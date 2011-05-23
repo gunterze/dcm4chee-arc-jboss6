@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is part of dcm4che, an implementation of DICOM(TM) in
+   - Java(TM), hosted at https://github.com/gunterze/dcm4che.
+   -
+   - The Initial Developer of the Original Code is
+   - Agfa Healthcare.
+   - Portions created by the Initial Developer are Copyright (C) 2011
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   - Gunter Zeilinger <gunterze@gmail.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK *****  -->
+
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_1_0.xsd"
+  version="1.0">
+  <persistence-unit-metadata>
+    <persistence-unit-defaults>
+      <entity-listeners>
+        <entity-listener class="org.dcm4chee.archive.entity.EntityLogger">
+          <pre-persist method-name="onPrePersist" />
+          <post-persist method-name="onPostPersist" />
+          <pre-remove method-name="onPreRemove" />
+          <post-remove method-name="onPostRemove" />
+          <pre-update method-name="onPreUpdate" />
+          <post-update method-name="onPostUpdate" />
+          <post-load method-name="onPostLoad" />
+        </entity-listener>
+      </entity-listeners>
+    </persistence-unit-defaults>
+  </persistence-unit-metadata>
+  
+  <package>org.dcm4chee.archive.entity</package>
+  
+  <entity class="Code" access="FIELD" metadata-complete="false">
+    <table name="code" />
+    <sequence-generator name="seq" sequence-name="code_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+      <basic name="codeMeaning">
+        <column name="code_meaning" column-definition="@nvarchar2@"/>
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="Issuer" access="FIELD" metadata-complete="false">
+    <table name="issuer" />
+    <sequence-generator name="seq" sequence-name="issuer_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="Patient" access="FIELD" metadata-complete="false">
+    <table name="patient" />
+    <sequence-generator name="seq" sequence-name="patient_pk_seq" />
+    <pre-persist method-name="onPrePersist" />
+    <pre-update method-name="onPreUpdate" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+      <basic name="patientName">
+        <column name="pat_name" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="patientIdeographicName">
+        <column name="pat_i_name" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="patientPhoneticName">
+        <column name="pat_p_name" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="encodedAttributes">
+        <column name="pat_attrs" column-definition="@blob@" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="Study" access="FIELD" metadata-complete="false">
+    <table name="study" />
+    <sequence-generator name="seq" sequence-name="study_pk_seq" />
+    <pre-persist method-name="onPrePersist" />
+    <pre-update method-name="onPreUpdate" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+      <basic name="referringPhysicianName">
+        <column name="ref_physician" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="referringPhysicianIdeographicName">
+        <column name="ref_phys_i_name" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="referringPhysicianPhoneticName">
+        <column name="ref_phys_p_name" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="studyDescription">
+        <column name="study_desc" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="encodedAttributes">
+        <column name="study_attrs" column-definition="@blob@" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="Series" access="FIELD" metadata-complete="false">
+    <table name="series" />
+    <sequence-generator name="seq" sequence-name="series_pk_seq" />
+    <pre-persist method-name="onPrePersist" />
+    <pre-update method-name="onPreUpdate" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+      <basic name="institutionalDepartmentName">
+        <column name="department" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="institutionName">
+        <column name="institution" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="performingPhysicianName">
+        <column name="perf_physician" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="performingPhysicianIdeographicName">
+        <column name="perf_phys_i_name" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="performingPhysicianPhoneticName">
+        <column name="perf_phys_p_name" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="encodedAttributes">
+        <column name="series_attrs" column-definition="@blob@" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="RequestAttributes" access="FIELD" metadata-complete="false">
+    <table name="series_req" />
+    <sequence-generator name="seq" sequence-name="series_req_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+      <basic name="requestingService">
+        <column name="req_service" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="requestingPhysician">
+        <column name="req_physician" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="requestingPhysicianIdeographicName">
+        <column name="req_phys_i_name" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="requestingPhysicianPhoneticName">
+        <column name="req_phys_p_name" column-definition="@nvarchar2@" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="Instance" access="FIELD" metadata-complete="false">
+    <table name="instance" />
+    <sequence-generator name="seq" sequence-name="instance_pk_seq" />
+    <pre-persist method-name="onPrePersist" />
+    <pre-update method-name="onPreUpdate" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+      <basic name="encodedAttributes">
+        <column name="inst_attrs" column-definition="@blob@" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="VerifyingObserver" access="FIELD" metadata-complete="false">
+    <table name="verify_observer" />
+    <sequence-generator name="seq" sequence-name="verify_observer_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+      <basic name="verifyingObserverName">
+        <column name="observer_name" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="verifyingObserverIdeographicName">
+        <column name="observer_i_name" column-definition="@nvarchar2@" />
+      </basic>
+      <basic name="verifyingObserverPhoneticName">
+        <column name="observer_p_name" column-definition="@nvarchar2@" />
+      </basic>
+    </attributes>
+  </entity>
+
+</entity-mappings>
