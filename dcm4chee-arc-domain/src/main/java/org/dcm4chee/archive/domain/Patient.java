@@ -36,8 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.entity;
+package org.dcm4chee.archive.domain;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
@@ -53,6 +54,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import org.dcm4che.data.Attributes;
+
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
  * @author Justin Falk <jfalkmu@gmail.com>
@@ -61,6 +64,8 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "patient")
 public class Patient implements Serializable {
+
+    private static final long serialVersionUID = 6430339764844147679L;
 
     @Id
     @GeneratedValue
@@ -130,4 +135,83 @@ public class Patient implements Serializable {
         updatedTime = new Date();
     }
 
+    public long getPk() {
+        return pk;
+    }
+
+    public Date getCreatedTime() {
+        return createdTime;
+    }
+
+    public Date getUpdatedTime() {
+        return updatedTime;
+    }
+
+    public String getPatientID() {
+        return patientID;
+    }
+
+    public String getIssuerOfPatientID() {
+        return issuerOfPatientID;
+    }
+
+    public String getPatientName() {
+        return patientName;
+    }
+
+    public String getPatientFamilyNameSoundex() {
+        return patientFamilyNameSoundex;
+    }
+
+    public String getPatientGivenNameSoundex() {
+        return patientGivenNameSoundex;
+    }
+
+    public String getPatientIdeographicName() {
+        return patientIdeographicName;
+    }
+
+    public String getPatientPhoneticName() {
+        return patientPhoneticName;
+    }
+
+    public String getPatientBirthDate() {
+        return patientBirthDate;
+    }
+
+    public String getPatientSex() {
+        return patientSex;
+    }
+
+    public String getPatientCustomAttribute1() {
+        return patientCustomAttribute1;
+    }
+
+    public String getPatientCustomAttribute2() {
+        return patientCustomAttribute2;
+    }
+
+    public String getPatientCustomAttribute3() {
+        return patientCustomAttribute3;
+    }
+
+    public Patient getMergedWith() {
+        return mergedWith;
+    }
+
+    public Set<Patient> getPrevious() {
+        return previous;
+    }
+
+    public Set<Study> getStudies() {
+        return studies;
+    }
+
+    public byte[] getEncodedAttributes() {
+        return encodedAttributes;
+    }
+
+    public Attributes getAttributes() throws IOException {
+        return Utils.decodeAttributes(encodedAttributes);
+    }
 }

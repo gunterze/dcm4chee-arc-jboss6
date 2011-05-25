@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.entity;
+package org.dcm4chee.archive.domain;
 
 import java.io.Serializable;
 

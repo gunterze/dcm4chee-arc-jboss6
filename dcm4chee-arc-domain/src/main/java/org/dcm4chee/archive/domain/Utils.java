@@ -36,16 +36,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.entity;
+package org.dcm4chee.archive.domain;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+
+import org.dcm4che.data.Attributes;
+import org.dcm4che.io.DicomInputStream;
 
 /**
- * @author Damien Evans <damien.daddy@gmail.com>
- * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public enum Availability {
-    ONLINE,
-    NEARLINE,
-    OFFLINE,
-    UNAVAILABLE
+class Utils {
+
+    public static Attributes decodeAttributes(byte[] b) throws IOException {
+        ByteArrayInputStream is = new ByteArrayInputStream(b);
+        DicomInputStream dis = new DicomInputStream(is);
+        return dis.readDataset(-1, -1);
+    }
+
 }

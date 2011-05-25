@@ -36,8 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.entity;
+package org.dcm4chee.archive.domain;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
@@ -52,6 +53,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import org.dcm4che.data.Attributes;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
@@ -139,4 +142,91 @@ public class Instance implements Serializable {
         updatedTime = new Date();
     }
 
+    public Attributes getAttributes() throws IOException {
+        return Utils.decodeAttributes(encodedAttributes);
+    }
+
+    public long getPk() {
+        return pk;
+    }
+
+    public Date getCreatedTime() {
+        return createdTime;
+    }
+
+    public Date getUpdatedTime() {
+        return updatedTime;
+    }
+
+    public String getSopInstanceUID() {
+        return sopInstanceUID;
+    }
+
+    public String getSopClassUID() {
+        return sopClassUID;
+    }
+
+    public String getInstanceNumber() {
+        return instanceNumber;
+    }
+
+    public Date getContentDateTime() {
+        return contentDateTime;
+    }
+
+    public String getCompletionFlag() {
+        return completionFlag;
+    }
+
+    public String getVerificationFlag() {
+        return verificationFlag;
+    }
+
+    public String getInstanceCustomAttribute1() {
+        return instanceCustomAttribute1;
+    }
+
+    public String getInstanceCustomAttribute2() {
+        return instanceCustomAttribute2;
+    }
+
+    public String getInstanceCustomAttribute3() {
+        return instanceCustomAttribute3;
+    }
+
+    public String getRetrieveAETs() {
+        return retrieveAETs;
+    }
+
+    public String getExternalRetrieveAET() {
+        return externalRetrieveAET;
+    }
+
+    public Availability getAvailability() {
+        return availability;
+    }
+
+    public boolean isArchived() {
+        return archived;
+    }
+
+    public boolean isStorageComitted() {
+        return storageComitted;
+    }
+
+    public byte[] getEncodedAttributes() {
+        return encodedAttributes;
+    }
+
+    public Code getConceptNameCode() {
+        return conceptNameCode;
+    }
+
+    public Set<VerifyingObserver> getVerifyingObservers() {
+        return verifyingObservers;
+    }
+
+    public Series getSeries() {
+        return series;
+    }
 }

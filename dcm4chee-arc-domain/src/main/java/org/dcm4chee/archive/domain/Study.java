@@ -36,8 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.entity;
+package org.dcm4chee.archive.domain;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
@@ -54,6 +55,8 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import org.dcm4che.data.Attributes;
 
 
 /**
@@ -166,4 +169,119 @@ public class Study implements Serializable {
         updatedTime = new Date();
     }
 
+    public Attributes getAttributes() throws IOException {
+        return Utils.decodeAttributes(encodedAttributes);
+    }
+
+    public long getPk() {
+        return pk;
+    }
+
+    public Date getCreatedTime() {
+        return createdTime;
+    }
+
+    public Date getUpdatedTime() {
+        return updatedTime;
+    }
+
+    public String getStudyInstanceUID() {
+        return studyInstanceUID;
+    }
+
+    public String getStudyID() {
+        return studyID;
+    }
+
+    public Date getStudyDateTime() {
+        return studyDateTime;
+    }
+
+    public String getAccessionNumber() {
+        return accessionNumber;
+    }
+
+    public String getReferringPhysicianName() {
+        return referringPhysicianName;
+    }
+
+    public String getReferringPhysicianFamilyNameSoundex() {
+        return referringPhysicianFamilyNameSoundex;
+    }
+
+    public String getReferringPhysicianGivenNameSoundex() {
+        return referringPhysicianGivenNameSoundex;
+    }
+
+    public String getReferringPhysicianIdeographicName() {
+        return referringPhysicianIdeographicName;
+    }
+
+    public String getReferringPhysicianPhoneticName() {
+        return referringPhysicianPhoneticName;
+    }
+
+    public String getStudyDescription() {
+        return studyDescription;
+    }
+
+    public String getStudyCustomAttribute1() {
+        return studyCustomAttribute1;
+    }
+
+    public String getStudyCustomAttribute2() {
+        return studyCustomAttribute2;
+    }
+
+    public String getStudyCustomAttribute3() {
+        return studyCustomAttribute3;
+    }
+
+    public int getNumberOfStudyRelatedSeries() {
+        return numberOfStudyRelatedSeries;
+    }
+
+    public int getNumberOfStudyRelatedInstances() {
+        return numberOfStudyRelatedInstances;
+    }
+
+    public String getModalitiesInStudy() {
+        return modalitiesInStudy;
+    }
+
+    public String getSopClassesInStudy() {
+        return sopClassesInStudy;
+    }
+
+    public String getRetrieveAETs() {
+        return retrieveAETs;
+    }
+
+    public String getExternalRetrieveAET() {
+        return externalRetrieveAET;
+    }
+
+    public Availability getAvailability() {
+        return availability;
+    }
+
+    public byte[] getEncodedAttributes() {
+        return encodedAttributes;
+    }
+
+    public Set<Code> getProcedureCodes() {
+        return procedureCodes;
+    }
+
+    public Issuer getIssuerOfAccessionNumber() {
+        return issuerOfAccessionNumber;
+    }
+
+    public Patient getPatient() {
+        return patient;
+    }
+
+    public Set<Series> getSeries() {
+        return series;
+    }
 }

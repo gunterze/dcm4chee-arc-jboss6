@@ -36,47 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.entity;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package org.dcm4chee.archive.domain;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
  * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class EntityLogger {
-
-    private Logger getLogger(Object entity) {
-        return LoggerFactory.getLogger(entity.getClass());
-    }
-
-    public void onPrePersist(Object entity) {
-        getLogger(entity).debug("Creating {}", entity);
-    }
-
-    public void onPostPersist(Object entity) {
-        getLogger(entity).debug("Created {}", entity);
-    }
-
-    public void onPostLoad(Object entity) {
-        getLogger(entity).debug("Loaded {}", entity);
-    }
-
-    public void onPreUpdate(Object entity) {
-        getLogger(entity).debug("Updating {}", entity);
-    }
-
-    public void onPostUpdate(Object entity) {
-        getLogger(entity).debug("Updated {}", entity);
-    }
-
-    public void onPreRemove(Object entity) {
-        getLogger(entity).debug("Deleting {}", entity);
-    }
-
-    public void onPostRemove(Object entity) {
-        getLogger(entity).debug("Deleted {}", entity);
-    }
+public enum Availability {
+    ONLINE,
+    NEARLINE,
+    OFFLINE,
+    UNAVAILABLE
 }

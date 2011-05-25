@@ -36,9 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.entity;
+package org.dcm4chee.archive.domain;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -55,51 +56,67 @@ import javax.persistence.Table;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @Entity
-@Table(name = "series_req")
-public class RequestAttributes implements Serializable {
+@Table(name = "verify_observer")
+public class VerifyingObserver implements Serializable {
 
-    private static final long serialVersionUID = -2985695106493984104L;
+    private static final long serialVersionUID = -4116421655961983539L;
 
     @Id
     @GeneratedValue
     @Column(name = "pk")
     private long pk;
 
-    @Column(name = "accession_no")
-    private String accessionNumber;
+    @Column(name = "verify_datetime")
+    private Date verificationDateTime;
+
+    @Column(name = "observer_name")
+    private String verifyingObserverName;
     
-    @Column(name = "study_iuid")
-    private String studyInstanceUID;
-
-    @Column(name = "req_proc_id")
-    private String requestedProcedureID;
-
-    @Column(name = "sps_id")
-    private String scheduledProcedureStepID;
-
-    @Column(name = "req_service")
-    private String requestingService;
-
-    @Column(name = "req_physician")
-    private String requestingPhysician;
+    @Column(name = "observer_fn_sx")
+    private String verifyingObserverFamilyNameSoundex;
     
-    @Column(name = "req_phys_fn_sx")
-    private String requestingPhysicianFamilyNameSoundex;
-    
-    @Column(name = "req_phys_gn_sx")
-    private String requestingPhysicianGivenNameSoundex;
+    @Column(name = "observer_gn_sx")
+    private String verifyingObserverGivenNameSoundex;
 
-    @Column(name = "req_phys_i_name")
-    private String requestingPhysicianIdeographicName;
+    @Column(name = "observer_i_name")
+    private String verifyingObserverIdeographicName;
 
-    @Column(name = "req_phys_p_name")
-    private String requestingPhysicianPhoneticName;
+    @Column(name = "observer_p_name")
+    private String verifyingObserverPhoneticName;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "series_fk")
-    private Series series;
+    @JoinColumn(name = "instance_fk")
+    private Instance instance;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "accno_issuer_fk")
-    private Issuer issuerOfAccessionNumber;
+    public long getPk() {
+        return pk;
+    }
+
+    public Date getVerificationDateTime() {
+        return verificationDateTime;
+    }
+
+    public String getVerifyingObserverName() {
+        return verifyingObserverName;
+    }
+
+    public String getVerifyingObserverFamilyNameSoundex() {
+        return verifyingObserverFamilyNameSoundex;
+    }
+
+    public String getVerifyingObserverGivenNameSoundex() {
+        return verifyingObserverGivenNameSoundex;
+    }
+
+    public String getVerifyingObserverIdeographicName() {
+        return verifyingObserverIdeographicName;
+    }
+
+    public String getVerifyingObserverPhoneticName() {
+        return verifyingObserverPhoneticName;
+    }
+
+    public Instance getInstance() {
+        return instance;
+    }
 }

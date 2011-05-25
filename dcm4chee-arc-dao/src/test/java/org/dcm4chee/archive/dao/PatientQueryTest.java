@@ -36,55 +36,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.entity;
+package org.dcm4chee.archive.dao;
 
-import java.io.Serializable;
-import java.util.Date;
+import static org.junit.Assert.*;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.ejb.EJB;
+
+import junit.framework.Assert;
+
+import org.dcm4che.data.Attributes;
+import org.dcm4chee.archive.domain.Patient;
+import org.jboss.arquillian.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
- * @author Damien Evans <damien.daddy@gmail.com>
- * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Entity
-@Table(name = "verify_observer")
-public class VerifyingObserver implements Serializable {
+@RunWith(Arquillian.class)
+public class PatientQueryTest {
 
-    private static final long serialVersionUID = -4116421655961983539L;
+    @Deployment
+    public static JavaArchive createDeployment() {
+       return ShrinkWrap.create(JavaArchive.class, "test.jar")
+                .addClass(PatientQuery.class);
+    }
 
-    @Id
-    @GeneratedValue
-    @Column(name = "pk")
-    private long pk;
+    @EJB
+    private PatientQuery ejb;
 
-    @Column(name = "verify_datetime")
-    private Date verificationDateTime;
+    @Test
+    public void testFind() {
+        Assert.assertNotNull(
+                "Verify that the ejb was injected",
+                ejb);
+        ejb.find(keys());
+        try {
+            while (ejb.hasNext()) {
+                Patient pat = ejb.next();
+            }
+        } finally {
+            ejb.close();
+        }
+        
+    }
 
-    @Column(name = "observer_name")
-    private String verifyingObserverName;
-    
-    @Column(name = "observer_fn_sx")
-    private String verifyingObserverFamilyNameSoundex;
-    
-    @Column(name = "observer_gn_sx")
-    private String verifyingObserverGivenNameSoundex;
+    private Attributes keys() {
+        Attributes keys = new Attributes();
+        // TODO Auto-generated method stub
+        return keys;
+    }
 
-    @Column(name = "observer_i_name")
-    private String verifyingObserverIdeographicName;
-
-    @Column(name = "observer_p_name")
-    private String verifyingObserverPhoneticName;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "instance_fk")
-    private Instance instance;
 }

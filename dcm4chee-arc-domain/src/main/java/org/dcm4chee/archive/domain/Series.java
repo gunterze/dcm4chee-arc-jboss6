@@ -36,8 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.entity;
+package org.dcm4chee.archive.domain;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
@@ -52,6 +53,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import org.dcm4che.data.Attributes;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
@@ -170,6 +173,138 @@ public class Series implements Serializable {
 
     public void onPreUpdate() {
         updatedTime = new Date();
+    }
+
+    public Attributes getAttributes() throws IOException {
+        return Utils.decodeAttributes(encodedAttributes);
+    }
+
+    public long getPk() {
+        return pk;
+    }
+
+    public Date getCreatedTime() {
+        return createdTime;
+    }
+
+    public Date getUpdatedTime() {
+        return updatedTime;
+    }
+
+    public String getSeriesInstanceUID() {
+        return seriesInstanceUID;
+    }
+
+    public String getSeriesNumber() {
+        return seriesNumber;
+    }
+
+    public String getSeriesDescription() {
+        return seriesDescription;
+    }
+
+    public String getModality() {
+        return modality;
+    }
+
+    public String getInstitutionalDepartmentName() {
+        return institutionalDepartmentName;
+    }
+
+    public String getInstitutionName() {
+        return institutionName;
+    }
+
+    public String getStationName() {
+        return stationName;
+    }
+
+    public String getBodyPartExamined() {
+        return bodyPartExamined;
+    }
+
+    public String getLaterality() {
+        return laterality;
+    }
+
+    public String getPerformingPhysicianName() {
+        return performingPhysicianName;
+    }
+
+    public String getPerformingPhysicianFamilyNameSoundex() {
+        return performingPhysicianFamilyNameSoundex;
+    }
+
+    public String getPerformingPhysicianGivenNameSoundex() {
+        return performingPhysicianGivenNameSoundex;
+    }
+
+    public String getPerformingPhysicianIdeographicName() {
+        return performingPhysicianIdeographicName;
+    }
+
+    public String getPerformingPhysicianPhoneticName() {
+        return performingPhysicianPhoneticName;
+    }
+
+    public Date getPerformedProcedureStepStartDateTime() {
+        return performedProcedureStepStartDateTime;
+    }
+
+    public String getPerformedProcedureStepInstanceUID() {
+        return performedProcedureStepInstanceUID;
+    }
+
+    public String getSeriesCustomAttribute1() {
+        return seriesCustomAttribute1;
+    }
+
+    public String getSeriesCustomAttribute2() {
+        return seriesCustomAttribute2;
+    }
+
+    public String getSeriesCustomAttribute3() {
+        return seriesCustomAttribute3;
+    }
+
+    public int getNumberOfSeriesRelatedInstances() {
+        return numberOfSeriesRelatedInstances;
+    }
+
+    public String getSourceAET() {
+        return sourceAET;
+    }
+
+    public String getRetrieveAETs() {
+        return retrieveAETs;
+    }
+
+    public String getExternalRetrieveAET() {
+        return externalRetrieveAET;
+    }
+
+    public Availability getAvailability() {
+        return availability;
+    }
+
+    public byte[] getEncodedAttributes() {
+        return encodedAttributes;
+    }
+
+    public Code getInstitutionCode() {
+        return institutionCode;
+    }
+
+    public Set<RequestAttributes> getRequestAttributes() {
+        return requestAttributes;
+    }
+
+    public Study getStudy() {
+        return study;
+    }
+
+    public Set<Instance> getInstances() {
+        return instances;
     }
 
 }
