@@ -46,7 +46,8 @@ import java.util.List;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnit;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -66,11 +67,13 @@ import org.dcm4chee.archive.domain.Utils;
 @Stateful
 public class PatientQuery {
 
-    @PersistenceContext(unitName="dcm4chee-arc")
+    @PersistenceUnit(unitName="dcm4chee-arc")
+    private EntityManagerFactory emf;
     private EntityManager em;
     private Iterator<byte[]> results;
 
-    public void find(Attributes keys, boolean matchUnknown) {
+    public void find(String[] pids, Attributes keys, boolean matchUnknown) {
+        em = emf.createEntityManager();
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<byte[]> cq = cb.createQuery(byte[].class);
         Root<Patient> pat = cq.from(Patient.class);
@@ -78,36 +81,31 @@ public class PatientQuery {
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
         predicates.add(cb.isNull(pat.get(Patient_.mergedWith)));
-        fillPredicates(cb, pat, keys, matchUnknown, predicates, params);
+        fillPredicates(cb, pat, pids, keys, matchUnknown, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<byte[]> q = em.createQuery(cq);
         int i = 0;
         for (Object param : params)
-            q.setParameter("param" + i++, param);
+            q.setParameter(Matching.paramName(i++), param);
 
         results = q.getResultList().iterator();
     }
 
     static void fillPredicates(CriteriaBuilder cb, Path<Patient> pat,
-            Attributes keys, boolean matchUnknown, List<Predicate> predicates,
-            List<Object> params) {
-        QueryUtils.addNotNull(predicates,
-                QueryUtils.matchWC(cb,
+            String[] pids, Attributes keys, boolean matchUnknown,
+            List<Predicate> predicates, List<Object> params) {
+        Matching.add(predicates,
+                Matching.patientID(cb,
                         pat.get(Patient_.patientID),
-                        keys.getString(Tag.PatientID, null),
-                        false, matchUnknown, params));
-        QueryUtils.addNotNull(predicates,
-                QueryUtils.matchWC(cb,
                         pat.get(Patient_.issuerOfPatientID),
-                        keys.getString(Tag.IssuerOfPatientID, null),
-                        false, matchUnknown, params));
-        QueryUtils.addNotNull(predicates,
-                QueryUtils.matchWC(cb,
+                        pids, matchUnknown, params));
+        Matching.add(predicates,
+                Matching.wildCard(cb,
                         pat.get(Patient_.patientName),
                         keys.getString(Tag.PatientName, null),
                         true, matchUnknown, params));
-        QueryUtils.addNotNull(predicates,
-                QueryUtils.matchWC(cb,
+        Matching.add(predicates,
+                Matching.wildCard(cb,
                         pat.get(Patient_.patientSex),
                         keys.getString(Tag.PatientSex, null),
                         true, matchUnknown, params));
@@ -121,8 +119,9 @@ public class PatientQuery {
 
     public Attributes next() throws IOException {
         checkResults();
+        byte[] result = results.next();
         Attributes attrs = new Attributes();
-        Utils.decodeAttributes(results.next(), attrs);
+        Utils.decodeAttributes(result, attrs);
         return attrs;
     }
 
@@ -133,6 +132,7 @@ public class PatientQuery {
 
     @Remove
     public void close() {
+        em.close();
     }
 
 }

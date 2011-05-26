@@ -36,48 +36,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.domain;
+package org.dcm4chee.archive.dao;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.dcm4che.io.DicomInputStream;
+import org.dcm4chee.archive.domain.Availability;
+import org.dcm4chee.archive.domain.Utils;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class Utils {
+class InstanceQueryResult {
 
-    public static Attributes decodeAttributes(byte[] b) throws IOException {
-        ByteArrayInputStream is = new ByteArrayInputStream(b);
-        DicomInputStream dis = new DicomInputStream(is);
-        return dis.readDataset(-1, -1);
+    private final long seriesPk;
+    private final String retrieveAETs;
+    private final String externalRetrieveAET;
+    private final Availability availability;
+    private final byte[] instanceAttributes;
+
+    public InstanceQueryResult(long seriesPk,
+            String retrieveAETs,
+            String externalRetrieveAET,
+            Availability availability,
+            byte[] instanceAttributes) {
+        this.seriesPk = seriesPk;
+        this.retrieveAETs = retrieveAETs;
+        this.externalRetrieveAET = externalRetrieveAET;
+        this.availability = availability;
+        this.instanceAttributes = instanceAttributes;
     }
 
-    public static void decodeAttributes(byte[] b, Attributes attrs)
-            throws IOException {
-        ByteArrayInputStream is = new ByteArrayInputStream(b);
-        DicomInputStream dis = new DicomInputStream(is);
-        dis.readFileMetaInformation();
-        dis.readAttributes(attrs, -1, -1);
+    public long getSeriesPk() {
+        return seriesPk;
     }
 
-
-    public static void setRetrieveAET(Attributes attrs, String retrieveAETs,
-            String externalRetrieveAET) {
-        if (retrieveAETs != null)
-            if (externalRetrieveAET != null)
-                attrs.setString(Tag.RetrieveAETitle, VR.AE,
-                        retrieveAETs, externalRetrieveAET);
-            else
-                attrs.setString(Tag.RetrieveAETitle, VR.AE,
-                        retrieveAETs);
-        else
-            if (externalRetrieveAET != null)
-                attrs.setString(Tag.RetrieveAETitle, VR.AE,
-                        externalRetrieveAET);
+    public Attributes mergeAttributes(Attributes seriesAttrs) throws IOException {
+        Attributes attrs = new Attributes();
+        attrs.addAll(seriesAttrs);
+        Utils.decodeAttributes(instanceAttributes, attrs);
+        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
+        attrs.setString(Tag.InstanceAvailability, VR.CS,
+                availability.toString());
+        return attrs;
     }
+
 }

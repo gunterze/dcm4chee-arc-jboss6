@@ -60,6 +60,8 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.domain.Patient;
 import org.dcm4chee.archive.domain.Patient_;
+import org.dcm4chee.archive.domain.Series;
+import org.dcm4chee.archive.domain.Series_;
 import org.dcm4chee.archive.domain.Study;
 import org.dcm4chee.archive.domain.Study_;
 
@@ -67,34 +69,38 @@ import org.dcm4chee.archive.domain.Study_;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @Stateful
-public class StudyQuery {
+public class SeriesQuery {
 
     @PersistenceUnit(unitName="dcm4chee-arc")
     private EntityManagerFactory emf;
     private EntityManager em;
-    private Iterator<StudyQueryResult> results;
+    private Iterator<SeriesQueryResult> results;
 
     public void find(String[] pids, Attributes keys, boolean matchUnknown) {
         em = emf.createEntityManager();
         CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<StudyQueryResult> cq = cb.createQuery(StudyQueryResult.class);
-        Root<Study> study = cq.from(Study.class);
+        CriteriaQuery<SeriesQueryResult> cq = cb.createQuery(SeriesQueryResult.class);
+        Root<Series> series = cq.from(Series.class);
+        Join<Series, Study> study = series.join(Series_.study);
         Join<Study, Patient> pat = study.join(Study_.patient);
-        cq.select(cb.construct(StudyQueryResult.class,
+        cq.select(cb.construct(SeriesQueryResult.class,
                 study.get(Study_.numberOfStudyRelatedSeries),
                 study.get(Study_.numberOfStudyRelatedInstances),
+                series.get(Series_.numberOfSeriesRelatedInstances),
                 study.get(Study_.modalitiesInStudy),
                 study.get(Study_.sopClassesInStudy),
-                study.get(Study_.retrieveAETs),
-                study.get(Study_.externalRetrieveAET),
-                study.get(Study_.availability),
+                series.get(Series_.retrieveAETs),
+                series.get(Series_.externalRetrieveAET),
+                series.get(Series_.availability),
+                series.get(Series_.encodedAttributes),
                 study.get(Study_.encodedAttributes),
                 pat.get(Patient_.encodedAttributes)));
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
-        fillPredicates(cb, pat, study, pids, keys, matchUnknown, predicates, params);
+        fillPredicates(cb, pat, study, series, pids, keys, matchUnknown,
+                predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
-        TypedQuery<StudyQueryResult> q = em.createQuery(cq);
+        TypedQuery<SeriesQueryResult> q = em.createQuery(cq);
         int i = 0;
         for (Object param : params)
             q.setParameter(Matching.paramName(i++), param);
@@ -102,16 +108,14 @@ public class StudyQuery {
     }
 
     static void fillPredicates(CriteriaBuilder cb, Path<Patient> pat,
-            Path<Study> study, String[] pids, Attributes keys,
-            boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
-        PatientQuery.fillPredicates(cb, pat, pids, keys, matchUnknown, predicates, params);
+            Join<Series, Study> study, Path<Series> series, String[] pids,
+            Attributes keys, boolean matchUnknown,
+            List<Predicate> predicates, List<Object> params) {
+        StudyQuery.fillPredicates(cb, pat, study, pids, keys, matchUnknown,
+                predicates, params);
         Matching.add(predicates, Matching.listOfUID(cb,
-                study.get(Study_.studyInstanceUID),
-                keys.getStrings(Tag.StudyInstanceUID), params));
-        Matching.add(predicates, Matching.wildCard(cb,
-                study.get(Study_.referringPhysicianName),
-                keys.getString(Tag.ReferringPhysicianName, null),
-                true, matchUnknown, params));
+                series.get(Series_.seriesInstanceUID),
+                keys.getStrings(Tag.SeriesInstanceUID), params));
     }
 
     public boolean hasNext() {
@@ -121,7 +125,7 @@ public class StudyQuery {
 
     public Attributes next() throws IOException {
         checkResults();
-        StudyQueryResult result = results.next();
+        SeriesQueryResult result = results.next();
         return result.mergeAttributes();
     }
 

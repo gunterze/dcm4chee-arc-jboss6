@@ -36,48 +36,76 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.domain;
+package org.dcm4chee.archive.dao;
 
-import java.io.ByteArrayInputStream;
+import static org.junit.Assert.*;
+
 import java.io.IOException;
+
+import javax.ejb.EJB;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.dcm4che.io.DicomInputStream;
+import org.jboss.arquillian.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class Utils {
+@RunWith(Arquillian.class)
+public class SeriesQueryTest {
 
-    public static Attributes decodeAttributes(byte[] b) throws IOException {
-        ByteArrayInputStream is = new ByteArrayInputStream(b);
-        DicomInputStream dis = new DicomInputStream(is);
-        return dis.readDataset(-1, -1);
+    @Deployment
+    public static JavaArchive createDeployment() {
+       return ShrinkWrap.create(JavaArchive.class, "test.jar")
+                .addClass(PatientQuery.class)
+                .addClass(StudyQuery.class)
+                .addClass(StudyQueryResult.class)
+                .addClass(SeriesQuery.class)
+                .addClass(SeriesQueryResult.class)
+                .addClass(Matching.class);
     }
 
-    public static void decodeAttributes(byte[] b, Attributes attrs)
-            throws IOException {
-        ByteArrayInputStream is = new ByteArrayInputStream(b);
-        DicomInputStream dis = new DicomInputStream(is);
-        dis.readFileMetaInformation();
-        dis.readAttributes(attrs, -1, -1);
+    @EJB
+    private SeriesQuery ejb;
+
+    @Test
+    public void testFind() {
+        assertNotNull(
+                "Verify that the ejb was injected",
+                ejb);
+        ejb.find(pids(), keys(), false);
+        try {
+            while (ejb.hasNext()) {
+                try {
+                    ejb.next();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            ejb.close();
+        }
+        
     }
 
-
-    public static void setRetrieveAET(Attributes attrs, String retrieveAETs,
-            String externalRetrieveAET) {
-        if (retrieveAETs != null)
-            if (externalRetrieveAET != null)
-                attrs.setString(Tag.RetrieveAETitle, VR.AE,
-                        retrieveAETs, externalRetrieveAET);
-            else
-                attrs.setString(Tag.RetrieveAETitle, VR.AE,
-                        retrieveAETs);
-        else
-            if (externalRetrieveAET != null)
-                attrs.setString(Tag.RetrieveAETitle, VR.AE,
-                        externalRetrieveAET);
+    private String[] pids() {
+        return null;
     }
+
+    private Attributes keys() {
+        Attributes keys = new Attributes();
+        keys.setString(Tag.PatientName, VR.PN, "B*");
+        return keys;
+    }
+
 }

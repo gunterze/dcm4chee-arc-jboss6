@@ -36,48 +36,52 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.domain;
+package org.dcm4chee.archive.dao;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.dcm4che.io.DicomInputStream;
+import org.dcm4chee.archive.domain.Availability;
+import org.dcm4chee.archive.domain.Utils;
 
-/**
- * @author Gunter Zeilinger <gunterze@gmail.com>
- */
-public class Utils {
+class SeriesQueryResult extends StudyQueryResult {
 
-    public static Attributes decodeAttributes(byte[] b) throws IOException {
-        ByteArrayInputStream is = new ByteArrayInputStream(b);
-        DicomInputStream dis = new DicomInputStream(is);
-        return dis.readDataset(-1, -1);
+    private final int numberOfSeriesRelatedInstances;
+    private final byte[] seriesAttributes;
+
+    public SeriesQueryResult(int numberOfStudyRelatedSeries,
+            int numberOfStudyRelatedInstances,
+            int numberOfSeriesRelatedInstances,
+            String modalitiesInStudy,
+            String sopClassesInStudy,
+            String retrieveAETs,
+            String externalRetrieveAET,
+            Availability availability,
+            byte[] seriesAttributes,
+            byte[] studyAttributes,
+            byte[] patientAttributes) {
+        super(numberOfStudyRelatedSeries,
+              numberOfStudyRelatedInstances,
+              modalitiesInStudy,
+              sopClassesInStudy,
+              retrieveAETs,
+              externalRetrieveAET,
+              availability,
+              studyAttributes,
+              patientAttributes);
+        this.numberOfSeriesRelatedInstances = numberOfSeriesRelatedInstances;
+        this.seriesAttributes = seriesAttributes;
     }
 
-    public static void decodeAttributes(byte[] b, Attributes attrs)
-            throws IOException {
-        ByteArrayInputStream is = new ByteArrayInputStream(b);
-        DicomInputStream dis = new DicomInputStream(is);
-        dis.readFileMetaInformation();
-        dis.readAttributes(attrs, -1, -1);
+    @Override
+    public Attributes mergeAttributes() throws IOException {
+        Attributes attrs = super.mergeAttributes();
+        Utils.decodeAttributes(seriesAttributes, attrs);
+        attrs.setInt(Tag.NumberOfSeriesRelatedInstances, VR.US,
+                numberOfSeriesRelatedInstances);
+        return attrs;
     }
 
-
-    public static void setRetrieveAET(Attributes attrs, String retrieveAETs,
-            String externalRetrieveAET) {
-        if (retrieveAETs != null)
-            if (externalRetrieveAET != null)
-                attrs.setString(Tag.RetrieveAETitle, VR.AE,
-                        retrieveAETs, externalRetrieveAET);
-            else
-                attrs.setString(Tag.RetrieveAETitle, VR.AE,
-                        retrieveAETs);
-        else
-            if (externalRetrieveAET != null)
-                attrs.setString(Tag.RetrieveAETitle, VR.AE,
-                        externalRetrieveAET);
-    }
 }

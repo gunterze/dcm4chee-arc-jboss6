@@ -64,7 +64,7 @@ public class PatientQueryTest {
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
                 .addClass(PatientQuery.class)
-                .addClass(QueryUtils.class);
+                .addClass(Matching.class);
     }
 
     @EJB
@@ -75,7 +75,7 @@ public class PatientQueryTest {
         assertNotNull(
                 "Verify that the ejb was injected",
                 ejb);
-        ejb.find(keys(), false);
+        ejb.find(pids(), keys(), false);
         try {
             while (ejb.hasNext()) {
                 try {
@@ -85,15 +85,22 @@ public class PatientQueryTest {
                     e.printStackTrace();
                 }
             }
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         } finally {
             ejb.close();
         }
-        
+    }
+
+    private String[] pids() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     private Attributes keys() {
         Attributes keys = new Attributes();
-        keys.setString(Tag.PatientName, VR.PN, "Doe^J*");
+        keys.setString(Tag.PatientName, VR.PN, "B*");
         keys.setString(Tag.PatientSex, VR.CS, "M");
         return keys;
     }

@@ -58,8 +58,12 @@ import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4chee.archive.domain.Instance;
+import org.dcm4chee.archive.domain.Instance_;
 import org.dcm4chee.archive.domain.Patient;
 import org.dcm4chee.archive.domain.Patient_;
+import org.dcm4chee.archive.domain.Series;
+import org.dcm4chee.archive.domain.Series_;
 import org.dcm4chee.archive.domain.Study;
 import org.dcm4chee.archive.domain.Study_;
 
@@ -67,51 +71,76 @@ import org.dcm4chee.archive.domain.Study_;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @Stateful
-public class StudyQuery {
+public class InstanceQuery {
 
     @PersistenceUnit(unitName="dcm4chee-arc")
     private EntityManagerFactory emf;
     private EntityManager em;
-    private Iterator<StudyQueryResult> results;
+    private TypedQuery<SeriesOfInstanceQueryResult> seriesQuery;
+    private long seriesPk = -1L;
+    private Attributes seriesAttrs;
+    private Iterator<InstanceQueryResult> results;
 
     public void find(String[] pids, Attributes keys, boolean matchUnknown) {
         em = emf.createEntityManager();
         CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<StudyQueryResult> cq = cb.createQuery(StudyQueryResult.class);
-        Root<Study> study = cq.from(Study.class);
+        seriesQuery = buildSeriesQuery(cb);
+        CriteriaQuery<InstanceQueryResult> cq =
+                cb.createQuery(InstanceQueryResult.class);
+        
+        Root<Instance> inst = cq.from(Instance.class);
+        Join<Instance, Series> series = inst.join(Instance_.series);
+        Join<Series, Study> study = series.join(Series_.study);
         Join<Study, Patient> pat = study.join(Study_.patient);
-        cq.select(cb.construct(StudyQueryResult.class,
-                study.get(Study_.numberOfStudyRelatedSeries),
-                study.get(Study_.numberOfStudyRelatedInstances),
-                study.get(Study_.modalitiesInStudy),
-                study.get(Study_.sopClassesInStudy),
-                study.get(Study_.retrieveAETs),
-                study.get(Study_.externalRetrieveAET),
-                study.get(Study_.availability),
-                study.get(Study_.encodedAttributes),
-                pat.get(Patient_.encodedAttributes)));
+        cq.select(cb.construct(InstanceQueryResult.class,
+                series.get(Series_.pk),
+                inst.get(Instance_.retrieveAETs),
+                inst.get(Instance_.externalRetrieveAET),
+                inst.get(Instance_.availability),
+                inst.get(Instance_.encodedAttributes)));
+        cq.orderBy(cb.asc(series.get(Series_.pk)));
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
-        fillPredicates(cb, pat, study, pids, keys, matchUnknown, predicates, params);
+        fillPredicates(cb, pat, study, series, inst, pids, keys, matchUnknown,
+                predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
-        TypedQuery<StudyQueryResult> q = em.createQuery(cq);
+        TypedQuery<InstanceQueryResult> q = em.createQuery(cq);
         int i = 0;
         for (Object param : params)
             q.setParameter(Matching.paramName(i++), param);
         results = q.getResultList().iterator();
     }
 
-    static void fillPredicates(CriteriaBuilder cb, Path<Patient> pat,
-            Path<Study> study, String[] pids, Attributes keys,
-            boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
-        PatientQuery.fillPredicates(cb, pat, pids, keys, matchUnknown, predicates, params);
+    private TypedQuery<SeriesOfInstanceQueryResult> buildSeriesQuery(
+            CriteriaBuilder cb) {
+        CriteriaQuery<SeriesOfInstanceQueryResult> cq = cb
+                .createQuery(SeriesOfInstanceQueryResult.class);
+        Root<Series> series = cq.from(Series.class);
+        Join<Series, Study> study = series.join(Series_.study);
+        Join<Study, Patient> pat = study.join(Study_.patient);
+        cq.select(cb.construct(SeriesOfInstanceQueryResult.class, study
+                .get(Study_.numberOfStudyRelatedSeries), study
+                .get(Study_.numberOfStudyRelatedInstances), series
+                .get(Series_.numberOfSeriesRelatedInstances), study
+                .get(Study_.modalitiesInStudy), study
+                .get(Study_.sopClassesInStudy), series
+                .get(Series_.encodedAttributes), study
+                .get(Study_.encodedAttributes), pat
+                .get(Patient_.encodedAttributes)));
+        cq.where(cb.equal(series.get(Series_.pk),
+                cb.parameter(Long.class, Matching.paramName(0))));
+        return em.createQuery(cq);
+    }
+
+    private void fillPredicates(CriteriaBuilder cb, Path<Patient> pat,
+            Join<Series, Study> study, Path<Series> series, Root<Instance> inst,
+            String[] pids, Attributes keys, boolean matchUnknown,
+            List<Predicate> predicates, List<Object> params) {
+        SeriesQuery.fillPredicates(cb, pat, study, series, pids, keys,
+                matchUnknown, predicates, params);
         Matching.add(predicates, Matching.listOfUID(cb,
-                study.get(Study_.studyInstanceUID),
-                keys.getStrings(Tag.StudyInstanceUID), params));
-        Matching.add(predicates, Matching.wildCard(cb,
-                study.get(Study_.referringPhysicianName),
-                keys.getString(Tag.ReferringPhysicianName, null),
-                true, matchUnknown, params));
+                series.get(Series_.seriesInstanceUID),
+                keys.getStrings(Tag.SeriesInstanceUID), params));
     }
 
     public boolean hasNext() {
@@ -121,8 +150,18 @@ public class StudyQuery {
 
     public Attributes next() throws IOException {
         checkResults();
-        StudyQueryResult result = results.next();
-        return result.mergeAttributes();
+        InstanceQueryResult result = results.next();
+        return result.mergeAttributes(seriesAttrs(result.getSeriesPk()));
+    }
+
+    private Attributes seriesAttrs(long seriesPk) throws IOException {
+        if (this.seriesPk != seriesPk) {
+            this.seriesAttrs = seriesQuery
+                    .setParameter(Matching.paramName(0), seriesPk)
+                    .getSingleResult().mergeAttributes();
+            this.seriesPk = seriesPk;
+        }
+        return seriesAttrs;
     }
 
     private void checkResults() {

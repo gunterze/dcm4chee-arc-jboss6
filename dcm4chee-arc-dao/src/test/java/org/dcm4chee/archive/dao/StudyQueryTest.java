@@ -65,7 +65,8 @@ public class StudyQueryTest {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
                 .addClass(PatientQuery.class)
                 .addClass(StudyQuery.class)
-                .addClass(QueryUtils.class);
+                .addClass(StudyQueryResult.class)
+                .addClass(Matching.class);
     }
 
     @EJB
@@ -76,7 +77,7 @@ public class StudyQueryTest {
         assertNotNull(
                 "Verify that the ejb was injected",
                 ejb);
-        ejb.find(keys(), false);
+        ejb.find(pids(), keys(), false);
         try {
             while (ejb.hasNext()) {
                 try {
@@ -86,16 +87,22 @@ public class StudyQueryTest {
                     e.printStackTrace();
                 }
             }
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         } finally {
             ejb.close();
         }
         
     }
 
+    private String[] pids() {
+        return null;
+    }
+
     private Attributes keys() {
         Attributes keys = new Attributes();
-        keys.setString(Tag.PatientName, VR.PN, "Doe^J*");
-        keys.setString(Tag.ReferringPhysicianName, VR.PN, "Clunie^David");
+        keys.setString(Tag.PatientName, VR.PN, "B*");
         return keys;
     }
 
