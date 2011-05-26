@@ -36,31 +36,67 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.domain;
+package org.dcm4chee.archive.dao;
 
-import java.io.ByteArrayInputStream;
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 
+import javax.ejb.EJB;
+
 import org.dcm4che.data.Attributes;
-import org.dcm4che.io.DicomInputStream;
+import org.dcm4che.data.Tag;
+import org.dcm4che.data.VR;
+import org.jboss.arquillian.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class Utils {
+@RunWith(Arquillian.class)
+public class StudyQueryTest {
 
-    public static Attributes decodeAttributes(byte[] b) throws IOException {
-        ByteArrayInputStream is = new ByteArrayInputStream(b);
-        DicomInputStream dis = new DicomInputStream(is);
-        return dis.readDataset(-1, -1);
+    @Deployment
+    public static JavaArchive createDeployment() {
+       return ShrinkWrap.create(JavaArchive.class, "test.jar")
+                .addClass(PatientQuery.class)
+                .addClass(StudyQuery.class)
+                .addClass(QueryUtils.class);
     }
 
-    public static void decodeAttributes(byte[] b, Attributes attrs)
-            throws IOException {
-        ByteArrayInputStream is = new ByteArrayInputStream(b);
-        DicomInputStream dis = new DicomInputStream(is);
-        dis.readFileMetaInformation();
-        dis.readAttributes(attrs, -1, -1);
+    @EJB
+    private StudyQuery ejb;
+
+    @Test
+    public void testFind() {
+        assertNotNull(
+                "Verify that the ejb was injected",
+                ejb);
+        ejb.find(keys(), false);
+        try {
+            while (ejb.hasNext()) {
+                try {
+                    ejb.next();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        } finally {
+            ejb.close();
+        }
+        
+    }
+
+    private Attributes keys() {
+        Attributes keys = new Attributes();
+        keys.setString(Tag.PatientName, VR.PN, "Doe^J*");
+        keys.setString(Tag.ReferringPhysicianName, VR.PN, "Clunie^David");
+        return keys;
     }
 
 }

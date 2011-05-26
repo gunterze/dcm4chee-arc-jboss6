@@ -40,12 +40,13 @@ package org.dcm4chee.archive.dao;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+
 import javax.ejb.EJB;
 
-import junit.framework.Assert;
-
 import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.domain.Patient;
+import org.dcm4che.data.Tag;
+import org.dcm4che.data.VR;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -62,7 +63,8 @@ public class PatientQueryTest {
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClass(PatientQuery.class);
+                .addClass(PatientQuery.class)
+                .addClass(QueryUtils.class);
     }
 
     @EJB
@@ -70,13 +72,18 @@ public class PatientQueryTest {
 
     @Test
     public void testFind() {
-        Assert.assertNotNull(
+        assertNotNull(
                 "Verify that the ejb was injected",
                 ejb);
-        ejb.find(keys());
+        ejb.find(keys(), false);
         try {
             while (ejb.hasNext()) {
-                Patient pat = ejb.next();
+                try {
+                    ejb.next();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
         } finally {
             ejb.close();
@@ -86,7 +93,8 @@ public class PatientQueryTest {
 
     private Attributes keys() {
         Attributes keys = new Attributes();
-        // TODO Auto-generated method stub
+        keys.setString(Tag.PatientName, VR.PN, "Doe^J*");
+        keys.setString(Tag.PatientSex, VR.CS, "M");
         return keys;
     }
 

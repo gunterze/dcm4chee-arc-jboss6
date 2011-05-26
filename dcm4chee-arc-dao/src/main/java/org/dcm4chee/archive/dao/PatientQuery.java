@@ -38,17 +38,27 @@
 
 package org.dcm4chee.archive.dao;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.domain.Patient;
+import org.dcm4chee.archive.domain.Patient_;
+import org.dcm4chee.archive.domain.Utils;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -58,10 +68,50 @@ public class PatientQuery {
 
     @PersistenceContext(unitName="dcm4chee-arc")
     private EntityManager em;
-    private Iterator<Patient> results;
+    private Iterator<byte[]> results;
 
-    public void find(Attributes keys) {
-        results = em.createQuery(createQuery(keys)).getResultList().iterator();
+    public void find(Attributes keys, boolean matchUnknown) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<byte[]> cq = cb.createQuery(byte[].class);
+        Root<Patient> pat = cq.from(Patient.class);
+        cq.select(pat.get(Patient_.encodedAttributes));
+        List<Predicate> predicates = new ArrayList<Predicate>();
+        List<Object> params = new ArrayList<Object>();
+        predicates.add(cb.isNull(pat.get(Patient_.mergedWith)));
+        fillPredicates(cb, pat, keys, matchUnknown, predicates, params);
+        cq.where(predicates.toArray(new Predicate[predicates.size()]));
+        TypedQuery<byte[]> q = em.createQuery(cq);
+        int i = 0;
+        for (Object param : params)
+            q.setParameter("param" + i++, param);
+
+        results = q.getResultList().iterator();
+    }
+
+    static void fillPredicates(CriteriaBuilder cb, Path<Patient> pat,
+            Attributes keys, boolean matchUnknown, List<Predicate> predicates,
+            List<Object> params) {
+        QueryUtils.addNotNull(predicates,
+                QueryUtils.matchWC(cb,
+                        pat.get(Patient_.patientID),
+                        keys.getString(Tag.PatientID, null),
+                        false, matchUnknown, params));
+        QueryUtils.addNotNull(predicates,
+                QueryUtils.matchWC(cb,
+                        pat.get(Patient_.issuerOfPatientID),
+                        keys.getString(Tag.IssuerOfPatientID, null),
+                        false, matchUnknown, params));
+        QueryUtils.addNotNull(predicates,
+                QueryUtils.matchWC(cb,
+                        pat.get(Patient_.patientName),
+                        keys.getString(Tag.PatientName, null),
+                        true, matchUnknown, params));
+        QueryUtils.addNotNull(predicates,
+                QueryUtils.matchWC(cb,
+                        pat.get(Patient_.patientSex),
+                        keys.getString(Tag.PatientSex, null),
+                        true, matchUnknown, params));
+        
     }
 
     public boolean hasNext() {
@@ -69,9 +119,11 @@ public class PatientQuery {
         return results.hasNext();
     }
 
-    public Patient next() {
+    public Attributes next() throws IOException {
         checkResults();
-        return results.next();
+        Attributes attrs = new Attributes();
+        Utils.decodeAttributes(results.next(), attrs);
+        return attrs;
     }
 
     private void checkResults() {
@@ -81,14 +133,6 @@ public class PatientQuery {
 
     @Remove
     public void close() {
-    }
-
-    private CriteriaQuery<Patient> createQuery(Attributes keys) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<Patient> cq = cb.createQuery(Patient.class);
-        cq.from(Patient.class);
-         // TODO
-        return cq ;
     }
 
 }

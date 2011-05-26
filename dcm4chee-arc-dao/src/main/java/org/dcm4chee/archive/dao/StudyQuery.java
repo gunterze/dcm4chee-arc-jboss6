@@ -38,17 +38,32 @@
 
 package org.dcm4chee.archive.dao;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
+import org.dcm4che.data.VR;
+import org.dcm4chee.archive.domain.Availability;
+import org.dcm4chee.archive.domain.Patient;
+import org.dcm4chee.archive.domain.Patient_;
 import org.dcm4chee.archive.domain.Study;
+import org.dcm4chee.archive.domain.Study_;
+import org.dcm4chee.archive.domain.Utils;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -58,28 +73,124 @@ public class StudyQuery {
 
     @PersistenceContext(unitName="dcm4chee-arc")
     private EntityManager em;
-    private Iterator<Study> results;
+    private Iterator<Result> results;
 
-    public void find(Attributes keys) {
-        results = em.createQuery(createQuery(keys)).getResultList().iterator();
+    public void find(Attributes keys, boolean matchUnknown) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Result> cq = cb.createQuery(Result.class);
+        Root<Study> study = cq.from(Study.class);
+        Join<Study, Patient> pat = study.join(Study_.patient);
+        cq.select(cb.construct(Result.class,
+                study.get(Study_.numberOfStudyRelatedSeries),
+                study.get(Study_.numberOfStudyRelatedInstances),
+                study.get(Study_.modalitiesInStudy),
+                study.get(Study_.sopClassesInStudy),
+                study.get(Study_.retrieveAETs),
+                study.get(Study_.externalRetrieveAET),
+                study.get(Study_.availability),
+                study.get(Study_.encodedAttributes),
+                pat.get(Patient_.encodedAttributes)));
+        List<Predicate> predicates = new ArrayList<Predicate>();
+        List<Object> params = new ArrayList<Object>();
+        fillPredicates(cb, pat, study, keys, matchUnknown, predicates, params);
+        cq.where(predicates.toArray(new Predicate[predicates.size()]));
+        TypedQuery<Result> q = em.createQuery(cq);
+        int i = 0;
+        for (Object param : params)
+            q.setParameter("param" + i++, param);
+        results = q.getResultList().iterator();
     }
 
-    public Study next() {
+    private void fillPredicates(CriteriaBuilder cb, Path<Patient> pat,
+            Path<Study> study, Attributes keys, boolean matchUnknown,
+            List<Predicate> predicates, List<Object> params) {
+        PatientQuery.fillPredicates(cb, pat, keys, matchUnknown, predicates, params);
+        QueryUtils.addNotNull(predicates, QueryUtils.matchWC(cb,
+                study.get(Study_.referringPhysicianName),
+                keys.getString(Tag.ReferringPhysicianName, null),
+                true, matchUnknown, params));
+    }
+
+    public boolean hasNext() {
+        checkResults();
+        return results.hasNext();
+    }
+
+    public Attributes next() throws IOException {
+        checkResults();
+        return results.next().toAttributes();
+    }
+
+    private void checkResults() {
         if (results == null)
             throw new IllegalStateException("results not initalized");
-        return results.hasNext() ? results.next() : null;
     }
 
     @Remove
     public void close() {
     }
 
-    private CriteriaQuery<Study> createQuery(Attributes keys) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<Study> cq = cb.createQuery(Study.class);
-        cq.from(Study.class);
-         // TODO
-        return cq ;
+    private static final class Result {
+
+        final int numberOfStudyRelatedSeries;
+        final int numberOfStudyRelatedInstances;
+        final String modalitiesInStudy;
+        final String sopClassesInStudy;
+        final String retrieveAETs;
+        final String externalRetrieveAET;
+        final Availability availability;
+        final byte[] studyAttributes;
+        final byte[] patientAttributes;
+
+        @SuppressWarnings("unused")
+        public Result(int numberOfStudyRelatedSeries,
+                int numberOfStudyRelatedInstances,
+                String modalitiesInStudy,
+                String sopClassesInStudy,
+                String retrieveAETs,
+                String externalRetrieveAET,
+                Availability availability,
+                byte[] studyAttributes,
+                byte[] patientAttributes) {
+            this.numberOfStudyRelatedSeries = numberOfStudyRelatedSeries;
+            this.numberOfStudyRelatedInstances = numberOfStudyRelatedInstances;
+            this.modalitiesInStudy = modalitiesInStudy;
+            this.sopClassesInStudy = sopClassesInStudy;
+            this.retrieveAETs = retrieveAETs;
+            this.externalRetrieveAET = externalRetrieveAET;
+            this.availability = availability;
+            this.studyAttributes = studyAttributes;
+            this.patientAttributes = patientAttributes;
+        }
+
+        public Attributes toAttributes() throws IOException {
+            Attributes attrs = new Attributes();
+            Utils.decodeAttributes(patientAttributes, attrs);
+            Utils.decodeAttributes(studyAttributes, attrs);
+            attrs.setInt(Tag.NumberOfStudyRelatedSeries, VR.US,
+                    numberOfStudyRelatedSeries);
+            attrs.setInt(Tag.NumberOfStudyRelatedInstances, VR.US,
+                    numberOfStudyRelatedInstances);
+            attrs.setString(Tag.ModalitiesInStudy, VR.CS,
+                    modalitiesInStudy);
+            attrs.setString(Tag.SOPClassesInStudy, VR.CS,
+                    sopClassesInStudy);
+            if (retrieveAETs != null)
+                if (externalRetrieveAET != null)
+                    attrs.setString(Tag.RetrieveAETitle, VR.AE,
+                            retrieveAETs, externalRetrieveAET);
+                else
+                    attrs.setString(Tag.RetrieveAETitle, VR.AE,
+                            retrieveAETs);
+            else
+                if (externalRetrieveAET != null)
+                    attrs.setString(Tag.RetrieveAETitle, VR.AE,
+                            externalRetrieveAET);
+            attrs.setString(Tag.InstanceAvailability, VR.CS,
+                    availability.toString());
+            return attrs ;
+        }
+
     }
 
 }
