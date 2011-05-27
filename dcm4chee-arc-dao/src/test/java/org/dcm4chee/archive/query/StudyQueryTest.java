@@ -36,51 +36,78 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.dao;
+package org.dcm4chee.archive.query;
+
+import static org.junit.Assert.*;
 
 import java.io.IOException;
+
+import javax.ejb.EJB;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.dcm4chee.archive.domain.Availability;
-import org.dcm4chee.archive.domain.Utils;
+import org.dcm4chee.archive.query.Matching;
+import org.dcm4chee.archive.query.PatientQuery;
+import org.dcm4chee.archive.query.StudyQuery;
+import org.dcm4chee.archive.query.StudyQueryResult;
+import org.jboss.arquillian.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-class InstanceQueryResult {
+@RunWith(Arquillian.class)
+public class StudyQueryTest {
 
-    private final long seriesPk;
-    private final String retrieveAETs;
-    private final String externalRetrieveAET;
-    private final Availability availability;
-    private final byte[] instanceAttributes;
-
-    public InstanceQueryResult(long seriesPk,
-            String retrieveAETs,
-            String externalRetrieveAET,
-            Availability availability,
-            byte[] instanceAttributes) {
-        this.seriesPk = seriesPk;
-        this.retrieveAETs = retrieveAETs;
-        this.externalRetrieveAET = externalRetrieveAET;
-        this.availability = availability;
-        this.instanceAttributes = instanceAttributes;
+    @Deployment
+    public static JavaArchive createDeployment() {
+       return ShrinkWrap.create(JavaArchive.class, "test.jar")
+                .addClass(PatientQuery.class)
+                .addClass(StudyQuery.class)
+                .addClass(StudyQueryResult.class)
+                .addClass(Matching.class);
     }
 
-    public long getSeriesPk() {
-        return seriesPk;
+    @EJB
+    private StudyQuery ejb;
+
+    @Test
+    public void testFind() {
+        assertNotNull(
+                "Verify that the ejb was injected",
+                ejb);
+        ejb.find(pids(), keys(), false);
+        try {
+            while (ejb.hasNext()) {
+                try {
+                    ejb.next();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
+            ejb.close();
+        }
+        
     }
 
-    public Attributes mergeAttributes(Attributes seriesAttrs) throws IOException {
-        Attributes attrs = new Attributes();
-        attrs.addAll(seriesAttrs);
-        Utils.decodeAttributes(instanceAttributes, attrs);
-        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
-        attrs.setString(Tag.InstanceAvailability, VR.CS,
-                availability.toString());
-        return attrs;
+    private String[] pids() {
+        return null;
+    }
+
+    private Attributes keys() {
+        Attributes keys = new Attributes();
+        keys.setString(Tag.PatientName, VR.PN, "B*");
+        return keys;
     }
 
 }

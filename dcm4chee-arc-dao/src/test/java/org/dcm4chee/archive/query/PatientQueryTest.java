@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.dao;
+package org.dcm4chee.archive.query;
 
 import static org.junit.Assert.*;
 
@@ -47,6 +47,8 @@ import javax.ejb.EJB;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.dcm4chee.archive.query.Matching;
+import org.dcm4chee.archive.query.PatientQuery;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -58,27 +60,20 @@ import org.junit.runner.RunWith;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @RunWith(Arquillian.class)
-public class InstanceQueryTest {
+public class PatientQueryTest {
 
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
                 .addClass(PatientQuery.class)
-                .addClass(StudyQuery.class)
-                .addClass(StudyQueryResult.class)
-                .addClass(SeriesQuery.class)
-                .addClass(SeriesQueryResult.class)
-                .addClass(InstanceQuery.class)
-                .addClass(InstanceQueryResult.class)
-                .addClass(SeriesOfInstanceQueryResult.class)
                 .addClass(Matching.class);
     }
 
     @EJB
-    private InstanceQuery ejb;
+    private PatientQuery ejb;
 
     @Test
-    public void testFind() throws Exception {
+    public void testFind() {
         assertNotNull(
                 "Verify that the ejb was injected",
                 ejb);
@@ -98,16 +93,17 @@ public class InstanceQueryTest {
         } finally {
             ejb.close();
         }
-        
     }
 
     private String[] pids() {
+        // TODO Auto-generated method stub
         return null;
     }
 
     private Attributes keys() {
         Attributes keys = new Attributes();
         keys.setString(Tag.PatientName, VR.PN, "B*");
+        keys.setString(Tag.PatientSex, VR.CS, "M");
         return keys;
     }
 

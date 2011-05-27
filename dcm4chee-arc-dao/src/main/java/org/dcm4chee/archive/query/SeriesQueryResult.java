@@ -36,74 +36,52 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.dao;
-
-import static org.junit.Assert.*;
+package org.dcm4chee.archive.query;
 
 import java.io.IOException;
-
-import javax.ejb.EJB;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.jboss.arquillian.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.dcm4chee.archive.domain.Availability;
+import org.dcm4chee.archive.domain.Utils;
 
-/**
- * @author Gunter Zeilinger <gunterze@gmail.com>
- */
-@RunWith(Arquillian.class)
-public class StudyQueryTest {
+class SeriesQueryResult extends StudyQueryResult {
 
-    @Deployment
-    public static JavaArchive createDeployment() {
-       return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClass(PatientQuery.class)
-                .addClass(StudyQuery.class)
-                .addClass(StudyQueryResult.class)
-                .addClass(Matching.class);
+    private final int numberOfSeriesRelatedInstances;
+    private final byte[] seriesAttributes;
+
+    public SeriesQueryResult(int numberOfStudyRelatedSeries,
+            int numberOfStudyRelatedInstances,
+            int numberOfSeriesRelatedInstances,
+            String modalitiesInStudy,
+            String sopClassesInStudy,
+            String retrieveAETs,
+            String externalRetrieveAET,
+            Availability availability,
+            byte[] seriesAttributes,
+            byte[] studyAttributes,
+            byte[] patientAttributes) {
+        super(numberOfStudyRelatedSeries,
+              numberOfStudyRelatedInstances,
+              modalitiesInStudy,
+              sopClassesInStudy,
+              retrieveAETs,
+              externalRetrieveAET,
+              availability,
+              studyAttributes,
+              patientAttributes);
+        this.numberOfSeriesRelatedInstances = numberOfSeriesRelatedInstances;
+        this.seriesAttributes = seriesAttributes;
     }
 
-    @EJB
-    private StudyQuery ejb;
-
-    @Test
-    public void testFind() {
-        assertNotNull(
-                "Verify that the ejb was injected",
-                ejb);
-        ejb.find(pids(), keys(), false);
-        try {
-            while (ejb.hasNext()) {
-                try {
-                    ejb.next();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            }
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } finally {
-            ejb.close();
-        }
-        
-    }
-
-    private String[] pids() {
-        return null;
-    }
-
-    private Attributes keys() {
-        Attributes keys = new Attributes();
-        keys.setString(Tag.PatientName, VR.PN, "B*");
-        return keys;
+    @Override
+    public Attributes mergeAttributes() throws IOException {
+        Attributes attrs = super.mergeAttributes();
+        Utils.decodeAttributes(seriesAttributes, attrs);
+        attrs.setInt(Tag.NumberOfSeriesRelatedInstances, VR.US,
+                numberOfSeriesRelatedInstances);
+        return attrs;
     }
 
 }

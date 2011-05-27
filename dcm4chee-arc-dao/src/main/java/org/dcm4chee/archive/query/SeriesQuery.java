@@ -36,13 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.dao;
+package org.dcm4chee.archive.query;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
@@ -52,12 +53,10 @@ import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.domain.Patient;
 import org.dcm4chee.archive.domain.Patient_;
 import org.dcm4chee.archive.domain.Series;
@@ -73,11 +72,17 @@ public class SeriesQuery {
 
     @PersistenceUnit(unitName="dcm4chee-arc")
     private EntityManagerFactory emf;
+
     private EntityManager em;
+
     private Iterator<SeriesQueryResult> results;
 
-    public void find(String[] pids, Attributes keys, boolean matchUnknown) {
+    @PostConstruct
+    public void init() {
         em = emf.createEntityManager();
+    }
+
+    public void find(String[] pids, Attributes keys, boolean matchUnknown) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<SeriesQueryResult> cq = cb.createQuery(SeriesQueryResult.class);
         Root<Series> series = cq.from(Series.class);
@@ -97,7 +102,7 @@ public class SeriesQuery {
                 pat.get(Patient_.encodedAttributes)));
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
-        fillPredicates(cb, pat, study, series, pids, keys, matchUnknown,
+        Matching.series(cb, pat, study, series, pids, keys, matchUnknown,
                 predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<SeriesQueryResult> q = em.createQuery(cq);
@@ -105,17 +110,6 @@ public class SeriesQuery {
         for (Object param : params)
             q.setParameter(Matching.paramName(i++), param);
         results = q.getResultList().iterator();
-    }
-
-    static void fillPredicates(CriteriaBuilder cb, Path<Patient> pat,
-            Join<Series, Study> study, Path<Series> series, String[] pids,
-            Attributes keys, boolean matchUnknown,
-            List<Predicate> predicates, List<Object> params) {
-        StudyQuery.fillPredicates(cb, pat, study, pids, keys, matchUnknown,
-                predicates, params);
-        Matching.add(predicates, Matching.listOfUID(cb,
-                series.get(Series_.seriesInstanceUID),
-                keys.getStrings(Tag.SeriesInstanceUID), params));
     }
 
     public boolean hasNext() {

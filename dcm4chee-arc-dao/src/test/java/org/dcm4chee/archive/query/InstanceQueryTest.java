@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.dao;
+package org.dcm4chee.archive.query;
 
 import static org.junit.Assert.*;
 
@@ -47,6 +47,10 @@ import javax.ejb.EJB;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.dcm4chee.archive.query.InstanceQuery;
+import org.dcm4chee.archive.query.InstanceQueryResult;
+import org.dcm4chee.archive.query.Matching;
+import org.dcm4chee.archive.query.SeriesOfInstanceQueryResult;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -58,20 +62,22 @@ import org.junit.runner.RunWith;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @RunWith(Arquillian.class)
-public class PatientQueryTest {
+public class InstanceQueryTest {
 
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClass(PatientQuery.class)
+                .addClass(InstanceQuery.class)
+                .addClass(InstanceQueryResult.class)
+                .addClass(SeriesOfInstanceQueryResult.class)
                 .addClass(Matching.class);
     }
 
     @EJB
-    private PatientQuery ejb;
+    private InstanceQuery ejb;
 
     @Test
-    public void testFind() {
+    public void testFind() throws Exception {
         assertNotNull(
                 "Verify that the ejb was injected",
                 ejb);
@@ -91,17 +97,16 @@ public class PatientQueryTest {
         } finally {
             ejb.close();
         }
+        
     }
 
     private String[] pids() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     private Attributes keys() {
         Attributes keys = new Attributes();
         keys.setString(Tag.PatientName, VR.PN, "B*");
-        keys.setString(Tag.PatientSex, VR.CS, "M");
         return keys;
     }
 

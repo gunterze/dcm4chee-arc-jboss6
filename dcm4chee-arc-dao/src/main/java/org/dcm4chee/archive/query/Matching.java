@@ -36,14 +36,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.dao;
+package org.dcm4chee.archive.query;
 
 import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
+import org.dcm4chee.archive.domain.Instance;
+import org.dcm4chee.archive.domain.Patient;
+import org.dcm4chee.archive.domain.Patient_;
+import org.dcm4chee.archive.domain.Series;
+import org.dcm4chee.archive.domain.Series_;
+import org.dcm4chee.archive.domain.Study;
+import org.dcm4chee.archive.domain.Study_;
 
 /**
 @author Gunter Zeilinger <gunterze@gmail.com>
@@ -179,5 +191,61 @@ class Matching {
         return issuer == null
                 ? predicate
                 : cb.and(predicate, wildCard0(cb, issuerField, issuer, params));
+    }
+
+    public static void patient(CriteriaBuilder cb, Path<Patient> pat,
+            String[] pids, Attributes keys, boolean matchUnknown,
+            List<Predicate> predicates, List<Object> params) {
+        add(predicates,
+                patientID(cb,
+                        pat.get(Patient_.patientID),
+                        pat.get(Patient_.issuerOfPatientID),
+                        pids, matchUnknown, params));
+        add(predicates,
+                wildCard(cb,
+                        pat.get(Patient_.patientName),
+                        keys.getString(Tag.PatientName, null),
+                        true, matchUnknown, params));
+        add(predicates,
+                wildCard(cb,
+                        pat.get(Patient_.patientSex),
+                        keys.getString(Tag.PatientSex, null),
+                        true, matchUnknown, params));
+        
+    }
+
+    public static void study(CriteriaBuilder cb, Path<Patient> pat,
+            Path<Study> study, String[] pids, Attributes keys,
+            boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
+        patient(cb, pat, pids, keys, matchUnknown, predicates, params);
+        add(predicates, listOfUID(cb,
+                study.get(Study_.studyInstanceUID),
+                keys.getStrings(Tag.StudyInstanceUID), params));
+        add(predicates, wildCard(cb,
+                study.get(Study_.referringPhysicianName),
+                keys.getString(Tag.ReferringPhysicianName, null),
+                true, matchUnknown, params));
+    }
+
+    public static void series(CriteriaBuilder cb, Path<Patient> pat,
+            Join<Series, Study> study, Path<Series> series, String[] pids,
+            Attributes keys, boolean matchUnknown,
+            List<Predicate> predicates, List<Object> params) {
+        study(cb, pat, study, pids, keys, matchUnknown,
+                predicates, params);
+        add(predicates, listOfUID(cb,
+                series.get(Series_.seriesInstanceUID),
+                keys.getStrings(Tag.SeriesInstanceUID), params));
+    }
+
+    public static void instance(CriteriaBuilder cb, Path<Patient> pat,
+            Join<Series, Study> study, Path<Series> series, Root<Instance> inst,
+            String[] pids, Attributes keys, boolean matchUnknown,
+            List<Predicate> predicates, List<Object> params) {
+        series(cb, pat, study, series, pids, keys,
+                matchUnknown, predicates, params);
+        add(predicates, listOfUID(cb,
+                series.get(Series_.seriesInstanceUID),
+                keys.getStrings(Tag.SeriesInstanceUID), params));
     }
 }

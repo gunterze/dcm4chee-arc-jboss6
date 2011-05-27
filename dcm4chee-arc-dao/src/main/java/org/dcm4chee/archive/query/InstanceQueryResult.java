@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.dao;
+package org.dcm4chee.archive.query;
 
 import java.io.IOException;
 
@@ -46,41 +46,40 @@ import org.dcm4che.data.VR;
 import org.dcm4chee.archive.domain.Availability;
 import org.dcm4chee.archive.domain.Utils;
 
-class SeriesQueryResult extends StudyQueryResult {
+/**
+ * @author Gunter Zeilinger <gunterze@gmail.com>
+ */
+class InstanceQueryResult {
 
-    private final int numberOfSeriesRelatedInstances;
-    private final byte[] seriesAttributes;
+    private final long seriesPk;
+    private final String retrieveAETs;
+    private final String externalRetrieveAET;
+    private final Availability availability;
+    private final byte[] instanceAttributes;
 
-    public SeriesQueryResult(int numberOfStudyRelatedSeries,
-            int numberOfStudyRelatedInstances,
-            int numberOfSeriesRelatedInstances,
-            String modalitiesInStudy,
-            String sopClassesInStudy,
+    public InstanceQueryResult(long seriesPk,
             String retrieveAETs,
             String externalRetrieveAET,
             Availability availability,
-            byte[] seriesAttributes,
-            byte[] studyAttributes,
-            byte[] patientAttributes) {
-        super(numberOfStudyRelatedSeries,
-              numberOfStudyRelatedInstances,
-              modalitiesInStudy,
-              sopClassesInStudy,
-              retrieveAETs,
-              externalRetrieveAET,
-              availability,
-              studyAttributes,
-              patientAttributes);
-        this.numberOfSeriesRelatedInstances = numberOfSeriesRelatedInstances;
-        this.seriesAttributes = seriesAttributes;
+            byte[] instanceAttributes) {
+        this.seriesPk = seriesPk;
+        this.retrieveAETs = retrieveAETs;
+        this.externalRetrieveAET = externalRetrieveAET;
+        this.availability = availability;
+        this.instanceAttributes = instanceAttributes;
     }
 
-    @Override
-    public Attributes mergeAttributes() throws IOException {
-        Attributes attrs = super.mergeAttributes();
-        Utils.decodeAttributes(seriesAttributes, attrs);
-        attrs.setInt(Tag.NumberOfSeriesRelatedInstances, VR.US,
-                numberOfSeriesRelatedInstances);
+    public long getSeriesPk() {
+        return seriesPk;
+    }
+
+    public Attributes mergeAttributes(Attributes seriesAttrs) throws IOException {
+        Attributes attrs = new Attributes();
+        attrs.addAll(seriesAttrs);
+        Utils.decodeAttributes(instanceAttributes, attrs);
+        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
+        attrs.setString(Tag.InstanceAvailability, VR.CS,
+                availability.toString());
         return attrs;
     }
 

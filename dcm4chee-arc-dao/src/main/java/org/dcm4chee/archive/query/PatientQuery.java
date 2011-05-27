@@ -36,13 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.dao;
+package org.dcm4chee.archive.query;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
@@ -51,67 +52,48 @@ import javax.persistence.PersistenceUnit;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.domain.Patient;
 import org.dcm4chee.archive.domain.Patient_;
-import org.dcm4chee.archive.domain.Study;
-import org.dcm4chee.archive.domain.Study_;
+import org.dcm4chee.archive.domain.Utils;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @Stateful
-public class StudyQuery {
+public class PatientQuery {
 
     @PersistenceUnit(unitName="dcm4chee-arc")
     private EntityManagerFactory emf;
+
     private EntityManager em;
-    private Iterator<StudyQueryResult> results;
+
+    private Iterator<byte[]> results;
+
+    @PostConstruct
+    public void init() {
+        em = emf.createEntityManager();
+    }
 
     public void find(String[] pids, Attributes keys, boolean matchUnknown) {
-        em = emf.createEntityManager();
         CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<StudyQueryResult> cq = cb.createQuery(StudyQueryResult.class);
-        Root<Study> study = cq.from(Study.class);
-        Join<Study, Patient> pat = study.join(Study_.patient);
-        cq.select(cb.construct(StudyQueryResult.class,
-                study.get(Study_.numberOfStudyRelatedSeries),
-                study.get(Study_.numberOfStudyRelatedInstances),
-                study.get(Study_.modalitiesInStudy),
-                study.get(Study_.sopClassesInStudy),
-                study.get(Study_.retrieveAETs),
-                study.get(Study_.externalRetrieveAET),
-                study.get(Study_.availability),
-                study.get(Study_.encodedAttributes),
-                pat.get(Patient_.encodedAttributes)));
+        CriteriaQuery<byte[]> cq = cb.createQuery(byte[].class);
+        Root<Patient> pat = cq.from(Patient.class);
+        cq.select(pat.get(Patient_.encodedAttributes));
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
-        fillPredicates(cb, pat, study, pids, keys, matchUnknown, predicates, params);
+        predicates.add(cb.isNull(pat.get(Patient_.mergedWith)));
+        Matching.patient(cb, pat, pids, keys, matchUnknown, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
-        TypedQuery<StudyQueryResult> q = em.createQuery(cq);
+        TypedQuery<byte[]> q = em.createQuery(cq);
         int i = 0;
         for (Object param : params)
             q.setParameter(Matching.paramName(i++), param);
-        results = q.getResultList().iterator();
-    }
 
-    static void fillPredicates(CriteriaBuilder cb, Path<Patient> pat,
-            Path<Study> study, String[] pids, Attributes keys,
-            boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
-        PatientQuery.fillPredicates(cb, pat, pids, keys, matchUnknown, predicates, params);
-        Matching.add(predicates, Matching.listOfUID(cb,
-                study.get(Study_.studyInstanceUID),
-                keys.getStrings(Tag.StudyInstanceUID), params));
-        Matching.add(predicates, Matching.wildCard(cb,
-                study.get(Study_.referringPhysicianName),
-                keys.getString(Tag.ReferringPhysicianName, null),
-                true, matchUnknown, params));
+        results = q.getResultList().iterator();
     }
 
     public boolean hasNext() {
@@ -121,8 +103,10 @@ public class StudyQuery {
 
     public Attributes next() throws IOException {
         checkResults();
-        StudyQueryResult result = results.next();
-        return result.mergeAttributes();
+        byte[] result = results.next();
+        Attributes attrs = new Attributes();
+        Utils.decodeAttributes(result, attrs);
+        return attrs;
     }
 
     private void checkResults() {
