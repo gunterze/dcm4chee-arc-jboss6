@@ -88,6 +88,16 @@
           <artifactId>jboss-as-client</artifactId>
           <version>${jboss.version}</version>
           <type>pom</type>
+          <exclusions>
+            <exclusion>
+              <groupId>woodstox</groupId>
+              <artifactId>wstx-asl</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>ws-commons</groupId>
+              <artifactId>policy</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
       </dependencies>
       <build>
