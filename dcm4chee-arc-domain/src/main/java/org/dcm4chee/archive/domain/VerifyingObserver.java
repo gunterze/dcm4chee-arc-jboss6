@@ -39,7 +39,6 @@
 package org.dcm4chee.archive.domain;
 
 import java.io.Serializable;
-import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -67,7 +66,7 @@ public class VerifyingObserver implements Serializable {
     private long pk;
 
     @Column(name = "verify_datetime")
-    private Date verificationDateTime;
+    private String verificationDateTime;
 
     @Column(name = "observer_name")
     private String verifyingObserverName;
@@ -92,7 +91,7 @@ public class VerifyingObserver implements Serializable {
         return pk;
     }
 
-    public Date getVerificationDateTime() {
+    public String getVerificationDateTime() {
         return verificationDateTime;
     }
 

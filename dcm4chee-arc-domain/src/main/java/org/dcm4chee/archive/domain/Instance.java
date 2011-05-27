@@ -52,6 +52,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 import org.dcm4che.data.Attributes;
@@ -87,8 +89,11 @@ public class Instance implements Serializable {
     @Column(name = "inst_no")
     private String instanceNumber;
 
-    @Column(name = "content_datetime")
-    private Date contentDateTime;
+    @Column(name = "content_date")
+    private String contentDate;
+
+    @Column(name = "content_time")
+    private String contentTime;
 
     @Column(name = "sr_complete")
     private String completionFlag;
@@ -134,10 +139,12 @@ public class Instance implements Serializable {
     @JoinColumn(name = "series_fk")
     private Series series;
 
+    @PrePersist
     public void onPrePersist() {
         createdTime = new Date();
     }
 
+    @PreUpdate
     public void onPreUpdate() {
         updatedTime = new Date();
     }
@@ -170,8 +177,12 @@ public class Instance implements Serializable {
         return instanceNumber;
     }
 
-    public Date getContentDateTime() {
-        return contentDateTime;
+    public String getContentDate() {
+        return contentDate;
+    }
+
+    public String getContentTime() {
+        return contentTime;
     }
 
     public String getCompletionFlag() {

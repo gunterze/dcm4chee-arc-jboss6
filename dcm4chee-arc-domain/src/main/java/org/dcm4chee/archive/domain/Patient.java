@@ -52,9 +52,13 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.PersonName;
+import org.dcm4che.data.Tag;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
@@ -127,10 +131,23 @@ public class Patient implements Serializable {
     @OneToMany(mappedBy = "patient", fetch=FetchType.LAZY, cascade=CascadeType.REMOVE)
     private Set<Study> studies;
 
+    @Override
+    public String toString() {
+        return "Patient[pk=" + pk
+                + ", id=" + patientID
+                + ", issuer=" + issuerOfPatientID
+                + ", name=" + patientName
+                + ", dob=" + patientBirthDate
+                + ", sex=" + patientSex
+                + "]";
+    }
+
+    @PrePersist
     public void onPrePersist() {
         createdTime = new Date();
     }
 
+    @PreUpdate
     public void onPreUpdate() {
         updatedTime = new Date();
     }
@@ -213,5 +230,21 @@ public class Patient implements Serializable {
 
     public Attributes getAttributes() throws IOException {
         return Utils.decodeAttributes(encodedAttributes);
+    }
+
+    public void setAttributes(Attributes attrs) {
+        patientID = attrs.getString(Tag.PatientID, null);
+        issuerOfPatientID = attrs.getString(Tag.IssuerOfPatientID, null);
+        PersonName pn = new PersonName(attrs.getString(Tag.PatientName, null));
+        patientName =
+                pn.toNormalizedString(PersonName.Group.Alphabetic);
+        patientIdeographicName =
+                pn.toNormalizedString(PersonName.Group.Ideographic);
+        patientPhoneticName =
+                pn.toNormalizedString(PersonName.Group.Phonetic);
+        patientBirthDate = attrs.getString(Tag.PatientBirthDate, null);
+        patientSex = attrs.getString(Tag.PatientSex, null);
+        encodedAttributes = Utils.encodeAttributes(attrs,
+                AttributeFilter.patientFilter);
     }
 }

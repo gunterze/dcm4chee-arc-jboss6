@@ -88,8 +88,6 @@
   <entity class="Patient">
     <table name="patient" />
     <sequence-generator name="seq" sequence-name="patient_pk_seq" />
-    <pre-persist method-name="onPrePersist" />
-    <pre-update method-name="onPreUpdate" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -113,8 +111,6 @@
   <entity class="Study">
     <table name="study" />
     <sequence-generator name="seq" sequence-name="study_pk_seq" />
-    <pre-persist method-name="onPrePersist" />
-    <pre-update method-name="onPreUpdate" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -141,8 +137,6 @@
   <entity class="Series">
     <table name="series" />
     <sequence-generator name="seq" sequence-name="series_pk_seq" />
-    <pre-persist method-name="onPrePersist" />
-    <pre-update method-name="onPreUpdate" />
     <attributes>
       <id name="pk">
         <column name="pk" />
@@ -195,8 +189,6 @@
   <entity class="Instance">
     <table name="instance" />
     <sequence-generator name="seq" sequence-name="instance_pk_seq" />
-    <pre-persist method-name="onPrePersist" />
-    <pre-update method-name="onPreUpdate" />
     <attributes>
       <id name="pk">
         <column name="pk" />

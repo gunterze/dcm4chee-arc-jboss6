@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NativeDicomModel>
+<DicomAttribute keyword="SpecificCharacterSet" tag="00080005" vr="CS"/>
+<DicomAttribute keyword="Modality" tag="00080060" vr="CS"/>
+<DicomAttribute keyword="Manufacturer" tag="00080070" vr="LO"/>
+<DicomAttribute keyword="InstitutionName" tag="00080080" vr="LO"/>
+<DicomAttribute keyword="InstitutionCodeSequence" tag="00080082" vr="SQ"/>
+<DicomAttribute keyword="StationName" tag="00081010" vr="LO"/>
+<DicomAttribute keyword="SeriesDescription" tag="0008103E" vr="LO"/>
+<DicomAttribute keyword="InstitutionalDepartmentName" tag="00081040" vr="LO"/>
+<DicomAttribute keyword="PerformingPhysicianName" tag="00081050" vr="PN"/>
+<DicomAttribute keyword="ManufacturerModelName" tag="00081090" vr="LO"/>
+<DicomAttribute keyword="ReferencedPerformedProcedureStepSequence" tag="00081111" vr="LO"/>
+<DicomAttribute keyword="BodyPartExamined" tag="00180015" vr="CS"/>
+<DicomAttribute keyword="SeriesInstanceUID" tag="0020000E" vr="UI"/>
+<DicomAttribute keyword="SeriesNumber" tag="00200011" vr="IS"/>
+<DicomAttribute keyword="Laterality" tag="00200060" vr="CS"/>
+<DicomAttribute keyword="PerformedProcedureStep StartDate" tag="00400244" vr="DA"/>
+<DicomAttribute keyword="PerformedProcedureStepStartTime" tag="00400245" vr="TM"/>
+<DicomAttribute keyword="RequestAttributesSequence" tag="00400275" vr="SQ"/>
+</NativeDicomModel>

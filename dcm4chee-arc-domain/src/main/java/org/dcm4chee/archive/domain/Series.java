@@ -52,6 +52,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 import org.dcm4che.data.Attributes;
@@ -120,8 +122,11 @@ public class Series implements Serializable {
     @Column(name = "perf_phys_p_name")
     private String performingPhysicianPhoneticName;
 
-    @Column(name = "pps_start")
-    private Date performedProcedureStepStartDateTime;
+    @Column(name = "pps_start_date")
+    private String performedProcedureStepStartDate;
+
+    @Column(name = "pps_start_time")
+    private String performedProcedureStepStartTime;
 
     @Column(name = "pps_iuid")
     private String performedProcedureStepInstanceUID;
@@ -167,10 +172,12 @@ public class Series implements Serializable {
     @OneToMany(mappedBy = "series", fetch = FetchType.LAZY, cascade=CascadeType.REMOVE)
     private Set<Instance> instances;
 
+    @PrePersist
     public void onPrePersist() {
         createdTime = new Date();
     }
 
+    @PreUpdate
     public void onPreUpdate() {
         updatedTime = new Date();
     }
@@ -247,8 +254,12 @@ public class Series implements Serializable {
         return performingPhysicianPhoneticName;
     }
 
-    public Date getPerformedProcedureStepStartDateTime() {
-        return performedProcedureStepStartDateTime;
+    public String getPerformedProcedureStepStartDate() {
+        return performedProcedureStepStartDate;
+    }
+
+    public String getPerformedProcedureStepStartTime() {
+        return performedProcedureStepStartTime;
     }
 
     public String getPerformedProcedureStepInstanceUID() {

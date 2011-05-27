@@ -54,6 +54,8 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 import org.dcm4che.data.Attributes;
@@ -87,8 +89,11 @@ public class Study implements Serializable {
     @Column(name = "study_id")
     private String studyID;
 
-    @Column(name = "study_datetime")
-    private Date studyDateTime;
+    @Column(name = "study_date")
+    private String studyDate;
+
+    @Column(name = "study_time")
+    private String studyTime;
 
     @Column(name = "accession_no")
     private String accessionNumber;
@@ -161,10 +166,12 @@ public class Study implements Serializable {
     @OneToMany(mappedBy = "study", fetch = FetchType.LAZY, cascade=CascadeType.REMOVE)
     private Set<Series> series;
 
+    @PrePersist
     public void onPrePersist() {
         createdTime = new Date();
     }
 
+    @PreUpdate
     public void onPreUpdate() {
         updatedTime = new Date();
     }
@@ -193,8 +200,12 @@ public class Study implements Serializable {
         return studyID;
     }
 
-    public Date getStudyDateTime() {
-        return studyDateTime;
+    public String getStudyDate() {
+        return studyDate;
+    }
+
+    public String getStudyTime() {
+        return studyTime;
     }
 
     public String getAccessionNumber() {

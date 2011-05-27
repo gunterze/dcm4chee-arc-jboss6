@@ -39,17 +39,34 @@
 package org.dcm4chee.archive.domain;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.data.UID;
 import org.dcm4che.data.VR;
 import org.dcm4che.io.DicomInputStream;
+import org.dcm4che.io.DicomOutputStream;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 public class Utils {
+
+    public static byte[] encodeAttributes(Attributes attrs, Attributes sel) {
+        Attributes tmp = new Attributes(sel.size());
+        tmp.addSelected(attrs, sel);
+        ByteArrayOutputStream out = new ByteArrayOutputStream(512);
+        try {
+            DicomOutputStream dos = new DicomOutputStream(out,
+                    UID.ExplicitVRLittleEndian);
+            dos.writeDataset(null, attrs);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return out.toByteArray();
+    }
 
     public static Attributes decodeAttributes(byte[] b) throws IOException {
         ByteArrayInputStream is = new ByteArrayInputStream(b);
