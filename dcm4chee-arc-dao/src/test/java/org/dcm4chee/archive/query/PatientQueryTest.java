@@ -65,8 +65,7 @@ public class PatientQueryTest {
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClass(PatientQuery.class)
-                .addClass(Matching.class);
+                .addClasses(PatientQuery.class, Matching.class);
     }
 
     @EJB

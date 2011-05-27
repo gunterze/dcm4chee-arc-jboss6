@@ -38,7 +38,7 @@
 
 package org.dcm4chee.archive.query;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 
@@ -47,10 +47,6 @@ import javax.ejb.EJB;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.dcm4chee.archive.query.Matching;
-import org.dcm4chee.archive.query.PatientQuery;
-import org.dcm4chee.archive.query.StudyQuery;
-import org.dcm4chee.archive.query.StudyQueryResult;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -67,10 +63,7 @@ public class StudyQueryTest {
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClass(PatientQuery.class)
-                .addClass(StudyQuery.class)
-                .addClass(StudyQueryResult.class)
-                .addClass(Matching.class);
+                .addClasses(StudyQuery.class, Matching.class);
     }
 
     @EJB

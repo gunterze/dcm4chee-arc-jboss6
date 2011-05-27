@@ -49,6 +49,7 @@ import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
+import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -57,6 +58,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4chee.archive.domain.Availability;
 import org.dcm4chee.archive.domain.Instance;
 import org.dcm4chee.archive.domain.Instance_;
 import org.dcm4chee.archive.domain.Patient;
@@ -65,6 +67,7 @@ import org.dcm4chee.archive.domain.Series;
 import org.dcm4chee.archive.domain.Series_;
 import org.dcm4chee.archive.domain.Study;
 import org.dcm4chee.archive.domain.Study_;
+import org.dcm4chee.archive.domain.Utils;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -77,9 +80,9 @@ public class InstanceQuery {
 
     private EntityManager em;
 
-    private Iterator<InstanceQueryResult> results;
+    private Iterator<Tuple> results;
 
-    private TypedQuery<SeriesOfInstanceQueryResult> seriesQuery;
+    private TypedQuery<Tuple> seriesQuery;
 
     private long seriesPk = -1L;
     private Attributes seriesAttrs;
@@ -93,40 +96,17 @@ public class InstanceQuery {
         em = emf.createEntityManager();
         CriteriaBuilder cb = em.getCriteriaBuilder();
         seriesQuery = buildSeriesQuery(cb);
-        CriteriaQuery<InstanceQueryResult> cq =
-                cb.createQuery(InstanceQueryResult.class);
-        
-        Root<Instance> inst = cq.from(Instance.class);
-        Join<Instance, Series> series = inst.join(Instance_.series);
-        Join<Series, Study> study = series.join(Series_.study);
-        Join<Study, Patient> pat = study.join(Study_.patient);
-        cq.select(cb.construct(InstanceQueryResult.class,
-                series.get(Series_.pk),
-                inst.get(Instance_.retrieveAETs),
-                inst.get(Instance_.externalRetrieveAET),
-                inst.get(Instance_.availability),
-                inst.get(Instance_.encodedAttributes)));
-        cq.orderBy(cb.asc(series.get(Series_.pk)));
-        List<Predicate> predicates = new ArrayList<Predicate>();
-        List<Object> params = new ArrayList<Object>();
-        Matching.instance(cb, pat, study, series, inst, pids, keys, matchUnknown,
-                predicates, params);
-        cq.where(predicates.toArray(new Predicate[predicates.size()]));
-        TypedQuery<InstanceQueryResult> q = em.createQuery(cq);
-        int i = 0;
-        for (Object param : params)
-            q.setParameter(Matching.paramName(i++), param);
-        results = q.getResultList().iterator();
+        TypedQuery<Tuple> instQuery =
+                buildInstanceQuery(cb, pids, keys, matchUnknown);
+        results = instQuery.getResultList().iterator();
     }
 
-    private TypedQuery<SeriesOfInstanceQueryResult> buildSeriesQuery(
-            CriteriaBuilder cb) {
-        CriteriaQuery<SeriesOfInstanceQueryResult> cq = cb
-                .createQuery(SeriesOfInstanceQueryResult.class);
+    private TypedQuery<Tuple> buildSeriesQuery(CriteriaBuilder cb) {
+        CriteriaQuery<Tuple> cq = cb.createTupleQuery();
         Root<Series> series = cq.from(Series.class);
         Join<Series, Study> study = series.join(Series_.study);
         Join<Study, Patient> pat = study.join(Study_.patient);
-        cq.select(cb.construct(SeriesOfInstanceQueryResult.class, 
+        cq.multiselect(
                 study.get(Study_.numberOfStudyRelatedSeries),
                 study.get(Study_.numberOfStudyRelatedInstances),
                 series.get(Series_.numberOfSeriesRelatedInstances),
@@ -134,10 +114,60 @@ public class InstanceQuery {
                 study.get(Study_.sopClassesInStudy),
                 series.get(Series_.encodedAttributes),
                 study.get(Study_.encodedAttributes),
-                pat.get(Patient_.encodedAttributes)));
+                pat.get(Patient_.encodedAttributes));
         cq.where(cb.equal(series.get(Series_.pk),
                 cb.parameter(Long.class, Matching.paramName(0))));
         return em.createQuery(cq);
+    }
+
+    private Attributes querySeriesAttrs(long seriesPk) throws IOException {
+        seriesQuery.setParameter(Matching.paramName(0), seriesPk);
+        Tuple tuple = seriesQuery.getSingleResult();
+        int numberOfStudyRelatedSeries = tuple.get(0, Integer.class);
+        int numberOfStudyRelatedInstances = tuple.get(1, Integer.class);
+        int numberOfSeriesRelatedInstances = tuple.get(2, Integer.class);
+        String modalitiesInStudy = tuple.get(3, String.class);
+        String sopClassesInStudy = tuple.get(4, String.class);
+        byte[] seriesAttributes = tuple.get(5, byte[].class);
+        byte[] studyAttributes = tuple.get(6, byte[].class);
+        byte[] patientAttributes = tuple.get(7, byte[].class);
+        Attributes attrs = new Attributes();
+        Utils.decodeAttributes(attrs, patientAttributes);
+        Utils.decodeAttributes(attrs, studyAttributes);
+        Utils.decodeAttributes(attrs, seriesAttributes);
+        Utils.setStudyQueryAttributes(attrs,
+                numberOfStudyRelatedSeries,
+                numberOfStudyRelatedInstances,
+                modalitiesInStudy,
+                sopClassesInStudy);
+        Utils.setSeriesQueryAttributes(attrs, numberOfSeriesRelatedInstances);
+        return attrs;
+    }
+
+    private TypedQuery<Tuple> buildInstanceQuery(CriteriaBuilder cb,
+            String[] pids, Attributes keys, boolean matchUnknown) {
+        CriteriaQuery<Tuple> cq =  cb.createTupleQuery();
+        Root<Instance> inst = cq.from(Instance.class);
+        Join<Instance, Series> series = inst.join(Instance_.series);
+        Join<Series, Study> study = series.join(Series_.study);
+        Join<Study, Patient> pat = study.join(Study_.patient);
+        cq.multiselect(
+                series.get(Series_.pk),
+                inst.get(Instance_.retrieveAETs),
+                inst.get(Instance_.externalRetrieveAET),
+                inst.get(Instance_.availability),
+                inst.get(Instance_.encodedAttributes));
+        cq.orderBy(cb.asc(series.get(Series_.pk)));
+        List<Predicate> predicates = new ArrayList<Predicate>();
+        List<Object> params = new ArrayList<Object>();
+        Matching.instance(cb, pat, study, series, inst, pids, keys, matchUnknown,
+                predicates, params);
+        cq.where(predicates.toArray(new Predicate[predicates.size()]));
+        TypedQuery<Tuple> instQuery = em.createQuery(cq);
+        int i = 0;
+        for (Object param : params)
+            instQuery.setParameter(Matching.paramName(i++), param);
+        return instQuery;
     }
 
     public boolean hasNext() {
@@ -147,18 +177,23 @@ public class InstanceQuery {
 
     public Attributes next() throws IOException {
         checkResults();
-        InstanceQueryResult result = results.next();
-        return result.mergeAttributes(seriesAttrs(result.getSeriesPk()));
-    }
-
-    private Attributes seriesAttrs(long seriesPk) throws IOException {
+        Tuple tuple = results.next();
+        long seriesPk = tuple.get(0, Long.class);
+        String retrieveAETs = tuple.get(1, String.class);
+        String externalRetrieveAET = tuple.get(2, String.class);
+        Availability availability = tuple.get(3, Availability.class);
+        byte[] instanceAttributes = tuple.get(4, byte[].class);
         if (this.seriesPk != seriesPk) {
-            this.seriesAttrs = seriesQuery
-                    .setParameter(Matching.paramName(0), seriesPk)
-                    .getSingleResult().mergeAttributes();
+            this.seriesAttrs = querySeriesAttrs(seriesPk);
             this.seriesPk = seriesPk;
         }
-        return seriesAttrs;
+
+        Attributes attrs = new Attributes();
+        attrs.addAll(seriesAttrs);
+        Utils.decodeAttributes(attrs, instanceAttributes);
+        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
+        Utils.setAvailability(attrs, availability);
+        return attrs;
     }
 
     private void checkResults() {

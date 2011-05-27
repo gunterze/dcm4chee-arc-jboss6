@@ -105,7 +105,7 @@ public class PatientQuery {
         checkResults();
         byte[] result = results.next();
         Attributes attrs = new Attributes();
-        Utils.decodeAttributes(result, attrs);
+        Utils.decodeAttributes(attrs, result);
         return attrs;
     }
 

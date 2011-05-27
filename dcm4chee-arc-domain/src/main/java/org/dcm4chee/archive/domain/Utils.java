@@ -57,7 +57,7 @@ public class Utils {
         return dis.readDataset(-1, -1);
     }
 
-    public static void decodeAttributes(byte[] b, Attributes attrs)
+    public static void decodeAttributes(Attributes attrs, byte[] b)
             throws IOException {
         ByteArrayInputStream is = new ByteArrayInputStream(b);
         DicomInputStream dis = new DicomInputStream(is);
@@ -65,6 +65,26 @@ public class Utils {
         dis.readAttributes(attrs, -1, -1);
     }
 
+    public static void setStudyQueryAttributes(Attributes attrs,
+            int numberOfStudyRelatedSeries,
+            int numberOfStudyRelatedInstances,
+            String modalitiesInStudy,
+            String sopClassesInStudy) {
+        attrs.setInt(Tag.NumberOfStudyRelatedSeries, VR.US,
+                numberOfStudyRelatedSeries);
+        attrs.setInt(Tag.NumberOfStudyRelatedInstances, VR.US,
+                numberOfStudyRelatedInstances);
+        attrs.setString(Tag.ModalitiesInStudy, VR.CS,
+                modalitiesInStudy);
+        attrs.setString(Tag.SOPClassesInStudy, VR.CS,
+                sopClassesInStudy);
+    }
+
+    public static void setSeriesQueryAttributes(Attributes attrs,
+            int numberOfSeriesRelatedInstances) {
+        attrs.setInt(Tag.NumberOfSeriesRelatedInstances, VR.US,
+                numberOfSeriesRelatedInstances);
+    }
 
     public static void setRetrieveAET(Attributes attrs, String retrieveAETs,
             String externalRetrieveAET) {
@@ -80,4 +100,10 @@ public class Utils {
                 attrs.setString(Tag.RetrieveAETitle, VR.AE,
                         externalRetrieveAET);
     }
+
+    public static void setAvailability(Attributes attrs,
+            Availability availability) {
+        attrs.setString(Tag.InstanceAvailability, VR.CS, availability.toString());
+    }
+
 }

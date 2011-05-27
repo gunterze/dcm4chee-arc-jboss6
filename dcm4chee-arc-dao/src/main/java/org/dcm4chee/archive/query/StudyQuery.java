@@ -49,6 +49,7 @@ import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
+import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -57,10 +58,12 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4chee.archive.domain.Availability;
 import org.dcm4chee.archive.domain.Patient;
 import org.dcm4chee.archive.domain.Patient_;
 import org.dcm4chee.archive.domain.Study;
 import org.dcm4chee.archive.domain.Study_;
+import org.dcm4chee.archive.domain.Utils;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -73,7 +76,7 @@ public class StudyQuery {
 
     private EntityManager em;
 
-    private Iterator<StudyQueryResult> results;
+    private Iterator<Tuple> results;
 
     @PostConstruct
     public void init() {
@@ -82,10 +85,10 @@ public class StudyQuery {
 
     public void find(String[] pids, Attributes keys, boolean matchUnknown) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<StudyQueryResult> cq = cb.createQuery(StudyQueryResult.class);
+        CriteriaQuery<Tuple> cq = cb.createTupleQuery();
         Root<Study> study = cq.from(Study.class);
         Join<Study, Patient> pat = study.join(Study_.patient);
-        cq.select(cb.construct(StudyQueryResult.class,
+        cq.multiselect(
                 study.get(Study_.numberOfStudyRelatedSeries),
                 study.get(Study_.numberOfStudyRelatedInstances),
                 study.get(Study_.modalitiesInStudy),
@@ -94,12 +97,12 @@ public class StudyQuery {
                 study.get(Study_.externalRetrieveAET),
                 study.get(Study_.availability),
                 study.get(Study_.encodedAttributes),
-                pat.get(Patient_.encodedAttributes)));
+                pat.get(Patient_.encodedAttributes));
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
         Matching.study(cb, pat, study, pids, keys, matchUnknown, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
-        TypedQuery<StudyQueryResult> q = em.createQuery(cq);
+        TypedQuery<Tuple> q = em.createQuery(cq);
         int i = 0;
         for (Object param : params)
             q.setParameter(Matching.paramName(i++), param);
@@ -113,8 +116,27 @@ public class StudyQuery {
 
     public Attributes next() throws IOException {
         checkResults();
-        StudyQueryResult result = results.next();
-        return result.mergeAttributes();
+        Tuple tuple = results.next();
+        int numberOfStudyRelatedSeries = tuple.get(0, Integer.class);
+        int numberOfStudyRelatedInstances = tuple.get(1, Integer.class);
+        String modalitiesInStudy = tuple.get(2, String.class);
+        String sopClassesInStudy = tuple.get(3, String.class);
+        String retrieveAETs = tuple.get(4, String.class);
+        String externalRetrieveAET = tuple.get(5, String.class);
+        Availability availability = tuple.get(6, Availability.class);
+        byte[] studyAttributes = tuple.get(7, byte[].class);
+        byte[] patientAttributes = tuple.get(8, byte[].class);
+        Attributes attrs = new Attributes();
+        Utils.decodeAttributes(attrs, patientAttributes);
+        Utils.decodeAttributes(attrs, studyAttributes);
+        Utils.setStudyQueryAttributes(attrs,
+                numberOfStudyRelatedSeries,
+                numberOfStudyRelatedInstances,
+                modalitiesInStudy,
+                sopClassesInStudy);
+        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
+        Utils.setAvailability(attrs, availability);
+        return attrs;
     }
 
     private void checkResults() {
