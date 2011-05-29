@@ -233,17 +233,20 @@ public class Patient implements Serializable {
     }
 
     public void setAttributes(Attributes attrs) {
-        patientID = attrs.getString(Tag.PatientID, null);
-        issuerOfPatientID = attrs.getString(Tag.IssuerOfPatientID, null);
-        PersonName pn = new PersonName(attrs.getString(Tag.PatientName, null));
+        patientID = AttributeFilter.getString(attrs, Tag.PatientID);
+        issuerOfPatientID = 
+                AttributeFilter.getString(attrs, Tag.IssuerOfPatientID);
+        PersonName pn = new PersonName(
+                AttributeFilter.getString(attrs, Tag.PatientName));
         patientName =
                 pn.toNormalizedString(PersonName.Group.Alphabetic);
         patientIdeographicName =
                 pn.toNormalizedString(PersonName.Group.Ideographic);
         patientPhoneticName =
                 pn.toNormalizedString(PersonName.Group.Phonetic);
-        patientBirthDate = attrs.getString(Tag.PatientBirthDate, null);
-        patientSex = attrs.getString(Tag.PatientSex, null);
+        patientBirthDate = 
+                AttributeFilter.getString(attrs, Tag.PatientBirthDate);
+        patientSex = AttributeFilter.getString(attrs, Tag.PatientSex);
         encodedAttributes = Utils.encodeAttributes(attrs,
                 AttributeFilter.patientFilter);
     }

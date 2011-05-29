@@ -49,7 +49,10 @@ import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.util.StringUtils;
+import org.dcm4chee.archive.domain.AttributeFilter;
 import org.dcm4chee.archive.domain.Instance;
+import org.dcm4chee.archive.domain.Instance_;
 import org.dcm4chee.archive.domain.Patient;
 import org.dcm4chee.archive.domain.Patient_;
 import org.dcm4chee.archive.domain.Series;
@@ -123,15 +126,63 @@ class Matching {
         return field.in(pes);
     }
 
+    private static Predicate personName(CriteriaBuilder cb,
+            Path<String> alphabethic,
+            Path<String> ideographic,
+            Path<String> phonetic,
+            String value,
+            boolean matchUnknown, List<Object> params) {
+        if (value.equals("*"))
+            return null;
+
+        String[] groups = StringUtils.split(value, '=');
+        Predicate predicate;
+        if (groups.length == 1) {
+            predicate = cb.or(wildCard0(cb, alphabethic, value, params),
+                  wildCard0(cb, ideographic, value, params),
+                  wildCard0(cb, phonetic, value, params));
+        } else {
+            predicate = and(cb,
+                    groups[0].isEmpty() ? null
+                            : wildCard0(cb, alphabethic, groups[0], params),
+                    groups[1].isEmpty() ? null
+                            : wildCard0(cb, ideographic, groups[1], params),
+                    groups.length == 2 || groups[2].isEmpty() ? null
+                            : wildCard0(cb, phonetic, groups[2], params));
+            if (predicate == null)
+                return null;
+        }
+        return matchUnknown ? cb.or(predicate, 
+                cb.and(cb.equal(alphabethic, "*"),
+                       cb.equal(ideographic, "*"),
+                       cb.equal(phonetic, "*"))) : predicate;
+    }
+
+    private static Predicate and(CriteriaBuilder cb, Predicate p1,
+            Predicate p2, Predicate p3) {
+        return p1 != null
+                   ? p2 != null
+                           ? p3 != null 
+                                   ? cb.and(p1, p2, p3)
+                                   : cb.and(p1, p2)
+                           : p3 != null
+                                   ? cb.and(p1, p3)
+                                   : p1
+                   : p2 != null
+                           ? p3 != null 
+                                   ? cb.and(p2, p3)
+                                   : p2
+                           : null;
+    }
+
     public static Predicate wildCard(CriteriaBuilder cb, Path<String> field,
-            String value, boolean toUpper, boolean matchUnknown,
+            String value, boolean matchUnknown,
             List<Object> params) {
-        if (value == null || value.isEmpty())
+        if (value.equals("*"))
             return null;
 
         return matchUnknown0(cb, field, matchUnknown,
-                wildCard0(cb, field, 
-                        toUpper ? value.toUpperCase() : value, params));
+                wildCard0(cb, field, value, params));
     }
 
     private static Predicate wildCard0(CriteriaBuilder cb,
@@ -159,7 +210,7 @@ class Matching {
 
     private static Predicate matchUnknown0(CriteriaBuilder cb,
             Path<String> field, boolean matchUnknown, Predicate predicate) {
-        return matchUnknown ? cb.or(predicate, cb.isNull(field)) : predicate;
+        return matchUnknown ? cb.or(predicate, cb.equal(field, "*")) : predicate;
     }
 
     public static Predicate patientID(CriteriaBuilder cb, Path<String> idField,
@@ -202,15 +253,17 @@ class Matching {
                         pat.get(Patient_.issuerOfPatientID),
                         pids, matchUnknown, params));
         add(predicates,
-                wildCard(cb,
+                personName(cb,
                         pat.get(Patient_.patientName),
-                        keys.getString(Tag.PatientName, null),
-                        true, matchUnknown, params));
+                        pat.get(Patient_.patientIdeographicName),
+                        pat.get(Patient_.patientPhoneticName),
+                        AttributeFilter.getString(keys, Tag.PatientName),
+                        matchUnknown, params));
         add(predicates,
                 wildCard(cb,
                         pat.get(Patient_.patientSex),
-                        keys.getString(Tag.PatientSex, null),
-                        true, matchUnknown, params));
+                        AttributeFilter.getString(keys, Tag.PatientSex),
+                        matchUnknown, params));
         
     }
 
@@ -221,10 +274,12 @@ class Matching {
         add(predicates, listOfUID(cb,
                 study.get(Study_.studyInstanceUID),
                 keys.getStrings(Tag.StudyInstanceUID), params));
-        add(predicates, wildCard(cb,
+        add(predicates, personName(cb,
                 study.get(Study_.referringPhysicianName),
-                keys.getString(Tag.ReferringPhysicianName, null),
-                true, matchUnknown, params));
+                study.get(Study_.referringPhysicianIdeographicName),
+                study.get(Study_.referringPhysicianPhoneticName),
+                AttributeFilter.getString(keys, Tag.ReferringPhysicianName),
+                matchUnknown, params));
     }
 
     public static void series(CriteriaBuilder cb, Path<Patient> pat,
@@ -245,7 +300,7 @@ class Matching {
         series(cb, pat, study, series, pids, keys,
                 matchUnknown, predicates, params);
         add(predicates, listOfUID(cb,
-                series.get(Series_.seriesInstanceUID),
-                keys.getStrings(Tag.SeriesInstanceUID), params));
+                inst.get(Instance_.sopInstanceUID),
+                keys.getStrings(Tag.SOPInstanceUID), params));
     }
 }

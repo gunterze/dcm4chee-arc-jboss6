@@ -36,47 +36,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.domain;
+package org.dcm4chee.archive.query;
 
-import org.dcm4che.data.Attributes;
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.dcm4che.io.SAXReader;
+import org.dcm4chee.archive.domain.Patient;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class AttributeFilter {
+@Stateless
+public class InitTestData {
 
-    private static final String PATIENT_ATTRIBUTE_FILTER =
-            "resource:patient-attribute-filter.xml";
-    private static final String STUDY_ATTRIBUTE_FILTER =
-            "resource:study-attribute-filter.xml";
-    private static final String SERIES_ATTRIBUTE_FILTER =
-            "resource:series-attribute-filter.xml";
-    private static final String INSTANCE_ATTRIBUTE_FILTER =
-            "resource:instance-attribute-filter.xml";
-    private static final String CASE_INSENSITIVE_ATTRIBUTES =
-            "resource:case-insensitive-attributes.xml";
+    @PersistenceContext(unitName="dcm4chee-arc")
+    private EntityManager em;
 
-    public final static Attributes patientFilter;
-    public final static Attributes studyFilter;
-    public final static Attributes seriesFilter;
-    public final static Attributes instanceFilter;
-    public final static Attributes caseInsensitive;
-
-    static {
-        try {
-            patientFilter = SAXReader.parse(PATIENT_ATTRIBUTE_FILTER, null);
-            studyFilter = SAXReader.parse(STUDY_ATTRIBUTE_FILTER, null);
-            seriesFilter = SAXReader.parse(SERIES_ATTRIBUTE_FILTER, null);
-            instanceFilter = SAXReader.parse(INSTANCE_ATTRIBUTE_FILTER, null);
-            caseInsensitive = SAXReader.parse(CASE_INSENSITIVE_ATTRIBUTES, null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public long persistPatient(String uri) throws Exception {
+        Patient patient = new Patient();
+        patient.setAttributes(SAXReader.parse(uri, null));
+        em.persist(patient);
+        return patient.getPk();
     }
 
-    public static String getString(Attributes attrs, int tag) {
-        String val = attrs.getString(tag, "*");
-        return caseInsensitive.contains(tag) ? val.toUpperCase() : val;
+    public void removePatient(long pk) {
+        em.remove(em.getReference(Patient.class, pk));
     }
 }

@@ -38,21 +38,20 @@
 
 package org.dcm4chee.archive.query;
 
-import static org.junit.Assert.*;
-
-import java.io.IOException;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import javax.ejb.EJB;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.dcm4chee.archive.query.Matching;
-import org.dcm4chee.archive.query.PatientQuery;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -62,48 +61,60 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class PatientQueryTest {
 
+    private static int remainingTests = 2;
+    private static long pat_1_pk = -1;
+
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(PatientQuery.class, Matching.class);
+                .addClasses(PatientQuery.class,
+                        Matching.class,
+                        InitTestData.class)
+                .addAsResource("patient-scsh31.xml");
     }
 
     @EJB
-    private PatientQuery ejb;
+    private InitTestData initTestData;
 
-    @Test
-    public void testFind() {
-        assertNotNull(
-                "Verify that the ejb was injected",
-                ejb);
-        ejb.find(pids(), keys(), false);
-        try {
-            while (ejb.hasNext()) {
-                try {
-                    ejb.next();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            }
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } finally {
-            ejb.close();
+    @EJB
+    private PatientQuery query;
+
+    @Before
+    public void initDB() throws Exception {
+        if (pat_1_pk == -1) {
+            pat_1_pk = initTestData.persistPatient("resource:patient-scsh31.xml");
         }
     }
 
-    private String[] pids() {
-        // TODO Auto-generated method stub
-        return null;
+    @After
+    public void after() {
+        if (--remainingTests <= 0)
+            initTestData.removePatient(pat_1_pk);
     }
 
-    private Attributes keys() {
-        Attributes keys = new Attributes();
-        keys.setString(Tag.PatientName, VR.PN, "B*");
-        keys.setString(Tag.PatientSex, VR.CS, "M");
-        return keys;
+    @Test
+    public void testByPatientID() throws Exception {
+        query.find(new String[] { "H31EXAMPLE", null },
+                new Attributes(), false);
+        assertTrue(query.hasNext());
+        query.next();
+        assertFalse(query.hasNext());
+        query.close();
     }
 
+    @Test
+    public void testByPatientNameAndSex() throws Exception {
+        query.find(null, patientNameAndSex("Yamada^*", "M"), false);
+        assertTrue(query.hasNext());
+        query.next();
+        assertFalse(query.hasNext());
+        query.close();
+    }
+
+    private Attributes patientNameAndSex(String name, String sex) {
+        Attributes attrs = new Attributes(2);
+        attrs.setString(Tag.PatientName, VR.PN, name);
+        attrs.setString(Tag.PatientSex, VR.PN, sex);
+        return attrs;
+    }
 }
