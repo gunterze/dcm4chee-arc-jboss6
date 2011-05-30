@@ -255,25 +255,31 @@ class Matching {
                         pat.get(Patient_.patientID),
                         pat.get(Patient_.issuerOfPatientID),
                         pids, matchUnknown, params));
+        if (keys == null)
+            return;
+
         add(predicates,
                 personName(cb,
                         pat.get(Patient_.patientName),
                         pat.get(Patient_.patientIdeographicName),
                         pat.get(Patient_.patientPhoneticName),
-                        AttributeFilter.getString(keys, Tag.PatientName, "*"),
+                        AttributeFilter.getString(keys, Tag.PatientName),
                         matchUnknown, params));
         add(predicates,
                 wildCard(cb,
                         pat.get(Patient_.patientSex),
-                        AttributeFilter.getString(keys, Tag.PatientSex, "*"),
+                        AttributeFilter.getString(keys, Tag.PatientSex),
                         matchUnknown, params));
-        
     }
 
     public static void study(CriteriaBuilder cb, Path<Patient> pat,
             Path<Study> study, String[] pids, Attributes keys,
-            boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
+            boolean matchUnknown, List<Predicate> predicates,
+            List<Object> params) {
         patient(cb, pat, pids, keys, matchUnknown, predicates, params);
+        if (keys == null)
+            return;
+
         add(predicates, listOfUID(cb,
                 study.get(Study_.studyInstanceUID),
                 keys.getStrings(Tag.StudyInstanceUID), params));
@@ -281,7 +287,7 @@ class Matching {
                 study.get(Study_.referringPhysicianName),
                 study.get(Study_.referringPhysicianIdeographicName),
                 study.get(Study_.referringPhysicianPhoneticName),
-                AttributeFilter.getString(keys, Tag.ReferringPhysicianName, "*"),
+                AttributeFilter.getString(keys, Tag.ReferringPhysicianName),
                 matchUnknown, params));
     }
 
@@ -289,8 +295,10 @@ class Matching {
             Join<Series, Study> study, Path<Series> series, String[] pids,
             Attributes keys, boolean matchUnknown,
             List<Predicate> predicates, List<Object> params) {
-        study(cb, pat, study, pids, keys, matchUnknown,
-                predicates, params);
+        study(cb, pat, study, pids, keys, matchUnknown, predicates, params);
+        if (keys == null)
+            return;
+
         add(predicates, listOfUID(cb,
                 series.get(Series_.seriesInstanceUID),
                 keys.getStrings(Tag.SeriesInstanceUID), params));
@@ -300,8 +308,11 @@ class Matching {
             Join<Series, Study> study, Path<Series> series, Root<Instance> inst,
             String[] pids, Attributes keys, boolean matchUnknown,
             List<Predicate> predicates, List<Object> params) {
-        series(cb, pat, study, series, pids, keys,
-                matchUnknown, predicates, params);
+        series(cb, pat, study, series, pids, keys, matchUnknown, predicates,
+                params);
+        if (keys == null)
+            return;
+
         add(predicates, listOfUID(cb,
                 inst.get(Instance_.sopInstanceUID),
                 keys.getStrings(Tag.SOPInstanceUID), params));

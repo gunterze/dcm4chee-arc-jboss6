@@ -49,6 +49,7 @@ import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
+import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -62,7 +63,6 @@ import org.dcm4chee.archive.domain.Availability;
 import org.dcm4chee.archive.domain.Instance;
 import org.dcm4chee.archive.domain.Instance_;
 import org.dcm4chee.archive.domain.Patient;
-import org.dcm4chee.archive.domain.Patient_;
 import org.dcm4chee.archive.domain.Series;
 import org.dcm4chee.archive.domain.Series_;
 import org.dcm4chee.archive.domain.Study;
@@ -79,10 +79,9 @@ public class InstanceQuery {
     private EntityManagerFactory emf;
 
     private EntityManager em;
+    private Query seriesQuery;
 
     private Iterator<Tuple> results;
-
-    private TypedQuery<Tuple> seriesQuery;
 
     private long seriesPk = -1L;
     private Attributes seriesAttrs;
@@ -90,47 +89,28 @@ public class InstanceQuery {
     @PostConstruct
     public void init() {
         em = emf.createEntityManager();
+        seriesQuery = em.createNamedQuery(Series.FIND_ATTRIBUTES_BY_SERIES_PK);
     }
 
     public void find(String[] pids, Attributes keys, boolean matchUnknown) {
         em = emf.createEntityManager();
         CriteriaBuilder cb = em.getCriteriaBuilder();
-        seriesQuery = buildSeriesQuery(cb);
         TypedQuery<Tuple> instQuery =
                 buildInstanceQuery(cb, pids, keys, matchUnknown);
         results = instQuery.getResultList().iterator();
     }
 
-    private TypedQuery<Tuple> buildSeriesQuery(CriteriaBuilder cb) {
-        CriteriaQuery<Tuple> cq = cb.createTupleQuery();
-        Root<Series> series = cq.from(Series.class);
-        Join<Series, Study> study = series.join(Series_.study);
-        Join<Study, Patient> pat = study.join(Study_.patient);
-        cq.multiselect(
-                study.get(Study_.numberOfStudyRelatedSeries),
-                study.get(Study_.numberOfStudyRelatedInstances),
-                series.get(Series_.numberOfSeriesRelatedInstances),
-                study.get(Study_.modalitiesInStudy),
-                study.get(Study_.sopClassesInStudy),
-                series.get(Series_.encodedAttributes),
-                study.get(Study_.encodedAttributes),
-                pat.get(Patient_.encodedAttributes));
-        cq.where(cb.equal(series.get(Series_.pk),
-                cb.parameter(Long.class, Matching.paramName(0))));
-        return em.createQuery(cq);
-    }
-
     private Attributes querySeriesAttrs(long seriesPk) throws IOException {
-        seriesQuery.setParameter(Matching.paramName(0), seriesPk);
-        Tuple tuple = seriesQuery.getSingleResult();
-        int numberOfStudyRelatedSeries = tuple.get(0, Integer.class);
-        int numberOfStudyRelatedInstances = tuple.get(1, Integer.class);
-        int numberOfSeriesRelatedInstances = tuple.get(2, Integer.class);
-        String modalitiesInStudy = tuple.get(3, String.class);
-        String sopClassesInStudy = tuple.get(4, String.class);
-        byte[] seriesAttributes = tuple.get(5, byte[].class);
-        byte[] studyAttributes = tuple.get(6, byte[].class);
-        byte[] patientAttributes = tuple.get(7, byte[].class);
+        Object[] tuple = (Object[])
+                seriesQuery.setParameter(1, seriesPk).getSingleResult();
+        int numberOfStudyRelatedSeries = (Integer) tuple[0];
+        int numberOfStudyRelatedInstances = (Integer) tuple[1];
+        int numberOfSeriesRelatedInstances = (Integer) tuple[2];
+        String modalitiesInStudy = (String) tuple[3];
+        String sopClassesInStudy = (String) tuple[4];
+        byte[] seriesAttributes = (byte[]) tuple[5];
+        byte[] studyAttributes = (byte[]) tuple[6];
+        byte[] patientAttributes = (byte[]) tuple[7];
         Attributes attrs = new Attributes();
         Utils.decodeAttributes(attrs, patientAttributes);
         Utils.decodeAttributes(attrs, studyAttributes);

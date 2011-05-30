@@ -249,11 +249,11 @@ public class Patient implements Serializable {
     }
 
     public void setAttributes(Attributes attrs) {
-        patientID = AttributeFilter.getString(attrs, Tag.PatientID, "*");
+        patientID = AttributeFilter.getString(attrs, Tag.PatientID);
         issuerOfPatientID = 
-                AttributeFilter.getString(attrs, Tag.IssuerOfPatientID, "*");
-        String s = AttributeFilter.getString(attrs, Tag.PatientName, null);
-        if (s == null) {
+                AttributeFilter.getString(attrs, Tag.IssuerOfPatientID);
+        String s = AttributeFilter.getString(attrs, Tag.PatientName);
+        if (s.equals("*")) {
             patientName = "*";
             patientIdeographicName = "*";
             patientPhoneticName = "*";
@@ -272,7 +272,7 @@ public class Patient implements Serializable {
             patientGivenNameSoundex = "*";
         }
         patientBirthDate = attrs.getString(Tag.PatientBirthDate, "*");
-        patientSex = AttributeFilter.getString(attrs, Tag.PatientSex, "*");
+        patientSex = AttributeFilter.getString(attrs, Tag.PatientSex);
         //TODO
         patientCustomAttribute1 = "*";
         patientCustomAttribute2 = "*";

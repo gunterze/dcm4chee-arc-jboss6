@@ -54,6 +54,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
@@ -70,11 +72,20 @@ import org.dcm4che.util.DateUtils;
  * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
+@NamedQueries({
+@NamedQuery(
+    name="Study.findByStudyInstanceUID",
+    query="SELECT s FROM Study s WHERE s.studyInstanceUID = ?1"
+)
+})
 @Entity
 @Table(name = "study")
 public class Study implements Serializable {
 
     private static final long serialVersionUID = -6358525535057418771L;
+
+    public static final String FIND_BY_STUDY_INSTANCE_UID =
+        "Study.findByStudyInstanceUID";
 
     @Id
     @GeneratedValue
@@ -90,7 +101,7 @@ public class Study implements Serializable {
     private Date updatedTime;
 
     @Basic(optional = false)
-    @Column(name = "study_iuid", nullable = false)
+    @Column(name = "study_iuid")
     private String studyInstanceUID;
 
     @Basic(optional = false)
@@ -146,11 +157,11 @@ public class Study implements Serializable {
     private String studyCustomAttribute3;
 
     @Basic(optional = false)
-    @Column(name = "num_series", nullable = false)
+    @Column(name = "num_series")
     private int numberOfStudyRelatedSeries;
 
     @Basic(optional = false)
-    @Column(name = "num_instances", nullable = false)
+    @Column(name = "num_instances")
     private int numberOfStudyRelatedInstances;
 
     @Column(name = "mods_in_study")
@@ -165,11 +176,12 @@ public class Study implements Serializable {
     @Column(name = "ext_retr_aet")
     private String externalRetrieveAET;
 
-    @Column(name = "availability", nullable = false)
+    @Basic(optional = false)
+    @Column(name = "availability")
     private Availability availability;
 
     @Basic(optional = false)
-    @Column(name = "study_attrs", nullable = false)
+    @Column(name = "study_attrs")
     private byte[] encodedAttributes;
 
     @ManyToMany(fetch=FetchType.LAZY)
@@ -182,7 +194,7 @@ public class Study implements Serializable {
     @JoinColumn(name = "accno_issuer_fk")
     private Issuer issuerOfAccessionNumber;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "patient_fk")
     private Patient patient;
     
@@ -299,6 +311,10 @@ public class Study implements Serializable {
         return availability;
     }
 
+    public void setAvailability(Availability availability) {
+        this.availability = availability;
+    }
+
     public byte[] getEncodedAttributes() {
         return encodedAttributes;
     }
@@ -325,9 +341,9 @@ public class Study implements Serializable {
 
     public void setAttributes(Attributes attrs) {
         studyInstanceUID = attrs.getString(Tag.StudyInstanceUID, null);
-        studyID = AttributeFilter.getString(attrs, Tag.StudyID, "*");
+        studyID = AttributeFilter.getString(attrs, Tag.StudyID);
         studyDescription =
-                AttributeFilter.getString(attrs, Tag.StudyDescription, "*");
+                AttributeFilter.getString(attrs, Tag.StudyDescription);
         Date dt = attrs.getDate(Tag.StudyDateAndTime, null);
         if (dt != null) {
             studyDate = DateUtils.formatDA(null, dt);
@@ -339,9 +355,9 @@ public class Study implements Serializable {
             studyTime = "*";
         }
         accessionNumber =
-                AttributeFilter.getString(attrs, Tag.AccessionNumber, "*");
-        String s = AttributeFilter.getString(attrs, Tag.ReferringPhysicianName, null);
-        if (s == null) {
+                AttributeFilter.getString(attrs, Tag.AccessionNumber);
+        String s = AttributeFilter.getString(attrs, Tag.ReferringPhysicianName);
+        if (s.equals("*")) {
             referringPhysicianName = "*";
             referringPhysicianIdeographicName = "*";
             referringPhysicianPhoneticName = "*";

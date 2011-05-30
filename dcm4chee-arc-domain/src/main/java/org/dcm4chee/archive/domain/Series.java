@@ -52,6 +52,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
@@ -68,11 +70,34 @@ import org.dcm4che.util.DateUtils;
  * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
+@NamedQueries({
+@NamedQuery(
+    name="Series.findBySeriesInstanceUID",
+    query="SELECT s FROM Series s WHERE s.seriesInstanceUID = ?1"
+),
+@NamedQuery(
+    name="Series.findAttributesBySeriesPk",
+    query="SELECT s.study.numberOfStudyRelatedSeries, " +
+                 "s.study.numberOfStudyRelatedInstances, " +
+                 "s.numberOfSeriesRelatedInstances, " +
+                 "s.study.modalitiesInStudy, " +
+                 "s.study.sopClassesInStudy, " +
+                 "s.encodedAttributes, " +
+                 "s.study.encodedAttributes, " +
+                 "s.study.patient.encodedAttributes " +
+          "FROM Series s WHERE s.pk = ?1"
+)
+})
 @Entity
 @Table(name = "series")
 public class Series implements Serializable {
 
     private static final long serialVersionUID = -8317105475421750944L;
+
+    public static final String FIND_BY_SERIES_INSTANCE_UID =
+            "Series.findBySeriesInstanceUID";
+    public static final String FIND_ATTRIBUTES_BY_SERIES_PK =
+            "Series.findAttributesBySeriesPk";
 
     @Id
     @GeneratedValue
@@ -88,7 +113,7 @@ public class Series implements Serializable {
     private Date updatedTime;
 
     @Basic(optional = false)
-    @Column(name = "series_iuid", nullable = false)
+    @Column(name = "series_iuid")
     private String seriesInstanceUID;
 
     @Basic(optional = false)
@@ -168,7 +193,7 @@ public class Series implements Serializable {
     private String seriesCustomAttribute3;
 
     @Basic(optional = false)
-    @Column(name = "num_instances", nullable = false)
+    @Column(name = "num_instances")
     private int numberOfSeriesRelatedInstances;
 
     @Column(name = "src_aet")
@@ -180,11 +205,12 @@ public class Series implements Serializable {
     @Column(name = "ext_retr_aet")
     private String externalRetrieveAET;
 
-    @Column(name = "availability", nullable = false)
+    @Basic(optional = false)
+    @Column(name = "availability")
     private Availability availability;
 
     @Basic(optional = false)
-    @Column(name = "series_attrs", nullable = false)
+    @Column(name = "series_attrs")
     private byte[] encodedAttributes;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -194,7 +220,7 @@ public class Series implements Serializable {
     @OneToMany(mappedBy = "series", fetch = FetchType.LAZY, cascade=CascadeType.REMOVE)
     private Set<RequestAttributes> requestAttributes;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "study_fk")
     private Study study;
 
@@ -327,6 +353,10 @@ public class Series implements Serializable {
         return availability;
     }
 
+    public void setAvailability(Availability availability) {
+        this.availability = availability;
+    }
+
     public byte[] getEncodedAttributes() {
         return encodedAttributes;
     }
@@ -353,9 +383,19 @@ public class Series implements Serializable {
 
     public void setAttributes(Attributes attrs) {
         seriesInstanceUID = attrs.getString(Tag.SeriesInstanceUID, null);
-        seriesNumber = AttributeFilter.getString(attrs, Tag.SeriesNumber, "*");
+        seriesNumber = AttributeFilter.getString(attrs, Tag.SeriesNumber);
         seriesDescription =
-                AttributeFilter.getString(attrs, Tag.SeriesDescription, "*");
+            AttributeFilter.getString(attrs, Tag.SeriesDescription);
+        institutionName = AttributeFilter.getString(attrs, Tag.InstitutionName);
+        institutionalDepartmentName =
+            AttributeFilter.getString(attrs, Tag.InstitutionalDepartmentName);
+        modality = AttributeFilter.getString(attrs, Tag.Modality);
+        stationName = AttributeFilter.getString(attrs, Tag.StationName);
+        bodyPartExamined = AttributeFilter.getString(attrs, Tag.BodyPartExamined);
+        laterality = AttributeFilter.getString(attrs, Tag.Laterality);
+        performedProcedureStepInstanceUID =
+            attrs.getNestedString(Tag.ReferencedSOPInstanceUID, "*",
+                    new ItemPointer(Tag.ReferencedPerformedProcedureStepSequence));
         Date dt = attrs.getDate(Tag.PerformedProcedureStepStartDateAndTime, null);
         if (dt != null) {
             performedProcedureStepStartDate = DateUtils.formatDA(null, dt);
@@ -367,8 +407,8 @@ public class Series implements Serializable {
             performedProcedureStepStartDate = "*";
             performedProcedureStepStartTime = "*";
         }
-        String s = AttributeFilter.getString(attrs, Tag.PerformingPhysicianName, null);
-        if (s == null) {
+        String s = AttributeFilter.getString(attrs, Tag.PerformingPhysicianName);
+        if (s.equals("*")) {
             performingPhysicianName = "*";
             performingPhysicianIdeographicName = "*";
             performingPhysicianPhoneticName = "*";
@@ -392,7 +432,7 @@ public class Series implements Serializable {
         seriesCustomAttribute3 = "*";
 
         encodedAttributes = Utils.encodeAttributes(attrs,
-                AttributeFilter.studyFilter);
+                AttributeFilter.seriesFilter);
         
     }
 }

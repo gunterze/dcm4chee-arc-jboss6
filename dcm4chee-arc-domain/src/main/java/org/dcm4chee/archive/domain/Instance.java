@@ -43,6 +43,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
 
+import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -51,62 +52,87 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
+import org.dcm4che.util.DateUtils;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
  * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
+@NamedQueries({
+@NamedQuery(
+    name="Instance.findBySOPInstanceUID",
+    query="SELECT i FROM Instance i WHERE i.sopInstanceUID = ?1"
+)
+})
 @Entity
 @Table(name = "instance")
 public class Instance implements Serializable {
 
     private static final long serialVersionUID = -6510894512195470408L;
 
+    public static final String FIND_BY_SOP_INSTANCE_UID =
+        "Instance.findBySOPInstanceUID";
+
     @Id
     @GeneratedValue
     @Column(name = "pk")
     private long pk;
 
+    @Basic(optional = false)
     @Column(name = "created_time")
     private Date createdTime;
 
+    @Basic(optional = false)
     @Column(name = "updated_time")
     private Date updatedTime;
 
-    @Column(name = "sop_iuid", nullable = false)
+    @Basic(optional = false)
+    @Column(name = "sop_iuid")
     private String sopInstanceUID;
 
-    @Column(name = "sop_cuid", nullable = false)
+    @Basic(optional = false)
+    @Column(name = "sop_cuid")
     private String sopClassUID;
 
+    @Basic(optional = false)
     @Column(name = "inst_no")
     private String instanceNumber;
 
+    @Basic(optional = false)
     @Column(name = "content_date")
     private String contentDate;
 
+    @Basic(optional = false)
     @Column(name = "content_time")
     private String contentTime;
 
+    @Basic(optional = false)
     @Column(name = "sr_complete")
     private String completionFlag;
 
+    @Basic(optional = false)
     @Column(name = "sr_verified")
     private String verificationFlag;
 
+    @Basic(optional = false)
     @Column(name = "inst_custom1")
     private String instanceCustomAttribute1;
 
+    @Basic(optional = false)
     @Column(name = "inst_custom2")
     private String instanceCustomAttribute2;
 
+    @Basic(optional = false)
     @Column(name = "inst_custom3")
     private String instanceCustomAttribute3;
 
@@ -116,16 +142,20 @@ public class Instance implements Serializable {
     @Column(name = "ext_retr_aet")
     private String externalRetrieveAET;
 
-    @Column(name = "availability", nullable = false)
+    @Basic(optional = false)
+    @Column(name = "availability")
     private Availability availability;
 
-    @Column(name = "archived", nullable = false)
+    @Basic(optional = false)
+    @Column(name = "archived")
     private boolean archived;
 
-    @Column(name = "commitment", nullable = false)
+    @Basic(optional = false)
+    @Column(name = "commitment")
     private boolean storageComitted;
 
-    @Column(name = "inst_attrs", nullable = false)
+    @Basic(optional = false)
+    @Column(name = "inst_attrs")
     private byte[] encodedAttributes;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -135,7 +165,7 @@ public class Instance implements Serializable {
     @OneToMany(mappedBy = "instance", fetch = FetchType.LAZY, cascade=CascadeType.REMOVE)
     private Set<VerifyingObserver> verifyingObservers;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "series_fk")
     private Series series;
 
@@ -217,6 +247,10 @@ public class Instance implements Serializable {
         return availability;
     }
 
+    public void setAvailability(Availability availability) {
+        this.availability = availability;
+    }
+
     public boolean isArchived() {
         return archived;
     }
@@ -239,5 +273,37 @@ public class Instance implements Serializable {
 
     public Series getSeries() {
         return series;
+    }
+
+    public void setSeries(Series series) {
+        this.series = series;
+    }
+
+    public void setAttributes(Attributes attrs) {
+        sopInstanceUID = attrs.getString(Tag.SOPInstanceUID, null);
+        sopClassUID = attrs.getString(Tag.SOPClassUID, null);
+        instanceNumber = AttributeFilter.getString(attrs, Tag.InstanceNumber);
+        Date dt = attrs.getDate(Tag.ContentDateAndTime, null);
+        if (dt != null) {
+            contentDate = DateUtils.formatDA(null, dt);
+            contentTime = 
+                attrs.containsValue(Tag.ContentTime)
+                    ? DateUtils.formatTM(null, dt)
+                    : "*";
+        } else {
+            contentDate = "*";
+            contentTime = "*";
+        }
+        completionFlag = AttributeFilter.getString(attrs, Tag.CompletionFlag);
+        verificationFlag = AttributeFilter.getString(attrs, Tag.VerificationFlag);
+
+        //TODO
+        instanceCustomAttribute1 = "*";
+        instanceCustomAttribute2 = "*";
+        instanceCustomAttribute3 = "*";
+
+        encodedAttributes = Utils.encodeAttributes(attrs,
+                AttributeFilter.instanceFilter);
+        
     }
 }

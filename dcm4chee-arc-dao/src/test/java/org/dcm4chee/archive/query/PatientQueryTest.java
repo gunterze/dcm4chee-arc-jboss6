@@ -38,15 +38,16 @@
 
 package org.dcm4chee.archive.query;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import javax.ejb.EJB;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.dcm4chee.archive.domain.Patient;
+import org.dcm4che.io.SAXReader;
+import org.dcm4chee.archive.domain.Availability;
+import org.dcm4chee.archive.store.InstanceStore;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -63,42 +64,48 @@ import org.junit.runner.RunWith;
 public class PatientQueryTest {
 
     private static int remainingTests = 2;
-    private static Patient testPatient;
+    private static long[] patientPKs;
 
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
                 .addClasses(PatientQuery.class,
                         Matching.class,
-                        InitTestData.class)
-                .addAsResource("patient-scsh31.xml");
+                        InstanceStore.class)
+                .addAsResource("scsh31.xml");
     }
 
     @EJB
-    private InitTestData initTestData;
+    private InstanceStore instanceStore;
 
     @EJB
     private PatientQuery query;
 
     @Before
-    public void initDB() throws Exception {
+    public void storeTestData() throws Exception {
         // emulates @BeforeClass
-        if (testPatient == null) {
-            testPatient = initTestData.persistPatient("resource:patient-scsh31.xml");
+        if (patientPKs == null) {
+            patientPKs = new long[]{
+                instanceStore.store(
+                    SAXReader.parse("resource:scsh31.xml", null),
+                    Availability.ONLINE)
+                    .getSeries().getStudy().getPatient().getPk()
+            };
         }
     }
 
     @After
-    public void after() {
+    public void clearTestData() {
         // emulates @AfterClass
         if (--remainingTests <= 0)
-            initTestData.remove(testPatient);
+            for (long pk : patientPKs) {
+                instanceStore.removePatient(pk);
+            }
     }
 
     @Test
     public void testByPatientID() throws Exception {
-        query.find(new String[] { "H31EXAMPLE", null },
-                new Attributes(), false);
+        query.find(new String[] { "H31EXAMPLE", null }, null, false);
         assertTrue(query.hasNext());
         query.next();
         assertFalse(query.hasNext());
@@ -106,18 +113,18 @@ public class PatientQueryTest {
     }
 
     @Test
-    public void testByPatientNameAndSex() throws Exception {
-        query.find(null, patientNameAndSex("Yamada", "M"), false);
+    public void testByPatientName() throws Exception {
+        query.find(null, patientName("山田^太郎"), false);
         assertTrue(query.hasNext());
         query.next();
         assertFalse(query.hasNext());
         query.close();
     }
 
-    private Attributes patientNameAndSex(String name, String sex) {
+    private Attributes patientName(String name) {
         Attributes attrs = new Attributes(2);
+        attrs.setString(Tag.SpecificCharacterSet, VR.CS, null, "ISO 2022 IR 87");
         attrs.setString(Tag.PatientName, VR.PN, name);
-        attrs.setString(Tag.PatientSex, VR.PN, sex);
         return attrs;
     }
 }
