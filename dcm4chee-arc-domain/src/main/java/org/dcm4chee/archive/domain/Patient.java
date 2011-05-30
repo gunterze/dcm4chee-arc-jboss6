@@ -43,6 +43,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
 
+import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -76,49 +77,64 @@ public class Patient implements Serializable {
     @Column(name = "pk")
     private long pk;
 
+    @Basic(optional = false)
     @Column(name = "created_time")
     private Date createdTime;
 
+    @Basic(optional = false)
     @Column(name = "updated_time")
     private Date updatedTime;
 
+    @Basic(optional = false)
     @Column(name = "pat_id")
     private String patientID;
 
+    @Basic(optional = false)
     @Column(name = "pat_id_issuer")
     private String issuerOfPatientID;
 
+    @Basic(optional = false)
     @Column(name = "pat_name")
     private String patientName;
 
+    @Basic(optional = false)
     @Column(name = "pat_fn_sx")
     private String patientFamilyNameSoundex;
 
+    @Basic(optional = false)
     @Column(name = "pat_gn_sx")
     private String patientGivenNameSoundex;
 
+    @Basic(optional = false)
     @Column(name = "pat_i_name")
     private String patientIdeographicName;
 
+    @Basic(optional = false)
     @Column(name = "pat_p_name")
     private String patientPhoneticName;
 
+    @Basic(optional = false)
     @Column(name = "pat_birthdate")
     private String patientBirthDate;
 
+    @Basic(optional = false)
     @Column(name = "pat_sex")
     private String patientSex;
 
+    @Basic(optional = false)
     @Column(name = "pat_custom1")
     private String patientCustomAttribute1;
 
+    @Basic(optional = false)
     @Column(name = "pat_custom2")
     private String patientCustomAttribute2;
 
+    @Basic(optional = false)
     @Column(name = "pat_custom3")
     private String patientCustomAttribute3;
 
-    @Column(name = "pat_attrs", nullable = false)
+    @Basic(optional = false)
+    @Column(name = "pat_attrs")
     private byte[] encodedAttributes;
 
     @ManyToOne(fetch=FetchType.LAZY)
@@ -233,20 +249,35 @@ public class Patient implements Serializable {
     }
 
     public void setAttributes(Attributes attrs) {
-        patientID = AttributeFilter.getString(attrs, Tag.PatientID);
+        patientID = AttributeFilter.getString(attrs, Tag.PatientID, "*");
         issuerOfPatientID = 
-                AttributeFilter.getString(attrs, Tag.IssuerOfPatientID);
-        PersonName pn = new PersonName(
-                AttributeFilter.getString(attrs, Tag.PatientName));
-        patientName =
-                pn.toNormalizedString(PersonName.Group.Alphabetic);
-        patientIdeographicName =
-                pn.toNormalizedString(PersonName.Group.Ideographic);
-        patientPhoneticName =
-                pn.toNormalizedString(PersonName.Group.Phonetic);
-        patientBirthDate = 
-                AttributeFilter.getString(attrs, Tag.PatientBirthDate);
-        patientSex = AttributeFilter.getString(attrs, Tag.PatientSex);
+                AttributeFilter.getString(attrs, Tag.IssuerOfPatientID, "*");
+        String s = AttributeFilter.getString(attrs, Tag.PatientName, null);
+        if (s == null) {
+            patientName = "*";
+            patientIdeographicName = "*";
+            patientPhoneticName = "*";
+            patientFamilyNameSoundex = "*";
+            patientGivenNameSoundex = "*";
+        } else {
+            PersonName pn = new PersonName(s);
+            patientName =
+                    pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
+            patientIdeographicName =
+                    pn.getNormalizedString(PersonName.Group.Ideographic, "*");
+            patientPhoneticName =
+                    pn.getNormalizedString(PersonName.Group.Phonetic, "*");
+            //TODO
+            patientFamilyNameSoundex = "*";
+            patientGivenNameSoundex = "*";
+        }
+        patientBirthDate = attrs.getString(Tag.PatientBirthDate, "*");
+        patientSex = AttributeFilter.getString(attrs, Tag.PatientSex, "*");
+        //TODO
+        patientCustomAttribute1 = "*";
+        patientCustomAttribute2 = "*";
+        patientCustomAttribute3 = "*";
+
         encodedAttributes = Utils.encodeAttributes(attrs,
                 AttributeFilter.patientFilter);
     }

@@ -43,6 +43,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
 
+import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -59,6 +60,9 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.PersonName;
+import org.dcm4che.data.Tag;
+import org.dcm4che.util.DateUtils;
 
 
 /**
@@ -77,57 +81,75 @@ public class Study implements Serializable {
     @Column(name = "pk")
     private long pk;
 
+    @Basic(optional = false)
     @Column(name = "created_time")
     private Date createdTime;
 
+    @Basic(optional = false)
     @Column(name = "updated_time")
     private Date updatedTime;
 
+    @Basic(optional = false)
     @Column(name = "study_iuid", nullable = false)
     private String studyInstanceUID;
 
+    @Basic(optional = false)
     @Column(name = "study_id")
     private String studyID;
 
+    @Basic(optional = false)
     @Column(name = "study_date")
     private String studyDate;
 
+    @Basic(optional = false)
     @Column(name = "study_time")
     private String studyTime;
 
+    @Basic(optional = false)
     @Column(name = "accession_no")
     private String accessionNumber;
 
+    @Basic(optional = false)
     @Column(name = "ref_physician")
     private String referringPhysicianName;
     
+    @Basic(optional = false)
     @Column(name = "ref_phys_fn_sx")
     private String referringPhysicianFamilyNameSoundex;
     
+    @Basic(optional = false)
     @Column(name = "ref_phys_gn_sx")
     private String referringPhysicianGivenNameSoundex;
 
+    @Basic(optional = false)
     @Column(name = "ref_phys_i_name")
     private String referringPhysicianIdeographicName;
 
+    @Basic(optional = false)
     @Column(name = "ref_phys_p_name")
     private String referringPhysicianPhoneticName;
 
+    @Basic(optional = false)
     @Column(name = "study_desc")
     private String studyDescription;
 
+    @Basic(optional = false)
     @Column(name = "study_custom1")
     private String studyCustomAttribute1;
 
+    @Basic(optional = false)
     @Column(name = "study_custom2")
     private String studyCustomAttribute2;
 
+    @Basic(optional = false)
     @Column(name = "study_custom3")
     private String studyCustomAttribute3;
 
+    @Basic(optional = false)
     @Column(name = "num_series", nullable = false)
     private int numberOfStudyRelatedSeries;
 
+    @Basic(optional = false)
     @Column(name = "num_instances", nullable = false)
     private int numberOfStudyRelatedInstances;
 
@@ -146,6 +168,7 @@ public class Study implements Serializable {
     @Column(name = "availability", nullable = false)
     private Availability availability;
 
+    @Basic(optional = false)
     @Column(name = "study_attrs", nullable = false)
     private byte[] encodedAttributes;
 
@@ -292,7 +315,57 @@ public class Study implements Serializable {
         return patient;
     }
 
+    public void setPatient(Patient patient) {
+        this.patient = patient;
+    }
+
     public Set<Series> getSeries() {
         return series;
+    }
+
+    public void setAttributes(Attributes attrs) {
+        studyInstanceUID = attrs.getString(Tag.StudyInstanceUID, null);
+        studyID = AttributeFilter.getString(attrs, Tag.StudyID, "*");
+        studyDescription =
+                AttributeFilter.getString(attrs, Tag.StudyDescription, "*");
+        Date dt = attrs.getDate(Tag.StudyDateAndTime, null);
+        if (dt != null) {
+            studyDate = DateUtils.formatDA(null, dt);
+            studyTime = attrs.containsValue(Tag.StudyTime)
+                    ? DateUtils.formatTM(null, dt)
+                    : "*";
+        } else {
+            studyDate = "*";
+            studyTime = "*";
+        }
+        accessionNumber =
+                AttributeFilter.getString(attrs, Tag.AccessionNumber, "*");
+        String s = AttributeFilter.getString(attrs, Tag.ReferringPhysicianName, null);
+        if (s == null) {
+            referringPhysicianName = "*";
+            referringPhysicianIdeographicName = "*";
+            referringPhysicianPhoneticName = "*";
+            referringPhysicianFamilyNameSoundex = "*";
+            referringPhysicianGivenNameSoundex = "*";
+        } else {
+            PersonName pn = new PersonName(s);
+            referringPhysicianName =
+                    pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
+            referringPhysicianIdeographicName =
+                    pn.getNormalizedString(PersonName.Group.Ideographic, "*");
+            referringPhysicianPhoneticName =
+                    pn.getNormalizedString(PersonName.Group.Phonetic, "*");
+            //TODO
+            referringPhysicianFamilyNameSoundex = "*";
+            referringPhysicianGivenNameSoundex = "*";
+        }
+        //TODO
+        studyCustomAttribute1 = "*";
+        studyCustomAttribute2 = "*";
+        studyCustomAttribute3 = "*";
+
+        encodedAttributes = Utils.encodeAttributes(attrs,
+                AttributeFilter.studyFilter);
+        
     }
 }

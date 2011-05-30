@@ -48,8 +48,8 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
-import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.domain.AttributeFilter;
 import org.dcm4chee.archive.domain.Instance;
 import org.dcm4chee.archive.domain.Instance_;
@@ -135,20 +135,23 @@ class Matching {
         if (value.equals("*"))
             return null;
 
-        String[] groups = StringUtils.split(value, '=');
+        PersonName pn = new PersonName(value);
         Predicate predicate;
-        if (groups.length == 1) {
-            predicate = cb.or(wildCard0(cb, alphabethic, value, params),
-                  wildCard0(cb, ideographic, value, params),
-                  wildCard0(cb, phonetic, value, params));
+        String queryString = pn.getNormalizedQueryString(PersonName.Group.Alphabetic);
+        if (value.indexOf('=') == -1) {
+            predicate = cb.or(
+                  wildCard0(cb, alphabethic, queryString, params),
+                  wildCard0(cb, ideographic, queryString, params),
+                  wildCard0(cb, phonetic, queryString, params));
         } else {
             predicate = and(cb,
-                    groups[0].isEmpty() ? null
-                            : wildCard0(cb, alphabethic, groups[0], params),
-                    groups[1].isEmpty() ? null
-                            : wildCard0(cb, ideographic, groups[1], params),
-                    groups.length == 2 || groups[2].isEmpty() ? null
-                            : wildCard0(cb, phonetic, groups[2], params));
+                    wildCard0(cb, alphabethic, queryString, params),
+                    wildCard0(cb, ideographic,
+                            pn.getNormalizedQueryString(PersonName.Group.Ideographic),
+                            params),
+                    wildCard0(cb, phonetic,
+                            pn.getNormalizedQueryString(PersonName.Group.Phonetic),
+                            params));
             if (predicate == null)
                 return null;
         }
@@ -191,7 +194,7 @@ class Matching {
             return singleValue0(cb, field, value, params);
 
         String pattern = Matching.toLikePattern(value);
-        if (pattern.equals("%")) 
+        if (pattern.equals("%"))
             return null;
 
         ParameterExpression<String> param = 
@@ -257,12 +260,12 @@ class Matching {
                         pat.get(Patient_.patientName),
                         pat.get(Patient_.patientIdeographicName),
                         pat.get(Patient_.patientPhoneticName),
-                        AttributeFilter.getString(keys, Tag.PatientName),
+                        AttributeFilter.getString(keys, Tag.PatientName, "*"),
                         matchUnknown, params));
         add(predicates,
                 wildCard(cb,
                         pat.get(Patient_.patientSex),
-                        AttributeFilter.getString(keys, Tag.PatientSex),
+                        AttributeFilter.getString(keys, Tag.PatientSex, "*"),
                         matchUnknown, params));
         
     }
@@ -278,7 +281,7 @@ class Matching {
                 study.get(Study_.referringPhysicianName),
                 study.get(Study_.referringPhysicianIdeographicName),
                 study.get(Study_.referringPhysicianPhoneticName),
-                AttributeFilter.getString(keys, Tag.ReferringPhysicianName),
+                AttributeFilter.getString(keys, Tag.ReferringPhysicianName, "*"),
                 matchUnknown, params));
     }
 

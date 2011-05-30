@@ -93,16 +93,16 @@
         <column name="pk" />
         <generated-value strategy="${generated-value-strategy}" generator="seq" />
       </id>
-      <basic name="patientName">
+      <basic name="patientName" optional="false">
         <column name="pat_name" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="patientIdeographicName">
+      <basic name="patientIdeographicName" optional="false">
         <column name="pat_i_name" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="patientPhoneticName">
+      <basic name="patientPhoneticName" optional="false">
         <column name="pat_p_name" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="encodedAttributes">
+      <basic name="encodedAttributes" optional="false">
         <column name="pat_attrs" column-definition="${blob}" />
       </basic>
     </attributes>
@@ -116,19 +116,19 @@
         <column name="pk" />
         <generated-value strategy="${generated-value-strategy}" generator="seq" />
       </id>
-      <basic name="referringPhysicianName">
+      <basic name="referringPhysicianName" optional="false">
         <column name="ref_physician" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="referringPhysicianIdeographicName">
+      <basic name="referringPhysicianIdeographicName" optional="false">
         <column name="ref_phys_i_name" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="referringPhysicianPhoneticName">
+      <basic name="referringPhysicianPhoneticName" optional="false">
         <column name="ref_phys_p_name" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="studyDescription">
+      <basic name="studyDescription" optional="false">
         <column name="study_desc" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="encodedAttributes">
+      <basic name="encodedAttributes" optional="false">
         <column name="study_attrs" column-definition="${blob}" />
       </basic>
     </attributes>
@@ -142,22 +142,22 @@
         <column name="pk" />
         <generated-value strategy="${generated-value-strategy}" generator="seq" />
       </id>
-      <basic name="institutionalDepartmentName">
+      <basic name="institutionalDepartmentName" optional="false">
         <column name="department" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="institutionName">
+      <basic name="institutionName" optional="false">
         <column name="institution" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="performingPhysicianName">
+      <basic name="performingPhysicianName" optional="false">
         <column name="perf_physician" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="performingPhysicianIdeographicName">
+      <basic name="performingPhysicianIdeographicName" optional="false">
         <column name="perf_phys_i_name" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="performingPhysicianPhoneticName">
+      <basic name="performingPhysicianPhoneticName" optional="false">
         <column name="perf_phys_p_name" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="encodedAttributes">
+      <basic name="encodedAttributes" optional="false">
         <column name="series_attrs" column-definition="${blob}" />
       </basic>
     </attributes>
@@ -171,16 +171,16 @@
         <column name="pk" />
         <generated-value strategy="${generated-value-strategy}" generator="seq" />
       </id>
-      <basic name="requestingService">
+      <basic name="requestingService" optional="false">
         <column name="req_service" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="requestingPhysician">
+      <basic name="requestingPhysician" optional="false">
         <column name="req_physician" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="requestingPhysicianIdeographicName">
+      <basic name="requestingPhysicianIdeographicName" optional="false">
         <column name="req_phys_i_name" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="requestingPhysicianPhoneticName">
+      <basic name="requestingPhysicianPhoneticName" optional="false">
         <column name="req_phys_p_name" column-definition="${nvarchar2}" />
       </basic>
     </attributes>
@@ -194,7 +194,7 @@
         <column name="pk" />
         <generated-value strategy="${generated-value-strategy}" generator="seq" />
       </id>
-      <basic name="encodedAttributes">
+      <basic name="encodedAttributes" optional="false">
         <column name="inst_attrs" column-definition="${blob}" />
       </basic>
     </attributes>
@@ -208,13 +208,13 @@
         <column name="pk" />
         <generated-value strategy="${generated-value-strategy}" generator="seq" />
       </id>
-      <basic name="verifyingObserverName">
+      <basic name="verifyingObserverName" optional="false">
         <column name="observer_name" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="verifyingObserverIdeographicName">
+      <basic name="verifyingObserverIdeographicName" optional="false">
         <column name="observer_i_name" column-definition="${nvarchar2}" />
       </basic>
-      <basic name="verifyingObserverPhoneticName">
+      <basic name="verifyingObserverPhoneticName" optional="false">
         <column name="observer_p_name" column-definition="${nvarchar2}" />
       </basic>
     </attributes>

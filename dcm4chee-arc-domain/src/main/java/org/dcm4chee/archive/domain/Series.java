@@ -43,6 +43,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Set;
 
+import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -57,6 +58,10 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.ItemPointer;
+import org.dcm4che.data.PersonName;
+import org.dcm4che.data.Tag;
+import org.dcm4che.util.DateUtils;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
@@ -74,72 +79,95 @@ public class Series implements Serializable {
     @Column(name = "pk")
     private long pk;
 
+    @Basic(optional = false)
     @Column(name = "created_time")
     private Date createdTime;
 
+    @Basic(optional = false)
     @Column(name = "updated_time")
     private Date updatedTime;
 
+    @Basic(optional = false)
     @Column(name = "series_iuid", nullable = false)
     private String seriesInstanceUID;
 
+    @Basic(optional = false)
     @Column(name = "series_no")
     private String seriesNumber;
 
+    @Basic(optional = false)
     @Column(name = "series_desc")
     private String seriesDescription;
 
+    @Basic(optional = false)
     @Column(name = "modality")
     private String modality;
 
+    @Basic(optional = false)
     @Column(name = "department")
     private String institutionalDepartmentName;
 
+    @Basic(optional = false)
     @Column(name = "institution")
     private String institutionName;
 
+    @Basic(optional = false)
     @Column(name = "station_name")
     private String stationName;
 
+    @Basic(optional = false)
     @Column(name = "body_part")
     private String bodyPartExamined;
 
+    @Basic(optional = false)
     @Column(name = "laterality")
     private String laterality;
 
+    @Basic(optional = false)
     @Column(name = "perf_physician")
     private String performingPhysicianName;
     
+    @Basic(optional = false)
     @Column(name = "perf_phys_fn_sx")
     private String performingPhysicianFamilyNameSoundex;
     
+    @Basic(optional = false)
     @Column(name = "perf_phys_gn_sx")
     private String performingPhysicianGivenNameSoundex;
 
+    @Basic(optional = false)
     @Column(name = "perf_phys_i_name")
     private String performingPhysicianIdeographicName;
 
+    @Basic(optional = false)
     @Column(name = "perf_phys_p_name")
     private String performingPhysicianPhoneticName;
 
+    @Basic(optional = false)
     @Column(name = "pps_start_date")
     private String performedProcedureStepStartDate;
 
+    @Basic(optional = false)
     @Column(name = "pps_start_time")
     private String performedProcedureStepStartTime;
 
+    @Basic(optional = false)
     @Column(name = "pps_iuid")
     private String performedProcedureStepInstanceUID;
 
+    @Basic(optional = false)
     @Column(name = "series_custom1")
     private String seriesCustomAttribute1;
 
+    @Basic(optional = false)
     @Column(name = "series_custom2")
     private String seriesCustomAttribute2;
 
+    @Basic(optional = false)
     @Column(name = "series_custom3")
     private String seriesCustomAttribute3;
 
+    @Basic(optional = false)
     @Column(name = "num_instances", nullable = false)
     private int numberOfSeriesRelatedInstances;
 
@@ -155,6 +183,7 @@ public class Series implements Serializable {
     @Column(name = "availability", nullable = false)
     private Availability availability;
 
+    @Basic(optional = false)
     @Column(name = "series_attrs", nullable = false)
     private byte[] encodedAttributes;
 
@@ -314,8 +343,56 @@ public class Series implements Serializable {
         return study;
     }
 
+    public void setStudy(Study study) {
+        this.study = study;
+    }
+
     public Set<Instance> getInstances() {
         return instances;
     }
 
+    public void setAttributes(Attributes attrs) {
+        seriesInstanceUID = attrs.getString(Tag.SeriesInstanceUID, null);
+        seriesNumber = AttributeFilter.getString(attrs, Tag.SeriesNumber, "*");
+        seriesDescription =
+                AttributeFilter.getString(attrs, Tag.SeriesDescription, "*");
+        Date dt = attrs.getDate(Tag.PerformedProcedureStepStartDateAndTime, null);
+        if (dt != null) {
+            performedProcedureStepStartDate = DateUtils.formatDA(null, dt);
+            performedProcedureStepStartTime = 
+                attrs.containsValue(Tag.PerformedProcedureStepStartDate)
+                    ? DateUtils.formatTM(null, dt)
+                    : "*";
+        } else {
+            performedProcedureStepStartDate = "*";
+            performedProcedureStepStartTime = "*";
+        }
+        String s = AttributeFilter.getString(attrs, Tag.PerformingPhysicianName, null);
+        if (s == null) {
+            performingPhysicianName = "*";
+            performingPhysicianIdeographicName = "*";
+            performingPhysicianPhoneticName = "*";
+            performingPhysicianFamilyNameSoundex = "*";
+            performingPhysicianGivenNameSoundex = "*";
+        } else {
+            PersonName pn = new PersonName(s);
+            performingPhysicianName =
+                    pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
+            performingPhysicianIdeographicName =
+                    pn.getNormalizedString(PersonName.Group.Ideographic, "*");
+            performingPhysicianPhoneticName =
+                    pn.getNormalizedString(PersonName.Group.Phonetic, "*");
+            //TODO
+            performingPhysicianFamilyNameSoundex = "*";
+            performingPhysicianGivenNameSoundex = "*";
+        }
+        //TODO
+        seriesCustomAttribute1 = "*";
+        seriesCustomAttribute2 = "*";
+        seriesCustomAttribute3 = "*";
+
+        encodedAttributes = Utils.encodeAttributes(attrs,
+                AttributeFilter.studyFilter);
+        
+    }
 }

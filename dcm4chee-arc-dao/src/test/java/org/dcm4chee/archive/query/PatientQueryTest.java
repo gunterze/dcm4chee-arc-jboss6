@@ -46,6 +46,7 @@ import javax.ejb.EJB;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.dcm4chee.archive.domain.Patient;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -62,7 +63,7 @@ import org.junit.runner.RunWith;
 public class PatientQueryTest {
 
     private static int remainingTests = 2;
-    private static long pat_1_pk = -1;
+    private static Patient testPatient;
 
     @Deployment
     public static JavaArchive createDeployment() {
@@ -81,15 +82,17 @@ public class PatientQueryTest {
 
     @Before
     public void initDB() throws Exception {
-        if (pat_1_pk == -1) {
-            pat_1_pk = initTestData.persistPatient("resource:patient-scsh31.xml");
+        // emulates @BeforeClass
+        if (testPatient == null) {
+            testPatient = initTestData.persistPatient("resource:patient-scsh31.xml");
         }
     }
 
     @After
     public void after() {
+        // emulates @AfterClass
         if (--remainingTests <= 0)
-            initTestData.removePatient(pat_1_pk);
+            initTestData.remove(testPatient);
     }
 
     @Test
@@ -104,7 +107,7 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientNameAndSex() throws Exception {
-        query.find(null, patientNameAndSex("Yamada^*", "M"), false);
+        query.find(null, patientNameAndSex("Yamada", "M"), false);
         assertTrue(query.hasNext());
         query.next();
         assertFalse(query.hasNext());

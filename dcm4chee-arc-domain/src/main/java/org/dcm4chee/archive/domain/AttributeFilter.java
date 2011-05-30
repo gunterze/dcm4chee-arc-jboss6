@@ -75,8 +75,10 @@ public class AttributeFilter {
         }
     }
 
-    public static String getString(Attributes attrs, int tag) {
-        String val = attrs.getString(tag, "*");
-        return caseInsensitive.contains(tag) ? val.toUpperCase() : val;
+    public static String getString(Attributes attrs, int tag, String defVal) {
+        String val = attrs.getString(tag, null);
+        return val != null
+                ? (caseInsensitive.contains(tag) ? val.toUpperCase() : val)
+                : defVal;
     }
 }

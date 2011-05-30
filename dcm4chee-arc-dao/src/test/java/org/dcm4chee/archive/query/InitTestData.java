@@ -44,6 +44,8 @@ import javax.persistence.PersistenceContext;
 
 import org.dcm4che.io.SAXReader;
 import org.dcm4chee.archive.domain.Patient;
+import org.dcm4chee.archive.domain.Series;
+import org.dcm4chee.archive.domain.Study;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -54,14 +56,30 @@ public class InitTestData {
     @PersistenceContext(unitName="dcm4chee-arc")
     private EntityManager em;
 
-    public long persistPatient(String uri) throws Exception {
+    public Patient persistPatient(String uri) throws Exception {
         Patient patient = new Patient();
         patient.setAttributes(SAXReader.parse(uri, null));
         em.persist(patient);
-        return patient.getPk();
+        return patient;
     }
 
-    public void removePatient(long pk) {
-        em.remove(em.getReference(Patient.class, pk));
+    public Study persistStudy(String uri, Patient patient) throws Exception {
+        Study study = new Study();
+        study.setPatient(patient);
+        study.setAttributes(SAXReader.parse(uri, null));
+        em.persist(study);
+        return study;
+    }
+
+    public Series persistSeries(String uri, Study study) throws Exception {
+        Series series = new Series();
+        series.setStudy(study);
+        series.setAttributes(SAXReader.parse(uri, null));
+        em.persist(series);
+        return series;
+    }
+
+   public void remove(Patient patient) {
+        em.remove(em.merge(patient));
     }
 }
