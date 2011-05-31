@@ -36,12 +36,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.query;
+package org.dcm4chee.archive.testdata;
 
-import static org.junit.Assert.*;
+import java.io.IOException;
+import java.io.InputStream;
 
 import javax.ejb.EJB;
 
+import org.dcm4che.data.Attributes;
+import org.dcm4che.io.DicomInputStream;
+import org.dcm4che.util.SafeClose;
+import org.dcm4chee.archive.domain.Availability;
+import org.dcm4chee.archive.store.CodeFactory;
+import org.dcm4chee.archive.store.InstanceStore;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -53,24 +60,33 @@ import org.junit.runner.RunWith;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @RunWith(Arquillian.class)
-public class SeriesQueryTest {
+public class InitTestData {
 
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(SeriesQuery.class,  Matching.class);
+                .addClasses(InstanceStore.class,
+                        CodeFactory.class)
+                .addAsResource("sr_602ct_add.dcm");
     }
 
     @EJB
-    private SeriesQuery query;
+    private InstanceStore instanceStore;
 
     @Test
-    public void testByPatientID() throws Exception {
-        query.find(new String[] { "CT5", null }, null, false);
-        assertTrue(query.hasNext());
-        query.next();
-        assertFalse(query.hasNext());
-        query.close();
+    public void storeTestData() throws IOException {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        instanceStore.store(readDataset("sr_602ct_add.dcm", cl),
+            Availability.ONLINE);
+    }
+
+    private Attributes readDataset(String name, ClassLoader cl) throws IOException {
+        InputStream in = cl.getResourceAsStream("sr_602ct_add.dcm");
+        try {
+            return new DicomInputStream(in).readDataset(-1, -1);
+        } finally {
+            SafeClose.close(in);
+        }
     }
 
 }

@@ -106,7 +106,8 @@
     </plugins>
   </build>
   <modules>
-    <module>dcm4chee-arc-domain</module>
     <module>dcm4chee-arc-dao</module>
+    <module>dcm4chee-arc-domain</module>
+    <module>dcm4chee-arc-testdata</module>
   </modules>
   </project>

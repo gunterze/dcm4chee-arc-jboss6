@@ -75,8 +75,7 @@ import org.dcm4che.util.DateUtils;
 @NamedQueries({
 @NamedQuery(
     name="Study.findByStudyInstanceUID",
-    query="SELECT s FROM Study s WHERE s.studyInstanceUID = ?1"
-)
+    query="SELECT s FROM Study s WHERE s.studyInstanceUID = ?1")
 })
 @Entity
 @Table(name = "study")
@@ -203,7 +202,9 @@ public class Study implements Serializable {
 
     @PrePersist
     public void onPrePersist() {
-        createdTime = new Date();
+        Date now = new Date();
+        createdTime = now;
+        updatedTime = now;
     }
 
     @PreUpdate

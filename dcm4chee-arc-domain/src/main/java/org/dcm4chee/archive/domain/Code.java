@@ -40,10 +40,13 @@ package org.dcm4chee.archive.domain;
 
 import java.io.Serializable;
 
+import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 import org.dcm4che.data.Attributes;
@@ -55,28 +58,61 @@ import org.dcm4che.data.VR;
  * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
+@NamedQueries({
+@NamedQuery(
+    name="Code.findByCodeValueWithoutSchemeVersion",
+    query="SELECT c FROM Code c " +
+          "WHERE c.codeValue = ?1 " +
+            "AND c.codingSchemeDesignator = ?2 " +
+            "AND c.codingSchemeVersion IS NULL"),
+@NamedQuery(
+    name="Code.findByCodeValueWithSchemeVersion",
+    query="SELECT c FROM Code c " +
+          "WHERE c.codeValue = ?1 " +
+            "AND c.codingSchemeDesignator = ?2 " +
+            "AND c.codingSchemeVersion = ?3")
+})
 @Entity
 @Table(name = "code")
 public class Code implements Serializable {
 
     private static final long serialVersionUID = -130090842318534124L;
 
+    public static final String FIND_BY_CODE_VALUE_WITHOUT_SCHEME_VERSION =
+        "Code.findByCodeValueWithoutSchemeVersion";
+    public static final String FIND_BY_CODE_VALUE_WITH_SCHEME_VERSION =
+        "Code.findByCodeValueWithSchemeVersion";
+
     @Id
     @GeneratedValue
     @Column(name = "pk")
     private long pk;
 
-    @Column(name = "code_value", nullable = false)
+    @Basic(optional = false)
+    @Column(name = "code_value")
     private String codeValue;
 
-    @Column(name = "code_designator", nullable = false)
+    @Basic(optional = false)
+    @Column(name = "code_designator")
     private String codingSchemeDesignator;
 
     @Column(name = "code_version")
     private String codingSchemeVersion;
 
+    @Basic(optional = false)
     @Column(name = "code_meaning")
     private String codeMeaning;
+
+
+    public Code() {}
+
+    public Code(String codeValue, String codingSchemeDesignator,
+            String codingSchemeVersion, String codeMeaning) {
+        this.codeValue = codeValue;
+        this.codingSchemeDesignator = codingSchemeDesignator;
+        this.codingSchemeVersion = codingSchemeVersion;
+        this.codeMeaning = codeMeaning;
+    }
 
     public long getPk() {
         return pk;

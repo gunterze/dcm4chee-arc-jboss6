@@ -36,41 +36,53 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.query;
+package org.dcm4chee.archive.store;
 
-import static org.junit.Assert.*;
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 
-import javax.ejb.EJB;
-
-import org.jboss.arquillian.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
+import org.dcm4chee.archive.domain.Code;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@RunWith(Arquillian.class)
-public class SeriesQueryTest {
+@Stateless
+public class CodeFactory {
 
-    @Deployment
-    public static JavaArchive createDeployment() {
-       return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(SeriesQuery.class,  Matching.class);
+    @PersistenceContext(name="dcm4chee-arc")
+    private EntityManager em;
+
+    public Code valueOf(String codeValue, String codingSchemeDesignator,
+            String codingSchemeVersion, String codeMeaning) {
+        try {
+            TypedQuery<Code> query = em.createNamedQuery(
+                        codingSchemeVersion == null
+                            ? Code.FIND_BY_CODE_VALUE_WITHOUT_SCHEME_VERSION
+                            : Code.FIND_BY_CODE_VALUE_WITH_SCHEME_VERSION,
+                        Code.class)
+                    .setParameter(1, codeValue)
+                    .setParameter(2, codingSchemeDesignator);
+            if (codingSchemeVersion != null)
+                query.setParameter(3, codingSchemeVersion);
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            Code code = new Code(codeValue, codingSchemeDesignator,
+                    codingSchemeVersion, codeMeaning);
+            em.persist(code);
+            return code;
+        }
     }
 
-    @EJB
-    private SeriesQuery query;
-
-    @Test
-    public void testByPatientID() throws Exception {
-        query.find(new String[] { "CT5", null }, null, false);
-        assertTrue(query.hasNext());
-        query.next();
-        assertFalse(query.hasNext());
-        query.close();
+    public Code valueOf(Attributes codeItem) {
+        return valueOf(
+                codeItem.getString(Tag.CodeValue, null),
+                codeItem.getString(Tag.CodingSchemeDesignator, null),
+                codeItem.getString(Tag.CodingSchemeDesignator, null),
+                codeItem.getString(Tag.CodeMeaning, null));
     }
-
 }

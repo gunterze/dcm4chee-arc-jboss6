@@ -40,8 +40,8 @@ package org.dcm4chee.archive.domain;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
-import java.util.Set;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -71,8 +71,7 @@ import org.dcm4che.util.DateUtils;
 @NamedQueries({
 @NamedQuery(
     name="Instance.findBySOPInstanceUID",
-    query="SELECT i FROM Instance i WHERE i.sopInstanceUID = ?1"
-)
+    query="SELECT i FROM Instance i WHERE i.sopInstanceUID = ?1")
 })
 @Entity
 @Table(name = "instance")
@@ -162,8 +161,9 @@ public class Instance implements Serializable {
     @JoinColumn(name = "srcode_fk")
     private Code conceptNameCode;
 
-    @OneToMany(mappedBy = "instance", fetch = FetchType.LAZY, cascade=CascadeType.REMOVE)
-    private Set<VerifyingObserver> verifyingObservers;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "instance_fk")
+    private Collection<VerifyingObserver> verifyingObservers;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "series_fk")
@@ -171,7 +171,9 @@ public class Instance implements Serializable {
 
     @PrePersist
     public void onPrePersist() {
-        createdTime = new Date();
+        Date now = new Date();
+        createdTime = now;
+        updatedTime = now;
     }
 
     @PreUpdate
@@ -267,8 +269,17 @@ public class Instance implements Serializable {
         return conceptNameCode;
     }
 
-    public Set<VerifyingObserver> getVerifyingObservers() {
+    public void setConceptNameCode(Code conceptNameCode) {
+        this.conceptNameCode = conceptNameCode;
+    }
+
+    public Collection<VerifyingObserver> getVerifyingObservers() {
         return verifyingObservers;
+    }
+
+    public void setVerifyingObservers(
+            Collection<VerifyingObserver> verifyingObservers) {
+        this.verifyingObservers = verifyingObservers;
     }
 
     public Series getSeries() {

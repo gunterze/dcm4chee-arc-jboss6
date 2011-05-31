@@ -45,15 +45,10 @@ import javax.ejb.EJB;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.dcm4che.io.SAXReader;
-import org.dcm4chee.archive.domain.Availability;
-import org.dcm4chee.archive.store.InstanceStore;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -63,49 +58,18 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class PatientQueryTest {
 
-    private static int remainingTests = 2;
-    private static long[] patientPKs;
-
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(PatientQuery.class,
-                        Matching.class,
-                        InstanceStore.class)
-                .addAsResource("scsh31.xml");
+                .addClasses(PatientQuery.class, Matching.class);
     }
-
-    @EJB
-    private InstanceStore instanceStore;
 
     @EJB
     private PatientQuery query;
 
-    @Before
-    public void storeTestData() throws Exception {
-        // emulates @BeforeClass
-        if (patientPKs == null) {
-            patientPKs = new long[]{
-                instanceStore.store(
-                    SAXReader.parse("resource:scsh31.xml", null),
-                    Availability.ONLINE)
-                    .getSeries().getStudy().getPatient().getPk()
-            };
-        }
-    }
-
-    @After
-    public void clearTestData() {
-        // emulates @AfterClass
-        if (--remainingTests <= 0)
-            for (long pk : patientPKs) {
-                instanceStore.removePatient(pk);
-            }
-    }
-
     @Test
     public void testByPatientID() throws Exception {
-        query.find(new String[] { "H31EXAMPLE", null }, null, false);
+        query.find(new String[] { "CT5", null }, null, false);
         assertTrue(query.hasNext());
         query.next();
         assertFalse(query.hasNext());
@@ -114,7 +78,7 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientName() throws Exception {
-        query.find(null, patientName("山田^太郎"), false);
+        query.find(null, patientName("大宮^省吾"), false);
         assertTrue(query.hasNext());
         query.next();
         assertFalse(query.hasNext());
@@ -123,7 +87,8 @@ public class PatientQueryTest {
 
     private Attributes patientName(String name) {
         Attributes attrs = new Attributes(2);
-        attrs.setString(Tag.SpecificCharacterSet, VR.CS, null, "ISO 2022 IR 87");
+        attrs.setString(Tag.SpecificCharacterSet, VR.CS, 
+                "ISO 2022 IR 6", "ISO 2022 IR 87");
         attrs.setString(Tag.PatientName, VR.PN, name);
         return attrs;
     }

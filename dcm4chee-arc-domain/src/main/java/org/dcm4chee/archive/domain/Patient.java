@@ -52,6 +52,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
@@ -66,11 +68,25 @@ import org.dcm4che.data.Tag;
  * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
+@NamedQueries({
+@NamedQuery(
+    name="Patient.findByPatientID",
+    query="SELECT p FROM Patient p WHERE p.patientID = ?1"),
+@NamedQuery(
+    name="Patient.findByPatientIDWithIssuer",
+    query="SELECT p FROM Patient p " +
+          "WHERE p.patientID = ?1 AND issuerOfPatientID = ?2")
+})
 @Entity
 @Table(name = "patient")
 public class Patient implements Serializable {
 
     private static final long serialVersionUID = 6430339764844147679L;
+
+    public static final String FIND_BY_PATIENT_ID = "Patient.findByPatientID";
+
+    public static final String FIND_BY_PATIENT_ID_WITH_ISSUER =
+            "Patient.findByPatientIDWithIssuer";
 
     @Id
     @GeneratedValue
@@ -160,7 +176,9 @@ public class Patient implements Serializable {
 
     @PrePersist
     public void onPrePersist() {
-        createdTime = new Date();
+        Date now = new Date();
+        createdTime = now;
+        updatedTime = now;
     }
 
     @PreUpdate

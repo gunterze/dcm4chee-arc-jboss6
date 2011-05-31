@@ -39,15 +39,19 @@
 package org.dcm4chee.archive.domain;
 
 import java.io.Serializable;
+import java.util.Date;
 
+import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.PersonName;
+import org.dcm4che.data.Tag;
+import org.dcm4che.util.DateUtils;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
@@ -65,27 +69,47 @@ public class VerifyingObserver implements Serializable {
     @Column(name = "pk")
     private long pk;
 
+    @Basic(optional = false)
     @Column(name = "verify_datetime")
     private String verificationDateTime;
 
+    @Basic(optional = false)
     @Column(name = "observer_name")
     private String verifyingObserverName;
     
+    @Basic(optional = false)
     @Column(name = "observer_fn_sx")
     private String verifyingObserverFamilyNameSoundex;
     
+    @Basic(optional = false)
     @Column(name = "observer_gn_sx")
     private String verifyingObserverGivenNameSoundex;
 
+    @Basic(optional = false)
     @Column(name = "observer_i_name")
     private String verifyingObserverIdeographicName;
 
+    @Basic(optional = false)
     @Column(name = "observer_p_name")
     private String verifyingObserverPhoneticName;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "instance_fk")
-    private Instance instance;
+    public VerifyingObserver() {}
+
+    public VerifyingObserver(Attributes attrs) {
+        Date dt = attrs.getDate(Tag.VerificationDateTime, null);
+        verificationDateTime = DateUtils.formatDT(null, dt);
+        String s = AttributeFilter.getString(attrs, Tag.VerifyingObserverName);
+        PersonName pn = new PersonName(s);
+        verifyingObserverName =
+                pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
+        verifyingObserverIdeographicName =
+                pn.getNormalizedString(PersonName.Group.Ideographic, "*");
+        verifyingObserverPhoneticName =
+                pn.getNormalizedString(PersonName.Group.Phonetic, "*");
+        //TODO
+        verifyingObserverFamilyNameSoundex = "*";
+        verifyingObserverGivenNameSoundex = "*";
+    }
 
     public long getPk() {
         return pk;
@@ -113,9 +137,5 @@ public class VerifyingObserver implements Serializable {
 
     public String getVerifyingObserverPhoneticName() {
         return verifyingObserverPhoneticName;
-    }
-
-    public Instance getInstance() {
-        return instance;
     }
 }

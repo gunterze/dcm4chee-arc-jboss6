@@ -42,15 +42,10 @@ import static org.junit.Assert.*;
 
 import javax.ejb.EJB;
 
-import org.dcm4che.io.SAXReader;
-import org.dcm4chee.archive.domain.Availability;
-import org.dcm4chee.archive.store.InstanceStore;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -60,50 +55,18 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class StudyQueryTest {
 
-    private static int remainingTests = 1;
-    private static long[] patientPKs;
-
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(StudyQuery.class,
-                        Matching.class,
-                        InstanceStore.class)
-                .addAsResource("scsh31.xml");
+                .addClasses(StudyQuery.class, Matching.class);
             }
-
-    @EJB
-    private InstanceStore instanceStore;
 
     @EJB
     private StudyQuery query;
 
-    @Before
-    public void storeTestData() throws Exception {
-        // emulates @BeforeClass
-        if (patientPKs == null) {
-            patientPKs = new long[]{
-                instanceStore.store(
-                    SAXReader.parse("resource:scsh31.xml", null),
-                    Availability.ONLINE)
-                    .getSeries().getStudy().getPatient().getPk()
-            };
-        }
-    }
-
-    @After
-    public void clearTestData() {
-        // emulates @AfterClass
-        if (--remainingTests <= 0)
-            for (long pk : patientPKs) {
-                instanceStore.removePatient(pk);
-            }
-    }
-
     @Test
     public void testByPatientID() throws Exception {
-        query.find(new String[] { "H31EXAMPLE", null },
-                null, false);
+        query.find(new String[] { "CT5", null }, null, false);
         assertTrue(query.hasNext());
         query.next();
         assertFalse(query.hasNext());

@@ -36,12 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.query;
-
-import static org.junit.Assert.*;
+package org.dcm4chee.archive.testdata;
 
 import javax.ejb.EJB;
 
+import org.dcm4chee.archive.store.CodeFactory;
+import org.dcm4chee.archive.store.InstanceStore;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -53,24 +53,21 @@ import org.junit.runner.RunWith;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @RunWith(Arquillian.class)
-public class SeriesQueryTest {
+public class ClearTestData {
 
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(SeriesQuery.class,  Matching.class);
+                .addClasses(InstanceStore.class,
+                        CodeFactory.class);
     }
 
     @EJB
-    private SeriesQuery query;
+    private InstanceStore instanceStore;
 
     @Test
-    public void testByPatientID() throws Exception {
-        query.find(new String[] { "CT5", null }, null, false);
-        assertTrue(query.hasNext());
-        query.next();
-        assertFalse(query.hasNext());
-        query.close();
+    public void removeTestData() {
+        instanceStore.removePatient("CT5", "DCM4CHEE_TESTDATA");
     }
 
 }

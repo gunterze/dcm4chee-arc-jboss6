@@ -38,18 +38,24 @@
 
 package org.dcm4chee.archive.store;
 
+import java.util.ArrayList;
+
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.ItemPointer;
+import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.domain.Availability;
 import org.dcm4chee.archive.domain.Instance;
 import org.dcm4chee.archive.domain.Patient;
 import org.dcm4chee.archive.domain.Series;
 import org.dcm4chee.archive.domain.Study;
+import org.dcm4chee.archive.domain.VerifyingObserver;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -60,6 +66,9 @@ public class InstanceStore {
     @PersistenceContext(unitName="dcm4chee-arc")
     private EntityManager em;
 
+    @EJB
+    private CodeFactory codeFactory;
+
     public Instance store(Attributes attrs, Availability availability) {
         try {
             return em.createNamedQuery(
@@ -69,11 +78,31 @@ public class InstanceStore {
         } catch (NoResultException e) {
             Instance inst = new Instance();
             inst.setSeries(getSeries(attrs, availability));
+            setConceptNameCode(inst, attrs);
+            setVerifyingObservers(inst, attrs);
             inst.setAvailability(availability);
             inst.setAttributes(attrs);
             em.persist(inst);
             return inst;
         }
+    }
+
+    private void setVerifyingObservers(Instance inst, Attributes attrs) {
+        Sequence seq = attrs.getSequence(Tag.VerifyingObserverSequence);
+        if (seq != null && !seq.isEmpty()) {
+            ArrayList<VerifyingObserver> list =
+                    new ArrayList<VerifyingObserver>(seq.size());
+            for (Attributes item : seq)
+                list.add(new VerifyingObserver(item));
+            inst.setVerifyingObservers(list);
+        }
+    }
+
+    private void setConceptNameCode(Instance inst, Attributes attrs) {
+        Attributes item = attrs.getNestedDataset(
+                new ItemPointer(Tag.ConceptNameCodeSequence));
+        if (item != null)
+            inst.setConceptNameCode(codeFactory.valueOf(item));
     }
 
     private Series getSeries(Attributes attrs, Availability availability) {
@@ -115,7 +144,12 @@ public class InstanceStore {
         return patient;
     }
 
-    public void removePatient(long pk) {
-        em.remove(em.getReference(Patient.class, pk));
+    public void removePatient(String pid, String issuer) {
+        Patient patient = em.createNamedQuery(
+                Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
+            .setParameter(1, pid)
+            .setParameter(2, issuer)
+            .getSingleResult();
+        em.remove(patient);
     }
 }

@@ -73,8 +73,7 @@ import org.dcm4che.util.DateUtils;
 @NamedQueries({
 @NamedQuery(
     name="Series.findBySeriesInstanceUID",
-    query="SELECT s FROM Series s WHERE s.seriesInstanceUID = ?1"
-),
+    query="SELECT s FROM Series s WHERE s.seriesInstanceUID = ?1"),
 @NamedQuery(
     name="Series.findAttributesBySeriesPk",
     query="SELECT s.study.numberOfStudyRelatedSeries, " +
@@ -85,8 +84,7 @@ import org.dcm4che.util.DateUtils;
                  "s.encodedAttributes, " +
                  "s.study.encodedAttributes, " +
                  "s.study.patient.encodedAttributes " +
-          "FROM Series s WHERE s.pk = ?1"
-)
+          "FROM Series s WHERE s.pk = ?1")
 })
 @Entity
 @Table(name = "series")
@@ -229,7 +227,9 @@ public class Series implements Serializable {
 
     @PrePersist
     public void onPrePersist() {
-        createdTime = new Date();
+        Date now = new Date();
+        createdTime = now;
+        updatedTime = now;
     }
 
     @PreUpdate
