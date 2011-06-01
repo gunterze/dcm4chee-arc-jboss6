@@ -38,10 +38,8 @@
 
 package org.dcm4chee.archive.store;
 
-import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import org.dcm4che.data.Attributes;
@@ -51,14 +49,11 @@ import org.dcm4chee.archive.domain.Code;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateless
 public class CodeFactory {
 
-    @PersistenceContext(name="dcm4chee-arc")
-    private EntityManager em;
-
-    public Code valueOf(String codeValue, String codingSchemeDesignator,
-            String codingSchemeVersion, String codeMeaning) {
+    public static Code createCode(EntityManager em, String codeValue,
+            String codingSchemeDesignator, String codingSchemeVersion,
+            String codeMeaning) {
         try {
             TypedQuery<Code> query = em.createNamedQuery(
                         codingSchemeVersion == null
@@ -78,8 +73,8 @@ public class CodeFactory {
         }
     }
 
-    public Code valueOf(Attributes codeItem) {
-        return valueOf(
+    public static Code createCode(EntityManager em, Attributes codeItem) {
+        return createCode(em,
                 codeItem.getString(Tag.CodeValue, null),
                 codeItem.getString(Tag.CodingSchemeDesignator, null),
                 codeItem.getString(Tag.CodingSchemeDesignator, null),

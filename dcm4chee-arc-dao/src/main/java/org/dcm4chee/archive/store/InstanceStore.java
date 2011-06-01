@@ -40,7 +40,6 @@ package org.dcm4chee.archive.store;
 
 import java.util.ArrayList;
 
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -51,8 +50,10 @@ import org.dcm4che.data.ItemPointer;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.domain.Availability;
+import org.dcm4chee.archive.domain.Code;
 import org.dcm4chee.archive.domain.Instance;
 import org.dcm4chee.archive.domain.Patient;
+import org.dcm4chee.archive.domain.RequestAttributes;
 import org.dcm4chee.archive.domain.Series;
 import org.dcm4chee.archive.domain.Study;
 import org.dcm4chee.archive.domain.VerifyingObserver;
@@ -66,10 +67,7 @@ public class InstanceStore {
     @PersistenceContext(unitName="dcm4chee-arc")
     private EntityManager em;
 
-    @EJB
-    private CodeFactory codeFactory;
-
-    public Instance store(Attributes attrs, Availability availability) {
+     public Instance store(Attributes attrs, Availability availability) {
         try {
             return em.createNamedQuery(
                 Instance.FIND_BY_SOP_INSTANCE_UID, Instance.class)
@@ -102,7 +100,7 @@ public class InstanceStore {
         Attributes item = attrs.getNestedDataset(
                 new ItemPointer(Tag.ConceptNameCodeSequence));
         if (item != null)
-            inst.setConceptNameCode(codeFactory.valueOf(item));
+            inst.setConceptNameCode(CodeFactory.createCode(em, item));
     }
 
     private Series getSeries(Attributes attrs, Availability availability) {
@@ -114,10 +112,22 @@ public class InstanceStore {
         } catch (NoResultException e) {
             Series series = new Series();
             series.setStudy(getStudy(attrs, availability));
+            setRequestAttributes(series, attrs);
             series.setAvailability(availability);
             series.setAttributes(attrs);
             em.persist(series);
             return series;
+        }
+    }
+
+    private void setRequestAttributes(Series series, Attributes attrs) {
+        Sequence seq = attrs.getSequence(Tag.RequestAttributesSequence);
+        if (seq != null && !seq.isEmpty()) {
+            ArrayList<RequestAttributes> list =
+                    new ArrayList<RequestAttributes>(seq.size());
+            for (Attributes item : seq)
+                list.add(new RequestAttributes(item));
+            series.setRequestAttributes(list);
         }
     }
 
@@ -130,10 +140,21 @@ public class InstanceStore {
         } catch (NoResultException e) {
             Study study = new Study();
             study.setPatient(getPatient(attrs));
+            setProcedureCodes(study, attrs);
             study.setAvailability(availability);
             study.setAttributes(attrs);
             em.persist(study);
             return study;
+        }
+    }
+
+    private void setProcedureCodes(Study study, Attributes attrs) {
+        Sequence seq = attrs.getSequence(Tag.ProcedureCodeSequence);
+        if (seq != null && !seq.isEmpty()) {
+            ArrayList<Code> list = new ArrayList<Code>(seq.size());
+            for (Attributes item : seq)
+                list.add(CodeFactory.createCode(em, item));
+            study.setProcedureCodes(list);
         }
     }
 
