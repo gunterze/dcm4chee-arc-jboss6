@@ -61,6 +61,12 @@ public class Issuer implements Serializable {
 
     private static final long serialVersionUID = -5050458184841995777L;
 
+    public static final String FIND_BY_ID = "Issuer.findByID";
+
+    public static final String FIND_BY_UID = "Issuer.findByUID";
+
+    public static final String FIND_BY_ID_OR_UID = "Issuer.findByIDorUID";
+
     public Issuer() {}
 
     public Issuer(String entityId, String entityUid, String entityUidType) {

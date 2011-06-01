@@ -36,62 +36,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.testdata;
+package org.dcm4chee.archive.store;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import javax.ejb.EJB;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.TypedQuery;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.io.DicomInputStream;
-import org.dcm4che.util.SafeClose;
-import org.dcm4chee.archive.domain.Availability;
-import org.dcm4chee.archive.store.CodeFactory;
-import org.dcm4chee.archive.store.InstanceStore;
-import org.dcm4chee.archive.store.IssuerFactory;
-import org.jboss.arquillian.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.dcm4che.data.Tag;
+import org.dcm4chee.archive.domain.Issuer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@RunWith(Arquillian.class)
-public class InitTestData {
+public class IssuerFactory {
 
-    private static final String SOURCE_AET = "SOURCE_AET";
-    private static final String RETRIEVE_AETS = "RETRIEVE_AET";
-
-    @Deployment
-    public static JavaArchive createDeployment() {
-       return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(InstanceStore.class,
-                        CodeFactory.class, IssuerFactory.class)
-                .addAsResource("sr_602ct_add.dcm");
-    }
-
-    @EJB
-    private InstanceStore instanceStore;
-
-    @Test
-    public void storeTestData() throws IOException {
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        instanceStore.store(readDataset("sr_602ct_add.dcm", cl),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-    }
-
-    private Attributes readDataset(String name, ClassLoader cl)
-            throws IOException {
-        InputStream in = cl.getResourceAsStream("sr_602ct_add.dcm");
+    public static Issuer createIssuer(EntityManager em, String entityID,
+            String entityUID, String entityUIDType) {
         try {
-            return new DicomInputStream(in).readDataset(-1, -1);
-        } finally {
-            SafeClose.close(in);
+            TypedQuery<Issuer> query;
+            if (entityID == null) {
+                query = em.createNamedQuery(Issuer.FIND_BY_UID, Issuer.class)
+                    .setParameter(1, entityUID)
+                    .setParameter(2, entityUIDType);
+            } else if (entityUID == null) {
+                query = em.createNamedQuery(Issuer.FIND_BY_ID, Issuer.class)
+                    .setParameter(1, entityID);
+            } else {
+                query = em.createNamedQuery(Issuer.FIND_BY_ID_OR_UID, Issuer.class)
+                    .setParameter(1, entityID)
+                    .setParameter(2, entityUID)
+                    .setParameter(3, entityUIDType);
+            }
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            Issuer issuer = new Issuer(entityID, entityUID, entityUIDType);
+            em.persist(issuer);
+            return issuer;
         }
     }
 
+    public static Issuer createIssuer(EntityManager em, Attributes issuerItem) {
+        return createIssuer(em,
+                issuerItem.getString(Tag.CodeValue, null),
+                issuerItem.getString(Tag.CodingSchemeDesignator, null),
+                issuerItem.getString(Tag.CodingSchemeDesignator, null));
+    }
 }

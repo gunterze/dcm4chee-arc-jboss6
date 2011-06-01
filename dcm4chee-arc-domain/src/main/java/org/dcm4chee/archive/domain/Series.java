@@ -342,12 +342,24 @@ public class Series implements Serializable {
         return sourceAET;
     }
 
+    public void setSourceAET(String sourceAET) {
+        this.sourceAET = sourceAET;
+    }
+
     public String getRetrieveAETs() {
         return retrieveAETs;
     }
 
+    public void setRetrieveAETs(String retrieveAETs) {
+        this.retrieveAETs = retrieveAETs;
+    }
+
     public String getExternalRetrieveAET() {
         return externalRetrieveAET;
+    }
+
+    public void setExternalRetrieveAET(String externalRetrieveAET) {
+        this.externalRetrieveAET = externalRetrieveAET;
     }
 
     public Availability getAvailability() {

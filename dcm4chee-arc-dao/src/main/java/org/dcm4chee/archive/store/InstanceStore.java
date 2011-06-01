@@ -67,7 +67,9 @@ public class InstanceStore {
     @PersistenceContext(unitName="dcm4chee-arc")
     private EntityManager em;
 
-     public Instance store(Attributes attrs, Availability availability) {
+     public Instance store(Attributes attrs, String sourceAET,
+             String retrieveAETs, String externalRetrieveAET,
+             Availability availability) {
         try {
             return em.createNamedQuery(
                 Instance.FIND_BY_SOP_INSTANCE_UID, Instance.class)
@@ -75,9 +77,12 @@ public class InstanceStore {
                 .getSingleResult();
         } catch (NoResultException e) {
             Instance inst = new Instance();
-            inst.setSeries(getSeries(attrs, availability));
+            inst.setSeries(getSeries(attrs, sourceAET, retrieveAETs, externalRetrieveAET,
+                    availability));
             setConceptNameCode(inst, attrs);
             setVerifyingObservers(inst, attrs);
+            inst.setRetrieveAETs(retrieveAETs);
+            inst.setExternalRetrieveAET(externalRetrieveAET);
             inst.setAvailability(availability);
             inst.setAttributes(attrs);
             em.persist(inst);
@@ -103,7 +108,9 @@ public class InstanceStore {
             inst.setConceptNameCode(CodeFactory.createCode(em, item));
     }
 
-    private Series getSeries(Attributes attrs, Availability availability) {
+    private Series getSeries(Attributes attrs, String sourceAET,
+            String retrieveAETs, String externalRetrieveAET,
+            Availability availability) {
         try {
             return em.createNamedQuery(
                 Series.FIND_BY_SERIES_INSTANCE_UID, Series.class)
@@ -111,8 +118,12 @@ public class InstanceStore {
                 .getSingleResult();
         } catch (NoResultException e) {
             Series series = new Series();
-            series.setStudy(getStudy(attrs, availability));
+            series.setStudy(getStudy(attrs, retrieveAETs, externalRetrieveAET,
+                    availability));
             setRequestAttributes(series, attrs);
+            series.setSourceAET(sourceAET);
+            series.setRetrieveAETs(retrieveAETs);
+            series.setExternalRetrieveAET(externalRetrieveAET);
             series.setAvailability(availability);
             series.setAttributes(attrs);
             em.persist(series);
@@ -125,13 +136,25 @@ public class InstanceStore {
         if (seq != null && !seq.isEmpty()) {
             ArrayList<RequestAttributes> list =
                     new ArrayList<RequestAttributes>(seq.size());
-            for (Attributes item : seq)
-                list.add(new RequestAttributes(item));
+            for (Attributes item : seq) {
+                RequestAttributes rqAttrs = new RequestAttributes(item);
+                setIssuerOfAccessionNumber(rqAttrs, item);
+                list.add(rqAttrs);
+            }
             series.setRequestAttributes(list);
         }
     }
 
-    private Study getStudy(Attributes attrs, Availability availability) {
+    private void setIssuerOfAccessionNumber(RequestAttributes rqAttrs,
+            Attributes attrs) {
+        Attributes item = attrs.getNestedDataset(
+                new ItemPointer(Tag.IssuerOfAccessionNumberSequence));
+        if (item != null)
+            rqAttrs.setIssuerOfAccessionNumber(
+                    IssuerFactory.createIssuer(em, item));
+    }
+
+    private Study getStudy(Attributes attrs, String retrieveAETs, String externalRetrieveAET, Availability availability) {
         try {
             return em.createNamedQuery(
                 Study.FIND_BY_STUDY_INSTANCE_UID, Study.class)
@@ -141,11 +164,22 @@ public class InstanceStore {
             Study study = new Study();
             study.setPatient(getPatient(attrs));
             setProcedureCodes(study, attrs);
+            setIssuerOfAccessionNumber(study, attrs);
+            study.setRetrieveAETs(retrieveAETs);
+            study.setExternalRetrieveAET(externalRetrieveAET);
             study.setAvailability(availability);
             study.setAttributes(attrs);
             em.persist(study);
             return study;
         }
+    }
+
+    private void setIssuerOfAccessionNumber(Study study, Attributes attrs) {
+        Attributes item = attrs.getNestedDataset(
+                new ItemPointer(Tag.IssuerOfAccessionNumberSequence));
+        if (item != null)
+            study.setIssuerOfAccessionNumber(
+                    IssuerFactory.createIssuer(em, item));
     }
 
     private void setProcedureCodes(Study study, Attributes attrs) {
