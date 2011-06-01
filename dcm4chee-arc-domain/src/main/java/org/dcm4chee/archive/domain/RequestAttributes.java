@@ -40,6 +40,7 @@ package org.dcm4chee.archive.domain;
 
 import java.io.Serializable;
 
+import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -48,6 +49,10 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.PersonName;
+import org.dcm4che.data.Tag;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
@@ -60,48 +65,88 @@ public class RequestAttributes implements Serializable {
 
     private static final long serialVersionUID = -2985695106493984104L;
 
+    public RequestAttributes() {}
+
+    public RequestAttributes(Attributes item) {
+        accessionNumber =
+            AttributeFilter.getString(item, Tag.AccessionNumber);
+        studyInstanceUID =
+            AttributeFilter.getString(item, Tag.StudyInstanceUID);
+        requestedProcedureID =
+            AttributeFilter.getString(item, Tag.RequestedProcedureID);
+        scheduledProcedureStepID =
+            AttributeFilter.getString(item, Tag.ScheduledProcedureStepID);
+        requestingService =
+            AttributeFilter.getString(item, Tag.RequestingService);
+        String s = AttributeFilter.getString(item, Tag.RequestingPhysician);
+        if (s.equals("*")) {
+            requestingPhysician = "*";
+            requestingPhysicianIdeographicName = "*";
+            requestingPhysicianPhoneticName = "*";
+            requestingPhysicianFamilyNameSoundex = "*";
+            requestingPhysicianGivenNameSoundex = "*";
+        } else {
+            PersonName pn = new PersonName(s);
+            requestingPhysician =
+                    pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
+            requestingPhysicianIdeographicName =
+                    pn.getNormalizedString(PersonName.Group.Ideographic, "*");
+            requestingPhysicianPhoneticName =
+                    pn.getNormalizedString(PersonName.Group.Phonetic, "*");
+            //TODO
+            requestingPhysicianFamilyNameSoundex = "*";
+            requestingPhysicianGivenNameSoundex = "*";
+        }
+    }
+
     @Id
     @GeneratedValue
     @Column(name = "pk")
     private long pk;
 
+    @Basic(optional = false)
     @Column(name = "accession_no")
     private String accessionNumber;
-    
-    @Column(name = "study_iuid")
-    private String studyInstanceUID;
-
-    @Column(name = "req_proc_id")
-    private String requestedProcedureID;
-
-    @Column(name = "sps_id")
-    private String scheduledProcedureStepID;
-
-    @Column(name = "req_service")
-    private String requestingService;
-
-    @Column(name = "req_physician")
-    private String requestingPhysician;
-    
-    @Column(name = "req_phys_fn_sx")
-    private String requestingPhysicianFamilyNameSoundex;
-    
-    @Column(name = "req_phys_gn_sx")
-    private String requestingPhysicianGivenNameSoundex;
-
-    @Column(name = "req_phys_i_name")
-    private String requestingPhysicianIdeographicName;
-
-    @Column(name = "req_phys_p_name")
-    private String requestingPhysicianPhoneticName;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "series_fk")
-    private Series series;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "accno_issuer_fk")
     private Issuer issuerOfAccessionNumber;
+
+    @Basic(optional = false)
+    @Column(name = "study_iuid")
+    private String studyInstanceUID;
+
+    @Basic(optional = false)
+    @Column(name = "req_proc_id")
+    private String requestedProcedureID;
+
+    @Basic(optional = false)
+    @Column(name = "sps_id")
+    private String scheduledProcedureStepID;
+
+    @Basic(optional = false)
+    @Column(name = "req_service")
+    private String requestingService;
+
+    @Basic(optional = false)
+    @Column(name = "req_physician")
+    private String requestingPhysician;
+    
+    @Basic(optional = false)
+    @Column(name = "req_phys_fn_sx")
+    private String requestingPhysicianFamilyNameSoundex;
+    
+    @Basic(optional = false)
+    @Column(name = "req_phys_gn_sx")
+    private String requestingPhysicianGivenNameSoundex;
+
+    @Basic(optional = false)
+    @Column(name = "req_phys_i_name")
+    private String requestingPhysicianIdeographicName;
+
+    @Basic(optional = false)
+    @Column(name = "req_phys_p_name")
+    private String requestingPhysicianPhoneticName;
 
     public long getPk() {
         return pk;
@@ -109,6 +154,14 @@ public class RequestAttributes implements Serializable {
 
     public String getAccessionNumber() {
         return accessionNumber;
+    }
+
+    public Issuer getIssuerOfAccessionNumber() {
+        return issuerOfAccessionNumber;
+    }
+
+    public void setIssuerOfAccessionNumber(Issuer issuerOfAccessionNumber) {
+        this.issuerOfAccessionNumber = issuerOfAccessionNumber;
     }
 
     public String getStudyInstanceUID() {
@@ -147,11 +200,4 @@ public class RequestAttributes implements Serializable {
         return requestingPhysicianPhoneticName;
     }
 
-    public Series getSeries() {
-        return series;
-    }
-
-    public Issuer getIssuerOfAccessionNumber() {
-        return issuerOfAccessionNumber;
-    }
 }

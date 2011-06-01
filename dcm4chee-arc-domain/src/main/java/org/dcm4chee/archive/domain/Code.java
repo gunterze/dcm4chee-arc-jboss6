@@ -114,6 +114,13 @@ public class Code implements Serializable {
         this.codeMeaning = codeMeaning;
     }
 
+    public Code(Attributes item) {
+        this(item.getString(Tag.CodeValue, null),
+             item.getString(Tag.CodingSchemeDesignator, null),
+             item.getString(Tag.CodingSchemeVersion, null),
+             item.getString(Tag.CodeMeaning, null));
+    }
+
     public long getPk() {
         return pk;
     }
@@ -153,14 +160,5 @@ public class Code implements Serializable {
             codeItem.setString(Tag.CodingSchemeVersion, VR.SH, codingSchemeVersion);
         codeItem.setString(Tag.CodeMeaning, VR.LO, codeMeaning);
         return codeItem ;
-    }
-
-    public static Code valueOf(Attributes item) {
-        Code code = new Code();
-        code.codeValue = item.getString(Tag.CodeValue, null);
-        code.codingSchemeDesignator = item.getString(Tag.CodingSchemeDesignator, null);
-        code.codingSchemeVersion = item.getString(Tag.CodingSchemeVersion, null);
-        code.codeMeaning = item.getString(Tag.CodeMeaning, null);
-        return code;
     }
 }

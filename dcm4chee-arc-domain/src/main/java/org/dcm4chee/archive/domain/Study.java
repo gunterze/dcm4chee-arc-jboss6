@@ -40,11 +40,10 @@ package org.dcm4chee.archive.domain;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
-import java.util.Set;
 
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -119,6 +118,10 @@ public class Study implements Serializable {
     @Column(name = "accession_no")
     private String accessionNumber;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "accno_issuer_fk")
+    private Issuer issuerOfAccessionNumber;
+
     @Basic(optional = false)
     @Column(name = "ref_physician")
     private String referringPhysicianName;
@@ -183,22 +186,18 @@ public class Study implements Serializable {
     @Column(name = "study_attrs")
     private byte[] encodedAttributes;
 
-    @ManyToMany(fetch=FetchType.LAZY)
+    @ManyToMany
     @JoinTable(name = "rel_study_pcode", 
         joinColumns = @JoinColumn(name = "study_fk", referencedColumnName = "pk"),
         inverseJoinColumns = @JoinColumn(name = "pcode_fk", referencedColumnName = "pk"))
-    private Set<Code> procedureCodes;
+    private Collection<Code> procedureCodes;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "accno_issuer_fk")
-    private Issuer issuerOfAccessionNumber;
-
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "patient_fk")
     private Patient patient;
-    
-    @OneToMany(mappedBy = "study", fetch = FetchType.LAZY, cascade=CascadeType.REMOVE)
-    private Set<Series> series;
+
+    @OneToMany(mappedBy = "study", orphanRemoval = true)
+    private Collection<Series> series;
 
     @PrePersist
     public void onPrePersist() {
@@ -246,6 +245,14 @@ public class Study implements Serializable {
 
     public String getAccessionNumber() {
         return accessionNumber;
+    }
+
+    public Issuer getIssuerOfAccessionNumber() {
+        return issuerOfAccessionNumber;
+    }
+
+    public void setIssuerOfAccessionNumber(Issuer issuerOfAccessionNumber) {
+        this.issuerOfAccessionNumber = issuerOfAccessionNumber;
     }
 
     public String getReferringPhysicianName() {
@@ -320,12 +327,12 @@ public class Study implements Serializable {
         return encodedAttributes;
     }
 
-    public Set<Code> getProcedureCodes() {
+    public Collection<Code> getProcedureCodes() {
         return procedureCodes;
     }
 
-    public Issuer getIssuerOfAccessionNumber() {
-        return issuerOfAccessionNumber;
+    public void setProcedureCodes(Collection<Code> procedureCodes) {
+        this.procedureCodes = procedureCodes;
     }
 
     public Patient getPatient() {
@@ -336,7 +343,7 @@ public class Study implements Serializable {
         this.patient = patient;
     }
 
-    public Set<Series> getSeries() {
+    public Collection<Series> getSeries() {
         return series;
     }
 

@@ -40,11 +40,10 @@ package org.dcm4chee.archive.domain;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
-import java.util.Set;
 
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -157,11 +156,11 @@ public class Patient implements Serializable {
     @JoinColumn(name = "merge_fk")
     private Patient mergedWith;
 
-    @OneToMany(mappedBy = "mergedWith", fetch=FetchType.LAZY, cascade=CascadeType.REMOVE)
-    private Set<Patient> previous;
+    @OneToMany(mappedBy = "mergedWith", orphanRemoval = true)
+    private Collection<Patient> previous;
 
-    @OneToMany(mappedBy = "patient", fetch=FetchType.LAZY, cascade=CascadeType.REMOVE)
-    private Set<Study> studies;
+    @OneToMany(mappedBy = "patient", orphanRemoval = true)
+    private Collection<Study> studies;
 
     @Override
     public String toString() {
@@ -250,11 +249,11 @@ public class Patient implements Serializable {
         return mergedWith;
     }
 
-    public Set<Patient> getPrevious() {
+    public Collection<Patient> getPrevious() {
         return previous;
     }
 
-    public Set<Study> getStudies() {
+    public Collection<Study> getStudies() {
         return studies;
     }
 

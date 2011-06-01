@@ -40,8 +40,8 @@ package org.dcm4chee.archive.domain;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
-import java.util.Set;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -215,15 +215,16 @@ public class Series implements Serializable {
     @JoinColumn(name = "inst_code_fk")
     private Code institutionCode;
 
-    @OneToMany(mappedBy = "series", fetch = FetchType.LAZY, cascade=CascadeType.REMOVE)
-    private Set<RequestAttributes> requestAttributes;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "series_fk")
+    private Collection<RequestAttributes> requestAttributes;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     @JoinColumn(name = "study_fk")
     private Study study;
 
-    @OneToMany(mappedBy = "series", fetch = FetchType.LAZY, cascade=CascadeType.REMOVE)
-    private Set<Instance> instances;
+    @OneToMany(mappedBy = "series", orphanRemoval = true)
+    private Collection<Instance> instances;
 
     @PrePersist
     public void onPrePersist() {
@@ -365,8 +366,12 @@ public class Series implements Serializable {
         return institutionCode;
     }
 
-    public Set<RequestAttributes> getRequestAttributes() {
+    public Collection<RequestAttributes> getRequestAttributes() {
         return requestAttributes;
+    }
+
+    public void setRequestAttributes(Collection<RequestAttributes> requestAttributes) {
+        this.requestAttributes = requestAttributes;
     }
 
     public Study getStudy() {
@@ -377,7 +382,7 @@ public class Series implements Serializable {
         this.study = study;
     }
 
-    public Set<Instance> getInstances() {
+    public Collection<Instance> getInstances() {
         return instances;
     }
 

@@ -61,6 +61,20 @@ public class Issuer implements Serializable {
 
     private static final long serialVersionUID = -5050458184841995777L;
 
+    public Issuer() {}
+
+    public Issuer(String entityId, String entityUid, String entityUidType) {
+        this.entityId = entityId;
+        this.entityUid = entityUid;
+        this.entityUidType = entityUidType;
+    }
+
+    public Issuer(Attributes item) {
+        this(item.getString(Tag.LocalNamespaceEntityID, null),
+             item.getString(Tag.UniversalEntityID, null),
+             item.getString(Tag.UniversalEntityIDType, null));
+    }
+
     @Id
     @GeneratedValue
     @Column(name = "pk")
