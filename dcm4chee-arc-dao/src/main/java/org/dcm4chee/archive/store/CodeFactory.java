@@ -38,11 +38,15 @@
 
 package org.dcm4chee.archive.store;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.domain.Code;
 
@@ -74,10 +78,23 @@ public class CodeFactory {
     }
 
     public static Code createCode(EntityManager em, Attributes codeItem) {
-        return createCode(em,
-                codeItem.getString(Tag.CodeValue, null),
-                codeItem.getString(Tag.CodingSchemeDesignator, null),
-                codeItem.getString(Tag.CodingSchemeDesignator, null),
-                codeItem.getString(Tag.CodeMeaning, null));
+        return codeItem != null
+                ? createCode(em,
+                    codeItem.getString(Tag.CodeValue, null),
+                    codeItem.getString(Tag.CodingSchemeDesignator, null),
+                    codeItem.getString(Tag.CodingSchemeVersion, null),
+                    codeItem.getString(Tag.CodeMeaning, null))
+                : null;
+    }
+
+    public static List<Code> createCodes(EntityManager em, Sequence seq) {
+        if (seq == null || seq.isEmpty())
+            return null;
+
+        ArrayList<Code> list = new ArrayList<Code>(seq.size());
+        for (Attributes item : seq)
+            list.add(CodeFactory.createCode(em, item));
+
+        return list;
     }
 }

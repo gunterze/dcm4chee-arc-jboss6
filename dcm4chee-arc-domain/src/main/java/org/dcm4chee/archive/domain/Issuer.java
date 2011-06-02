@@ -44,6 +44,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 import org.dcm4che.data.Attributes;
@@ -55,24 +57,38 @@ import org.dcm4che.data.VR;
  * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
+@NamedQueries({
+@NamedQuery(
+    name="Issuer.findByEntityID",
+    query="SELECT i FROM Issuer i WHERE i.entityID = ?1"),
+@NamedQuery(
+    name="Issuer.findByEntityUID",
+    query="SELECT i FROM Issuer i " +
+          "WHERE i.entityUID = ?1 AND i.entityUIDType = ?2"),
+@NamedQuery(
+    name="Issuer.findByEntityIDorUID",
+    query="SELECT i FROM Issuer i WHERE i.entityID = ?1 " +
+          "OR (i.entityUID = ?2 AND i.entityUIDType = ?3)")
+})
 @Entity
 @Table(name = "issuer")
 public class Issuer implements Serializable {
 
     private static final long serialVersionUID = -5050458184841995777L;
 
-    public static final String FIND_BY_ID = "Issuer.findByID";
+    public static final String FIND_BY_ENTITY_ID = "Issuer.findByEntityID";
 
-    public static final String FIND_BY_UID = "Issuer.findByUID";
+    public static final String FIND_BY_ENTITY_UID = "Issuer.findByEntityUID";
 
-    public static final String FIND_BY_ID_OR_UID = "Issuer.findByIDorUID";
+    public static final String FIND_BY_ENTITY_ID_OR_UID =
+        "Issuer.findByEntityIDorUID";
 
     public Issuer() {}
 
-    public Issuer(String entityId, String entityUid, String entityUidType) {
-        this.entityId = entityId;
-        this.entityUid = entityUid;
-        this.entityUidType = entityUidType;
+    public Issuer(String entityID, String entityUID, String entityUIDType) {
+        this.entityID = entityID;
+        this.entityUID = entityUID;
+        this.entityUIDType = entityUIDType;
     }
 
     public Issuer(Attributes item) {
@@ -87,81 +103,81 @@ public class Issuer implements Serializable {
     private long pk;
 
     @Column(name = "entity_id")
-    private String entityId;
+    private String entityID;
 
     @Column(name = "entity_uid")
-    private String entityUid;
+    private String entityUID;
 
     @Column(name = "entity_uid_type")
-    private String entityUidType;
+    private String entityUIDType;
 
     public long getPk() {
         return pk;
     }
 
     public String getLocalNamespaceEntityID() {
-        return entityId;
+        return entityID;
     }
 
     public void setLocalNamespaceEntityID(String entityId) {
-        this.entityId = entityId;
+        this.entityID = entityId;
     }
 
     public String getUniversalEntityID() {
-        return entityUid;
+        return entityUID;
     }
 
     public void setUniversalEntityID(String entityUid) {
-        this.entityUid = entityUid;
+        this.entityUID = entityUid;
     }
 
     public String getUniversalEntityIDType() {
-        return entityUidType;
+        return entityUIDType;
     }
 
     public void setUniversalEntityIDType(String entityUidType) {
-        this.entityUidType = entityUidType;
+        this.entityUIDType = entityUidType;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder().append("Issuer[id=");
-        if (entityId != null)
-            sb.append(entityId);
+        if (entityID != null)
+            sb.append(entityID);
         sb.append(", uid=");
-        if (entityUid != null)
-            sb.append(entityUid);
+        if (entityUID != null)
+            sb.append(entityUID);
         sb.append(", type=");
-        if (entityUidType != null)
-            sb.append(entityUidType);
+        if (entityUIDType != null)
+            sb.append(entityUIDType);
         sb.append("]");
         return sb.toString();
     }
 
     public Attributes toItem() {
         int size = 0;
-        if (entityId != null)
+        if (entityID != null)
             size++;
-        if (entityUid != null)
+        if (entityUID != null)
             size++;
-        if (entityUidType != null)
+        if (entityUIDType != null)
             size++;
 
         Attributes item = new Attributes(size);
-        if (entityId != null)
-            item.setString(Tag.LocalNamespaceEntityID, VR.UT, entityId);
-        if (entityUid != null)
-            item.setString(Tag.UniversalEntityID, VR.UT, entityUid);
-        if (entityUidType != null)
-            item.setString(Tag.UniversalEntityIDType, VR.UT, entityUid);
+        if (entityID != null)
+            item.setString(Tag.LocalNamespaceEntityID, VR.UT, entityID);
+        if (entityUID != null)
+            item.setString(Tag.UniversalEntityID, VR.UT, entityUID);
+        if (entityUIDType != null)
+            item.setString(Tag.UniversalEntityIDType, VR.UT, entityUID);
         return item ;
     }
 
     public static Issuer valueOf(Attributes item) {
         Issuer issuer = new Issuer();
-        issuer.entityId = item.getString(Tag.LocalNamespaceEntityID, null);
-        issuer.entityUid = item.getString(Tag.UniversalEntityID, null);
-        issuer.entityUidType = item.getString(Tag.UniversalEntityIDType, null);
+        issuer.entityID = item.getString(Tag.LocalNamespaceEntityID, null);
+        issuer.entityUID = item.getString(Tag.UniversalEntityID, null);
+        issuer.entityUIDType = item.getString(Tag.UniversalEntityIDType, null);
         return issuer;
     }
 }

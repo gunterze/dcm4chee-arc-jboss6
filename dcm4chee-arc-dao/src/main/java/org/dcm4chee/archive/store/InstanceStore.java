@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.store;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -50,7 +51,6 @@ import org.dcm4che.data.ItemPointer;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.domain.Availability;
-import org.dcm4chee.archive.domain.Code;
 import org.dcm4chee.archive.domain.Instance;
 import org.dcm4chee.archive.domain.Patient;
 import org.dcm4chee.archive.domain.RequestAttributes;
@@ -77,10 +77,13 @@ public class InstanceStore {
                 .getSingleResult();
         } catch (NoResultException e) {
             Instance inst = new Instance();
-            inst.setSeries(getSeries(attrs, sourceAET, retrieveAETs, externalRetrieveAET,
-                    availability));
-            setConceptNameCode(inst, attrs);
-            setVerifyingObservers(inst, attrs);
+            inst.setSeries(getSeries(attrs, sourceAET, retrieveAETs,
+                    externalRetrieveAET, availability));
+            inst.setConceptNameCode(
+                    CodeFactory.createCode(em, attrs.getNestedDataset(
+                            new ItemPointer(Tag.ConceptNameCodeSequence))));
+            inst.setVerifyingObservers(createVerifyingObservers(
+                    attrs.getSequence(Tag.VerifyingObserverSequence)));
             inst.setRetrieveAETs(retrieveAETs);
             inst.setExternalRetrieveAET(externalRetrieveAET);
             inst.setAvailability(availability);
@@ -90,22 +93,15 @@ public class InstanceStore {
         }
     }
 
-    private void setVerifyingObservers(Instance inst, Attributes attrs) {
-        Sequence seq = attrs.getSequence(Tag.VerifyingObserverSequence);
-        if (seq != null && !seq.isEmpty()) {
-            ArrayList<VerifyingObserver> list =
-                    new ArrayList<VerifyingObserver>(seq.size());
-            for (Attributes item : seq)
-                list.add(new VerifyingObserver(item));
-            inst.setVerifyingObservers(list);
-        }
-    }
+    private List<VerifyingObserver> createVerifyingObservers(Sequence seq) {
+        if (seq == null || seq.isEmpty())
+            return null;
 
-    private void setConceptNameCode(Instance inst, Attributes attrs) {
-        Attributes item = attrs.getNestedDataset(
-                new ItemPointer(Tag.ConceptNameCodeSequence));
-        if (item != null)
-            inst.setConceptNameCode(CodeFactory.createCode(em, item));
+        ArrayList<VerifyingObserver> list =
+                new ArrayList<VerifyingObserver>(seq.size());
+        for (Attributes item : seq)
+            list.add(new VerifyingObserver(item));
+        return list;
     }
 
     private Series getSeries(Attributes attrs, String sourceAET,
@@ -120,7 +116,11 @@ public class InstanceStore {
             Series series = new Series();
             series.setStudy(getStudy(attrs, retrieveAETs, externalRetrieveAET,
                     availability));
-            setRequestAttributes(series, attrs);
+            series.setInstitutionCode(
+                    CodeFactory.createCode(em, attrs.getNestedDataset(
+                            new ItemPointer(Tag.InstitutionCodeSequence))));
+            series.setRequestAttributes(createRequestAttributes(
+                    attrs.getSequence(Tag.RequestAttributesSequence)));
             series.setSourceAET(sourceAET);
             series.setRetrieveAETs(retrieveAETs);
             series.setExternalRetrieveAET(externalRetrieveAET);
@@ -131,30 +131,24 @@ public class InstanceStore {
         }
     }
 
-    private void setRequestAttributes(Series series, Attributes attrs) {
-        Sequence seq = attrs.getSequence(Tag.RequestAttributesSequence);
-        if (seq != null && !seq.isEmpty()) {
-            ArrayList<RequestAttributes> list =
-                    new ArrayList<RequestAttributes>(seq.size());
-            for (Attributes item : seq) {
-                RequestAttributes rqAttrs = new RequestAttributes(item);
-                setIssuerOfAccessionNumber(rqAttrs, item);
-                list.add(rqAttrs);
-            }
-            series.setRequestAttributes(list);
-        }
-    }
+    private List<RequestAttributes> createRequestAttributes(Sequence seq) {
+        if (seq == null || seq.isEmpty())
+            return null;
 
-    private void setIssuerOfAccessionNumber(RequestAttributes rqAttrs,
-            Attributes attrs) {
-        Attributes item = attrs.getNestedDataset(
-                new ItemPointer(Tag.IssuerOfAccessionNumberSequence));
-        if (item != null)
+        ArrayList<RequestAttributes> list =
+                new ArrayList<RequestAttributes>(seq.size());
+        for (Attributes item : seq) {
+            RequestAttributes rqAttrs = new RequestAttributes(item);
             rqAttrs.setIssuerOfAccessionNumber(
-                    IssuerFactory.createIssuer(em, item));
+                    IssuerFactory.createIssuer(em, item.getNestedDataset(
+                            new ItemPointer(Tag.IssuerOfAccessionNumberSequence))));
+            list.add(rqAttrs);
+        }
+        return list;
     }
 
-    private Study getStudy(Attributes attrs, String retrieveAETs, String externalRetrieveAET, Availability availability) {
+    private Study getStudy(Attributes attrs, String retrieveAETs,
+            String externalRetrieveAET, Availability availability) {
         try {
             return em.createNamedQuery(
                 Study.FIND_BY_STUDY_INSTANCE_UID, Study.class)
@@ -163,32 +157,19 @@ public class InstanceStore {
         } catch (NoResultException e) {
             Study study = new Study();
             study.setPatient(getPatient(attrs));
-            setProcedureCodes(study, attrs);
-            setIssuerOfAccessionNumber(study, attrs);
+            study.setProcedureCodes(CodeFactory.createCodes(em,
+                    attrs.getSequence(Tag.ProcedureCodeSequence)));
+            study.setIssuerOfAccessionNumber(
+                    IssuerFactory.createIssuer(em, attrs.getNestedDataset(
+                            new ItemPointer(Tag.IssuerOfAccessionNumberSequence))));
+            study.setModalitiesInStudy(attrs.getString(Tag.Modality, null));
+            study.setSOPClassesInStudy(attrs.getString(Tag.SOPClassUID, null));
             study.setRetrieveAETs(retrieveAETs);
             study.setExternalRetrieveAET(externalRetrieveAET);
             study.setAvailability(availability);
             study.setAttributes(attrs);
             em.persist(study);
             return study;
-        }
-    }
-
-    private void setIssuerOfAccessionNumber(Study study, Attributes attrs) {
-        Attributes item = attrs.getNestedDataset(
-                new ItemPointer(Tag.IssuerOfAccessionNumberSequence));
-        if (item != null)
-            study.setIssuerOfAccessionNumber(
-                    IssuerFactory.createIssuer(em, item));
-    }
-
-    private void setProcedureCodes(Study study, Attributes attrs) {
-        Sequence seq = attrs.getSequence(Tag.ProcedureCodeSequence);
-        if (seq != null && !seq.isEmpty()) {
-            ArrayList<Code> list = new ArrayList<Code>(seq.size());
-            for (Attributes item : seq)
-                list.add(CodeFactory.createCode(em, item));
-            study.setProcedureCodes(list);
         }
     }
 

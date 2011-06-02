@@ -56,14 +56,14 @@ public class IssuerFactory {
         try {
             TypedQuery<Issuer> query;
             if (entityID == null) {
-                query = em.createNamedQuery(Issuer.FIND_BY_UID, Issuer.class)
+                query = em.createNamedQuery(Issuer.FIND_BY_ENTITY_UID, Issuer.class)
                     .setParameter(1, entityUID)
                     .setParameter(2, entityUIDType);
             } else if (entityUID == null) {
-                query = em.createNamedQuery(Issuer.FIND_BY_ID, Issuer.class)
+                query = em.createNamedQuery(Issuer.FIND_BY_ENTITY_ID, Issuer.class)
                     .setParameter(1, entityID);
             } else {
-                query = em.createNamedQuery(Issuer.FIND_BY_ID_OR_UID, Issuer.class)
+                query = em.createNamedQuery(Issuer.FIND_BY_ENTITY_ID_OR_UID, Issuer.class)
                     .setParameter(1, entityID)
                     .setParameter(2, entityUID)
                     .setParameter(3, entityUIDType);
@@ -77,9 +77,11 @@ public class IssuerFactory {
     }
 
     public static Issuer createIssuer(EntityManager em, Attributes issuerItem) {
-        return createIssuer(em,
-                issuerItem.getString(Tag.CodeValue, null),
-                issuerItem.getString(Tag.CodingSchemeDesignator, null),
-                issuerItem.getString(Tag.CodingSchemeDesignator, null));
+        return issuerItem != null
+                ? createIssuer(em,
+                    issuerItem.getString(Tag.CodeValue, null),
+                    issuerItem.getString(Tag.CodingSchemeDesignator, null),
+                    issuerItem.getString(Tag.CodingSchemeDesignator, null))
+                : null;
     }
 }

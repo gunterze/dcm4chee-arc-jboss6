@@ -71,7 +71,8 @@ public class InitTestData {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
                 .addClasses(InstanceStore.class,
                         CodeFactory.class, IssuerFactory.class)
-                .addAsResource("sr_602ct_add.dcm");
+                .addAsResource("sr-1.dcm")
+                .addAsResource("sr-2.dcm");
     }
 
     @EJB
@@ -80,13 +81,15 @@ public class InitTestData {
     @Test
     public void storeTestData() throws IOException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        instanceStore.store(readDataset("sr_602ct_add.dcm", cl),
+        instanceStore.store(readDataset("sr-1.dcm", cl),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(readDataset("sr-2.dcm", cl),
                 SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
     }
 
     private Attributes readDataset(String name, ClassLoader cl)
             throws IOException {
-        InputStream in = cl.getResourceAsStream("sr_602ct_add.dcm");
+        InputStream in = cl.getResourceAsStream(name);
         try {
             return new DicomInputStream(in).readDataset(-1, -1);
         } finally {

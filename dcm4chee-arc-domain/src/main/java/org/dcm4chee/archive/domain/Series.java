@@ -378,6 +378,10 @@ public class Series implements Serializable {
         return institutionCode;
     }
 
+    public void setInstitutionCode(Code institutionCode) {
+        this.institutionCode = institutionCode;
+    }
+
     public Collection<RequestAttributes> getRequestAttributes() {
         return requestAttributes;
     }

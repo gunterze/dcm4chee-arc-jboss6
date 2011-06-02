@@ -303,8 +303,16 @@ public class Study implements Serializable {
         return modalitiesInStudy;
     }
 
-    public String getSopClassesInStudy() {
+    public void setModalitiesInStudy(String modalitiesInStudy) {
+        this.modalitiesInStudy = modalitiesInStudy;
+    }
+
+    public String getSOPClassesInStudy() {
         return sopClassesInStudy;
+    }
+
+    public void setSOPClassesInStudy(String sopClassesInStudy) {
+        this.sopClassesInStudy = sopClassesInStudy;
     }
 
     public String getRetrieveAETs() {
