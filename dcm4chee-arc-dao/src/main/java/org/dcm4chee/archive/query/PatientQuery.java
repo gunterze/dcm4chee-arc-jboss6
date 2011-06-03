@@ -43,12 +43,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceUnit;
+import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceContextType;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -66,17 +65,11 @@ import org.dcm4chee.archive.domain.Utils;
 @Stateful
 public class PatientQuery {
 
-    @PersistenceUnit(unitName="dcm4chee-arc")
-    private EntityManagerFactory emf;
-
+    @PersistenceContext(unitName = "dcm4chee-arc",
+                        type = PersistenceContextType.EXTENDED)
     private EntityManager em;
 
     private Iterator<byte[]> results;
-
-    @PostConstruct
-    public void init() {
-        em = emf.createEntityManager();
-    }
 
     public void find(String[] pids, Attributes keys, boolean matchUnknown) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -115,8 +108,6 @@ public class PatientQuery {
     }
 
     @Remove
-    public void close() {
-        em.close();
-    }
+    public void close() {}
 
 }

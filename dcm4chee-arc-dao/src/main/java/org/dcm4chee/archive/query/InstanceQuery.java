@@ -43,12 +43,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceUnit;
+import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceContextType;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
@@ -75,9 +74,8 @@ import org.dcm4chee.archive.domain.Utils;
 @Stateful
 public class InstanceQuery {
 
-    @PersistenceUnit(unitName="dcm4chee-arc")
-    private EntityManagerFactory emf;
-
+    @PersistenceContext(unitName = "dcm4chee-arc",
+                        type = PersistenceContextType.EXTENDED)
     private EntityManager em;
     private Query seriesQuery;
 
@@ -86,20 +84,14 @@ public class InstanceQuery {
     private long seriesPk = -1L;
     private Attributes seriesAttrs;
 
-    @PostConstruct
-    public void init() {
-        em = emf.createEntityManager();
-        seriesQuery = em.createNamedQuery(Series.FIND_ATTRIBUTES_BY_SERIES_PK);
-    }
-
     public void find(String[] pids, Attributes keys, boolean matchUnknown,
             boolean combinedDateTime) {
-        em = emf.createEntityManager();
         CriteriaBuilder cb = em.getCriteriaBuilder();
         TypedQuery<Tuple> instQuery =
                 buildInstanceQuery(cb, pids, keys, matchUnknown,
                         combinedDateTime);
         results = instQuery.getResultList().iterator();
+        seriesQuery = em.createNamedQuery(Series.FIND_ATTRIBUTES_BY_SERIES_PK);
     }
 
     private Attributes querySeriesAttrs(long seriesPk) throws IOException {
@@ -185,8 +177,6 @@ public class InstanceQuery {
     }
 
     @Remove
-    public void close() {
-        em.close();
-    }
+    public void close() {}
 
 }

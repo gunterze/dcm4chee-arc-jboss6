@@ -94,6 +94,7 @@ public class InitTestData {
                 SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
         instanceStore.store(SAXReader.parse("resource:sr-2.xml", null),
                 SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.close();
     }
 
 }

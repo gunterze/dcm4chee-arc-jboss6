@@ -41,10 +41,13 @@ package org.dcm4chee.archive.store;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.ejb.Stateless;
+import javax.ejb.Remove;
+import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceContextType;
+import javax.persistence.TypedQuery;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.ItemPointer;
@@ -52,7 +55,6 @@ import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.domain.Availability;
 import org.dcm4chee.archive.domain.Instance;
-import org.dcm4chee.archive.domain.Patient;
 import org.dcm4chee.archive.domain.RequestAttributes;
 import org.dcm4chee.archive.domain.Series;
 import org.dcm4chee.archive.domain.Study;
@@ -61,13 +63,16 @@ import org.dcm4chee.archive.domain.VerifyingObserver;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateless
+@Stateful
 public class InstanceStore {
 
-    @PersistenceContext(unitName="dcm4chee-arc")
+    @PersistenceContext(unitName = "dcm4chee-arc",
+            type = PersistenceContextType.EXTENDED)
     private EntityManager em;
+    private final ArrayList<Study> dirtyStudies = new ArrayList<Study>();
+    private final ArrayList<Series> dirtySeries = new ArrayList<Series>();
 
-     public Instance store(Attributes attrs, String sourceAET,
+    public Instance store(Attributes attrs, String sourceAET,
              String retrieveAETs, String externalRetrieveAET,
              Availability availability) {
         try {
@@ -77,8 +82,10 @@ public class InstanceStore {
                 .getSingleResult();
         } catch (NoResultException e) {
             Instance inst = new Instance();
-            inst.setSeries(getSeries(attrs, sourceAET, retrieveAETs,
-                    externalRetrieveAET, availability));
+            Series series = getSeries(attrs, sourceAET, retrieveAETs,
+                    externalRetrieveAET, availability);
+            Study study = series.getStudy();
+            inst.setSeries(series);
             inst.setConceptNameCode(
                     CodeFactory.getCode(em, attrs.getNestedDataset(
                             new ItemPointer(Tag.ConceptNameCodeSequence))));
@@ -89,8 +96,55 @@ public class InstanceStore {
             inst.setAvailability(availability);
             inst.setAttributes(attrs);
             em.persist(inst);
+            if (!series.isDirty()) {
+                markAsDirty(series);
+                em.merge(series);
+            }
+            if (!study.isDirty()) {
+                markAsDirty(study);
+                em.merge(study);
+            }
             return inst;
         }
+    }
+
+    private void markAsDirty(Series series) {
+        series.setDirty(true);
+        dirtySeries.add(series);
+    }
+
+    private void markAsDirty(Study study) {
+        study.setDirty(true);
+        dirtyStudies.add(study);
+    }
+
+ 
+    public void updateDerivedFields() {
+        TypedQuery<Long> countInstancesOfSeries =
+                em.createNamedQuery(Series.COUNT_INSTANCES, Long.class);
+        TypedQuery<Long> countSeriesOfStudy =
+                em.createNamedQuery(Study.COUNT_SERIES, Long.class);
+        TypedQuery<Long> countInstancesOfStudy =
+                em.createNamedQuery(Study.COUNT_INSTANCES, Long.class);
+        for (Series series : dirtySeries) {
+            series.setNumberOfSeriesRelatedInstances(
+                    countInstancesOfSeries.setParameter(1, series)
+                    .getSingleResult().intValue());
+            series.setDirty(false);
+            em.merge(series);
+        }
+        for (Study study : dirtyStudies) {
+            study.setNumberOfStudyRelatedSeries(
+                    countSeriesOfStudy.setParameter(1, study)
+                    .getSingleResult().intValue());
+            study.setNumberOfStudyRelatedInstances(
+                    countInstancesOfStudy.setParameter(1, study)
+                    .getSingleResult().intValue());
+            study.setDirty(false);
+            em.merge(study);
+        }
+        dirtySeries.clear();
+        dirtyStudies.clear();
     }
 
     private List<VerifyingObserver> createVerifyingObservers(Sequence seq) {
@@ -108,10 +162,11 @@ public class InstanceStore {
             String retrieveAETs, String externalRetrieveAET,
             Availability availability) {
         try {
-            return em.createNamedQuery(
+            Series series = em.createNamedQuery(
                 Series.FIND_BY_SERIES_INSTANCE_UID, Series.class)
                 .setParameter(1, attrs.getString(Tag.SeriesInstanceUID, null))
                 .getSingleResult();
+            return series;
         } catch (NoResultException e) {
             Series series = new Series();
             series.setStudy(getStudy(attrs, retrieveAETs, externalRetrieveAET,
@@ -126,12 +181,13 @@ public class InstanceStore {
             series.setExternalRetrieveAET(externalRetrieveAET);
             series.setAvailability(availability);
             series.setAttributes(attrs);
+            markAsDirty(series);
             em.persist(series);
             return series;
         }
     }
 
-    private List<RequestAttributes> createRequestAttributes(Sequence seq) {
+   private List<RequestAttributes> createRequestAttributes(Sequence seq) {
         if (seq == null || seq.isEmpty())
             return null;
 
@@ -170,17 +226,15 @@ public class InstanceStore {
             study.setExternalRetrieveAET(externalRetrieveAET);
             study.setAvailability(availability);
             study.setAttributes(attrs);
+            markAsDirty(study);
             em.persist(study);
             return study;
         }
     }
 
-    public void removePatient(String pid, String issuer) {
-        Patient patient = em.createNamedQuery(
-                Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
-            .setParameter(1, pid)
-            .setParameter(2, issuer)
-            .getSingleResult();
-        em.remove(patient);
-    }
+   @Remove
+   public void close() {
+       updateDerivedFields();
+   }
+
 }

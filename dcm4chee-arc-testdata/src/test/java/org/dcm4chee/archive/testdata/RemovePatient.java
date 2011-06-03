@@ -38,33 +38,29 @@
 
 package org.dcm4chee.archive.testdata;
 
-import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
-import org.jboss.arquillian.api.Deployment;
-import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.dcm4chee.archive.domain.Patient;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@RunWith(Arquillian.class)
-public class ClearTestData {
+@Stateless
+public class RemovePatient {
 
-    @Deployment
-    public static JavaArchive createDeployment() {
-       return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(RemovePatient.class);
+    @PersistenceContext(unitName = "dcm4chee-arc")
+    private EntityManager em;
+
+    public void removePatient(String pid, String issuer) {
+        Patient patient = em.createNamedQuery(
+                Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
+            .setParameter(1, pid)
+            .setParameter(2, issuer)
+            .getSingleResult();
+        em.remove(patient);
     }
 
-    @EJB
-    private RemovePatient removePatient;
-
-    @Test
-    public void removeTestData() {
-        removePatient.removePatient("CT5", "DCM4CHEE_TESTDATA");
-    }
 
 }

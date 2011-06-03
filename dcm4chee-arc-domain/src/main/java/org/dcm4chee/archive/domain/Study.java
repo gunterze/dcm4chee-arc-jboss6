@@ -74,7 +74,13 @@ import org.dcm4che.util.DateUtils;
 @NamedQueries({
 @NamedQuery(
     name="Study.findByStudyInstanceUID",
-    query="SELECT s FROM Study s WHERE s.studyInstanceUID = ?1")
+    query="SELECT s FROM Study s WHERE s.studyInstanceUID = ?1"),
+@NamedQuery(
+    name="Study.countSeries",
+    query="SELECT COUNT(s) FROM Series s WHERE s.study = ?1"),
+@NamedQuery(
+    name="Study.countInstances",
+    query="SELECT COUNT(i) FROM Instance i WHERE i.series.study = ?1")
 })
 @Entity
 @Table(name = "study")
@@ -84,6 +90,8 @@ public class Study implements Serializable {
 
     public static final String FIND_BY_STUDY_INSTANCE_UID =
         "Study.findByStudyInstanceUID";
+    public static final String COUNT_SERIES = "Study.countSeries";
+    public static final String COUNT_INSTANCES = "Study.countInstances";
 
     @Id
     @GeneratedValue
@@ -181,6 +189,10 @@ public class Study implements Serializable {
     @Basic(optional = false)
     @Column(name = "availability")
     private Availability availability;
+
+    @Basic(optional = false)
+    @Column(name = "dirty")
+    private boolean dirty;
 
     @Basic(optional = false)
     @Column(name = "study_attrs")
@@ -295,8 +307,16 @@ public class Study implements Serializable {
         return numberOfStudyRelatedSeries;
     }
 
+    public void setNumberOfStudyRelatedSeries(int numberOfStudyRelatedSeries) {
+        this.numberOfStudyRelatedSeries = numberOfStudyRelatedSeries;
+    }
+
     public int getNumberOfStudyRelatedInstances() {
         return numberOfStudyRelatedInstances;
+    }
+
+    public void setNumberOfStudyRelatedInstances(int numberOfStudyRelatedInstances) {
+        this.numberOfStudyRelatedInstances = numberOfStudyRelatedInstances;
     }
 
     public String getModalitiesInStudy() {
@@ -337,6 +357,14 @@ public class Study implements Serializable {
 
     public void setAvailability(Availability availability) {
         this.availability = availability;
+    }
+
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
     }
 
     public byte[] getEncodedAttributes() {

@@ -84,7 +84,10 @@ import org.dcm4che.util.DateUtils;
                  "s.encodedAttributes, " +
                  "s.study.encodedAttributes, " +
                  "s.study.patient.encodedAttributes " +
-          "FROM Series s WHERE s.pk = ?1")
+          "FROM Series s WHERE s.pk = ?1"),
+@NamedQuery(
+    name="Series.countInstances",
+    query="SELECT COUNT(i) FROM Instance i WHERE i.series = ?1")
 })
 @Entity
 @Table(name = "series")
@@ -96,6 +99,8 @@ public class Series implements Serializable {
             "Series.findBySeriesInstanceUID";
     public static final String FIND_ATTRIBUTES_BY_SERIES_PK =
             "Series.findAttributesBySeriesPk";
+    public static final String COUNT_INSTANCES =
+            "Series.countInstances";
 
     @Id
     @GeneratedValue
@@ -206,6 +211,10 @@ public class Series implements Serializable {
     @Basic(optional = false)
     @Column(name = "availability")
     private Availability availability;
+
+    @Basic(optional = false)
+    @Column(name = "dirty")
+    private boolean dirty;
 
     @Basic(optional = false)
     @Column(name = "series_attrs")
@@ -338,6 +347,10 @@ public class Series implements Serializable {
         return numberOfSeriesRelatedInstances;
     }
 
+    public void setNumberOfSeriesRelatedInstances(int numberOfSeriesRelatedInstances) {
+        this.numberOfSeriesRelatedInstances = numberOfSeriesRelatedInstances;
+    }
+
     public String getSourceAET() {
         return sourceAET;
     }
@@ -368,6 +381,14 @@ public class Series implements Serializable {
 
     public void setAvailability(Availability availability) {
         this.availability = availability;
+    }
+
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
     }
 
     public byte[] getEncodedAttributes() {
