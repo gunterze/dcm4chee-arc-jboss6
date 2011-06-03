@@ -80,7 +80,7 @@ public class InstanceStore {
             inst.setSeries(getSeries(attrs, sourceAET, retrieveAETs,
                     externalRetrieveAET, availability));
             inst.setConceptNameCode(
-                    CodeFactory.createCode(em, attrs.getNestedDataset(
+                    CodeFactory.getCode(em, attrs.getNestedDataset(
                             new ItemPointer(Tag.ConceptNameCodeSequence))));
             inst.setVerifyingObservers(createVerifyingObservers(
                     attrs.getSequence(Tag.VerifyingObserverSequence)));
@@ -117,7 +117,7 @@ public class InstanceStore {
             series.setStudy(getStudy(attrs, retrieveAETs, externalRetrieveAET,
                     availability));
             series.setInstitutionCode(
-                    CodeFactory.createCode(em, attrs.getNestedDataset(
+                    CodeFactory.getCode(em, attrs.getNestedDataset(
                             new ItemPointer(Tag.InstitutionCodeSequence))));
             series.setRequestAttributes(createRequestAttributes(
                     attrs.getSequence(Tag.RequestAttributesSequence)));
@@ -140,7 +140,7 @@ public class InstanceStore {
         for (Attributes item : seq) {
             RequestAttributes rqAttrs = new RequestAttributes(item);
             rqAttrs.setIssuerOfAccessionNumber(
-                    IssuerFactory.createIssuer(em, item.getNestedDataset(
+                    IssuerFactory.getIssuer(em, item.getNestedDataset(
                             new ItemPointer(Tag.IssuerOfAccessionNumberSequence))));
             list.add(rqAttrs);
         }
@@ -156,11 +156,13 @@ public class InstanceStore {
                 .getSingleResult();
         } catch (NoResultException e) {
             Study study = new Study();
-            study.setPatient(getPatient(attrs));
+            study.setPatient(
+                    PatientFactory.followMergedWith(
+                            PatientFactory.getPatient(em, attrs)));
             study.setProcedureCodes(CodeFactory.createCodes(em,
                     attrs.getSequence(Tag.ProcedureCodeSequence)));
             study.setIssuerOfAccessionNumber(
-                    IssuerFactory.createIssuer(em, attrs.getNestedDataset(
+                    IssuerFactory.getIssuer(em, attrs.getNestedDataset(
                             new ItemPointer(Tag.IssuerOfAccessionNumberSequence))));
             study.setModalitiesInStudy(attrs.getString(Tag.Modality, null));
             study.setSOPClassesInStudy(attrs.getString(Tag.SOPClassUID, null));
@@ -171,13 +173,6 @@ public class InstanceStore {
             em.persist(study);
             return study;
         }
-    }
-
-    private Patient getPatient(Attributes attrs) {
-        Patient patient = new Patient();
-        patient.setAttributes(attrs);
-        em.persist(patient);
-        return patient;
     }
 
     public void removePatient(String pid, String issuer) {

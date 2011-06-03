@@ -51,7 +51,7 @@ import org.dcm4chee.archive.domain.Issuer;
  */
 public class IssuerFactory {
 
-    public static Issuer createIssuer(EntityManager em, String entityID,
+    public static Issuer getIssuer(EntityManager em, String entityID,
             String entityUID, String entityUIDType) {
         try {
             TypedQuery<Issuer> query;
@@ -76,9 +76,9 @@ public class IssuerFactory {
         }
     }
 
-    public static Issuer createIssuer(EntityManager em, Attributes issuerItem) {
+    public static Issuer getIssuer(EntityManager em, Attributes issuerItem) {
         return issuerItem != null
-                ? createIssuer(em,
+                ? getIssuer(em,
                     issuerItem.getString(Tag.CodeValue, null),
                     issuerItem.getString(Tag.CodingSchemeDesignator, null),
                     issuerItem.getString(Tag.CodingSchemeDesignator, null))

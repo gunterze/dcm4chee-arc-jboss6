@@ -42,6 +42,9 @@ import static org.junit.Assert.*;
 
 import javax.ejb.EJB;
 
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
+import org.dcm4che.data.VR;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -65,12 +68,20 @@ public class InstanceQueryTest {
     private InstanceQuery query;
 
     @Test
-    public void testByPatientID() throws Exception {
-        query.find(new String[] { "CT5", null }, null, false);
+    public void testByVerificationFlag() throws Exception {
+        query.find(new String[] { "CT5", "DCM4CHEE_TESTDATA" },
+                verificationFlag("VERIFIED"), false, false);
         assertTrue(query.hasNext());
         query.next();
         assertFalse(query.hasNext());
         query.close();
+    }
+
+    private Attributes verificationFlag(String value) {
+        Attributes attrs = new Attributes(2);
+        attrs.setString(Tag.Modality, VR.CS, "SR");
+        attrs.setString(Tag.VerificationFlag, VR.CS, value);
+        return attrs;
     }
 
 }

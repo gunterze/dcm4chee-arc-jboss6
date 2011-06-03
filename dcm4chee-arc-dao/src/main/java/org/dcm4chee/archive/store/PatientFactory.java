@@ -38,63 +38,67 @@
 
 package org.dcm4chee.archive.store;
 
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
-import javax.persistence.TypedQuery;
+import javax.persistence.NonUniqueResultException;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
-import org.dcm4chee.archive.domain.Code;
+import org.dcm4chee.archive.domain.AttributeFilter;
+import org.dcm4chee.archive.domain.Patient;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class CodeFactory {
+public class PatientFactory {
 
-    public static Code getCode(EntityManager em, String codeValue,
-            String codingSchemeDesignator, String codingSchemeVersion,
-            String codeMeaning) {
+    public static Patient getPatient(EntityManager em, Attributes attrs) {
         try {
-            TypedQuery<Code> query = em.createNamedQuery(
-                        codingSchemeVersion == null
-                            ? Code.FIND_BY_CODE_VALUE_WITHOUT_SCHEME_VERSION
-                            : Code.FIND_BY_CODE_VALUE_WITH_SCHEME_VERSION,
-                        Code.class)
-                    .setParameter(1, codeValue)
-                    .setParameter(2, codingSchemeDesignator);
-            if (codingSchemeVersion != null)
-                query.setParameter(3, codingSchemeVersion);
-            return query.getSingleResult();
+            return findPatient(em, attrs);
         } catch (NoResultException e) {
-            Code code = new Code(codeValue, codingSchemeDesignator,
-                    codingSchemeVersion, codeMeaning);
-            em.persist(code);
-            return code;
+            return createNewPatient(em, attrs);
+        } catch (NonUniqueResultException e) {
+            return createNewPatient(em, attrs);
         }
     }
 
-    public static Code getCode(EntityManager em, Attributes codeItem) {
-        return codeItem != null
-                ? getCode(em,
-                    codeItem.getString(Tag.CodeValue, null),
-                    codeItem.getString(Tag.CodingSchemeDesignator, null),
-                    codeItem.getString(Tag.CodingSchemeVersion, null),
-                    codeItem.getString(Tag.CodeMeaning, null))
-                : null;
+    private static Patient findPatient(EntityManager em, Attributes attrs) {
+        String pid = AttributeFilter.getString(attrs, Tag.PatientID);
+        if (pid.equals("*"))
+            throw new NonUniqueResultException();
+        List<Patient> list =
+            em.createNamedQuery(Patient.FIND_BY_PATIENT_ID, Patient.class)
+                .setParameter(1, pid)
+                .getResultList();
+        String issuer1 = AttributeFilter.getString(attrs, Tag.IssuerOfPatientID);
+        if (!issuer1.equals("*"))
+            for (Iterator<Patient> it = list.iterator(); it.hasNext();) {
+                Patient pat = it.next();
+                String issuer2 = pat.getIssuerOfPatientID();
+                if (!issuer2.equals("*") && !issuer2.equals(issuer1))
+                    it.remove();
+            }
+        if (list.isEmpty())
+            throw new NoResultException();
+        if (list.size() > 1)
+            throw new NonUniqueResultException();
+        return list.get(0);
     }
 
-    public static List<Code> createCodes(EntityManager em, Sequence seq) {
-        if (seq == null || seq.isEmpty())
-            return null;
-
-        ArrayList<Code> list = new ArrayList<Code>(seq.size());
-        for (Attributes item : seq)
-            list.add(CodeFactory.getCode(em, item));
-
-        return list;
+    public static Patient followMergedWith(Patient patient) {
+        while (patient.getMergedWith() != null)
+            patient = patient.getMergedWith();
+        return patient;
     }
+
+    private static Patient createNewPatient(EntityManager em, Attributes attrs) {
+        Patient patient = new Patient();
+        patient.setAttributes(attrs);
+        em.persist(patient);
+        return patient;
+    }
+
 }

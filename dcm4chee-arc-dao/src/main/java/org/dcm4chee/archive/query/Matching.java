@@ -179,8 +179,7 @@ class Matching {
     }
 
     public static Predicate wildCard(CriteriaBuilder cb, Path<String> field,
-            String value, boolean matchUnknown,
-            List<Object> params) {
+            String value, boolean matchUnknown, List<Object> params) {
         if (value.equals("*"))
             return null;
 
@@ -270,12 +269,13 @@ class Matching {
                         pat.get(Patient_.patientSex),
                         AttributeFilter.getString(keys, Tag.PatientSex),
                         matchUnknown, params));
+        // TODO
     }
 
     public static void study(CriteriaBuilder cb, Path<Patient> pat,
             Path<Study> study, String[] pids, Attributes keys,
-            boolean matchUnknown, List<Predicate> predicates,
-            List<Object> params) {
+            boolean matchUnknown, boolean combinedDateTime,
+            List<Predicate> predicates, List<Object> params) {
         patient(cb, pat, pids, keys, matchUnknown, predicates, params);
         if (keys == null)
             return;
@@ -289,32 +289,46 @@ class Matching {
                 study.get(Study_.referringPhysicianPhoneticName),
                 AttributeFilter.getString(keys, Tag.ReferringPhysicianName),
                 matchUnknown, params));
+        // TODO
     }
 
     public static void series(CriteriaBuilder cb, Path<Patient> pat,
             Join<Series, Study> study, Path<Series> series, String[] pids,
-            Attributes keys, boolean matchUnknown,
+            Attributes keys, boolean matchUnknown, boolean combinedDateTime,
             List<Predicate> predicates, List<Object> params) {
-        study(cb, pat, study, pids, keys, matchUnknown, predicates, params);
+        study(cb, pat, study, pids, keys, combinedDateTime, matchUnknown,
+                predicates, params);
         if (keys == null)
             return;
 
         add(predicates, listOfUID(cb,
                 series.get(Series_.seriesInstanceUID),
                 keys.getStrings(Tag.SeriesInstanceUID), params));
+        add(predicates, wildCard(cb, series.get(Series_.modality),
+                AttributeFilter.getString(keys, Tag.Modality), matchUnknown,
+                params));
+        // TODO
     }
 
     public static void instance(CriteriaBuilder cb, Path<Patient> pat,
-            Join<Series, Study> study, Path<Series> series, Root<Instance> inst,
-            String[] pids, Attributes keys, boolean matchUnknown,
+            Join<Series, Study> study, Path<Series> series,
+            Root<Instance> inst, String[] pids, Attributes keys,
+            boolean matchUnknown, boolean combinedDateTime,
             List<Predicate> predicates, List<Object> params) {
-        series(cb, pat, study, series, pids, keys, matchUnknown, predicates,
-                params);
+        series(cb, pat, study, series, pids, keys, matchUnknown,
+                combinedDateTime, predicates, params);
         if (keys == null)
             return;
 
         add(predicates, listOfUID(cb,
                 inst.get(Instance_.sopInstanceUID),
                 keys.getStrings(Tag.SOPInstanceUID), params));
+        add(predicates, wildCard(cb, inst.get(Instance_.instanceNumber),
+                AttributeFilter.getString(keys, Tag.InstanceNumber),
+                matchUnknown, params));
+        add(predicates, wildCard(cb, inst.get(Instance_.verificationFlag),
+                AttributeFilter.getString(keys, Tag.VerificationFlag),
+                matchUnknown, params));
+        // TODO
     }
 }

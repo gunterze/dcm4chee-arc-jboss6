@@ -92,11 +92,13 @@ public class InstanceQuery {
         seriesQuery = em.createNamedQuery(Series.FIND_ATTRIBUTES_BY_SERIES_PK);
     }
 
-    public void find(String[] pids, Attributes keys, boolean matchUnknown) {
+    public void find(String[] pids, Attributes keys, boolean matchUnknown,
+            boolean combinedDateTime) {
         em = emf.createEntityManager();
         CriteriaBuilder cb = em.getCriteriaBuilder();
         TypedQuery<Tuple> instQuery =
-                buildInstanceQuery(cb, pids, keys, matchUnknown);
+                buildInstanceQuery(cb, pids, keys, matchUnknown,
+                        combinedDateTime);
         results = instQuery.getResultList().iterator();
     }
 
@@ -125,7 +127,8 @@ public class InstanceQuery {
     }
 
     private TypedQuery<Tuple> buildInstanceQuery(CriteriaBuilder cb,
-            String[] pids, Attributes keys, boolean matchUnknown) {
+            String[] pids, Attributes keys, boolean matchUnknown,
+            boolean combinedDateTime) {
         CriteriaQuery<Tuple> cq =  cb.createTupleQuery();
         Root<Instance> inst = cq.from(Instance.class);
         Join<Instance, Series> series = inst.join(Instance_.series);
@@ -140,8 +143,8 @@ public class InstanceQuery {
         cq.orderBy(cb.asc(series.get(Series_.pk)));
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
-        Matching.instance(cb, pat, study, series, inst, pids, keys, matchUnknown,
-                predicates, params);
+        Matching.instance(cb, pat, study, series, inst, pids, keys,
+                matchUnknown, combinedDateTime, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<Tuple> instQuery = em.createQuery(cq);
         int i = 0;

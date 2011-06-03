@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NativeDicomModel xml-space="preserved">
+<DicomAttribute keyword="SpecificCharacterSet" tag="00080005" vr="CS">
+<Value number="1">ISO 2022 IR 6</Value>
+<Value number="2">ISO 2022 IR 87</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SOPClassUID" tag="00080016" vr="UI">
+<Value number="1">1.2.840.10008.5.1.4.1.1.7</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SOPInstanceUID" tag="00080018" vr="UI">
+<Value number="1">1.2.276.0.7230010.3.200.13.1.1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="StudyDate" tag="00080020" vr="DA">
+<Value number="1">19991117</Value>
+</DicomAttribute>
+<DicomAttribute keyword="StudyTime" tag="00080030" vr="TM">
+<Value number="1">083303</Value>
+</DicomAttribute>
+<DicomAttribute keyword="AccessionNumber" tag="00080050" vr="SH"/>
+<DicomAttribute keyword="Modality" tag="00080060" vr="CS">
+<Value number="1">OT</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ConversionType" tag="00080064" vr="CS">
+<Value number="1">WSD</Value>
+</DicomAttribute>
+<DicomAttribute keyword="Manufacturer" tag="00080070" vr="LO">
+<Value number="1">David Clunie</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ReferringPhysicianName" tag="00080090" vr="PN">
+<PersonName number="1">
+<Alphabetic>
+<FamilyName>Riesmeier</FamilyName>
+<GivenName>Joerg</GivenName>
+</Alphabetic>
+</PersonName>
+</DicomAttribute>
+<DicomAttribute keyword="StudyDescription" tag="00081030" vr="LO">
+<Value number="1">Complex Combination Test</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SeriesDescription" tag="0008103E" vr="LO">
+<Value number="1">complex combination of various pstate features</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PatientName" tag="00100010" vr="PN">
+<PersonName number="1">
+<Alphabetic>
+<FamilyName>oomiya</FamilyName>
+<GivenName>shougo</GivenName>
+</Alphabetic>
+<Ideographic>
+<FamilyName>大宮</FamilyName>
+<GivenName>省吾</GivenName>
+</Ideographic>
+<Phonetic>
+<FamilyName>オオミヤ</FamilyName>
+<GivenName>ショウゴ</GivenName>
+</Phonetic>
+</PersonName>
+</DicomAttribute>
+<DicomAttribute keyword="PatientID" tag="00100020" vr="LO">
+<Value number="1">CT5</Value>
+</DicomAttribute>
+<DicomAttribute keyword="IssuerOfPatientID" tag="00100021" vr="LO">
+<Value number="1">DCM4CHEE_TESTDATA</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PatientBirthDate" tag="00100030" vr="DA">
+<Value number="1">19551003</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PatientSex" tag="00100040" vr="CS">
+<Value number="1">M</Value>
+</DicomAttribute>
+<DicomAttribute keyword="StudyInstanceUID" tag="0020000D" vr="UI">
+<Value number="1">1.2.276.0.7230010.3.200.13</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SeriesInstanceUID" tag="0020000E" vr="UI">
+<Value number="1">1.2.276.0.7230010.3.200.13.1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="StudyID" tag="00200010" vr="SH">
+<Value number="1">CPLX_Pnn</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SeriesNumber" tag="00200011" vr="IS">
+<Value number="1">01</Value>
+</DicomAttribute>
+<DicomAttribute keyword="InstanceNumber" tag="00200013" vr="IS">
+<Value number="1">01</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PatientOrientation" tag="00200020" vr="CS"/>
+<DicomAttribute keyword="ImageComments" tag="00204000" vr="LT">
+<Value number="1">image for test CPLX_P01</Value>
+</DicomAttribute>
+<DicomAttribute keyword="SamplesPerPixel" tag="00280002" vr="US">
+<Value number="1">1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PhotometricInterpretation" tag="00280004" vr="CS">
+<Value number="1">MONOCHROME2</Value>
+</DicomAttribute>
+<DicomAttribute keyword="NumberOfFrames" tag="00280008" vr="IS">
+<Value number="1">1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="Rows" tag="00280010" vr="US">
+<Value number="1">900</Value>
+</DicomAttribute>
+<DicomAttribute keyword="Columns" tag="00280011" vr="US">
+<Value number="1">1280</Value>
+</DicomAttribute>
+<DicomAttribute keyword="BitsAllocated" tag="00280100" vr="US">
+<Value number="1">8</Value>
+</DicomAttribute>
+<DicomAttribute keyword="BitsStored" tag="00280101" vr="US">
+<Value number="1">8</Value>
+</DicomAttribute>
+<DicomAttribute keyword="HighBit" tag="00280102" vr="US">
+<Value number="1">7</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PixelRepresentation" tag="00280103" vr="US">
+<Value number="1">0</Value>
+</DicomAttribute>
+<DicomAttribute keyword="PixelData" tag="7FE00010" vr="OW"/>
+</NativeDicomModel>

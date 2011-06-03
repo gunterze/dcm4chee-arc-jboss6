@@ -83,7 +83,8 @@ public class StudyQuery {
         em = emf.createEntityManager();
     }
 
-    public void find(String[] pids, Attributes keys, boolean matchUnknown) {
+    public void find(String[] pids, Attributes keys, boolean matchUnknown,
+            boolean combinedDateTime) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Tuple> cq = cb.createTupleQuery();
         Root<Study> study = cq.from(Study.class);
@@ -100,7 +101,8 @@ public class StudyQuery {
                 pat.get(Patient_.encodedAttributes));
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
-        Matching.study(cb, pat, study, pids, keys, matchUnknown, predicates, params);
+        Matching.study(cb, pat, study, pids, keys, matchUnknown,
+                combinedDateTime, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<Tuple> q = em.createQuery(cq);
         int i = 0;

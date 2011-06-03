@@ -42,6 +42,9 @@ import static org.junit.Assert.*;
 
 import javax.ejb.EJB;
 
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
+import org.dcm4che.data.VR;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -65,12 +68,19 @@ public class StudyQueryTest {
     private StudyQuery query;
 
     @Test
-    public void testByPatientID() throws Exception {
-        query.find(new String[] { "CT5", null }, null, false);
+    public void testByModalitiesInStudy() throws Exception {
+        query.find(new String[] { "CT5", "DCM4CHEE_TESTDATA" },
+                modalitiesInStudy("SR"), false, false);
         assertTrue(query.hasNext());
         query.next();
         assertFalse(query.hasNext());
         query.close();
     }
 
+
+    private Attributes modalitiesInStudy(String value) {
+        Attributes attrs = new Attributes(1);
+        attrs.setString(Tag.ModalitiesInStudy, VR.CS, value);
+        return attrs;
+    }
 }

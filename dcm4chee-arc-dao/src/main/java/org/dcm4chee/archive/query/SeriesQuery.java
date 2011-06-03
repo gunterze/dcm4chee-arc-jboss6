@@ -85,7 +85,8 @@ public class SeriesQuery {
         em = emf.createEntityManager();
     }
 
-    public void find(String[] pids, Attributes keys, boolean matchUnknown) {
+    public void find(String[] pids, Attributes keys, boolean matchUnknown,
+            boolean combinedDateTime) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Tuple> cq = cb.createTupleQuery();
         Root<Series> series = cq.from(Series.class);
@@ -105,8 +106,8 @@ public class SeriesQuery {
                 pat.get(Patient_.encodedAttributes));
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
-        Matching.series(cb, pat, study, series, pids, keys, matchUnknown,
-                predicates, params);
+        Matching.series(cb, pat, study, series, pids, keys, combinedDateTime,
+                matchUnknown, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<Tuple> q = em.createQuery(cq);
         int i = 0;

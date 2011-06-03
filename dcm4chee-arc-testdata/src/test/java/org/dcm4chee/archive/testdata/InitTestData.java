@@ -38,18 +38,14 @@
 
 package org.dcm4chee.archive.testdata;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import javax.ejb.EJB;
 
-import org.dcm4che.data.Attributes;
-import org.dcm4che.io.DicomInputStream;
-import org.dcm4che.util.SafeClose;
+import org.dcm4che.io.SAXReader;
 import org.dcm4chee.archive.domain.Availability;
 import org.dcm4chee.archive.store.CodeFactory;
 import org.dcm4chee.archive.store.InstanceStore;
 import org.dcm4chee.archive.store.IssuerFactory;
+import org.dcm4chee.archive.store.PatientFactory;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -70,31 +66,34 @@ public class InitTestData {
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
                 .addClasses(InstanceStore.class,
-                        CodeFactory.class, IssuerFactory.class)
-                .addAsResource("sr-1.dcm")
-                .addAsResource("sr-2.dcm");
+                        CodeFactory.class,
+                        IssuerFactory.class,
+                        PatientFactory.class)
+                .addAsResource("sc-1.xml")
+                .addAsResource("pr-1.xml")
+                .addAsResource("ct-1.xml")
+                .addAsResource("ct-2.xml")
+                .addAsResource("sr-1.xml")
+                .addAsResource("sr-2.xml");
     }
 
     @EJB
     private InstanceStore instanceStore;
 
     @Test
-    public void storeTestData() throws IOException {
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        instanceStore.store(readDataset("sr-1.dcm", cl),
+    public void storeTestData() throws Exception {
+        instanceStore.store(SAXReader.parse("resource:sc-1.xml", null),
                 SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(readDataset("sr-2.dcm", cl),
+        instanceStore.store(SAXReader.parse("resource:pr-1.xml", null),
                 SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-    }
-
-    private Attributes readDataset(String name, ClassLoader cl)
-            throws IOException {
-        InputStream in = cl.getResourceAsStream(name);
-        try {
-            return new DicomInputStream(in).readDataset(-1, -1);
-        } finally {
-            SafeClose.close(in);
-        }
+        instanceStore.store(SAXReader.parse("resource:ct-1.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:ct-2.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:sr-1.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:sr-2.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
     }
 
 }

@@ -69,7 +69,7 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientID() throws Exception {
-        query.find(new String[] { "CT5", null }, null, false);
+        query.find(new String[] { "CT5", "DCM4CHEE_TESTDATA" }, null, false);
         assertTrue(query.hasNext());
         query.next();
         assertFalse(query.hasNext());
