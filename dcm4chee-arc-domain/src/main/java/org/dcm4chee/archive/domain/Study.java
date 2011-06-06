@@ -44,7 +44,6 @@ import java.util.Collection;
 import java.util.Date;
 
 import javax.persistence.Basic;
-import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -96,7 +95,6 @@ import org.dcm4che.util.DateUtils;
     query="UPDATE Study s SET numberOfStudyRelatedInstances = numberOfStudyRelatedInstances + 1 WHERE s = ?1")
 })
 @Entity
-@Cacheable
 @Table(name = "study")
 public class Study implements Serializable {
 
@@ -191,17 +189,17 @@ public class Study implements Serializable {
     private String studyCustomAttribute3;
 
     @Basic(optional = false)
-    @Column(name = "num_series")
+    @Column(name = "num_series", updatable = false)
     private int numberOfStudyRelatedSeries;
 
     @Basic(optional = false)
-    @Column(name = "num_instances")
+    @Column(name = "num_instances", updatable = false)
     private int numberOfStudyRelatedInstances;
 
-    @Column(name = "mods_in_study")
+    @Column(name = "mods_in_study", updatable = false)
     private String modalitiesInStudy;
 
-    @Column(name = "cuids_in_study")
+    @Column(name = "cuids_in_study", updatable = false)
     private String sopClassesInStudy;
 
     @Column(name = "retrieve_aets")

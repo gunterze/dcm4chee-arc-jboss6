@@ -44,7 +44,6 @@ import java.util.Collection;
 import java.util.Date;
 
 import javax.persistence.Basic;
-import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -91,7 +90,6 @@ import org.dcm4che.util.DateUtils;
     query="UPDATE Series s SET numberOfSeriesRelatedInstances = numberOfSeriesRelatedInstances + 1 WHERE s = ?1")
 })
 @Entity
-@Cacheable
 @Table(name = "series")
 public class Series implements Serializable {
 
@@ -198,7 +196,7 @@ public class Series implements Serializable {
     private String seriesCustomAttribute3;
 
     @Basic(optional = false)
-    @Column(name = "num_instances")
+    @Column(name = "num_instances", updatable = false)
     private int numberOfSeriesRelatedInstances;
 
     @Column(name = "src_aet")

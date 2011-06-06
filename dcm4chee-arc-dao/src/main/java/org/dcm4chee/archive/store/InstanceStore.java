@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.store;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.ejb.Remove;
@@ -47,8 +48,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.ItemPointer;
@@ -68,20 +67,11 @@ import org.dcm4chee.archive.domain.VerifyingObserver;
 @Stateful
 public class InstanceStore {
 
-
     @PersistenceContext(unitName = "dcm4chee-arc",
             type = PersistenceContextType.EXTENDED)
     private EntityManager em;
-    private TypedQuery<Study> findStudy;
-    private TypedQuery<Series> findSeries;
-    private TypedQuery<Instance> findInstance;
-    private TypedQuery<String> getModalitiesInStudy;
-    private TypedQuery<String> getSOPClassesInStudy;
-    private Query incNumberOfSeriesRelatedInstances;
-    private Query incNumberOfStudyRelatedSeries;
-    private Query incNumberOfStudyRelatedInstances;
-    private Query updateModalitiesInStudy;
-    private Query updateSOPClassesInStudy;
+    private final HashMap<String,Series> cachedSeries =
+            new HashMap<String,Series>();
 
     public Instance store(Attributes attrs, String sourceAET,
              String retrieveAETs, String externalRetrieveAET,
@@ -106,76 +96,62 @@ public class InstanceStore {
             incNumberOfSeriesRelatedInstances(series);
             Study study = series.getStudy();
             incNumberOfStudyRelatedInstances(study);
-            if (updateSOPClassesInStudy(study,
-                    attrs.getString(Tag.SOPClassUID, null)))
-                em.refresh(study);
+            updateSOPClassesInStudy(study,
+                    attrs.getString(Tag.SOPClassUID, null));
             return inst;
         }
     }
 
     private Instance findInstance(String sopIUID) {
-        if (findInstance == null)
-            findInstance = em.createNamedQuery(
-                    Instance.FIND_BY_SOP_INSTANCE_UID, Instance.class);
-        return findInstance.setParameter(1, sopIUID).getSingleResult();
+        return em.createNamedQuery(
+                    Instance.FIND_BY_SOP_INSTANCE_UID, Instance.class)
+                 .setParameter(1, sopIUID).getSingleResult();
     }
 
     private Series findSeries(String seriesIUID) {
-        if (findSeries == null)
-            findSeries = em.createNamedQuery(
-                    Series.FIND_BY_SERIES_INSTANCE_UID, Series.class);
-        return findSeries.setParameter(1, seriesIUID).getSingleResult();
+        return em.createNamedQuery(
+                    Series.FIND_BY_SERIES_INSTANCE_UID, Series.class)
+                 .setParameter(1, seriesIUID)
+                 .getSingleResult();
     }
 
     private Study findStudy(String studyIUID) {
-        if (findStudy == null)
-            findStudy = em.createNamedQuery(
-                    Study.FIND_BY_STUDY_INSTANCE_UID, Study.class);
-        return findStudy.setParameter(1, studyIUID).getSingleResult();
+        return em.createNamedQuery(
+                    Study.FIND_BY_STUDY_INSTANCE_UID, Study.class)
+                 .setParameter(1, studyIUID)
+                 .getSingleResult();
     }
 
     private void incNumberOfStudyRelatedInstances(Study study) {
-        if (incNumberOfStudyRelatedInstances == null)
-            incNumberOfStudyRelatedInstances = em.createNamedQuery(
-                    Study.INC_NUMBER_OF_STUDY_RELATED_INSTANCES);
-        incNumberOfStudyRelatedInstances.setParameter(1, study);
-        incNumberOfStudyRelatedInstances.executeUpdate();
+        em.createNamedQuery(Study.INC_NUMBER_OF_STUDY_RELATED_INSTANCES)
+          .setParameter(1, study)
+          .executeUpdate();
     }
 
     private void incNumberOfStudyRelatedSeries(Study study) {
-        if (incNumberOfStudyRelatedSeries == null)
-            incNumberOfStudyRelatedSeries = em.createNamedQuery(
-                    Study.INC_NUMBER_OF_STUDY_RELATED_SERIES);
-        incNumberOfStudyRelatedSeries.setParameter(1, study);
-        incNumberOfStudyRelatedSeries.executeUpdate();
+        em.createNamedQuery(Study.INC_NUMBER_OF_STUDY_RELATED_SERIES)
+          .setParameter(1, study)
+          .executeUpdate();
     }
 
     private void incNumberOfSeriesRelatedInstances(Series series) {
-        if (incNumberOfSeriesRelatedInstances == null)
-            incNumberOfSeriesRelatedInstances = em.createNamedQuery(
-                    Series.INC_NUMBER_OF_SERIES_RELATED_INSTANCES);
-        incNumberOfSeriesRelatedInstances.setParameter(1, series);
-        incNumberOfSeriesRelatedInstances.executeUpdate();
+        em.createNamedQuery(Series.INC_NUMBER_OF_SERIES_RELATED_INSTANCES)
+          .setParameter(1, series)
+          .executeUpdate();
     }
 
     public boolean updateModalitiesInStudy(Study study, String modality) {
         if (contains(study.getModalitiesInStudy(), modality))
             return false;
 
-        if (getModalitiesInStudy == null)
-            getModalitiesInStudy = em.createNamedQuery(
-                    Study.MODALITIES_IN_STUDY, String.class);
-
-        String value = join(
-                getModalitiesInStudy.setParameter(1, study).getResultList());
-
-        if (updateModalitiesInStudy == null)
-            updateModalitiesInStudy = em.createNamedQuery(
-                    Study.UPDATE_MODALITIES_IN_STUDY);
-        updateModalitiesInStudy
-                .setParameter(1, study)
-                .setParameter(2, value)
-                .executeUpdate();
+        study.setModalitiesInStudy(join(
+                em.createNamedQuery(Study.MODALITIES_IN_STUDY, String.class)
+                  .setParameter(1, study)
+                  .getResultList()));
+        em.createNamedQuery(Study.UPDATE_MODALITIES_IN_STUDY)
+          .setParameter(1, study)
+          .setParameter(2, study.getModalitiesInStudy())
+          .executeUpdate();
 
         return true;
     }
@@ -184,20 +160,14 @@ public class InstanceStore {
         if (contains(study.getSOPClassesInStudy(), cuid))
             return false;
 
-        if (getSOPClassesInStudy == null)
-            getSOPClassesInStudy = em.createNamedQuery(
-                    Study.SOP_CLASSES_IN_STUDY, String.class);
-
-        String value = join(
-                getSOPClassesInStudy.setParameter(1, study).getResultList());
-
-        if (updateSOPClassesInStudy == null)
-            updateSOPClassesInStudy = em.createNamedQuery(
-                    Study.UPDATE_SOP_CLASSES_IN_STUDY);
-        updateSOPClassesInStudy
+        study.setSOPClassesInStudy(join(
+                em.createNamedQuery(Study.SOP_CLASSES_IN_STUDY, String.class)
                 .setParameter(1, study)
-                .setParameter(2, value)
-                .executeUpdate();
+                .getResultList()));
+        em.createNamedQuery(Study.UPDATE_SOP_CLASSES_IN_STUDY)
+          .setParameter(1, study)
+          .setParameter(2, study.getSOPClassesInStudy())
+          .executeUpdate();
 
         return true;
     }
@@ -236,11 +206,14 @@ public class InstanceStore {
     private Series getSeries(Attributes attrs, String sourceAET,
             String retrieveAETs, String externalRetrieveAET,
             Availability availability) {
-        try {
-            Series series = findSeries(attrs.getString(Tag.SeriesInstanceUID, null));
+        String seriesIUID = attrs.getString(Tag.SeriesInstanceUID, null);
+        Series series = cachedSeries.get(seriesIUID);
+        if (series != null)
             return series;
+        try {
+            series = findSeries(seriesIUID);
         } catch (NoResultException e) {
-            Series series = new Series();
+            series = new Series();
             Study study = getStudy(attrs, retrieveAETs, externalRetrieveAET,
                     availability);
             series.setStudy(study);
@@ -257,8 +230,14 @@ public class InstanceStore {
             em.persist(series);
             incNumberOfStudyRelatedSeries(study);
             updateModalitiesInStudy(study, attrs.getString(Tag.Modality, null));
-            return series;
         }
+        cachedSeries.put(seriesIUID, series);
+        return series;
+    }
+
+    @Remove
+    public void close() {
+        cachedSeries.clear();
     }
 
     private List<RequestAttributes> createRequestAttributes(Sequence seq) {
@@ -279,9 +258,8 @@ public class InstanceStore {
 
     private Study getStudy(Attributes attrs, String retrieveAETs,
             String externalRetrieveAET, Availability availability) {
-        String studyIUID = attrs.getString(Tag.StudyInstanceUID, null);
         try {
-            return findStudy(studyIUID);
+            return findStudy(attrs.getString(Tag.StudyInstanceUID, null));
         } catch (NoResultException e) {
             Study study = new Study();
             study.setPatient(
@@ -302,9 +280,5 @@ public class InstanceStore {
             return study;
         }
     }
-
-   @Remove
-   public void close() {
-   }
 
 }
