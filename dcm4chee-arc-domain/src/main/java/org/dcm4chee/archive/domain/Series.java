@@ -44,6 +44,7 @@ import java.util.Collection;
 import java.util.Date;
 
 import javax.persistence.Basic;
+import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -86,10 +87,11 @@ import org.dcm4che.util.DateUtils;
                  "s.study.patient.encodedAttributes " +
           "FROM Series s WHERE s.pk = ?1"),
 @NamedQuery(
-    name="Series.countInstances",
-    query="SELECT COUNT(i) FROM Instance i WHERE i.series = ?1")
+    name="Series.incNumberOfSeriesRelatedInstances",
+    query="UPDATE Series s SET numberOfSeriesRelatedInstances = numberOfSeriesRelatedInstances + 1 WHERE s = ?1")
 })
 @Entity
+@Cacheable
 @Table(name = "series")
 public class Series implements Serializable {
 
@@ -99,8 +101,8 @@ public class Series implements Serializable {
             "Series.findBySeriesInstanceUID";
     public static final String FIND_ATTRIBUTES_BY_SERIES_PK =
             "Series.findAttributesBySeriesPk";
-    public static final String COUNT_INSTANCES =
-            "Series.countInstances";
+    public static final String INC_NUMBER_OF_SERIES_RELATED_INSTANCES =
+            "Series.incNumberOfSeriesRelatedInstances";
 
     @Id
     @GeneratedValue
@@ -211,10 +213,6 @@ public class Series implements Serializable {
     @Basic(optional = false)
     @Column(name = "availability")
     private Availability availability;
-
-    @Basic(optional = false)
-    @Column(name = "dirty")
-    private boolean dirty;
 
     @Basic(optional = false)
     @Column(name = "series_attrs")
@@ -381,14 +379,6 @@ public class Series implements Serializable {
 
     public void setAvailability(Availability availability) {
         this.availability = availability;
-    }
-
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    public void setDirty(boolean dirty) {
-        this.dirty = dirty;
     }
 
     public byte[] getEncodedAttributes() {

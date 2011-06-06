@@ -44,6 +44,7 @@ import java.util.Collection;
 import java.util.Date;
 
 import javax.persistence.Basic;
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -77,6 +78,7 @@ import org.dcm4che.data.Tag;
           "WHERE p.patientID = ?1 AND issuerOfPatientID = ?2")
 })
 @Entity
+@Cacheable
 @Table(name = "patient")
 public class Patient implements Serializable {
 

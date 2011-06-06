@@ -47,12 +47,14 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.ItemPointer;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
+import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.domain.Availability;
 import org.dcm4chee.archive.domain.Instance;
 import org.dcm4chee.archive.domain.RequestAttributes;
@@ -66,25 +68,30 @@ import org.dcm4chee.archive.domain.VerifyingObserver;
 @Stateful
 public class InstanceStore {
 
+
     @PersistenceContext(unitName = "dcm4chee-arc",
             type = PersistenceContextType.EXTENDED)
     private EntityManager em;
-    private final ArrayList<Study> dirtyStudies = new ArrayList<Study>();
-    private final ArrayList<Series> dirtySeries = new ArrayList<Series>();
+    private TypedQuery<Study> findStudy;
+    private TypedQuery<Series> findSeries;
+    private TypedQuery<Instance> findInstance;
+    private TypedQuery<String> getModalitiesInStudy;
+    private TypedQuery<String> getSOPClassesInStudy;
+    private Query incNumberOfSeriesRelatedInstances;
+    private Query incNumberOfStudyRelatedSeries;
+    private Query incNumberOfStudyRelatedInstances;
+    private Query updateModalitiesInStudy;
+    private Query updateSOPClassesInStudy;
 
     public Instance store(Attributes attrs, String sourceAET,
              String retrieveAETs, String externalRetrieveAET,
              Availability availability) {
         try {
-            return em.createNamedQuery(
-                Instance.FIND_BY_SOP_INSTANCE_UID, Instance.class)
-                .setParameter(1, attrs.getString(Tag.SOPInstanceUID, null))
-                .getSingleResult();
+            return findInstance(attrs.getString(Tag.SOPInstanceUID, null));
         } catch (NoResultException e) {
             Instance inst = new Instance();
             Series series = getSeries(attrs, sourceAET, retrieveAETs,
                     externalRetrieveAET, availability);
-            Study study = series.getStudy();
             inst.setSeries(series);
             inst.setConceptNameCode(
                     CodeFactory.getCode(em, attrs.getNestedDataset(
@@ -96,55 +103,123 @@ public class InstanceStore {
             inst.setAvailability(availability);
             inst.setAttributes(attrs);
             em.persist(inst);
-            if (!series.isDirty()) {
-                markAsDirty(series);
-                em.merge(series);
-            }
-            if (!study.isDirty()) {
-                markAsDirty(study);
-                em.merge(study);
-            }
+            incNumberOfSeriesRelatedInstances(series);
+            Study study = series.getStudy();
+            incNumberOfStudyRelatedInstances(study);
+            if (updateSOPClassesInStudy(study,
+                    attrs.getString(Tag.SOPClassUID, null)))
+                em.refresh(study);
             return inst;
         }
     }
 
-    private void markAsDirty(Series series) {
-        series.setDirty(true);
-        dirtySeries.add(series);
+    private Instance findInstance(String sopIUID) {
+        if (findInstance == null)
+            findInstance = em.createNamedQuery(
+                    Instance.FIND_BY_SOP_INSTANCE_UID, Instance.class);
+        return findInstance.setParameter(1, sopIUID).getSingleResult();
     }
 
-    private void markAsDirty(Study study) {
-        study.setDirty(true);
-        dirtyStudies.add(study);
+    private Series findSeries(String seriesIUID) {
+        if (findSeries == null)
+            findSeries = em.createNamedQuery(
+                    Series.FIND_BY_SERIES_INSTANCE_UID, Series.class);
+        return findSeries.setParameter(1, seriesIUID).getSingleResult();
     }
 
- 
-    public void updateDerivedFields() {
-        TypedQuery<Long> countInstancesOfSeries =
-                em.createNamedQuery(Series.COUNT_INSTANCES, Long.class);
-        TypedQuery<Long> countSeriesOfStudy =
-                em.createNamedQuery(Study.COUNT_SERIES, Long.class);
-        TypedQuery<Long> countInstancesOfStudy =
-                em.createNamedQuery(Study.COUNT_INSTANCES, Long.class);
-        for (Series series : dirtySeries) {
-            series.setNumberOfSeriesRelatedInstances(
-                    countInstancesOfSeries.setParameter(1, series)
-                    .getSingleResult().intValue());
-            series.setDirty(false);
-            em.merge(series);
-        }
-        for (Study study : dirtyStudies) {
-            study.setNumberOfStudyRelatedSeries(
-                    countSeriesOfStudy.setParameter(1, study)
-                    .getSingleResult().intValue());
-            study.setNumberOfStudyRelatedInstances(
-                    countInstancesOfStudy.setParameter(1, study)
-                    .getSingleResult().intValue());
-            study.setDirty(false);
-            em.merge(study);
-        }
-        dirtySeries.clear();
-        dirtyStudies.clear();
+    private Study findStudy(String studyIUID) {
+        if (findStudy == null)
+            findStudy = em.createNamedQuery(
+                    Study.FIND_BY_STUDY_INSTANCE_UID, Study.class);
+        return findStudy.setParameter(1, studyIUID).getSingleResult();
+    }
+
+    private void incNumberOfStudyRelatedInstances(Study study) {
+        if (incNumberOfStudyRelatedInstances == null)
+            incNumberOfStudyRelatedInstances = em.createNamedQuery(
+                    Study.INC_NUMBER_OF_STUDY_RELATED_INSTANCES);
+        incNumberOfStudyRelatedInstances.setParameter(1, study);
+        incNumberOfStudyRelatedInstances.executeUpdate();
+    }
+
+    private void incNumberOfStudyRelatedSeries(Study study) {
+        if (incNumberOfStudyRelatedSeries == null)
+            incNumberOfStudyRelatedSeries = em.createNamedQuery(
+                    Study.INC_NUMBER_OF_STUDY_RELATED_SERIES);
+        incNumberOfStudyRelatedSeries.setParameter(1, study);
+        incNumberOfStudyRelatedSeries.executeUpdate();
+    }
+
+    private void incNumberOfSeriesRelatedInstances(Series series) {
+        if (incNumberOfSeriesRelatedInstances == null)
+            incNumberOfSeriesRelatedInstances = em.createNamedQuery(
+                    Series.INC_NUMBER_OF_SERIES_RELATED_INSTANCES);
+        incNumberOfSeriesRelatedInstances.setParameter(1, series);
+        incNumberOfSeriesRelatedInstances.executeUpdate();
+    }
+
+    public boolean updateModalitiesInStudy(Study study, String modality) {
+        if (contains(study.getModalitiesInStudy(), modality))
+            return false;
+
+        if (getModalitiesInStudy == null)
+            getModalitiesInStudy = em.createNamedQuery(
+                    Study.MODALITIES_IN_STUDY, String.class);
+
+        String value = join(
+                getModalitiesInStudy.setParameter(1, study).getResultList());
+
+        if (updateModalitiesInStudy == null)
+            updateModalitiesInStudy = em.createNamedQuery(
+                    Study.UPDATE_MODALITIES_IN_STUDY);
+        updateModalitiesInStudy
+                .setParameter(1, study)
+                .setParameter(2, value)
+                .executeUpdate();
+
+        return true;
+    }
+
+    public boolean updateSOPClassesInStudy(Study study, String cuid) {
+        if (contains(study.getSOPClassesInStudy(), cuid))
+            return false;
+
+        if (getSOPClassesInStudy == null)
+            getSOPClassesInStudy = em.createNamedQuery(
+                    Study.SOP_CLASSES_IN_STUDY, String.class);
+
+        String value = join(
+                getSOPClassesInStudy.setParameter(1, study).getResultList());
+
+        if (updateSOPClassesInStudy == null)
+            updateSOPClassesInStudy = em.createNamedQuery(
+                    Study.UPDATE_SOP_CLASSES_IN_STUDY);
+        updateSOPClassesInStudy
+                .setParameter(1, study)
+                .setParameter(2, value)
+                .executeUpdate();
+
+        return true;
+    }
+    private static String join(List<String> list) {
+        return StringUtils.join(list.toArray(new String[list.size()]), '\\');
+    }
+
+    private static boolean contains(String vals, String val) {
+        if (val == null)
+            return true;
+
+        if (vals == null)
+            return false;
+
+        if (vals.equals(val))
+            return true;
+
+        for (String s : StringUtils.split(vals, '\\'))
+            if (s.equals(val))
+                return true;
+
+        return false;
     }
 
     private List<VerifyingObserver> createVerifyingObservers(Sequence seq) {
@@ -162,15 +237,13 @@ public class InstanceStore {
             String retrieveAETs, String externalRetrieveAET,
             Availability availability) {
         try {
-            Series series = em.createNamedQuery(
-                Series.FIND_BY_SERIES_INSTANCE_UID, Series.class)
-                .setParameter(1, attrs.getString(Tag.SeriesInstanceUID, null))
-                .getSingleResult();
+            Series series = findSeries(attrs.getString(Tag.SeriesInstanceUID, null));
             return series;
         } catch (NoResultException e) {
             Series series = new Series();
-            series.setStudy(getStudy(attrs, retrieveAETs, externalRetrieveAET,
-                    availability));
+            Study study = getStudy(attrs, retrieveAETs, externalRetrieveAET,
+                    availability);
+            series.setStudy(study);
             series.setInstitutionCode(
                     CodeFactory.getCode(em, attrs.getNestedDataset(
                             new ItemPointer(Tag.InstitutionCodeSequence))));
@@ -181,13 +254,14 @@ public class InstanceStore {
             series.setExternalRetrieveAET(externalRetrieveAET);
             series.setAvailability(availability);
             series.setAttributes(attrs);
-            markAsDirty(series);
             em.persist(series);
+            incNumberOfStudyRelatedSeries(study);
+            updateModalitiesInStudy(study, attrs.getString(Tag.Modality, null));
             return series;
         }
     }
 
-   private List<RequestAttributes> createRequestAttributes(Sequence seq) {
+    private List<RequestAttributes> createRequestAttributes(Sequence seq) {
         if (seq == null || seq.isEmpty())
             return null;
 
@@ -205,11 +279,9 @@ public class InstanceStore {
 
     private Study getStudy(Attributes attrs, String retrieveAETs,
             String externalRetrieveAET, Availability availability) {
+        String studyIUID = attrs.getString(Tag.StudyInstanceUID, null);
         try {
-            return em.createNamedQuery(
-                Study.FIND_BY_STUDY_INSTANCE_UID, Study.class)
-                .setParameter(1, attrs.getString(Tag.StudyInstanceUID, null))
-                .getSingleResult();
+            return findStudy(studyIUID);
         } catch (NoResultException e) {
             Study study = new Study();
             study.setPatient(
@@ -226,7 +298,6 @@ public class InstanceStore {
             study.setExternalRetrieveAET(externalRetrieveAET);
             study.setAvailability(availability);
             study.setAttributes(attrs);
-            markAsDirty(study);
             em.persist(study);
             return study;
         }
@@ -234,7 +305,6 @@ public class InstanceStore {
 
    @Remove
    public void close() {
-       updateDerivedFields();
    }
 
 }

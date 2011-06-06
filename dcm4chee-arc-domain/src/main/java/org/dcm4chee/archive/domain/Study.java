@@ -44,6 +44,7 @@ import java.util.Collection;
 import java.util.Date;
 
 import javax.persistence.Basic;
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -76,13 +77,26 @@ import org.dcm4che.util.DateUtils;
     name="Study.findByStudyInstanceUID",
     query="SELECT s FROM Study s WHERE s.studyInstanceUID = ?1"),
 @NamedQuery(
-    name="Study.countSeries",
-    query="SELECT COUNT(s) FROM Series s WHERE s.study = ?1"),
+    name="Study.modalitiesInStudy",
+    query="SELECT DISTINCT(s.modality) FROM Series s WHERE s.study = ?1"),
 @NamedQuery(
-    name="Study.countInstances",
-    query="SELECT COUNT(i) FROM Instance i WHERE i.series.study = ?1")
+    name="Study.sopClassesInStudy",
+    query="SELECT DISTINCT(i.sopClassUID) FROM Instance i WHERE i.series.study = ?1"),
+@NamedQuery(
+    name="Study.updateModalitiesInStudy",
+    query="UPDATE Study s SET modalitiesInStudy = ?2 WHERE s = ?1"),
+@NamedQuery(
+    name="Study.updateSOPClassesInStudy",
+    query="UPDATE Study s SET sopClassesInStudy = ?2 WHERE s = ?1"),
+@NamedQuery(
+    name="Study.incNumberOfStudyRelatedSeries",
+    query="UPDATE Study s SET numberOfStudyRelatedSeries = numberOfStudyRelatedSeries + 1 WHERE s = ?1"),
+@NamedQuery(
+    name="Study.incNumberOfStudyRelatedInstances",
+    query="UPDATE Study s SET numberOfStudyRelatedInstances = numberOfStudyRelatedInstances + 1 WHERE s = ?1")
 })
 @Entity
+@Cacheable
 @Table(name = "study")
 public class Study implements Serializable {
 
@@ -90,8 +104,18 @@ public class Study implements Serializable {
 
     public static final String FIND_BY_STUDY_INSTANCE_UID =
         "Study.findByStudyInstanceUID";
-    public static final String COUNT_SERIES = "Study.countSeries";
-    public static final String COUNT_INSTANCES = "Study.countInstances";
+    public static final String MODALITIES_IN_STUDY =
+        "Study.modalitiesInStudy";
+    public static final String SOP_CLASSES_IN_STUDY =
+        "Study.sopClassesInStudy";
+    public static final String INC_NUMBER_OF_STUDY_RELATED_SERIES =
+        "Study.incNumberOfStudyRelatedSeries";
+    public static final String INC_NUMBER_OF_STUDY_RELATED_INSTANCES =
+        "Study.incNumberOfStudyRelatedInstances";
+    public static final String UPDATE_MODALITIES_IN_STUDY =
+        "Study.updateModalitiesInStudy";
+    public static final String UPDATE_SOP_CLASSES_IN_STUDY =
+        "Study.updateSOPClassesInStudy";
 
     @Id
     @GeneratedValue
@@ -189,10 +213,6 @@ public class Study implements Serializable {
     @Basic(optional = false)
     @Column(name = "availability")
     private Availability availability;
-
-    @Basic(optional = false)
-    @Column(name = "dirty")
-    private boolean dirty;
 
     @Basic(optional = false)
     @Column(name = "study_attrs")
@@ -357,14 +377,6 @@ public class Study implements Serializable {
 
     public void setAvailability(Availability availability) {
         this.availability = availability;
-    }
-
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    public void setDirty(boolean dirty) {
-        this.dirty = dirty;
     }
 
     public byte[] getEncodedAttributes() {
