@@ -93,7 +93,7 @@ public class Patient implements Serializable {
     private long pk;
 
     @Basic(optional = false)
-    @Column(name = "created_time")
+    @Column(name = "created_time", updatable = false)
     private Date createdTime;
 
     @Basic(optional = false)

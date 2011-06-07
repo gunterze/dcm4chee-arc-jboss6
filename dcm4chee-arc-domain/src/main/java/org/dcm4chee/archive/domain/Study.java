@@ -82,12 +82,6 @@ import org.dcm4che.util.DateUtils;
     name="Study.sopClassesInStudy",
     query="SELECT DISTINCT(i.sopClassUID) FROM Instance i WHERE i.series.study = ?1"),
 @NamedQuery(
-    name="Study.updateModalitiesInStudy",
-    query="UPDATE Study s SET modalitiesInStudy = ?2 WHERE s = ?1"),
-@NamedQuery(
-    name="Study.updateSOPClassesInStudy",
-    query="UPDATE Study s SET sopClassesInStudy = ?2 WHERE s = ?1"),
-@NamedQuery(
     name="Study.incNumberOfStudyRelatedSeries",
     query="UPDATE Study s SET numberOfStudyRelatedSeries = numberOfStudyRelatedSeries + 1 WHERE s = ?1"),
 @NamedQuery(
@@ -110,10 +104,6 @@ public class Study implements Serializable {
         "Study.incNumberOfStudyRelatedSeries";
     public static final String INC_NUMBER_OF_STUDY_RELATED_INSTANCES =
         "Study.incNumberOfStudyRelatedInstances";
-    public static final String UPDATE_MODALITIES_IN_STUDY =
-        "Study.updateModalitiesInStudy";
-    public static final String UPDATE_SOP_CLASSES_IN_STUDY =
-        "Study.updateSOPClassesInStudy";
 
     @Id
     @GeneratedValue
@@ -121,7 +111,7 @@ public class Study implements Serializable {
     private long pk;
 
     @Basic(optional = false)
-    @Column(name = "created_time")
+    @Column(name = "created_time", updatable = false)
     private Date createdTime;
 
     @Basic(optional = false)
@@ -129,7 +119,7 @@ public class Study implements Serializable {
     private Date updatedTime;
 
     @Basic(optional = false)
-    @Column(name = "study_iuid")
+    @Column(name = "study_iuid", updatable = false)
     private String studyInstanceUID;
 
     @Basic(optional = false)
@@ -196,10 +186,10 @@ public class Study implements Serializable {
     @Column(name = "num_instances", updatable = false)
     private int numberOfStudyRelatedInstances;
 
-    @Column(name = "mods_in_study", updatable = false)
+    @Column(name = "mods_in_study")
     private String modalitiesInStudy;
 
-    @Column(name = "cuids_in_study", updatable = false)
+    @Column(name = "cuids_in_study")
     private String sopClassesInStudy;
 
     @Column(name = "retrieve_aets")
@@ -228,6 +218,17 @@ public class Study implements Serializable {
 
     @OneToMany(mappedBy = "study", orphanRemoval = true)
     private Collection<Series> series;
+
+    @Override
+    public String toString() {
+        return "Study[pk=" + pk
+                + ", uid=" + studyInstanceUID
+                + ", id=" + studyID
+                + ", mods=" + modalitiesInStudy
+                + ", numS=" + numberOfStudyRelatedSeries
+                + ", numI=" + numberOfStudyRelatedInstances
+                + "]";
+    }
 
     @PrePersist
     public void onPrePersist() {
@@ -329,12 +330,20 @@ public class Study implements Serializable {
         this.numberOfStudyRelatedSeries = numberOfStudyRelatedSeries;
     }
 
+    public void incNumberOfStudyRelatedSeries() {
+        numberOfStudyRelatedSeries++;
+    }
+
     public int getNumberOfStudyRelatedInstances() {
         return numberOfStudyRelatedInstances;
     }
 
     public void setNumberOfStudyRelatedInstances(int numberOfStudyRelatedInstances) {
         this.numberOfStudyRelatedInstances = numberOfStudyRelatedInstances;
+    }
+
+    public void incNumberOfStudyRelatedInstances() {
+        numberOfStudyRelatedInstances++;
     }
 
     public String getModalitiesInStudy() {

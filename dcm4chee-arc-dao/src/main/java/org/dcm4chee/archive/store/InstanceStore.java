@@ -93,13 +93,57 @@ public class InstanceStore {
             inst.setAvailability(availability);
             inst.setAttributes(attrs);
             em.persist(inst);
-            incNumberOfSeriesRelatedInstances(series);
             Study study = series.getStudy();
+            incNumberOfSeriesRelatedInstances(series);
             incNumberOfStudyRelatedInstances(study);
-            updateSOPClassesInStudy(study,
-                    attrs.getString(Tag.SOPClassUID, null));
+            if (!contains(study.getSOPClassesInStudy(), inst.getSopClassUID()))
+                study.setSOPClassesInStudy(join(
+                        em.createNamedQuery(Study.SOP_CLASSES_IN_STUDY, String.class)
+                        .setParameter(1, study)
+                        .getResultList()));
+            if (!contains(study.getModalitiesInStudy(), series.getModality()))
+                study.setModalitiesInStudy(join(
+                        em.createNamedQuery(Study.MODALITIES_IN_STUDY, String.class)
+                          .setParameter(1, study)
+                          .getResultList()));
+            if (!isNullOrEquals(series.getExternalRetrieveAET(),
+                    externalRetrieveAET))
+                series.setExternalRetrieveAET(null);
+            if (!isNullOrEquals(study.getExternalRetrieveAET(),
+                    externalRetrieveAET))
+                study.setExternalRetrieveAET(null);
+            if (series.getAvailability().compareTo(availability) < 0)
+                series.setAvailability(availability);
+            if (study.getAvailability().compareTo(availability) < 0)
+                study.setAvailability(availability);
+            em.flush();
             return inst;
         }
+    }
+
+    private static boolean isNullOrEquals(String aet1, String aet2) {
+        return aet1 == null || aet1.equals(aet2);
+    }
+
+    private static String join(List<String> list) {
+        return StringUtils.join(list.toArray(new String[list.size()]), '\\');
+    }
+
+    private static boolean contains(String vals, String val) {
+        if (val == null)
+            return true;
+
+        if (vals == null)
+            return false;
+
+        if (vals.equals(val))
+            return true;
+
+        for (String s : StringUtils.split(vals, '\\'))
+            if (s.equals(val))
+                return true;
+
+        return false;
     }
 
     private Instance findInstance(String sopIUID) {
@@ -126,70 +170,21 @@ public class InstanceStore {
         em.createNamedQuery(Study.INC_NUMBER_OF_STUDY_RELATED_INSTANCES)
           .setParameter(1, study)
           .executeUpdate();
+        study.incNumberOfStudyRelatedInstances();
     }
 
     private void incNumberOfStudyRelatedSeries(Study study) {
         em.createNamedQuery(Study.INC_NUMBER_OF_STUDY_RELATED_SERIES)
           .setParameter(1, study)
           .executeUpdate();
+        study.incNumberOfStudyRelatedSeries();
     }
 
     private void incNumberOfSeriesRelatedInstances(Series series) {
         em.createNamedQuery(Series.INC_NUMBER_OF_SERIES_RELATED_INSTANCES)
           .setParameter(1, series)
           .executeUpdate();
-    }
-
-    public boolean updateModalitiesInStudy(Study study, String modality) {
-        if (contains(study.getModalitiesInStudy(), modality))
-            return false;
-
-        study.setModalitiesInStudy(join(
-                em.createNamedQuery(Study.MODALITIES_IN_STUDY, String.class)
-                  .setParameter(1, study)
-                  .getResultList()));
-        em.createNamedQuery(Study.UPDATE_MODALITIES_IN_STUDY)
-          .setParameter(1, study)
-          .setParameter(2, study.getModalitiesInStudy())
-          .executeUpdate();
-
-        return true;
-    }
-
-    public boolean updateSOPClassesInStudy(Study study, String cuid) {
-        if (contains(study.getSOPClassesInStudy(), cuid))
-            return false;
-
-        study.setSOPClassesInStudy(join(
-                em.createNamedQuery(Study.SOP_CLASSES_IN_STUDY, String.class)
-                .setParameter(1, study)
-                .getResultList()));
-        em.createNamedQuery(Study.UPDATE_SOP_CLASSES_IN_STUDY)
-          .setParameter(1, study)
-          .setParameter(2, study.getSOPClassesInStudy())
-          .executeUpdate();
-
-        return true;
-    }
-    private static String join(List<String> list) {
-        return StringUtils.join(list.toArray(new String[list.size()]), '\\');
-    }
-
-    private static boolean contains(String vals, String val) {
-        if (val == null)
-            return true;
-
-        if (vals == null)
-            return false;
-
-        if (vals.equals(val))
-            return true;
-
-        for (String s : StringUtils.split(vals, '\\'))
-            if (s.equals(val))
-                return true;
-
-        return false;
+        series.incNumberOfSeriesRelatedInstances();
     }
 
     private List<VerifyingObserver> createVerifyingObservers(Sequence seq) {
@@ -229,7 +224,6 @@ public class InstanceStore {
             series.setAttributes(attrs);
             em.persist(series);
             incNumberOfStudyRelatedSeries(study);
-            updateModalitiesInStudy(study, attrs.getString(Tag.Modality, null));
         }
         cachedSeries.put(seriesIUID, series);
         return series;

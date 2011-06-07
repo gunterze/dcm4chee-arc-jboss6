@@ -108,7 +108,7 @@ public class Series implements Serializable {
     private long pk;
 
     @Basic(optional = false)
-    @Column(name = "created_time")
+    @Column(name = "created_time", updatable = false)
     private Date createdTime;
 
     @Basic(optional = false)
@@ -116,7 +116,7 @@ public class Series implements Serializable {
     private Date updatedTime;
 
     @Basic(optional = false)
-    @Column(name = "series_iuid")
+    @Column(name = "series_iuid", updatable = false)
     private String seriesInstanceUID;
 
     @Basic(optional = false)
@@ -215,6 +215,16 @@ public class Series implements Serializable {
     @Basic(optional = false)
     @Column(name = "series_attrs")
     private byte[] encodedAttributes;
+
+    @Override
+    public String toString() {
+        return "Series[pk=" + pk
+                + ", uid=" + seriesInstanceUID
+                + ", no=" + seriesNumber
+                + ", mod=" + modality
+                + ", numI=" + numberOfSeriesRelatedInstances
+                + "]";
+    }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inst_code_fk")
@@ -345,6 +355,10 @@ public class Series implements Serializable {
 
     public void setNumberOfSeriesRelatedInstances(int numberOfSeriesRelatedInstances) {
         this.numberOfSeriesRelatedInstances = numberOfSeriesRelatedInstances;
+    }
+
+    public void incNumberOfSeriesRelatedInstances() {
+        numberOfSeriesRelatedInstances++;
     }
 
     public String getSourceAET() {

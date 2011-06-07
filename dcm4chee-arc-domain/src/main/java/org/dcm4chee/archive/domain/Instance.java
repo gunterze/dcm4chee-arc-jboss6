@@ -88,7 +88,7 @@ public class Instance implements Serializable {
     private long pk;
 
     @Basic(optional = false)
-    @Column(name = "created_time")
+    @Column(name = "created_time", updatable = false)
     private Date createdTime;
 
     @Basic(optional = false)
@@ -96,11 +96,11 @@ public class Instance implements Serializable {
     private Date updatedTime;
 
     @Basic(optional = false)
-    @Column(name = "sop_iuid")
+    @Column(name = "sop_iuid", updatable = false)
     private String sopInstanceUID;
 
     @Basic(optional = false)
-    @Column(name = "sop_cuid")
+    @Column(name = "sop_cuid", updatable = false)
     private String sopClassUID;
 
     @Basic(optional = false)
@@ -168,6 +168,15 @@ public class Instance implements Serializable {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "series_fk")
     private Series series;
+
+    @Override
+    public String toString() {
+        return "Instance[pk=" + pk
+                + ", uid=" + sopInstanceUID
+                + ", class=" + sopClassUID
+                + ", no=" + instanceNumber
+                + "]";
+    }
 
     @PrePersist
     public void onPrePersist() {
