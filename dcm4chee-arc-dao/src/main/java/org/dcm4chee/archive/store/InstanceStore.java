@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.store;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -106,19 +107,38 @@ public class InstanceStore {
                         em.createNamedQuery(Study.MODALITIES_IN_STUDY, String.class)
                           .setParameter(1, study)
                           .getResultList()));
+            if (!isNullOrEquals(series.getRetrieveAETs(), retrieveAETs))
+                series.setRetrieveAETs(
+                        common(series.getRetrieveAETs(), retrieveAETs));
             if (!isNullOrEquals(series.getExternalRetrieveAET(),
                     externalRetrieveAET))
                 series.setExternalRetrieveAET(null);
+            if (series.getAvailability().compareTo(availability) < 0)
+                series.setAvailability(availability);
+            if (!isNullOrEquals(study.getRetrieveAETs(), retrieveAETs))
+                study.setRetrieveAETs(
+                        common(study.getRetrieveAETs(), retrieveAETs));
             if (!isNullOrEquals(study.getExternalRetrieveAET(),
                     externalRetrieveAET))
                 study.setExternalRetrieveAET(null);
-            if (series.getAvailability().compareTo(availability) < 0)
-                series.setAvailability(availability);
             if (study.getAvailability().compareTo(availability) < 0)
                 study.setAvailability(availability);
             em.flush();
             return inst;
         }
+    }
+
+    private static String common(String aets1, String aets2) {
+        if (aets1 == null || aets2 == null)
+            return null;
+        String[] ss1 = StringUtils.split(aets1, '\\');
+        String[] ss2 = StringUtils.split(aets2, '\\');
+        int len = 0;
+        for (int i = 0; i < ss1.length; i++) {
+            if (contains(ss2, ss1[i]))
+                ss1[len++] = ss1[i];
+        }
+        return len == 0 ? null : StringUtils.join(Arrays.copyOf(ss1, len), '\\');
     }
 
     private static boolean isNullOrEquals(String aet1, String aet2) {
@@ -139,10 +159,13 @@ public class InstanceStore {
         if (vals.equals(val))
             return true;
 
-        for (String s : StringUtils.split(vals, '\\'))
+        return contains(StringUtils.split(vals, '\\'), val);
+    }
+
+    private static boolean contains(String[] vals, String val) {
+        for (String s : vals)
             if (s.equals(val))
                 return true;
-
         return false;
     }
 

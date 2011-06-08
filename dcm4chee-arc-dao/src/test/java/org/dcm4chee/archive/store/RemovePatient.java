@@ -40,7 +40,8 @@ package org.dcm4chee.archive.store;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnit;
 
 import org.dcm4chee.archive.domain.Patient;
 
@@ -50,16 +51,18 @@ import org.dcm4chee.archive.domain.Patient;
 @Stateless
 public class RemovePatient {
 
-    @PersistenceContext(unitName = "dcm4chee-arc")
-    private EntityManager em;
+    @PersistenceUnit(unitName = "dcm4chee-arc")
+    private EntityManagerFactory emf;
 
     public void removePatient(String pid, String issuer) {
-        Patient patient = em.createNamedQuery(
+        EntityManager em = emf.createEntityManager();
+        Patient patient = em .createNamedQuery(
                 Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
             .setParameter(1, pid)
             .setParameter(2, issuer)
             .getSingleResult();
         em.remove(patient);
+        em.close();
     }
 
 }

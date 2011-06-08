@@ -63,7 +63,6 @@ import org.junit.runner.RunWith;
 public class InstanceStoreTest {
 
     private static final String SOURCE_AET = "SOURCE_AET";
-    private static final String RETRIEVE_AETS = "RETRIEVE_AET";
 
     @Deployment
     public static JavaArchive createDeployment() {
@@ -93,13 +92,13 @@ public class InstanceStoreTest {
     public void storeTest() throws Exception {
         Instance ct1 = 
             instanceStore.store(SAXReader.parse("resource:ct-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+                SOURCE_AET, "AET_1\\AET_2", "AET_3", Availability.ONLINE);
         Instance ct2 =
             instanceStore.store(SAXReader.parse("resource:ct-2.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+                SOURCE_AET, "AET_2", "AET_3", Availability.NEARLINE);
         Instance pr1 =
             instanceStore.store(SAXReader.parse("resource:pr-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+                SOURCE_AET, "AET_1\\AET_2", "AET_4", Availability.ONLINE);
         instanceStore.close();
         Series ctSeries = ct1.getSeries();
         Series prSeries = pr1.getSeries();
@@ -113,7 +112,16 @@ public class InstanceStoreTest {
         assertTrue(equals(study.getModalitiesInStudy(), "CT", "PR"));
         assertTrue(equals(study.getSOPClassesInStudy(),
                 "1.2.840.10008.5.1.4.1.1.2", "1.2.840.10008.5.1.4.1.1.11.1"));
-    }
+        assertEquals("AET_2", ctSeries.getRetrieveAETs());
+        assertEquals("AET_1\\AET_2", prSeries.getRetrieveAETs());
+        assertEquals("AET_2", study.getRetrieveAETs());
+        assertEquals("AET_3", ctSeries.getExternalRetrieveAET());
+        assertEquals("AET_4", prSeries.getExternalRetrieveAET());
+        assertNull(study.getExternalRetrieveAET());
+        assertEquals(Availability.NEARLINE, ctSeries.getAvailability());
+        assertEquals(Availability.ONLINE, prSeries.getAvailability());
+        assertEquals(Availability.NEARLINE, study.getAvailability());
+  }
 
     private boolean equals(String s, String... vals) {
         String[] ss = StringUtils.split(s, '\\');
