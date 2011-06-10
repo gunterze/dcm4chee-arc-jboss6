@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<deployment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="urn:jboss:bean-deployer bean-deployer_2_0.xsd"
+  xmlns="urn:jboss:bean-deployer:2.0">
+
+  <bean name="Executer" class="java.util.concurrent.Executor">
+    <constructor factoryClass="java.util.concurrent.Executors"
+      factoryMethod="newCachedThreadPool" />
+  </bean>
+
+  <bean name="ScheduledExecutorService" class="java.util.concurrent.ScheduledExecutorService">
+    <constructor factoryClass="java.util.concurrent.Executors"
+      factoryMethod="newSingleThreadScheduledExecutor" />
+  </bean>
+
+  <!-- The DICOM Device -->
+  <bean name="Device" class="org.dcm4che.net.Device">
+    <constructor>
+      <parameter>dcm4chee-arc</parameter>
+    </constructor>
+    <property name="executor">
+      <inject bean="Executer" />
+    </property>
+    <property name="scheduledExecutor">
+      <inject bean="ScheduledExecutorService" />
+    </property>
+    <incallback method="addConnection" />
+    <incallback method="addApplicationEntity" />
+    <start method="activate" />
+    <stop method="deactivate" />
+  </bean>
+
+  <!-- The DICOM Connection -->
+  <bean name="Connection" class="org.dcm4che.net.Connection">
+    <property name="port">11112</property>
+  </bean>
+
+  <!-- The DICOM Application Entity -->
+  <bean name="ApplicationEntity" class="org.dcm4che.net.ApplicationEntity">
+    <constructor>
+      <parameter>DCM4CHEE</parameter>
+    </constructor>
+    <property name="associationAcceptor">true</property>
+    <property name="dimseRQHandler">
+      <inject bean="DicomServiceRegistry" />
+    </property>
+    <incallback method="addConnection" />
+    <incallback method="addTransferCapability" />
+  </bean>
+
+  <!-- Verification SCP -->
+  <bean name="VerificationSCPCapability" class="org.dcm4che.net.TransferCapability">
+    <constructor>
+      <parameter><null/></parameter>
+      <parameter>1.2.840.10008.1.1</parameter>
+      <parameter>SCP</parameter>
+      <parameter>1.2.840.10008.1.2</parameter>
+    </constructor>
+  </bean>
+
+  <!-- Patient Root Query/Retrieve Information Model - FIND, SOP Class SCP -->
+  <bean name="PatientRootQuerySCP" class="org.dcm4che.net.TransferCapability">
+    <constructor>
+      <parameter><null/></parameter>
+      <parameter>1.2.840.10008.5.1.4.1.2.1.1</parameter>
+      <parameter>SCP</parameter>
+      <parameter>1.2.840.10008.1.2</parameter>
+    </constructor>
+  </bean>
+
+  <!-- Study Root Query/Retrieve Information Model - FIND, SOP Class SCP -->
+  <bean name="StudyRootQuerySCP" class="org.dcm4che.net.TransferCapability">
+    <constructor>
+      <parameter><null/></parameter>
+      <parameter>1.2.840.10008.5.1.4.1.2.2.1</parameter>
+      <parameter>SCP</parameter>
+      <parameter>1.2.840.10008.1.2</parameter>
+    </constructor>
+  </bean>
+
+  <!-- Patient/Study Only Root Query/Retrieve Information Model - FIND, SOP Class SCP -->
+  <bean name="PatientStudyOnlyQuerySCP" class="org.dcm4che.net.TransferCapability">
+    <constructor>
+      <parameter><null/></parameter>
+      <parameter>1.2.840.10008.5.1.4.1.2.3.1</parameter>
+      <parameter>SCP</parameter>
+      <parameter>1.2.840.10008.1.2</parameter>
+    </constructor>
+  </bean>
+
+  <!-- Service Registry -->
+  <bean name="DicomServiceRegistry" class="org.dcm4che.net.service.DicomServiceRegistry">
+    <incallback method="addDicomService" />
+  </bean>
+
+  <!-- CEchoSCP -->
+  <bean name="CEchoSCP" class="org.dcm4che.net.service.BasicCEchoSCP"/>
+
+  <!-- CFindSCP -->
+  <bean name="CFindSCP" class="org.dcm4che.net.service.BasicCFindSCP">
+    <constructor>
+      <parameter><inject bean="Device" /></parameter>
+      <parameter>
+        <array>
+          <value>1.2.840.10008.5.1.4.1.2.1.1</value>
+          <value>1.2.840.10008.5.1.4.1.2.2.1</value>
+          <value>1.2.840.10008.5.1.4.1.2.3.1</value>
+        </array>
+      </parameter>
+    </constructor>
+  </bean>
+
+</deployment>
