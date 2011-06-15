@@ -36,16 +36,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.testdata;
+package org.dcm4chee.archive.ejb.query;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import javax.ejb.EJB;
 
-import org.dcm4che.io.SAXReader;
-import org.dcm4chee.archive.ejb.store.CodeFactory;
-import org.dcm4chee.archive.ejb.store.InstanceStore;
-import org.dcm4chee.archive.ejb.store.IssuerFactory;
-import org.dcm4chee.archive.ejb.store.PatientFactory;
-import org.dcm4chee.archive.persistence.Availability;
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
+import org.dcm4che.data.VR;
+import org.dcm4chee.archive.ejb.query.Matching;
+import org.dcm4chee.archive.ejb.query.PatientQuery;
+import org.dcm4chee.archive.ejb.query.PatientQueryBean;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -57,44 +60,43 @@ import org.junit.runner.RunWith;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @RunWith(Arquillian.class)
-public class InitTestData {
-
-    private static final String SOURCE_AET = "SOURCE_AET";
-    private static final String RETRIEVE_AETS = "RETRIEVE_AET";
+public class PatientQueryTest {
 
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(InstanceStore.class,
-                        CodeFactory.class,
-                        IssuerFactory.class,
-                        PatientFactory.class)
-                .addAsResource("sc-1.xml")
-                .addAsResource("pr-1.xml")
-                .addAsResource("ct-1.xml")
-                .addAsResource("ct-2.xml")
-                .addAsResource("sr-1.xml")
-                .addAsResource("sr-2.xml");
+                .addClasses(
+                        PatientQuery.class,
+                        PatientQueryBean.class,
+                        Matching.class);
     }
 
     @EJB
-    private InstanceStore instanceStore;
+    private PatientQuery query;
 
     @Test
-    public void storeTestData() throws Exception {
-        instanceStore.store(SAXReader.parse("resource:sc-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:pr-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:ct-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:ct-2.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:sr-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:sr-2.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.close();
+    public void testByPatientID() throws Exception {
+        query.find(null, new String[] { "CT5", "DCM4CHEE_TESTDATA" }, null, false);
+        assertTrue(query.hasMoreMatches());
+        query.nextMatch();
+        assertFalse(query.hasMoreMatches());
+        query.close();
     }
 
+    @Test
+    public void testByPatientName() throws Exception {
+        query.find(null, null, patientName("大宮^省吾"), false);
+        assertTrue(query.hasMoreMatches());
+        query.nextMatch();
+        assertFalse(query.hasMoreMatches());
+        query.close();
+    }
+
+    private Attributes patientName(String name) {
+        Attributes attrs = new Attributes(2);
+        attrs.setString(Tag.SpecificCharacterSet, VR.CS, 
+                "ISO 2022 IR 6", "ISO 2022 IR 87");
+        attrs.setString(Tag.PatientName, VR.PN, name);
+        return attrs;
+    }
 }

@@ -36,31 +36,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.testdata;
+package org.dcm4chee.archive.persistence;
 
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.dcm4chee.archive.persistence.Patient;
+import org.dcm4che.data.Attributes;
+import org.dcm4che.io.SAXReader;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateless
-public class RemovePatient {
+public class AttributeFilter {
 
-    @PersistenceContext(unitName = "dcm4chee-arc")
-    private EntityManager em;
+    private static final String PATIENT_ATTRIBUTE_FILTER =
+            "resource:patient-attribute-filter.xml";
+    private static final String STUDY_ATTRIBUTE_FILTER =
+            "resource:study-attribute-filter.xml";
+    private static final String SERIES_ATTRIBUTE_FILTER =
+            "resource:series-attribute-filter.xml";
+    private static final String INSTANCE_ATTRIBUTE_FILTER =
+            "resource:instance-attribute-filter.xml";
+    private static final String CASE_INSENSITIVE_ATTRIBUTES =
+            "resource:case-insensitive-attributes.xml";
 
-    public void removePatient(String pid, String issuer) {
-        Patient patient = em.createNamedQuery(
-                Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
-            .setParameter(1, pid)
-            .setParameter(2, issuer)
-            .getSingleResult();
-        em.remove(patient);
+    public final static Attributes patientFilter;
+    public final static Attributes studyFilter;
+    public final static Attributes seriesFilter;
+    public final static Attributes instanceFilter;
+    public final static Attributes caseInsensitive;
+
+    static {
+        try {
+            patientFilter = SAXReader.parse(PATIENT_ATTRIBUTE_FILTER, null);
+            studyFilter = SAXReader.parse(STUDY_ATTRIBUTE_FILTER, null);
+            seriesFilter = SAXReader.parse(SERIES_ATTRIBUTE_FILTER, null);
+            instanceFilter = SAXReader.parse(INSTANCE_ATTRIBUTE_FILTER, null);
+            caseInsensitive = SAXReader.parse(CASE_INSENSITIVE_ATTRIBUTES, null);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-
+    public static String getString(Attributes attrs, int tag) {
+        String val = attrs.getString(tag, null);
+        return val != null
+                ? (caseInsensitive.contains(tag) ? val.toUpperCase() : val)
+                : "*";
+    }
 }

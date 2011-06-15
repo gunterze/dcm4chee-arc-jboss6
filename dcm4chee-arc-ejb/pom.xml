@@ -37,7 +37,9 @@
    -
    - ***** END LICENSE BLOCK *****  -->
    
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>dcm4chee-arc-parent</artifactId>
@@ -45,10 +47,11 @@
     <version>4.0.0-SNAPSHOT</version>
   </parent>
   <groupId>org.dcm4che.dcm4chee-arc</groupId>
-  <artifactId>dcm4chee-arc-testdata</artifactId>
-  <version>4.0.0-SNAPSHOT</version>
-  <name>dcm4chee-arc-testdata</name>
-  <description>Insert/Remove test data into DB</description>
+  <artifactId>dcm4chee-arc-ejb</artifactId>
+  <version>${parent.version}</version>
+  <packaging>ejb</packaging>
+  <name>dcm4chee-arc-ejb</name>
+  <description>Session Beans for DICOM Archive J2EE application</description>
   <properties>
     <db>hsql</db>
     <arquillian.version>1.0.0.Alpha5</arquillian.version>
@@ -56,6 +59,22 @@
     <jboss.version>6.0.0.Final</jboss.version>
   </properties>
   <profiles>
+    <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>jbossas-remote-6</id>
       <dependencies>
@@ -101,13 +120,14 @@
       <version>${parent.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.dcm4che.dcm4chee-arc</groupId>
-      <artifactId>dcm4chee-arc-ejb</artifactId>
-      <version>${parent.version}</version>
+      <groupId>org.dcm4che</groupId>
+      <artifactId>dcm4che-core</artifactId>
+      <version>3.0.0-SNAPSHOT</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
-      <artifactId>dcm4che-core</artifactId>
+      <artifactId>dcm4che-net</artifactId>
       <version>3.0.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
@@ -147,4 +167,15 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-ejb-plugin</artifactId>
+        <version>2.3</version>
+        <configuration>
+          <ejbVersion>3.1</ejbVersion>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

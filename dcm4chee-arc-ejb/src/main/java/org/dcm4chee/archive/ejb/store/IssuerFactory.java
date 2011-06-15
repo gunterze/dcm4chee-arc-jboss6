@@ -36,31 +36,52 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.testdata;
+package org.dcm4chee.archive.ejb.store;
 
-import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import javax.persistence.NoResultException;
+import javax.persistence.TypedQuery;
 
-import org.dcm4chee.archive.persistence.Patient;
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
+import org.dcm4chee.archive.persistence.Issuer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateless
-public class RemovePatient {
+public class IssuerFactory {
 
-    @PersistenceContext(unitName = "dcm4chee-arc")
-    private EntityManager em;
-
-    public void removePatient(String pid, String issuer) {
-        Patient patient = em.createNamedQuery(
-                Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
-            .setParameter(1, pid)
-            .setParameter(2, issuer)
-            .getSingleResult();
-        em.remove(patient);
+    public static Issuer getIssuer(EntityManager em, String entityID,
+            String entityUID, String entityUIDType) {
+        try {
+            TypedQuery<Issuer> query;
+            if (entityID == null) {
+                query = em.createNamedQuery(Issuer.FIND_BY_ENTITY_UID, Issuer.class)
+                    .setParameter(1, entityUID)
+                    .setParameter(2, entityUIDType);
+            } else if (entityUID == null) {
+                query = em.createNamedQuery(Issuer.FIND_BY_ENTITY_ID, Issuer.class)
+                    .setParameter(1, entityID);
+            } else {
+                query = em.createNamedQuery(Issuer.FIND_BY_ENTITY_ID_OR_UID, Issuer.class)
+                    .setParameter(1, entityID)
+                    .setParameter(2, entityUID)
+                    .setParameter(3, entityUIDType);
+            }
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            Issuer issuer = new Issuer(entityID, entityUID, entityUIDType);
+            em.persist(issuer);
+            return issuer;
+        }
     }
 
-
+    public static Issuer getIssuer(EntityManager em, Attributes issuerItem) {
+        return issuerItem != null
+                ? getIssuer(em,
+                    issuerItem.getString(Tag.CodeValue, null),
+                    issuerItem.getString(Tag.CodingSchemeDesignator, null),
+                    issuerItem.getString(Tag.CodingSchemeDesignator, null))
+                : null;
+    }
 }

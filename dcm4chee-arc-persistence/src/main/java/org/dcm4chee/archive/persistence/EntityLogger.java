@@ -36,31 +36,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.testdata;
+package org.dcm4chee.archive.persistence;
 
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.dcm4chee.archive.persistence.Patient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
+ * @author Damien Evans <damien.daddy@gmail.com>
+ * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateless
-public class RemovePatient {
+public class EntityLogger {
 
-    @PersistenceContext(unitName = "dcm4chee-arc")
-    private EntityManager em;
-
-    public void removePatient(String pid, String issuer) {
-        Patient patient = em.createNamedQuery(
-                Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
-            .setParameter(1, pid)
-            .setParameter(2, issuer)
-            .getSingleResult();
-        em.remove(patient);
+    private Logger getLogger(Object entity) {
+        return LoggerFactory.getLogger(entity.getClass());
     }
 
+    public void onPrePersist(Object entity) {
+        getLogger(entity).debug("Creating {}", entity);
+    }
 
+    public void onPostPersist(Object entity) {
+        getLogger(entity).debug("Created {}", entity);
+    }
+
+    public void onPostLoad(Object entity) {
+        getLogger(entity).debug("Loaded {}", entity);
+    }
+
+    public void onPreUpdate(Object entity) {
+        getLogger(entity).debug("Updating {}", entity);
+    }
+
+    public void onPostUpdate(Object entity) {
+        getLogger(entity).debug("Updated {}", entity);
+    }
+
+    public void onPreRemove(Object entity) {
+        getLogger(entity).debug("Deleting {}", entity);
+    }
+
+    public void onPostRemove(Object entity) {
+        getLogger(entity).debug("Deleted {}", entity);
+    }
 }

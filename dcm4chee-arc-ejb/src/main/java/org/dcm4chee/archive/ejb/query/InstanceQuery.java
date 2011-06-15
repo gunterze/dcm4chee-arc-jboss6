@@ -36,31 +36,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.testdata;
+package org.dcm4chee.archive.ejb.query;
 
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import javax.ejb.Local;
 
-import org.dcm4chee.archive.persistence.Patient;
+import org.dcm4che.data.Attributes;
+import org.dcm4che.net.service.Matches;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateless
-public class RemovePatient {
+@Local
+public interface InstanceQuery extends Matches {
 
-    @PersistenceContext(unitName = "dcm4chee-arc")
-    private EntityManager em;
+    public static final String JNDI_NAME = "InstanceQueryBean/local";
 
-    public void removePatient(String pid, String issuer) {
-        Patient patient = em.createNamedQuery(
-                Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
-            .setParameter(1, pid)
-            .setParameter(2, issuer)
-            .getSingleResult();
-        em.remove(patient);
-    }
-
-
+    void find(Attributes rq, String[] pids, Attributes keys,
+            boolean matchUnknown, boolean combinedDateTime);
 }

@@ -36,31 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.testdata;
-
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.dcm4chee.archive.persistence.Patient;
+package org.dcm4chee.archive.persistence;
 
 /**
+ * @author Damien Evans <damien.daddy@gmail.com>
+ * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateless
-public class RemovePatient {
-
-    @PersistenceContext(unitName = "dcm4chee-arc")
-    private EntityManager em;
-
-    public void removePatient(String pid, String issuer) {
-        Patient patient = em.createNamedQuery(
-                Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
-            .setParameter(1, pid)
-            .setParameter(2, issuer)
-            .getSingleResult();
-        em.remove(patient);
-    }
-
-
+public enum Availability {
+    ONLINE,
+    NEARLINE,
+    OFFLINE,
+    UNAVAILABLE
 }

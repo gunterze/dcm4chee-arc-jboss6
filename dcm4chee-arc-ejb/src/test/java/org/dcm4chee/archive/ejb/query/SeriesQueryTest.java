@@ -36,31 +36,57 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.testdata;
+package org.dcm4chee.archive.ejb.query;
 
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import static org.junit.Assert.*;
 
-import org.dcm4chee.archive.persistence.Patient;
+import javax.ejb.EJB;
+
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
+import org.dcm4che.data.VR;
+import org.dcm4chee.archive.ejb.query.Matching;
+import org.dcm4chee.archive.ejb.query.SeriesQuery;
+import org.dcm4chee.archive.ejb.query.SeriesQueryBean;
+import org.jboss.arquillian.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateless
-public class RemovePatient {
+@RunWith(Arquillian.class)
+public class SeriesQueryTest {
 
-    @PersistenceContext(unitName = "dcm4chee-arc")
-    private EntityManager em;
-
-    public void removePatient(String pid, String issuer) {
-        Patient patient = em.createNamedQuery(
-                Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
-            .setParameter(1, pid)
-            .setParameter(2, issuer)
-            .getSingleResult();
-        em.remove(patient);
+    @Deployment
+    public static JavaArchive createDeployment() {
+       return ShrinkWrap.create(JavaArchive.class, "test.jar")
+                .addClasses(
+                        SeriesQuery.class,
+                        SeriesQueryBean.class,
+                        Matching.class);
     }
 
+    @EJB
+    private SeriesQuery query;
+
+    @Test
+    public void testByModality() throws Exception {
+        query.find(null, new String[] { "CT5", "DCM4CHEE_TESTDATA" },
+                modality("PR"), false, false);
+        assertTrue(query.hasMoreMatches());
+        query.nextMatch();
+        assertFalse(query.hasMoreMatches());
+        query.close();
+    }
+
+    private Attributes modality(String value) {
+        Attributes attrs = new Attributes(1);
+        attrs.setString(Tag.Modality, VR.CS, value);
+        return attrs;
+    }
 
 }

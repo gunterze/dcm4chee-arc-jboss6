@@ -36,20 +36,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.testdata;
+package org.dcm4chee.archive.ejb.store;
+
+import static org.junit.Assert.*;
 
 import javax.ejb.EJB;
 
 import org.dcm4che.io.SAXReader;
+import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.ejb.store.CodeFactory;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.ejb.store.IssuerFactory;
 import org.dcm4chee.archive.ejb.store.PatientFactory;
 import org.dcm4chee.archive.persistence.Availability;
+import org.dcm4chee.archive.persistence.Instance;
+import org.dcm4chee.archive.persistence.Series;
+import org.dcm4chee.archive.persistence.Study;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -57,10 +64,9 @@ import org.junit.runner.RunWith;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @RunWith(Arquillian.class)
-public class InitTestData {
+public class InstanceStoreTest {
 
     private static final String SOURCE_AET = "SOURCE_AET";
-    private static final String RETRIEVE_AETS = "RETRIEVE_AET";
 
     @Deployment
     public static JavaArchive createDeployment() {
@@ -68,33 +74,75 @@ public class InitTestData {
                 .addClasses(InstanceStore.class,
                         CodeFactory.class,
                         IssuerFactory.class,
-                        PatientFactory.class)
-                .addAsResource("sc-1.xml")
-                .addAsResource("pr-1.xml")
+                        PatientFactory.class,
+                        RemovePatient.class)
                 .addAsResource("ct-1.xml")
                 .addAsResource("ct-2.xml")
-                .addAsResource("sr-1.xml")
-                .addAsResource("sr-2.xml");
+                .addAsResource("pr-1.xml");
     }
+
+    @EJB
+    private RemovePatient removePatient;
 
     @EJB
     private InstanceStore instanceStore;
 
-    @Test
-    public void storeTestData() throws Exception {
-        instanceStore.store(SAXReader.parse("resource:sc-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:pr-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:ct-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:ct-2.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:sr-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:sr-2.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.close();
+    @After
+    public void clearDB() {
+        removePatient.removePatient("TEST-20110607", "DCM4CHEE_TESTDATA");
     }
 
+    @Test
+    public void storeTest() throws Exception {
+        Instance ct1 = 
+            instanceStore.store(SAXReader.parse("resource:ct-1.xml", null),
+                SOURCE_AET, "AET_1\\AET_2", "AET_3", Availability.ONLINE);
+        Instance ct2 =
+            instanceStore.store(SAXReader.parse("resource:ct-2.xml", null),
+                SOURCE_AET, "AET_2", "AET_3", Availability.NEARLINE);
+        Instance pr1 =
+            instanceStore.store(SAXReader.parse("resource:pr-1.xml", null),
+                SOURCE_AET, "AET_1\\AET_2", "AET_4", Availability.ONLINE);
+        instanceStore.close();
+        Series ctSeries = ct1.getSeries();
+        Series prSeries = pr1.getSeries();
+        Study study = ctSeries.getStudy();
+        assertEquals(ctSeries, ct2.getSeries());
+        assertEquals(study, prSeries.getStudy());
+        assertEquals(2, study.getNumberOfStudyRelatedSeries());
+        assertEquals(3, study.getNumberOfStudyRelatedInstances());
+        assertEquals(2, ctSeries.getNumberOfSeriesRelatedInstances());
+        assertEquals(1, prSeries.getNumberOfSeriesRelatedInstances());
+        assertTrue(equals(study.getModalitiesInStudy(), "CT", "PR"));
+        assertTrue(equals(study.getSOPClassesInStudy(),
+                "1.2.840.10008.5.1.4.1.1.2", "1.2.840.10008.5.1.4.1.1.11.1"));
+        assertEquals("AET_2", ctSeries.getRetrieveAETs());
+        assertEquals("AET_1\\AET_2", prSeries.getRetrieveAETs());
+        assertEquals("AET_2", study.getRetrieveAETs());
+        assertEquals("AET_3", ctSeries.getExternalRetrieveAET());
+        assertEquals("AET_4", prSeries.getExternalRetrieveAET());
+        assertNull(study.getExternalRetrieveAET());
+        assertEquals(Availability.NEARLINE, ctSeries.getAvailability());
+        assertEquals(Availability.ONLINE, prSeries.getAvailability());
+        assertEquals(Availability.NEARLINE, study.getAvailability());
+  }
+
+    private boolean equals(String s, String... vals) {
+        String[] ss = StringUtils.split(s, '\\');
+        if (ss.length != vals.length)
+            return false;
+        for (String val : vals) {
+            if (!contains(ss, val))
+                return false;
+        }
+        return true;
+    }
+
+    private boolean contains(String[] ss, String val) {
+        for (String s : ss) {
+            if (val.equals(s))
+                return true;
+        }
+        return false;
+    }
 }

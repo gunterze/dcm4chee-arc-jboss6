@@ -54,7 +54,7 @@
   <dependencies>
     <dependency>
       <groupId>org.dcm4che.dcm4chee-arc</groupId>
-      <artifactId>dcm4chee-arc-dao</artifactId>
+      <artifactId>dcm4chee-arc-ejb</artifactId>
       <version>${parent.version}</version>
     </dependency>
     <dependency>

@@ -52,10 +52,10 @@ import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.service.BasicCFindSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.Matches;
-import org.dcm4chee.archive.query.InstanceQuery;
-import org.dcm4chee.archive.query.PatientQuery;
-import org.dcm4chee.archive.query.SeriesQuery;
-import org.dcm4chee.archive.query.StudyQuery;
+import org.dcm4chee.archive.ejb.query.InstanceQuery;
+import org.dcm4chee.archive.ejb.query.PatientQuery;
+import org.dcm4chee.archive.ejb.query.SeriesQuery;
+import org.dcm4chee.archive.ejb.query.StudyQuery;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
