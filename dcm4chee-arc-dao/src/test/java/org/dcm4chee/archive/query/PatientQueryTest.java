@@ -38,7 +38,8 @@
 
 package org.dcm4chee.archive.query;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import javax.ejb.EJB;
 
@@ -61,7 +62,10 @@ public class PatientQueryTest {
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(PatientQuery.class, Matching.class);
+                .addClasses(
+                        PatientQuery.class,
+                        PatientQueryBean.class,
+                        Matching.class);
     }
 
     @EJB
@@ -69,19 +73,19 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientID() throws Exception {
-        query.find(new String[] { "CT5", "DCM4CHEE_TESTDATA" }, null, false);
-        assertTrue(query.hasNext());
-        query.next();
-        assertFalse(query.hasNext());
+        query.find(null, new String[] { "CT5", "DCM4CHEE_TESTDATA" }, null, false);
+        assertTrue(query.hasMoreMatches());
+        query.nextMatch();
+        assertFalse(query.hasMoreMatches());
         query.close();
     }
 
     @Test
     public void testByPatientName() throws Exception {
-        query.find(null, patientName("大宮^省吾"), false);
-        assertTrue(query.hasNext());
-        query.next();
-        assertFalse(query.hasNext());
+        query.find(null, null, patientName("大宮^省吾"), false);
+        assertTrue(query.hasMoreMatches());
+        query.nextMatch();
+        assertFalse(query.hasMoreMatches());
         query.close();
     }
 

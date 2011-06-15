@@ -61,7 +61,10 @@ public class StudyQueryTest {
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(StudyQuery.class, Matching.class);
+                .addClasses(
+                        StudyQuery.class,
+                        StudyQueryBean.class,
+                        Matching.class);
             }
 
     @EJB
@@ -69,11 +72,11 @@ public class StudyQueryTest {
 
     @Test
     public void testByModalitiesInStudy() throws Exception {
-        query.find(new String[] { "CT5", "DCM4CHEE_TESTDATA" },
+        query.find(null, new String[] { "CT5", "DCM4CHEE_TESTDATA" },
                 modalitiesInStudy("SR"), false, false);
-        assertTrue(query.hasNext());
-        query.next();
-        assertFalse(query.hasNext());
+        assertTrue(query.hasMoreMatches());
+        query.nextMatch();
+        assertFalse(query.hasMoreMatches());
         query.close();
     }
 

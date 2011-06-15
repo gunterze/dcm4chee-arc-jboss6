@@ -38,145 +38,19 @@
 
 package org.dcm4chee.archive.query;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.ejb.Remove;
-import javax.ejb.Stateful;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceContextType;
-import javax.persistence.Query;
-import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.ejb.Local;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.domain.Availability;
-import org.dcm4chee.archive.domain.Instance;
-import org.dcm4chee.archive.domain.Instance_;
-import org.dcm4chee.archive.domain.Patient;
-import org.dcm4chee.archive.domain.Series;
-import org.dcm4chee.archive.domain.Series_;
-import org.dcm4chee.archive.domain.Study;
-import org.dcm4chee.archive.domain.Study_;
-import org.dcm4chee.archive.domain.Utils;
+import org.dcm4che.net.service.Matches;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateful
-public class InstanceQuery {
+@Local
+public interface InstanceQuery extends Matches {
 
-    @PersistenceContext(unitName = "dcm4chee-arc",
-                        type = PersistenceContextType.EXTENDED)
-    private EntityManager em;
-    private Query seriesQuery;
+    public static final String JNDI_NAME = "InstanceQueryBean/local";
 
-    private Iterator<Tuple> results;
-
-    private long seriesPk = -1L;
-    private Attributes seriesAttrs;
-
-    public void find(String[] pids, Attributes keys, boolean matchUnknown,
-            boolean combinedDateTime) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        TypedQuery<Tuple> instQuery =
-                buildInstanceQuery(cb, pids, keys, matchUnknown,
-                        combinedDateTime);
-        results = instQuery.getResultList().iterator();
-        seriesQuery = em.createNamedQuery(Series.FIND_ATTRIBUTES_BY_SERIES_PK);
-    }
-
-    private Attributes querySeriesAttrs(long seriesPk) throws IOException {
-        Object[] tuple = (Object[])
-                seriesQuery.setParameter(1, seriesPk).getSingleResult();
-        int numberOfStudyRelatedSeries = (Integer) tuple[0];
-        int numberOfStudyRelatedInstances = (Integer) tuple[1];
-        int numberOfSeriesRelatedInstances = (Integer) tuple[2];
-        String modalitiesInStudy = (String) tuple[3];
-        String sopClassesInStudy = (String) tuple[4];
-        byte[] seriesAttributes = (byte[]) tuple[5];
-        byte[] studyAttributes = (byte[]) tuple[6];
-        byte[] patientAttributes = (byte[]) tuple[7];
-        Attributes attrs = new Attributes();
-        Utils.decodeAttributes(attrs, patientAttributes);
-        Utils.decodeAttributes(attrs, studyAttributes);
-        Utils.decodeAttributes(attrs, seriesAttributes);
-        Utils.setStudyQueryAttributes(attrs,
-                numberOfStudyRelatedSeries,
-                numberOfStudyRelatedInstances,
-                modalitiesInStudy,
-                sopClassesInStudy);
-        Utils.setSeriesQueryAttributes(attrs, numberOfSeriesRelatedInstances);
-        return attrs;
-    }
-
-    private TypedQuery<Tuple> buildInstanceQuery(CriteriaBuilder cb,
-            String[] pids, Attributes keys, boolean matchUnknown,
-            boolean combinedDateTime) {
-        CriteriaQuery<Tuple> cq =  cb.createTupleQuery();
-        Root<Instance> inst = cq.from(Instance.class);
-        Join<Instance, Series> series = inst.join(Instance_.series);
-        Join<Series, Study> study = series.join(Series_.study);
-        Join<Study, Patient> pat = study.join(Study_.patient);
-        cq.multiselect(
-                series.get(Series_.pk),
-                inst.get(Instance_.retrieveAETs),
-                inst.get(Instance_.externalRetrieveAET),
-                inst.get(Instance_.availability),
-                inst.get(Instance_.encodedAttributes));
-        cq.orderBy(cb.asc(series.get(Series_.pk)));
-        List<Predicate> predicates = new ArrayList<Predicate>();
-        List<Object> params = new ArrayList<Object>();
-        Matching.instance(cb, pat, study, series, inst, pids, keys,
-                matchUnknown, combinedDateTime, predicates, params);
-        cq.where(predicates.toArray(new Predicate[predicates.size()]));
-        TypedQuery<Tuple> instQuery = em.createQuery(cq);
-        int i = 0;
-        for (Object param : params)
-            instQuery.setParameter(Matching.paramName(i++), param);
-        return instQuery;
-    }
-
-    public boolean hasNext() {
-        checkResults();
-        return results.hasNext();
-    }
-
-    public Attributes next() throws IOException {
-        checkResults();
-        Tuple tuple = results.next();
-        long seriesPk = tuple.get(0, Long.class);
-        String retrieveAETs = tuple.get(1, String.class);
-        String externalRetrieveAET = tuple.get(2, String.class);
-        Availability availability = tuple.get(3, Availability.class);
-        byte[] instanceAttributes = tuple.get(4, byte[].class);
-        if (this.seriesPk != seriesPk) {
-            this.seriesAttrs = querySeriesAttrs(seriesPk);
-            this.seriesPk = seriesPk;
-        }
-
-        Attributes attrs = new Attributes();
-        attrs.addAll(seriesAttrs);
-        Utils.decodeAttributes(attrs, instanceAttributes);
-        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
-        Utils.setAvailability(attrs, availability);
-        return attrs;
-    }
-
-    private void checkResults() {
-        if (results == null)
-            throw new IllegalStateException("results not initalized");
-    }
-
-    @Remove
-    public void close() {}
-
+    void find(Attributes rq, String[] pids, Attributes keys,
+            boolean matchUnknown, boolean combinedDateTime);
 }

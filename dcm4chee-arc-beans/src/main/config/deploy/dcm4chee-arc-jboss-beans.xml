@@ -97,15 +97,47 @@
   <!-- CEchoSCP -->
   <bean name="CEchoSCP" class="org.dcm4che.net.service.BasicCEchoSCP"/>
 
-  <!-- CFindSCP -->
-  <bean name="CFindSCP" class="org.dcm4che.net.service.BasicCFindSCP">
+  <!-- Patient Root C-FIND SCP -->
+  <bean name="PatientRootCFindSCP" class="org.dcm4chee.archive.beans.query.CompositeCFindSCP">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
+      <parameter>1.2.840.10008.5.1.4.1.2.1.1</parameter>
       <parameter>
         <array>
-          <value>1.2.840.10008.5.1.4.1.2.1.1</value>
-          <value>1.2.840.10008.5.1.4.1.2.2.1</value>
-          <value>1.2.840.10008.5.1.4.1.2.3.1</value>
+          <value>PATIENT</value>
+          <value>STUDY</value>
+          <value>SERIES</value>
+          <value>IMAGE</value>
+        </array>
+      </parameter>
+    </constructor>
+  </bean>
+
+
+  <!-- Study Root C-FIND SCP -->
+  <bean name="StudyRootCFindSCP" class="org.dcm4chee.archive.beans.query.CompositeCFindSCP">
+    <constructor>
+      <parameter><inject bean="Device" /></parameter>
+      <parameter>1.2.840.10008.5.1.4.1.2.2.1</parameter>
+      <parameter>
+        <array>
+          <value>STUDY</value>
+          <value>SERIES</value>
+          <value>IMAGE</value>
+        </array>
+      </parameter>
+    </constructor>
+  </bean>
+
+  <!-- Patient/Study Only C-FIND SCP -->
+  <bean name="PatientStudyOnlyCFindSCP" class="org.dcm4chee.archive.beans.query.CompositeCFindSCP">
+    <constructor>
+      <parameter><inject bean="Device" /></parameter>
+      <parameter>1.2.840.10008.5.1.4.1.2.3.1</parameter>
+      <parameter>
+        <array>
+          <value>PATIENT</value>
+          <value>STUDY</value>
         </array>
       </parameter>
     </constructor>

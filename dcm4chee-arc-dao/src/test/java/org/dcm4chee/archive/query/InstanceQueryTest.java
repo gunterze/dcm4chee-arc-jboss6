@@ -38,7 +38,8 @@
 
 package org.dcm4chee.archive.query;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import javax.ejb.EJB;
 
@@ -61,7 +62,10 @@ public class InstanceQueryTest {
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(InstanceQuery.class, Matching.class);
+                .addClasses(
+                        InstanceQuery.class,
+                        InstanceQueryBean.class,
+                        Matching.class);
     }
 
     @EJB
@@ -69,11 +73,11 @@ public class InstanceQueryTest {
 
     @Test
     public void testByVerificationFlag() throws Exception {
-        query.find(new String[] { "CT5", "DCM4CHEE_TESTDATA" },
+        query.find(null, new String[] { "CT5", "DCM4CHEE_TESTDATA" },
                 verificationFlag("VERIFIED"), false, false);
-        assertTrue(query.hasNext());
-        query.next();
-        assertFalse(query.hasNext());
+        assertTrue(query.hasMoreMatches());
+        query.nextMatch();
+        assertFalse(query.hasMoreMatches());
         query.close();
     }
 

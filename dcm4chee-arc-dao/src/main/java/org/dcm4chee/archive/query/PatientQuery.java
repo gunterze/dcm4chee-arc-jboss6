@@ -38,76 +38,19 @@
 
 package org.dcm4chee.archive.query;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.ejb.Remove;
-import javax.ejb.Stateful;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceContextType;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.ejb.Local;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.domain.Patient;
-import org.dcm4chee.archive.domain.Patient_;
-import org.dcm4chee.archive.domain.Utils;
+import org.dcm4che.net.service.Matches;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateful
-public class PatientQuery {
+@Local
+public interface PatientQuery extends Matches {
 
-    @PersistenceContext(unitName = "dcm4chee-arc",
-                        type = PersistenceContextType.EXTENDED)
-    private EntityManager em;
+    public static final String JNDI_NAME = "PatientQueryBean/local";
 
-    private Iterator<byte[]> results;
-
-    public void find(String[] pids, Attributes keys, boolean matchUnknown) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<byte[]> cq = cb.createQuery(byte[].class);
-        Root<Patient> pat = cq.from(Patient.class);
-        cq.select(pat.get(Patient_.encodedAttributes));
-        List<Predicate> predicates = new ArrayList<Predicate>();
-        List<Object> params = new ArrayList<Object>();
-        predicates.add(cb.isNull(pat.get(Patient_.mergedWith)));
-        Matching.patient(cb, pat, pids, keys, matchUnknown, predicates, params);
-        cq.where(predicates.toArray(new Predicate[predicates.size()]));
-        TypedQuery<byte[]> q = em.createQuery(cq);
-        int i = 0;
-        for (Object param : params)
-            q.setParameter(Matching.paramName(i++), param);
-
-        results = q.getResultList().iterator();
-    }
-
-    public boolean hasNext() {
-        checkResults();
-        return results.hasNext();
-    }
-
-    public Attributes next() throws IOException {
-        checkResults();
-        byte[] result = results.next();
-        Attributes attrs = new Attributes();
-        Utils.decodeAttributes(attrs, result);
-        return attrs;
-    }
-
-    private void checkResults() {
-        if (results == null)
-            throw new IllegalStateException("results not initalized");
-    }
-
-    @Remove
-    public void close() {}
-
+    void find(Attributes rq, String[] pids, Attributes keys,
+            boolean matchUnknown);
 }

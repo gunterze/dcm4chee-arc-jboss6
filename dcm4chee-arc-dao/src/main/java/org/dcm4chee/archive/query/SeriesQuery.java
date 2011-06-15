@@ -38,117 +38,19 @@
 
 package org.dcm4chee.archive.query;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.ejb.Remove;
-import javax.ejb.Stateful;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceContextType;
-import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.ejb.Local;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.domain.Availability;
-import org.dcm4chee.archive.domain.Patient;
-import org.dcm4chee.archive.domain.Patient_;
-import org.dcm4chee.archive.domain.Series;
-import org.dcm4chee.archive.domain.Series_;
-import org.dcm4chee.archive.domain.Study;
-import org.dcm4chee.archive.domain.Study_;
-import org.dcm4chee.archive.domain.Utils;
+import org.dcm4che.net.service.Matches;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateful
-public class SeriesQuery {
+@Local
+public interface SeriesQuery extends Matches {
 
-    @PersistenceContext(unitName = "dcm4chee-arc",
-                        type = PersistenceContextType.EXTENDED)
-    private EntityManager em;
+    public static final String JNDI_NAME = "SeriesQueryBean/local";
 
-    private Iterator<Tuple> results;
-
-    public void find(String[] pids, Attributes keys, boolean matchUnknown,
-            boolean combinedDateTime) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<Tuple> cq = cb.createTupleQuery();
-        Root<Series> series = cq.from(Series.class);
-        Join<Series, Study> study = series.join(Series_.study);
-        Join<Study, Patient> pat = study.join(Study_.patient);
-        cq.multiselect(
-                study.get(Study_.numberOfStudyRelatedSeries),
-                study.get(Study_.numberOfStudyRelatedInstances),
-                series.get(Series_.numberOfSeriesRelatedInstances),
-                study.get(Study_.modalitiesInStudy),
-                study.get(Study_.sopClassesInStudy),
-                series.get(Series_.retrieveAETs),
-                series.get(Series_.externalRetrieveAET),
-                series.get(Series_.availability),
-                series.get(Series_.encodedAttributes),
-                study.get(Study_.encodedAttributes),
-                pat.get(Patient_.encodedAttributes));
-        List<Predicate> predicates = new ArrayList<Predicate>();
-        List<Object> params = new ArrayList<Object>();
-        Matching.series(cb, pat, study, series, pids, keys, combinedDateTime,
-                matchUnknown, predicates, params);
-        cq.where(predicates.toArray(new Predicate[predicates.size()]));
-        TypedQuery<Tuple> q = em.createQuery(cq);
-        int i = 0;
-        for (Object param : params)
-            q.setParameter(Matching.paramName(i++), param);
-        results = q.getResultList().iterator();
-    }
-
-    public boolean hasNext() {
-        checkResults();
-        return results.hasNext();
-    }
-
-    public Attributes next() throws IOException {
-        checkResults();
-        Tuple tuple = results.next();
-        int numberOfStudyRelatedSeries = tuple.get(0, Integer.class);
-        int numberOfStudyRelatedInstances = tuple.get(1, Integer.class);
-        int numberOfSeriesRelatedInstances = tuple.get(2, Integer.class);
-        String modalitiesInStudy = tuple.get(3, String.class);
-        String sopClassesInStudy = tuple.get(4, String.class);
-        String retrieveAETs = tuple.get(5, String.class);
-        String externalRetrieveAET = tuple.get(6, String.class);
-        Availability availability = tuple.get(7, Availability.class);
-        byte[] seriesAttributes = tuple.get(8, byte[].class);
-        byte[] studyAttributes = tuple.get(9, byte[].class);
-        byte[] patientAttributes = tuple.get(10, byte[].class);
-        Attributes attrs = new Attributes();
-        Utils.decodeAttributes(attrs, patientAttributes);
-        Utils.decodeAttributes(attrs, studyAttributes);
-        Utils.decodeAttributes(attrs, seriesAttributes);
-        Utils.setStudyQueryAttributes(attrs,
-                numberOfStudyRelatedSeries,
-                numberOfStudyRelatedInstances,
-                modalitiesInStudy,
-                sopClassesInStudy);
-        Utils.setSeriesQueryAttributes(attrs, numberOfSeriesRelatedInstances);
-        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
-        Utils.setAvailability(attrs, availability);
-        return attrs;
-    }
-
-    private void checkResults() {
-        if (results == null)
-            throw new IllegalStateException("results not initalized");
-    }
-
-    @Remove
-    public void close() {}
-
+    void find(Attributes rq, String[] pids, Attributes keys,
+            boolean matchUnknown, boolean combinedDateTime);
 }

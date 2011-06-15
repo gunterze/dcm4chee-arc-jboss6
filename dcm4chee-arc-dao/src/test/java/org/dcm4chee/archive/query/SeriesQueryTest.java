@@ -61,7 +61,10 @@ public class SeriesQueryTest {
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(SeriesQuery.class,  Matching.class);
+                .addClasses(
+                        SeriesQuery.class,
+                        SeriesQueryBean.class,
+                        Matching.class);
     }
 
     @EJB
@@ -69,11 +72,11 @@ public class SeriesQueryTest {
 
     @Test
     public void testByModality() throws Exception {
-        query.find(new String[] { "CT5", "DCM4CHEE_TESTDATA" },
+        query.find(null, new String[] { "CT5", "DCM4CHEE_TESTDATA" },
                 modality("PR"), false, false);
-        assertTrue(query.hasNext());
-        query.next();
-        assertFalse(query.hasNext());
+        assertTrue(query.hasMoreMatches());
+        query.nextMatch();
+        assertFalse(query.hasMoreMatches());
         query.close();
     }
 
