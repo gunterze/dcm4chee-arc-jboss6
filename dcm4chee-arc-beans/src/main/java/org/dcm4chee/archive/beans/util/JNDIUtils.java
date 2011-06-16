@@ -36,26 +36,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.ejb.store;
+package org.dcm4chee.archive.beans.util;
 
-import javax.ejb.Local;
-
-import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.persistence.Availability;
-import org.dcm4chee.archive.persistence.Instance;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Local
-public interface InstanceStore {
+public class JNDIUtils {
 
-    public static final String JNDI_NAME = "InstanceStoreBean/local";
-
-    Instance store(Attributes attrs, String sourceAET,
-            String retrieveAETs, String externalRetrieveAET,
-            Availability availability);
-
-    void close();
+    public static Object lookup(String name) throws NamingException {
+        InitialContext ctx = new InitialContext();
+        try {
+            return ctx.lookup(name);
+        } finally {
+            ctx.close();
+        }
+    }
 
 }

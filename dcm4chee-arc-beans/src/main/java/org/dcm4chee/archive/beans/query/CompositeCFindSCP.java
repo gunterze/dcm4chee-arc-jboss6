@@ -38,8 +38,6 @@
 
 package org.dcm4chee.archive.beans.query;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.AttributesValidator;
@@ -52,6 +50,7 @@ import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.service.BasicCFindSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.Matches;
+import org.dcm4chee.archive.beans.util.JNDIUtils;
 import org.dcm4chee.archive.ejb.query.InstanceQuery;
 import org.dcm4chee.archive.ejb.query.PatientQuery;
 import org.dcm4chee.archive.ejb.query.SeriesQuery;
@@ -109,7 +108,7 @@ public class CompositeCFindSCP extends BasicCFindSCP {
 
     private Matches patientMatches(Association as, Attributes rq,
             Attributes keys) throws Exception {
-        PatientQuery query = (PatientQuery) lookup(PatientQuery.JNDI_NAME);
+        PatientQuery query = (PatientQuery) JNDIUtils.lookup(PatientQuery.JNDI_NAME);
         query.find(rq, pids(keys), keys, matchUnknown);
         return query;
     }
@@ -118,7 +117,7 @@ public class CompositeCFindSCP extends BasicCFindSCP {
             Attributes keys) throws Exception {
         String cuid = rq.getString(Tag.AffectedSOPClassUID, null);
         boolean combinedDateTime = combinedDateTime(as, cuid);
-        StudyQuery query = (StudyQuery) lookup(StudyQuery.JNDI_NAME);
+        StudyQuery query = (StudyQuery) JNDIUtils.lookup(StudyQuery.JNDI_NAME);
         query.find(rq, pids(keys), keys, matchUnknown, combinedDateTime);
         return query;
     }
@@ -127,7 +126,7 @@ public class CompositeCFindSCP extends BasicCFindSCP {
             Attributes keys) throws Exception {
         String cuid = rq.getString(Tag.AffectedSOPClassUID, null);
         boolean combinedDateTime = combinedDateTime(as, cuid);
-        SeriesQuery query = (SeriesQuery) lookup(SeriesQuery.JNDI_NAME);
+        SeriesQuery query = (SeriesQuery) JNDIUtils.lookup(SeriesQuery.JNDI_NAME);
         query.find(rq, pids(keys), keys, matchUnknown, combinedDateTime);
         return query;
     }
@@ -136,18 +135,9 @@ public class CompositeCFindSCP extends BasicCFindSCP {
             Attributes keys) throws Exception {
         String cuid = rq.getString(Tag.AffectedSOPClassUID, null);
         boolean combinedDateTime = combinedDateTime(as, cuid);
-        InstanceQuery query = (InstanceQuery) lookup(InstanceQuery.JNDI_NAME);
+        InstanceQuery query = (InstanceQuery) JNDIUtils.lookup(InstanceQuery.JNDI_NAME);
         query.find(rq, pids(keys), keys, matchUnknown, combinedDateTime);
         return query;
-    }
-
-    private Object lookup(String name) throws NamingException {
-        InitialContext ctx = new InitialContext();
-        try {
-            return ctx.lookup(name);
-        } finally {
-            ctx.close();
-        }
     }
 
     private boolean combinedDateTime(Association as, String cuid) {

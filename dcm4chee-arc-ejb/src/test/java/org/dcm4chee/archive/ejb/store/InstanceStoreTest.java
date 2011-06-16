@@ -45,7 +45,7 @@ import javax.ejb.EJB;
 import org.dcm4che.io.SAXReader;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.ejb.store.CodeFactory;
-import org.dcm4chee.archive.ejb.store.InstanceStore;
+import org.dcm4chee.archive.ejb.store.InstanceStoreBean;
 import org.dcm4chee.archive.ejb.store.IssuerFactory;
 import org.dcm4chee.archive.ejb.store.PatientFactory;
 import org.dcm4chee.archive.persistence.Availability;
@@ -72,6 +72,7 @@ public class InstanceStoreTest {
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
                 .addClasses(InstanceStore.class,
+                        InstanceStoreBean.class,
                         CodeFactory.class,
                         IssuerFactory.class,
                         PatientFactory.class,
