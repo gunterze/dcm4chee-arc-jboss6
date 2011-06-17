@@ -1925,7 +1925,7 @@
       <parameter>SCP</parameter>
       <parameter>
         <array>
-          <!--Implicit VR Little Endian, Transfer Syntax -->
+          <!-- Implicit VR Little Endian, Transfer Syntax -->
           <value>1.2.840.10008.1.2</value>
         </array>
       </parameter>
@@ -1940,7 +1940,7 @@
       <parameter>SCP</parameter>
       <parameter>
         <array>
-          <!--Implicit VR Little Endian, Transfer Syntax -->
+          <!-- Implicit VR Little Endian, Transfer Syntax -->
           <value>1.2.840.10008.1.2</value>
         </array>
       </parameter>
@@ -1955,8 +1955,47 @@
       <parameter>SCP</parameter>
       <parameter>
         <array>
-          <!--Implicit VR Little Endian, Transfer Syntax -->
+          <!-- Implicit VR Little Endian, Transfer Syntax -->
           <value>1.2.840.10008.1.2</value>
+        </array>
+      </parameter>
+    </constructor>
+  </bean>
+
+  <!-- Query Extended Negotiator -->
+  <bean name="QueryExtendedNegotiator" class="org.dcm4che.net.BasicExtendedNegotiator">
+    <install bean="ApplicationEntity" method="addExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.1.1</parameter>
+      <parameter><this/></parameter>
+    </install>
+    <install bean="ApplicationEntity" method="addExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.2.1</parameter>
+      <parameter><this/></parameter>
+    </install>
+    <install bean="ApplicationEntity" method="addExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.3.1</parameter>
+      <parameter><this/></parameter>
+    </install>
+    <uninstall bean="ApplicationEntity" method="removeExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.1.1</parameter>
+    </uninstall>
+    <uninstall bean="ApplicationEntity" method="removeExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.2.1</parameter>
+    </uninstall>
+    <uninstall bean="ApplicationEntity" method="removeExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.3.1</parameter>
+    </uninstall>
+    <constructor>
+      <parameter>
+        <array elementType="byte">
+          <!-- Relational-queries -->
+          <value>1</value>
+          <!-- Date-time matching -->
+          <value>1</value>
+          <!-- Fuzzy semantic matching of person names -->
+          <value>0</value>
+          <!-- Timezone query adjustment -->
+          <value>1</value>
         </array>
       </parameter>
     </constructor>

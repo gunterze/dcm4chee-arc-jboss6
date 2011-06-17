@@ -63,7 +63,9 @@
       <inject bean="ScheduledExecutorService" />
     </property>
     <incallback method="addConnection" />
+    <uncallback method="removeConnection" />
     <incallback method="addApplicationEntity" />
+    <uncallback method="removeApplicationEntity" />
     <start method="activate" />
     <stop method="deactivate" />
   </bean>
@@ -79,6 +81,8 @@
       <parameter>DCM4CHEE</parameter>
     </constructor>
     <property name="associationAcceptor">true</property>
+    <property name="maxOpsPerformed">0</property>
+    <property name="maxOpsInvoked">0</property>
     <property name="dimseRQHandler">
       <inject bean="DicomServiceRegistry" />
     </property>
