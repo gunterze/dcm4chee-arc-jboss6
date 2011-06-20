@@ -8,7 +8,7 @@
 <Value number="1">1.2.840.10008.5.1.4.1.1.11.1</Value>
 </DicomAttribute>
 <DicomAttribute keyword="SOPInstanceUID" tag="00080018" vr="UI">
-<Value number="1">1.2.276.0.7230010.3.200.13.0.1</Value>
+<Value number="1">1.2.40.0.13.1.1.99.2.2.1</Value>
 </DicomAttribute>
 <DicomAttribute keyword="StudyDate" tag="00080020" vr="DA">
 <Value number="1">19981112</Value>
@@ -19,9 +19,6 @@
 <DicomAttribute keyword="AccessionNumber" tag="00080050" vr="SH"/>
 <DicomAttribute keyword="Modality" tag="00080060" vr="CS">
 <Value number="1">PR</Value>
-</DicomAttribute>
-<DicomAttribute keyword="Manufacturer" tag="00080070" vr="LO">
-<Value number="1">David Clunie</Value>
 </DicomAttribute>
 <DicomAttribute keyword="ReferringPhysicianName" tag="00080090" vr="PN">
 <PersonName number="1">
@@ -36,23 +33,6 @@
 </DicomAttribute>
 <DicomAttribute keyword="SeriesDescription" tag="0008103E" vr="LO">
 <Value number="1">pstates for complex combination test</Value>
-</DicomAttribute>
-<DicomAttribute keyword="ReferencedSeriesSequence" tag="00081115" vr="SQ">
-<Item number="1">
-<DicomAttribute keyword="ReferencedImageSequence" tag="00081140" vr="SQ">
-<Item number="1">
-<DicomAttribute keyword="ReferencedSOPClassUID" tag="00081150" vr="UI">
-<Value number="1">1.2.840.10008.5.1.4.1.1.7</Value>
-</DicomAttribute>
-<DicomAttribute keyword="ReferencedSOPInstanceUID" tag="00081155" vr="UI">
-<Value number="1">1.2.276.0.7230010.3.200.13.1.1</Value>
-</DicomAttribute>
-</Item>
-</DicomAttribute>
-<DicomAttribute keyword="SeriesInstanceUID" tag="0020000E" vr="UI">
-<Value number="1">1.2.276.0.7230010.3.200.13.1</Value>
-</DicomAttribute>
-</Item>
 </DicomAttribute>
 <DicomAttribute keyword="PatientName" tag="00100010" vr="PN">
 <PersonName number="1">
@@ -82,203 +62,19 @@
 <DicomAttribute keyword="PatientSex" tag="00100040" vr="CS">
 <Value number="1">M</Value>
 </DicomAttribute>
-<DicomAttribute keyword="ShutterShape" tag="00181600" vr="CS">
-<Value number="1">CIRCULAR</Value>
-</DicomAttribute>
-<DicomAttribute keyword="CenterOfCircularShutter" tag="00181610" vr="IS">
-<Value number="1">644</Value>
-<Value number="2">1024</Value>
-</DicomAttribute>
-<DicomAttribute keyword="RadiusOfCircularShutter" tag="00181612" vr="IS">
-<Value number="1">128</Value>
-</DicomAttribute>
-<DicomAttribute keyword="ShutterPresentationValue" tag="00181622" vr="US">
-<Value number="1">0</Value>
-</DicomAttribute>
 <DicomAttribute keyword="StudyInstanceUID" tag="0020000D" vr="UI">
-<Value number="1">1.2.276.0.7230010.3.200.13</Value>
+<Value number="1">1.2.40.0.13.1.1.99.2</Value>
 </DicomAttribute>
 <DicomAttribute keyword="SeriesInstanceUID" tag="0020000E" vr="UI">
-<Value number="1">1.2.276.0.7230010.3.200.13.0</Value>
+<Value number="1">1.2.40.0.13.1.1.99.2.2</Value>
 </DicomAttribute>
 <DicomAttribute keyword="StudyID" tag="00200010" vr="SH">
 <Value number="1">CPLX_Pnn</Value>
 </DicomAttribute>
 <DicomAttribute keyword="SeriesNumber" tag="00200011" vr="IS">
-<Value number="1">00</Value>
+<Value number="1">2</Value>
 </DicomAttribute>
 <DicomAttribute keyword="InstanceNumber" tag="00200013" vr="IS">
-<Value number="1">01</Value>
-</DicomAttribute>
-<DicomAttribute keyword="GraphicAnnotationSequence" tag="00700001" vr="SQ">
-<Item number="1">
-<DicomAttribute keyword="GraphicLayer" tag="00700002" vr="CS">
-<Value number="1">LAYER1</Value>
-</DicomAttribute>
-<DicomAttribute keyword="TextObjectSequence" tag="00700008" vr="SQ">
-<Item number="1">
-<DicomAttribute keyword="BoundingBoxAnnotationUnits" tag="00700003" vr="CS">
-<Value number="1">PIXEL</Value>
-</DicomAttribute>
-<DicomAttribute keyword="UnformattedTextValue" tag="00700006" vr="ST">
-<Value number="1">Image relative text overlapping shutter</Value>
-</DicomAttribute>
-<DicomAttribute keyword="BoundingBoxTopLeftHandCorner" tag="00700010" vr="FL">
-<Value number="1">896</Value>
-<Value number="2">516</Value>
-</DicomAttribute>
-<DicomAttribute keyword="BoundingBoxBottomRightHandCorner" tag="00700011" vr="FL">
-<Value number="1">912</Value>
-<Value number="2">772</Value>
-</DicomAttribute>
-<DicomAttribute keyword="BoundingBoxTextHorizontalJustification" tag="00700012" vr="CS">
-<Value number="1">LEFT</Value>
-</DicomAttribute>
-</Item>
-<Item number="2">
-<DicomAttribute keyword="BoundingBoxAnnotationUnits" tag="00700003" vr="CS">
-<Value number="1">DISPLAY</Value>
-</DicomAttribute>
-<DicomAttribute keyword="UnformattedTextValue" tag="00700006" vr="ST">
-<Value number="1">Displayed area relative text overlapping shutter</Value>
-</DicomAttribute>
-<DicomAttribute keyword="BoundingBoxTopLeftHandCorner" tag="00700010" vr="FL">
-<Value number="1">0.25</Value>
-<Value number="2">0.75</Value>
-</DicomAttribute>
-<DicomAttribute keyword="BoundingBoxBottomRightHandCorner" tag="00700011" vr="FL">
-<Value number="1">0.75</Value>
-<Value number="2">0.78125</Value>
-</DicomAttribute>
-<DicomAttribute keyword="BoundingBoxTextHorizontalJustification" tag="00700012" vr="CS">
-<Value number="1">LEFT</Value>
-</DicomAttribute>
-</Item>
-</DicomAttribute>
-<DicomAttribute keyword="GraphicObjectSequence" tag="00700009" vr="SQ">
-<Item number="1">
-<DicomAttribute keyword="GraphicAnnotationUnits" tag="00700005" vr="CS">
-<Value number="1">PIXEL</Value>
-</DicomAttribute>
-<DicomAttribute keyword="GraphicDimensions" tag="00700020" vr="US">
-<Value number="1">2</Value>
-</DicomAttribute>
-<DicomAttribute keyword="NumberOfGraphicPoints" tag="00700021" vr="US">
-<Value number="1">5</Value>
-</DicomAttribute>
-<DicomAttribute keyword="GraphicData" tag="00700022" vr="FL">
-<Value number="1">960</Value>
-<Value number="2">452</Value>
-<Value number="3">960</Value>
-<Value number="4">836</Value>
-<Value number="5">976</Value>
-<Value number="6">836</Value>
-<Value number="7">976</Value>
-<Value number="8">452</Value>
-<Value number="9">960</Value>
-<Value number="10">452</Value>
-</DicomAttribute>
-<DicomAttribute keyword="GraphicType" tag="00700023" vr="CS">
-<Value number="1">POLYLINE</Value>
-</DicomAttribute>
-<DicomAttribute keyword="GraphicFilled" tag="00700024" vr="CS">
-<Value number="1">N</Value>
-</DicomAttribute>
-</Item>
-<Item number="2">
-<DicomAttribute keyword="GraphicAnnotationUnits" tag="00700005" vr="CS">
-<Value number="1">DISPLAY</Value>
-</DicomAttribute>
-<DicomAttribute keyword="GraphicDimensions" tag="00700020" vr="US">
-<Value number="1">2</Value>
-</DicomAttribute>
-<DicomAttribute keyword="NumberOfGraphicPoints" tag="00700021" vr="US">
-<Value number="1">5</Value>
-</DicomAttribute>
-<DicomAttribute keyword="GraphicData" tag="00700022" vr="FL">
-<Value number="1">0.125</Value>
-<Value number="2">0.59375</Value>
-<Value number="3">0.875</Value>
-<Value number="4">0.59375</Value>
-<Value number="5">0.875</Value>
-<Value number="6">0.625</Value>
-<Value number="7">0.125</Value>
-<Value number="8">0.625</Value>
-<Value number="9">0.125</Value>
-<Value number="10">0.59375</Value>
-</DicomAttribute>
-<DicomAttribute keyword="GraphicType" tag="00700023" vr="CS">
-<Value number="1">POLYLINE</Value>
-</DicomAttribute>
-<DicomAttribute keyword="GraphicFilled" tag="00700024" vr="CS">
-<Value number="1">N</Value>
-</DicomAttribute>
-</Item>
-</DicomAttribute>
-</Item>
-</DicomAttribute>
-<DicomAttribute keyword="ImageHorizontalFlip" tag="00700041" vr="CS">
-<Value number="1">Y</Value>
-</DicomAttribute>
-<DicomAttribute keyword="ImageRotation" tag="00700042" vr="US">
-<Value number="1">90</Value>
-</DicomAttribute>
-<DicomAttribute keyword="DisplayedAreaSelectionSequence" tag="0070005A" vr="SQ">
-<Item number="1">
-<DicomAttribute keyword="DisplayedAreaTopLeftHandCorner" tag="00700052" vr="SL">
-<Value number="1">768</Value>
-<Value number="2">388</Value>
-</DicomAttribute>
-<DicomAttribute keyword="DisplayedAreaBottomRightHandCorner" tag="00700053" vr="SL">
-<Value number="1">1280</Value>
-<Value number="2">900</Value>
-</DicomAttribute>
-<DicomAttribute keyword="PresentationSizeMode" tag="00700100" vr="CS">
-<Value number="1">SCALE TO FIT</Value>
-</DicomAttribute>
-<DicomAttribute keyword="PresentationPixelAspectRatio" tag="00700102" vr="IS">
 <Value number="1">1</Value>
-<Value number="2">1</Value>
-</DicomAttribute>
-</Item>
-</DicomAttribute>
-<DicomAttribute keyword="GraphicLayerSequence" tag="00700060" vr="SQ">
-<Item number="1">
-<DicomAttribute keyword="GraphicLayer" tag="00700002" vr="CS">
-<Value number="1">LAYER1</Value>
-</DicomAttribute>
-<DicomAttribute keyword="GraphicLayerOrder" tag="00700062" vr="IS">
-<Value number="1">1</Value>
-</DicomAttribute>
-<DicomAttribute keyword="GraphicLayerRecommendedDisplayGrayscaleValue" tag="00700066" vr="US">
-<Value number="1">65535</Value>
-</DicomAttribute>
-<DicomAttribute keyword="GraphicLayerDescription" tag="00700068" vr="LO">
-<Value number="1">for annotation</Value>
-</DicomAttribute>
-</Item>
-</DicomAttribute>
-<DicomAttribute keyword="ContentLabel" tag="00700080" vr="CS">
-<Value number="1">CPLX_P01</Value>
-</DicomAttribute>
-<DicomAttribute keyword="ContentDescription" tag="00700081" vr="LO">
-<Value number="1">complex combination of various pstate features</Value>
-</DicomAttribute>
-<DicomAttribute keyword="PresentationCreationDate" tag="00700082" vr="DA">
-<Value number="1">19981112</Value>
-</DicomAttribute>
-<DicomAttribute keyword="PresentationCreationTime" tag="00700083" vr="TM">
-<Value number="1">102942</Value>
-</DicomAttribute>
-<DicomAttribute keyword="ContentCreatorName" tag="00700084" vr="PN">
-<PersonName number="1">
-<Alphabetic>
-<FamilyName>Clunie</FamilyName>
-<GivenName>David</GivenName>
-</Alphabetic>
-</PersonName>
-</DicomAttribute>
-<DicomAttribute keyword="PresentationLUTShape" tag="20500020" vr="CS">
-<Value number="1">IDENTITY</Value>
 </DicomAttribute>
 </NativeDicomModel>

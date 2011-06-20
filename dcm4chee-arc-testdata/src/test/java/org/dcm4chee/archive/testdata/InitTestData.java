@@ -76,7 +76,14 @@ public class InitTestData {
                 .addAsResource("ct-1.xml")
                 .addAsResource("ct-2.xml")
                 .addAsResource("sr-1.xml")
-                .addAsResource("sr-2.xml");
+                .addAsResource("sr-2.xml")
+                .addAsResource("date-range-1.xml")
+                .addAsResource("date-range-2.xml")
+                .addAsResource("date-range-3.xml")
+                .addAsResource("date-range-4.xml")
+                .addAsResource("date-range-5.xml")
+                .addAsResource("date-range-6.xml")
+                .addAsResource("date-range-7.xml");
     }
 
     @EJB
@@ -95,6 +102,20 @@ public class InitTestData {
         instanceStore.store(SAXReader.parse("resource:sr-1.xml", null),
                 SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
         instanceStore.store(SAXReader.parse("resource:sr-2.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:date-range-1.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:date-range-2.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:date-range-3.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:date-range-4.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:date-range-5.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:date-range-6.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:date-range-7.xml", null),
                 SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
         instanceStore.close();
     }
