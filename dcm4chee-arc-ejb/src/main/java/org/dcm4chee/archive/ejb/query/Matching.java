@@ -431,6 +431,12 @@ class Matching {
 	add(predicates, wildCard(cb, study.get(Study_.studyDescription),
 		AttributeFilter.getString(keys, Tag.StudyDescription),
 		matchUnknown, params));
+	add(predicates, wildCard(cb, study.get(Study_.accessionNumber), 
+		AttributeFilter.getString(keys, Tag.AccessionNumber), 
+		matchUnknown, params));
+//	add(predicates, wildCard(cb, study.get(Study_.modalitiesInStudy), 
+//		AttributeFilter.getString(keys, Tag.ModalitiesInStudy), 
+//		matchUnknown, params));
     }
 
     public static void series(CriteriaBuilder cb, Path<Patient> pat,

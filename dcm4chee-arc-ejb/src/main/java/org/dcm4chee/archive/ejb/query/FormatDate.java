@@ -43,6 +43,7 @@ import java.util.Date;
 import org.dcm4che.util.DateUtils;
 
 /**
+ * @author Gunter Zeilinger <gunterze@gmail.com>
  * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 abstract class FormatDate {
