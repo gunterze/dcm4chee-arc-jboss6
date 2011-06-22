@@ -64,194 +64,203 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class StudyQueryTest {
 
-    private static final String[] RangeMatching = { "RANGE-MATCHING", "DCM4CHEE_TESTDATA" };
+    private static final String[] RangeMatching =
+            { "RANGE-MATCHING", "DCM4CHEE_TESTDATA" };
 
     @Deployment
     public static JavaArchive createDeployment() {
-	return ShrinkWrap.create(JavaArchive.class, "test.jar").addClasses(
-	        StudyQuery.class, StudyQueryBean.class, Matching.class, 
-	        FormatDate.class);
+        return ShrinkWrap.create(JavaArchive.class, "test.jar").addClasses(
+                StudyQuery.class, StudyQueryBean.class, Matching.class,
+                RangeMatching.class);
     }
 
     @EJB
     private StudyQuery query;
 
-//     @Test
-//     public void testByModalitiesInStudy() throws Exception {
-//	 query.find(null, new String[] { "CT5", "DCM4CHEE_TESTDATA" },
-//		 modalitiesInStudy("SR"), false, false);
-//	 assertTrue(query.hasMoreMatches());
-//	 query.nextMatch();
-//	 assertFalse(query.hasMoreMatches());
-//	 query.close();
-//     }
+//    @Test
+//    public void testByModalitiesInStudy() throws Exception {
+//        query.find(null, new String[] { "CT5", "DCM4CHEE_TESTDATA" },
+//                modalitiesInStudy("SR"), false, false);
+//        assertTrue(query.hasMoreMatches());
+//        query.nextMatch();
+//        assertFalse(query.hasMoreMatches());
+//        query.close();
+//    }
 
     @Test
     public void testByDateTime() throws Exception {
-	query
-	        .find(null, RangeMatching, studyDateTimeRange("20110620", 
-	        	"103000.000"), false, false);
-	assertTrue(query.hasMoreMatches());
-	String studyUID =
-	        query.nextMatch().getString(Tag.StudyInstanceUID, null);
-	assertFalse(query.hasMoreMatches());
-	assertTrue(studyUID.equals("1.2.40.0.13.1.1.99.3"));
-	query.close();
+        query.find(null, RangeMatching, studyDateTimeRange("20110620",
+                "103000.000"), false, false);
+        assertTrue(query.hasMoreMatches());
+        String studyUID =
+                query.nextMatch().getString(Tag.StudyInstanceUID, null);
+        assertFalse(query.hasMoreMatches());
+        assertTrue(studyUID.equals("1.2.40.0.13.1.1.99.3"));
+        query.close();
     }
-    
+
     @Test
     public void testByOpenEndTime() throws Exception {
-	query.find(null, RangeMatching, studyDateTimeRange(null, "1030-"), 
-		false, false);
-	assertTrue(query.hasMoreMatches());
-	ArrayList<String> result = studyUIDResultList(query);
-	String studyUIDs[] = { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-		"1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6"};
-	Collection<String> col = Arrays.asList(studyUIDs);
-	assertTrue(result.containsAll(col));
-	query.close();
+        query.find(null, RangeMatching, studyDateTimeRange(null, "1030-"),
+                false, false);
+        assertTrue(query.hasMoreMatches());
+        ArrayList<String> result = studyUIDResultList(query);
+        String studyUIDs[] =
+                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
+                        "1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6" };
+        Collection<String> col = Arrays.asList(studyUIDs);
+        assertTrue(result.containsAll(col));
+        query.close();
     }
-    
+
     @Test
     public void testByOpenStartTime() throws Exception {
-	query.find(null, RangeMatching, studyDateTimeRange(null, "-1430"), 
-		false, false);
-	assertTrue(query.hasMoreMatches());
-	ArrayList<String> result = studyUIDResultList(query);
-	String studyUIDs[] = { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-		"1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6"};
-	Collection<String> col = Arrays.asList(studyUIDs);
-	assertTrue(result.containsAll(col));
-	query.close();
+        query.find(null, RangeMatching, studyDateTimeRange(null, "-1430"),
+                false, false);
+        assertTrue(query.hasMoreMatches());
+        ArrayList<String> result = studyUIDResultList(query);
+        String studyUIDs[] =
+                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
+                        "1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6" };
+        Collection<String> col = Arrays.asList(studyUIDs);
+        assertTrue(result.containsAll(col));
+        query.close();
     }
-    
+
     @Test
     public void testByDateTimeMatchUnknown() throws Exception {
-	query.find(null, RangeMatching, studyDateTimeRange("20110620", 
-		"103000.000"), true, false);
-	assertTrue(query.hasMoreMatches());
-	ArrayList<String> result = studyUIDResultList(query);
-	String studyUIDs[] = { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.9" };
-	Collection<String> col = Arrays.asList(studyUIDs);
-	assertTrue(result.containsAll(col));
-	query.close();
+        query.find(null, RangeMatching, studyDateTimeRange("20110620",
+                "103000.000"), true, false);
+        assertTrue(query.hasMoreMatches());
+        ArrayList<String> result = studyUIDResultList(query);
+        String studyUIDs[] = { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.9" };
+        Collection<String> col = Arrays.asList(studyUIDs);
+        assertTrue(result.containsAll(col));
+        query.close();
     }
 
     @Test
     public void testByTimeRange() throws Exception {
-	query.find(null, RangeMatching, studyDateTimeRange(null, "1030-1430"), 
-		false, false);
-	assertTrue(query.hasMoreMatches());
-	ArrayList<String> result = studyUIDResultList(query);
-	String studyUIDs[] = { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-		"1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6"};
-	Collection<String> col = Arrays.asList(studyUIDs);
-	assertTrue(result.containsAll(col));
-	query.close();
+        query.find(null, RangeMatching, studyDateTimeRange(null, "1030-1430"),
+                false, false);
+        assertTrue(query.hasMoreMatches());
+        ArrayList<String> result = studyUIDResultList(query);
+        String studyUIDs[] =
+                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
+                        "1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6" };
+        Collection<String> col = Arrays.asList(studyUIDs);
+        assertTrue(result.containsAll(col));
+        query.close();
     }
 
     @Test
     public void testByDateRange() throws Exception {
-	query.find(null, RangeMatching, studyDateTimeRange("20100620-20110620", 
-		null), false, false);
-	assertTrue(query.hasMoreMatches());
-	ArrayList<String> result = studyUIDResultList(query);
-	String studyUIDs[] = { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-		"1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6", 
-		"1.2.40.0.13.1.1.99.7", "1.2.40.0.13.1.1.99.8"};
-	Collection<String> col = Arrays.asList(studyUIDs);
-	assertTrue(result.containsAll(col));
-	query.close();
-    }
-    
-    @Test
-    public void testByDateTimeRange() throws Exception {
-	query.find(null, RangeMatching, studyDateTimeRange("20100620-20110620",
-		"1030-1430"),false, false);
-	assertTrue(query.hasMoreMatches());
-	ArrayList<String> result = studyUIDResultList(query);
-	String studyUIDs[] = { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-		"1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6"};
-	Collection<String> col = Arrays.asList(studyUIDs);
-	assertTrue(result.containsAll(col));
-	query.close();
-    }
-    
-    @Test
-    public void testByDateTimeRangeCombined() throws Exception {
-	query.find(null, RangeMatching, studyDateTimeRange("20100620-20110620",
-		"1040-1430"),false, true);
-	assertTrue(query.hasMoreMatches());
-	ArrayList<String> result = studyUIDResultList(query);
-	String studyUIDs[] = { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-		"1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
-		"1.2.40.0.13.1.1.99.6"};
-	Collection<String> col = Arrays.asList(studyUIDs);
-	assertTrue(result.containsAll(col));
-	query.close();
-    }
-    
-    @Test
-    public void testByDateTimeRangeCombinedOpenEndRange() throws Exception {
-        query.find(null, RangeMatching, studyDateTimeRange("20100620-",
-            "1040-"),false, true);
+        query.find(null, RangeMatching, studyDateTimeRange("20100620-20110620",
+                null), false, false);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyUIDResultList(query);
-        String studyUIDs[] = { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-            "1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
-            "1.2.40.0.13.1.1.99.6"};
-        Collection<String> col = Arrays.asList(studyUIDs);
-        assertTrue(result.containsAll(col));
-        query.close();
-    }
-    
-    @Test
-    public void testByDateTimeRangeCombinedOpenStartRange() throws Exception {
-        query.find(null, RangeMatching, studyDateTimeRange("-20110620",
-            "-1420"),false, true);
-        assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyUIDResultList(query);
-        String studyUIDs[] = { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.5",
-            "1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
-            "1.2.40.0.13.1.1.99.6"};
+        String studyUIDs[] =
+                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
+                        "1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6",
+                        "1.2.40.0.13.1.1.99.7", "1.2.40.0.13.1.1.99.8" };
         Collection<String> col = Arrays.asList(studyUIDs);
         assertTrue(result.containsAll(col));
         query.close();
     }
 
-    
+    @Test
+    public void testByDateTimeRange() throws Exception {
+        query.find(null, RangeMatching, studyDateTimeRange("20100620-20110620",
+                "1030-1430"), false, false);
+        assertTrue(query.hasMoreMatches());
+        ArrayList<String> result = studyUIDResultList(query);
+        String studyUIDs[] =
+                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
+                        "1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6" };
+        Collection<String> col = Arrays.asList(studyUIDs);
+        assertTrue(result.containsAll(col));
+        query.close();
+    }
+
+    @Test
+    public void testByDateTimeRangeCombined() throws Exception {
+        query.find(null, RangeMatching, studyDateTimeRange("20100620-20110620",
+                "1040-1430"), false, true);
+        assertTrue(query.hasMoreMatches());
+        ArrayList<String> result = studyUIDResultList(query);
+        String studyUIDs[] =
+                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
+                        "1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
+                        "1.2.40.0.13.1.1.99.6" };
+        Collection<String> col = Arrays.asList(studyUIDs);
+        assertTrue(result.containsAll(col));
+        query.close();
+    }
+
+    @Test
+    public void testByDateTimeRangeCombinedOpenEndRange() throws Exception {
+        query.find(null, RangeMatching,
+                studyDateTimeRange("20100620-", "1040-"), false, true);
+        assertTrue(query.hasMoreMatches());
+        ArrayList<String> result = studyUIDResultList(query);
+        String studyUIDs[] =
+                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
+                        "1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
+                        "1.2.40.0.13.1.1.99.6" };
+        Collection<String> col = Arrays.asList(studyUIDs);
+        assertTrue(result.containsAll(col));
+        query.close();
+    }
+
+    @Test
+    public void testByDateTimeRangeCombinedOpenStartRange() throws Exception {
+        query.find(null, RangeMatching,
+                studyDateTimeRange("-20110620", "-1420"), false, true);
+        assertTrue(query.hasMoreMatches());
+        ArrayList<String> result = studyUIDResultList(query);
+        String studyUIDs[] =
+                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.5",
+                        "1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
+                        "1.2.40.0.13.1.1.99.6" };
+        Collection<String> col = Arrays.asList(studyUIDs);
+        assertTrue(result.containsAll(col));
+        query.close();
+    }
+
     @Test
     public void testByDateTimeRangeCombinedMatchUnknown() throws Exception {
-	query.find(null, RangeMatching, studyDateTimeRange("20100620-20110620",
-		"1040-1430"),true, true);
-	assertTrue(query.hasMoreMatches());
-	ArrayList<String> result = studyUIDResultList(query);
-	String studyUIDs[] = { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-		"1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
-		"1.2.40.0.13.1.1.99.6", "1.2.40.0.13.1.1.99.9"};
-	Collection<String> col = Arrays.asList(studyUIDs);
-	assertTrue(result.containsAll(col));
-	query.close();
+        query.find(null, RangeMatching, studyDateTimeRange("20100620-20110620",
+                "1040-1430"), true, true);
+        assertTrue(query.hasMoreMatches());
+        ArrayList<String> result = studyUIDResultList(query);
+        String studyUIDs[] =
+                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
+                        "1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
+                        "1.2.40.0.13.1.1.99.6", "1.2.40.0.13.1.1.99.9" };
+        Collection<String> col = Arrays.asList(studyUIDs);
+        assertTrue(result.containsAll(col));
+        query.close();
     }
 
     private Attributes studyDateTimeRange(String date, String time) {
-	Attributes attrs = new Attributes(2);
-	attrs.setString(Tag.StudyDate, VR.DA, date);
-	attrs.setString(Tag.StudyTime, VR.TM, time);
-	return attrs;
+        Attributes attrs = new Attributes(2);
+        attrs.setString(Tag.StudyDate, VR.DA, date);
+        attrs.setString(Tag.StudyTime, VR.TM, time);
+        return attrs;
     }
 
     private Attributes modalitiesInStudy(String value) {
-	Attributes attrs = new Attributes(1);
-	attrs.setString(Tag.ModalitiesInStudy, VR.CS, value);
-	return attrs;
+        Attributes attrs = new Attributes(1);
+        attrs.setString(Tag.ModalitiesInStudy, VR.CS, value);
+        return attrs;
     }
-    
-    private ArrayList<String> studyUIDResultList(StudyQuery query) throws Exception{
-	ArrayList<String> result = new ArrayList<String>();
-	while(query.hasMoreMatches()){
-	    result.add(query.nextMatch().getString(Tag.StudyInstanceUID, null));
-	}
-	return result;
+
+    private ArrayList<String> studyUIDResultList(StudyQuery query)
+            throws Exception {
+        ArrayList<String> result = new ArrayList<String>();
+        while (query.hasMoreMatches()) {
+            result.add(query.nextMatch().getString(Tag.StudyInstanceUID, null));
+        }
+        return result;
     }
 }

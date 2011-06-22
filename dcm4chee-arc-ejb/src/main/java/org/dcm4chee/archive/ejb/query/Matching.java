@@ -38,7 +38,6 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import java.util.Date;
 import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -49,10 +48,8 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.DateRange;
 import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
-import org.dcm4che.util.DateUtils;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.Instance_;
@@ -205,138 +202,7 @@ class Matching {
         return cb.equal(field, param);
     }
 
-    private static Predicate rangeDT(CriteriaBuilder cb, Path<String> date,
-            Path<String> time, DateRange range, boolean matchUnknown,
-            List<Object> params) {
-        Date startDateRange = range.getStartDate();
-        Date endDateRange = range.getEndDate();
-        if (startDateRange == null)
-            return endDTRange(cb, date, time, endDateRange, matchUnknown, params);
-        if (endDateRange == null)
-            return startDTRange(cb, date, time, startDateRange, matchUnknown, params);
-        else
-            return startEndDTRange(cb, date, time, 
-                    startDateRange, endDateRange, 
-                    matchUnknown, params);
-    }
-    private static Predicate startEndDTRange(CriteriaBuilder cb,
-                Path<String> date, Path<String> time, 
-                Date startDateRange, Date endDateRange,
-                boolean matchUnknown, List<Object> params) {
-        String startTime = DateUtils.formatTM(null, startDateRange);
-        String endTime = DateUtils.formatTM(null, endDateRange);
-        if ( endTime == null )
-            return cb.and(
-                    endDate(cb, date, startDateRange, matchUnknown, FormatDate.DA, params),
-                    startDTRange(cb, date, time, endDateRange, matchUnknown, params));
-        if ( startTime == null )
-            return cb.and(
-                    startDate(cb, date, endDateRange, matchUnknown, FormatDate.DA, params),
-                    endDTRange(cb, date, time, startDateRange, matchUnknown, params));
-        else
-            return cb.and(
-                    startDTRange(cb, date, time, startDateRange, matchUnknown, params),
-                    endDTRange(cb, date, time, endDateRange, matchUnknown, params));
-        }
-
-    private static Predicate startDTRange(CriteriaBuilder cb,
-                Path<String> date, Path<String> time, Date startDateRange,
-                boolean matchUnknown, List<Object> params) {
-        String startDate = DateUtils.formatDA(null, startDateRange);
-        String startTime = DateUtils.formatTM(null, startDateRange);
-        ParameterExpression<String> paramStartDate = setParam(cb, params, startDate);
-        ParameterExpression<String> paramStartTime = setParam(cb, params, startTime);
-        Predicate startDayTime = cb.and(cb.equal(date, paramStartDate), 
-                cb.greaterThanOrEqualTo(time, paramStartTime));
-        Predicate startDayTimeUnknown = cb.and(cb.equal(date, paramStartDate),
-                cb.equal(time, "*"));
-        Predicate startDayFollowing = cb.greaterThan(date, paramStartDate);
-        Predicate unknown = cb.or(cb.equal(date, "*"),
-                cb.and(cb.greaterThanOrEqualTo(date, paramStartDate),
-                        cb.equal(time, "*")));
-        if(matchUnknown)
-            return cb.or(startDayTime, cb.or(startDayFollowing, unknown));
-        else
-            return cb.or(cb.or(startDayTime,startDayTimeUnknown), startDayFollowing);
-    }
-
-    private static Predicate endDTRange(CriteriaBuilder cb, Path<String> date,
-                Path<String> time, Date endDateRange, boolean matchUnknown,
-                List<Object> params) {
-        String endDate = DateUtils.formatDA(null, endDateRange);
-        String endTime = DateUtils.formatTM(null, endDateRange);
-        ParameterExpression<String> paramEndDate = setParam(cb, params, endDate);
-        ParameterExpression<String> paramEndTime = setParam(cb, params, endTime);
-        Predicate endDayTime = cb.and(cb.equal(date, paramEndDate), 
-                cb.lessThanOrEqualTo(time, paramEndTime));
-        Predicate endDayTimeUnknown = cb.and(cb.equal(date, paramEndDate),
-                cb.equal(time, "*"));
-        Predicate endDayPrevious = cb.lessThan(date, paramEndDate);
-        Predicate unknown = cb.or(cb.equal(date, "*"),
-                cb.and(cb.lessThanOrEqualTo(date, paramEndDate),
-                        cb.equal(time, "*")));
-        if(matchUnknown)
-            return cb.or(endDayTime, cb.or(endDayPrevious, unknown));
-        else
-            return cb.or(cb.or(endDayTime,endDayTimeUnknown), endDayPrevious);
-        }
-
-    private static Predicate range(CriteriaBuilder cb, Path<String> field,
-            DateRange range, boolean matchUnknown, FormatDate dt,
-            List<Object> params) {
-        Date startDate = range.getStartDate();
-        Date endDate = range.getEndDate();
-        if (startDate == null)
-            return endDate(cb, field, endDate, matchUnknown, dt, params);
-        if (endDate == null)
-            return startDate(cb, field, startDate, matchUnknown, dt, params);
-        else
-            return dateRange(cb, field, startDate, endDate, matchUnknown, dt, params);
-    }
-    
-    private static Predicate startDate(CriteriaBuilder cb, Path<String> field,
-            Date startDate, boolean matchUnknown, FormatDate dt,
-            List<Object> params) {
-        String start = dt.format(startDate);
-        ParameterExpression<String> paramStart = setParam(cb, params, start);
-        Predicate predicate = cb.greaterThanOrEqualTo(field, paramStart);
-        return matchUnknown0(cb, field, matchUnknown, predicate);
-    }
-    
-    private static Predicate endDate(CriteriaBuilder cb, Path<String> field,
-            Date endDate, boolean matchUnknown, FormatDate dt,
-            List<Object> params) {
-        String end = dt.format(endDate);
-        ParameterExpression<String> paramEnd = setParam(cb, params, end);
-        Predicate predicate = cb.lessThanOrEqualTo(field, paramEnd);
-        return matchUnknown0(cb, field, matchUnknown, predicate);
-    }
-    
-    private static Predicate dateRange(CriteriaBuilder cb, Path<String> field,
-            Date startDate, Date endDate, boolean matchUnknown, FormatDate dt,
-            List<Object> params) {
-        Predicate predicate;
-        String start = dt.format(startDate);
-        String end = dt.format(endDate);
-        ParameterExpression<String> paramStart = setParam(cb, params, start);
-        if (end.equals(start)){
-            predicate = cb.equal(field, paramStart);
-        } else {
-            ParameterExpression<String> paramEnd = setParam(cb, params, end);
-            predicate = cb.between(field, paramStart, paramEnd);
-        }
-        return matchUnknown0(cb, field, matchUnknown, predicate);
-    }
-    
-    private static ParameterExpression<String> setParam(CriteriaBuilder cb,
-            List<Object> params, String value) {
-        ParameterExpression<String> paramExp =
-            cb.parameter(String.class, paramName(params.size()));
-        params.add(value);
-        return paramExp;
-    }
-    
-    private static Predicate matchUnknown0(CriteriaBuilder cb,
+    static Predicate matchUnknown0(CriteriaBuilder cb,
             Path<String> field, boolean matchUnknown, Predicate predicate) {
         return matchUnknown ? cb.or(predicate, cb.equal(field, "*"))
                 : predicate;
@@ -408,21 +274,17 @@ class Matching {
                         .get(Study_.referringPhysicianPhoneticName),
                 AttributeFilter.getString(keys, Tag.ReferringPhysicianName),
                 matchUnknown, params));
-        if (combinedDateTime && keys.containsValue(Tag.StudyDate)
-                && keys.containsValue(Tag.StudyTime))
-            add(predicates, rangeDT(cb, study.get(Study_.studyDate), study
-                    .get(Study_.studyTime), keys.getDateRange(
-                    Tag.StudyDateAndTime, null), matchUnknown, params));
-        else {
-            if (keys.containsValue(Tag.StudyDate))
-                add(predicates, range(cb, study.get(Study_.studyDate), keys
-                        .getDateRange(Tag.StudyDate, null), matchUnknown,
-                        FormatDate.DA, params));
-            if (keys.containsValue(Tag.StudyTime))
-                add(predicates, range(cb, study.get(Study_.studyTime), keys
-                        .getDateRange(Tag.StudyTime, null), matchUnknown,
-                        FormatDate.TM, params));
-        }
+//        RangeMatching.rangeMatch(cb, study, keys, matchUnknown, combinedDateTime, predicates,
+//                params);
+        RangeMatching.rangeMatch(cb, 
+                study.get(Study_.studyDate), 
+                study.get(Study_.studyTime),
+                keys.containsValue(Tag.StudyDate),
+                keys.containsValue(Tag.StudyTime),
+                keys.getDateRange(Tag.StudyDate, null),
+                keys.getDateRange(Tag.StudyTime, null),
+                keys.getDateRange(Tag.StudyDateAndTime, null), 
+                matchUnknown, combinedDateTime, predicates, params);
         add(predicates, wildCard(cb, study.get(Study_.studyDescription),
                 AttributeFilter.getString(keys, Tag.StudyDescription),
                 matchUnknown, params));
@@ -448,11 +310,11 @@ class Matching {
         add(predicates, wildCard(cb, series.get(Series_.modality),
                 AttributeFilter.getString(keys, Tag.Modality), matchUnknown,
                 params));
-        if (keys.containsValue(Tag.PerformedProcedureStepStartTime))
-            add(predicates, range(cb, series
-                    .get(Series_.performedProcedureStepStartDate), keys
-                    .getDateRange(Tag.PerformedProcedureStepStartTime, null),
-                    matchUnknown, FormatDate.TM, params));
+//        if (keys.containsValue(Tag.PerformedProcedureStepStartTime))
+//            add(predicates, RangeMatching.range(cb, series
+//                    .get(Series_.performedProcedureStepStartDate), keys
+//                    .getDateRange(Tag.PerformedProcedureStepStartTime, null),
+//                    matchUnknown, FormatDate.TM, params));
         // TODO
     }
 
@@ -475,5 +337,13 @@ class Matching {
                 AttributeFilter.getString(keys, Tag.VerificationFlag),
                 matchUnknown, params));
         // TODO
+    }
+
+    static ParameterExpression<String> setParam(CriteriaBuilder cb,
+            List<Object> params, String value) {
+        ParameterExpression<String> paramExp =
+            cb.parameter(String.class, paramName(params.size()));
+        params.add(value);
+        return paramExp;
     }
 }

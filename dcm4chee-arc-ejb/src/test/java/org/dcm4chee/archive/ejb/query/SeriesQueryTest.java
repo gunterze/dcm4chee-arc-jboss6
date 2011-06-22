@@ -82,6 +82,11 @@ public class SeriesQueryTest {
         assertFalse(query.hasMoreMatches());
         query.close();
     }
+    
+//    @Test
+//    public void testByPerformedProcedureStepStartTime() throws Exception {
+//	query find(null, )
+//    }
 
     private Attributes modality(String value) {
         Attributes attrs = new Attributes(1);
