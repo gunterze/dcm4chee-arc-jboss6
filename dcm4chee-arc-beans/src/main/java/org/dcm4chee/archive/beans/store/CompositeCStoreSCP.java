@@ -73,9 +73,16 @@ public class CompositeCStoreSCP extends BasicCStoreSCP {
                     .store(ds, as.getCallingAET(), as.getCalledAET(),
                             null, Availability.ONLINE);
         } catch (Exception e) {
-            data.skipAll();
-            throw new DicomServiceException(rq, Status.ProcessingFailure, e);
+            throw new DicomServiceException(rq, Status.ProcessingFailure, 
+                    causeOf(e));
         }
+    }
+
+    private static Throwable causeOf(Throwable e) {
+        Throwable cause;
+        while ((cause = e.getCause()) != null && e != cause)
+            e = cause;
+        return e;
     }
 
     private InstanceStore initInstanceStore(Association as) throws Exception {

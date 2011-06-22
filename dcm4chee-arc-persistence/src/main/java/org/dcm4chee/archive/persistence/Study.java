@@ -435,7 +435,7 @@ public class Study implements Serializable {
             referringPhysicianFamilyNameSoundex = "*";
             referringPhysicianGivenNameSoundex = "*";
         } else {
-            PersonName pn = new PersonName(s);
+            PersonName pn = new PersonName(s, true);
             referringPhysicianName =
                     pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
             referringPhysicianIdeographicName =

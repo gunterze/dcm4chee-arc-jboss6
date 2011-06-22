@@ -99,7 +99,7 @@ public class VerifyingObserver implements Serializable {
         Date dt = attrs.getDate(Tag.VerificationDateTime, null);
         verificationDateTime = DateUtils.formatDT(null, dt);
         String s = AttributeFilter.getString(attrs, Tag.VerifyingObserverName);
-        PersonName pn = new PersonName(s);
+        PersonName pn = new PersonName(s, true);
         verifyingObserverName =
                 pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
         verifyingObserverIdeographicName =

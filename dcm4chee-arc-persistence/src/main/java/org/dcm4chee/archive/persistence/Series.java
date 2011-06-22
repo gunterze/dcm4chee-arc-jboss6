@@ -459,7 +459,7 @@ public class Series implements Serializable {
             performingPhysicianFamilyNameSoundex = "*";
             performingPhysicianGivenNameSoundex = "*";
         } else {
-            PersonName pn = new PersonName(s);
+            PersonName pn = new PersonName(s, true);
             performingPhysicianName =
                     pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
             performingPhysicianIdeographicName =

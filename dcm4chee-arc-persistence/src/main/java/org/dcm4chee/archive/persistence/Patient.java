@@ -277,7 +277,7 @@ public class Patient implements Serializable {
             patientFamilyNameSoundex = "*";
             patientGivenNameSoundex = "*";
         } else {
-            PersonName pn = new PersonName(s);
+            PersonName pn = new PersonName(s, true);
             patientName =
                     pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
             patientIdeographicName =
