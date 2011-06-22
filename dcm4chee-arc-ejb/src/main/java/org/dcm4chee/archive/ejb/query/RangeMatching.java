@@ -46,6 +46,7 @@ import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 
+import org.dcm4che.data.Attributes;
 import org.dcm4che.data.DateRange;
 import org.dcm4che.util.DateUtils;
 
@@ -53,7 +54,7 @@ import org.dcm4che.util.DateUtils;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
-public class RangeMatching extends Matching {
+public class RangeMatching {
 
     private static Predicate rangeDT(CriteriaBuilder cb, Path<String> date,
             Path<String> time, DateRange range, boolean matchUnknown,
@@ -79,10 +80,10 @@ public class RangeMatching extends Matching {
         String startDate = DateUtils.formatDA(null, startDateRange);
         String endDate = DateUtils.formatDA(null, endDateRange);
         if (endDate.equals(startDate))
-            return cb.and(matchUnknown0(cb, date, matchUnknown, cb.equal(date,
-                    startDate)), cb.and(startDateInterval0(cb, time, startTime,
-                    matchUnknown, params), endDateInterval0(cb, time, endTime,
-                    matchUnknown, params)));
+            return cb.and(Matching.matchUnknown0(cb, date, matchUnknown, cb
+                    .equal(date, startDate)), cb.and(startDateInterval0(cb,
+                    time, startTime, matchUnknown, params), endDateInterval0(
+                    cb, time, endTime, matchUnknown, params)));
         else
             return cb.and(startDTRange0(cb, date, time, startDate, startTime,
                     matchUnknown, params), endDTRange0(cb, date, time, endDate,
@@ -102,9 +103,9 @@ public class RangeMatching extends Matching {
             Path<String> date, Path<String> time, String startDate,
             String startTime, boolean matchUnknown, List<Object> params) {
         ParameterExpression<String> paramStartDate =
-                setParam(cb, params, startDate);
+                Matching.setParam(cb, params, startDate);
         ParameterExpression<String> paramStartTime =
-                setParam(cb, params, startTime);
+                Matching.setParam(cb, params, startTime);
         Predicate startDayTime =
                 cb.and(cb.equal(date, paramStartDate), cb.greaterThanOrEqualTo(
                         time, paramStartTime));
@@ -136,9 +137,9 @@ public class RangeMatching extends Matching {
             Path<String> time, String endDate, String endTime,
             boolean matchUnknown, List<Object> params) {
         ParameterExpression<String> paramEndDate =
-                setParam(cb, params, endDate);
+                Matching.setParam(cb, params, endDate);
         ParameterExpression<String> paramEndTime =
-                setParam(cb, params, endTime);
+                Matching.setParam(cb, params, endTime);
         Predicate endDayTime =
                 cb.and(cb.equal(date, paramEndDate), cb.lessThanOrEqualTo(time,
                         paramEndTime));
@@ -181,9 +182,10 @@ public class RangeMatching extends Matching {
     private static Predicate startDateInterval0(CriteriaBuilder cb,
             Path<String> field, String start, boolean matchUnknown,
             List<Object> params) {
-        ParameterExpression<String> paramStart = setParam(cb, params, start);
+        ParameterExpression<String> paramStart =
+                Matching.setParam(cb, params, start);
         Predicate predicate = cb.greaterThanOrEqualTo(field, paramStart);
-        return matchUnknown0(cb, field, matchUnknown, predicate);
+        return Matching.matchUnknown0(cb, field, matchUnknown, predicate);
     }
 
     private static Predicate endDateInterval(CriteriaBuilder cb,
@@ -196,9 +198,10 @@ public class RangeMatching extends Matching {
     private static Predicate endDateInterval0(CriteriaBuilder cb,
             Path<String> field, String end, boolean matchUnknown,
             List<Object> params) {
-        ParameterExpression<String> paramEnd = setParam(cb, params, end);
+        ParameterExpression<String> paramEnd =
+                Matching.setParam(cb, params, end);
         Predicate predicate = cb.lessThanOrEqualTo(field, paramEnd);
-        return matchUnknown0(cb, field, matchUnknown, predicate);
+        return Matching.matchUnknown0(cb, field, matchUnknown, predicate);
     }
 
     private static Predicate dateRange(CriteriaBuilder cb, Path<String> field,
@@ -207,17 +210,19 @@ public class RangeMatching extends Matching {
         Predicate predicate;
         String start = dt.format(startDate);
         String end = dt.format(endDate);
-        ParameterExpression<String> paramStart = setParam(cb, params, start);
+        ParameterExpression<String> paramStart =
+                Matching.setParam(cb, params, start);
         if (end.equals(start)) {
             predicate = cb.equal(field, paramStart);
         } else {
-            ParameterExpression<String> paramEnd = setParam(cb, params, end);
+            ParameterExpression<String> paramEnd =
+                    Matching.setParam(cb, params, end);
             predicate = cb.between(field, paramStart, paramEnd);
         }
-        return matchUnknown0(cb, field, matchUnknown, predicate);
+        return Matching.matchUnknown0(cb, field, matchUnknown, predicate);
     }
 
-    private enum FormatDate {
+    static private enum FormatDate {
         DA {
             @Override
             String format(Date date) {
@@ -234,19 +239,23 @@ public class RangeMatching extends Matching {
     }
 
     public static void rangeMatch(CriteriaBuilder cb, Path<String> dateField,
-            Path<String> timeField, boolean date, boolean time,
-            DateRange dateRange, DateRange timeRange, DateRange dateTimeRange,
-            boolean matchUnknown, boolean combinedDateTime,
-            List<Predicate> predicates, List<Object> params) {
+            Path<String> timeField, int dateTag, int timeTag,
+            long dateAndTimeTag, Attributes keys, boolean matchUnknown,
+            boolean combinedDateTime, List<Predicate> predicates,
+            List<Object> params) {
+        boolean date = keys.containsValue(dateTag);
+        boolean time = keys.containsValue(timeTag);
         if (combinedDateTime && date && time)
-            add(predicates, rangeDT(cb, dateField, timeField, dateTimeRange,
-                    matchUnknown, params));
+            Matching.add(predicates, rangeDT(cb, dateField, timeField, keys
+                    .getDateRange(dateAndTimeTag, null), matchUnknown, params));
         else {
             if (date)
-                add(predicates, range(cb, dateField, dateRange, matchUnknown,
+                Matching.add(predicates, range(cb, dateField, keys
+                        .getDateRange(dateTag, null), matchUnknown,
                         FormatDate.DA, params));
             if (time)
-                add(predicates, range(cb, timeField, timeRange, matchUnknown,
+                Matching.add(predicates, range(cb, timeField, keys
+                        .getDateRange(timeTag, null), matchUnknown,
                         FormatDate.TM, params));
         }
     }

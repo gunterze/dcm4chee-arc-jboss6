@@ -173,7 +173,7 @@ class Matching {
                 .and(p1, p2) : p3 != null ? cb.and(p1, p3) : p1
                 : p2 != null ? p3 != null ? cb.and(p2, p3) : p2 : null;
     }
-    
+
     public static Predicate wildCard(CriteriaBuilder cb, Path<String> field,
             String value, boolean matchUnknown, List<Object> params) {
         if (value.equals("*"))
@@ -202,8 +202,8 @@ class Matching {
         return cb.equal(field, param);
     }
 
-    static Predicate matchUnknown0(CriteriaBuilder cb,
-            Path<String> field, boolean matchUnknown, Predicate predicate) {
+    static Predicate matchUnknown0(CriteriaBuilder cb, Path<String> field,
+            boolean matchUnknown, Predicate predicate) {
         return matchUnknown ? cb.or(predicate, cb.equal(field, "*"))
                 : predicate;
     }
@@ -274,17 +274,10 @@ class Matching {
                         .get(Study_.referringPhysicianPhoneticName),
                 AttributeFilter.getString(keys, Tag.ReferringPhysicianName),
                 matchUnknown, params));
-//        RangeMatching.rangeMatch(cb, study, keys, matchUnknown, combinedDateTime, predicates,
-//                params);
-        RangeMatching.rangeMatch(cb, 
-                study.get(Study_.studyDate), 
-                study.get(Study_.studyTime),
-                keys.containsValue(Tag.StudyDate),
-                keys.containsValue(Tag.StudyTime),
-                keys.getDateRange(Tag.StudyDate, null),
-                keys.getDateRange(Tag.StudyTime, null),
-                keys.getDateRange(Tag.StudyDateAndTime, null), 
-                matchUnknown, combinedDateTime, predicates, params);
+        RangeMatching.rangeMatch(cb, study.get(Study_.studyDate), study
+                .get(Study_.studyTime), Tag.StudyDate, Tag.StudyTime,
+                Tag.StudyDateAndTime, keys, matchUnknown, combinedDateTime,
+                predicates, params);
         add(predicates, wildCard(cb, study.get(Study_.studyDescription),
                 AttributeFilter.getString(keys, Tag.StudyDescription),
                 matchUnknown, params));
@@ -310,11 +303,11 @@ class Matching {
         add(predicates, wildCard(cb, series.get(Series_.modality),
                 AttributeFilter.getString(keys, Tag.Modality), matchUnknown,
                 params));
-//        if (keys.containsValue(Tag.PerformedProcedureStepStartTime))
-//            add(predicates, RangeMatching.range(cb, series
-//                    .get(Series_.performedProcedureStepStartDate), keys
-//                    .getDateRange(Tag.PerformedProcedureStepStartTime, null),
-//                    matchUnknown, FormatDate.TM, params));
+        // if (keys.containsValue(Tag.PerformedProcedureStepStartTime))
+        // add(predicates, RangeMatching.range(cb, series
+        // .get(Series_.performedProcedureStepStartDate), keys
+        // .getDateRange(Tag.PerformedProcedureStepStartTime, null),
+        // matchUnknown, FormatDate.TM, params));
         // TODO
     }
 
@@ -342,7 +335,7 @@ class Matching {
     static ParameterExpression<String> setParam(CriteriaBuilder cb,
             List<Object> params, String value) {
         ParameterExpression<String> paramExp =
-            cb.parameter(String.class, paramName(params.size()));
+                cb.parameter(String.class, paramName(params.size()));
         params.add(value);
         return paramExp;
     }
