@@ -287,6 +287,7 @@ class Matching {
         // add(predicates, wildCard(cb, study.get(Study_.modalitiesInStudy),
         // AttributeFilter.getString(keys, Tag.ModalitiesInStudy),
         // matchUnknown, params));
+        //TODO
     }
 
     public static void series(CriteriaBuilder cb, Path<Patient> pat,
@@ -303,11 +304,13 @@ class Matching {
         add(predicates, wildCard(cb, series.get(Series_.modality),
                 AttributeFilter.getString(keys, Tag.Modality), matchUnknown,
                 params));
-        // if (keys.containsValue(Tag.PerformedProcedureStepStartTime))
-        // add(predicates, RangeMatching.range(cb, series
-        // .get(Series_.performedProcedureStepStartDate), keys
-        // .getDateRange(Tag.PerformedProcedureStepStartTime, null),
-        // matchUnknown, FormatDate.TM, params));
+        RangeMatching.rangeMatch(cb, series
+                .get(Series_.performedProcedureStepStartDate), series
+                .get(Series_.performedProcedureStepStartTime),
+                Tag.PerformedProcedureStepStartDate,
+                Tag.PerformedProcedureStepStartTime,
+                Tag.PerformedProcedureStepStartDateAndTime, keys, matchUnknown,
+                combinedDateTime, predicates, params);
         // TODO
     }
 
