@@ -46,13 +46,8 @@ import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 
-import org.dcm4che.data.Attributes;
 import org.dcm4che.data.DateRange;
-import org.dcm4che.data.Tag;
 import org.dcm4che.util.DateUtils;
-import org.dcm4chee.archive.persistence.Study;
-import org.dcm4chee.archive.persistence.Study_;
-import org.w3c.dom.ranges.Range;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -66,14 +61,14 @@ public class RangeMatching extends Matching {
         Date startDateRange = range.getStartDate();
         Date endDateRange = range.getEndDate();
         if (startDateRange == null)
-            return RangeMatching.endDTRange(cb, date, time, endDateRange,
-                    matchUnknown, params);
+            return endDTRange(cb, date, time, endDateRange, matchUnknown,
+                    params);
         if (endDateRange == null)
-            return RangeMatching.startDTRange(cb, date, time, startDateRange,
-                    matchUnknown, params);
+            return startDTRange(cb, date, time, startDateRange, matchUnknown,
+                    params);
         else
-            return RangeMatching.startEndDTRange(cb, date, time,
-                    startDateRange, endDateRange, matchUnknown, params);
+            return startEndDTRange(cb, date, time, startDateRange,
+                    endDateRange, matchUnknown, params);
     }
 
     private static Predicate startEndDTRange(CriteriaBuilder cb,
@@ -84,17 +79,14 @@ public class RangeMatching extends Matching {
         String startDate = DateUtils.formatDA(null, startDateRange);
         String endDate = DateUtils.formatDA(null, endDateRange);
         if (endDate.equals(startDate))
-            return cb.and(
-                    cb.and(RangeMatching.startDateInterval0(cb, time,
-                            startTime, matchUnknown, params), RangeMatching
-                            .endDateInterval0(cb, time, endTime, matchUnknown,
-                                    params)), matchUnknown0(cb, date,
-                            matchUnknown, cb.equal(date, startDate)));
+            return cb.and(matchUnknown0(cb, date, matchUnknown, cb.equal(date,
+                    startDate)), cb.and(startDateInterval0(cb, time, startTime,
+                    matchUnknown, params), endDateInterval0(cb, time, endTime,
+                    matchUnknown, params)));
         else
-            return cb.and(RangeMatching.startDTRange(cb, date, time,
-                    startDateRange, matchUnknown, params), RangeMatching
-                    .endDTRange(cb, date, time, endDateRange, matchUnknown,
-                            params));
+            return cb.and(startDTRange0(cb, date, time, startDate, startTime,
+                    matchUnknown, params), endDTRange0(cb, date, time, endDate,
+                    endTime, matchUnknown, params));
     }
 
     private static Predicate startDTRange(CriteriaBuilder cb,
@@ -102,6 +94,13 @@ public class RangeMatching extends Matching {
             boolean matchUnknown, List<Object> params) {
         String startDate = DateUtils.formatDA(null, startDateRange);
         String startTime = DateUtils.formatTM(null, startDateRange);
+        return startDTRange0(cb, date, time, startDate, startTime,
+                matchUnknown, params);
+    }
+
+    private static Predicate startDTRange0(CriteriaBuilder cb,
+            Path<String> date, Path<String> time, String startDate,
+            String startTime, boolean matchUnknown, List<Object> params) {
         ParameterExpression<String> paramStartDate =
                 setParam(cb, params, startDate);
         ParameterExpression<String> paramStartTime =
@@ -112,15 +111,16 @@ public class RangeMatching extends Matching {
         Predicate startDayTimeUnknown =
                 cb.and(cb.equal(date, paramStartDate), cb.equal(time, "*"));
         Predicate startDayFollowing = cb.greaterThan(date, paramStartDate);
+        Predicate predicate =
+                cb.or(cb.or(startDayTime, startDayTimeUnknown),
+                        startDayFollowing);
         if (matchUnknown) {
             Predicate unknown =
                     cb.or(cb.equal(date, "*"), cb.and(cb.greaterThanOrEqualTo(
                             date, paramStartDate), cb.equal(time, "*")));
-            return cb.or(cb.or(startDayTime, startDayTimeUnknown), cb.or(
-                    startDayFollowing, unknown));
+            return cb.or(predicate, unknown);
         } else
-            return cb.or(cb.or(startDayTime, startDayTimeUnknown),
-                    startDayFollowing);
+            return predicate;
     }
 
     private static Predicate endDTRange(CriteriaBuilder cb, Path<String> date,
@@ -128,6 +128,13 @@ public class RangeMatching extends Matching {
             List<Object> params) {
         String endDate = DateUtils.formatDA(null, endDateRange);
         String endTime = DateUtils.formatTM(null, endDateRange);
+        return endDTRange0(cb, date, time, endDate, endTime, matchUnknown,
+                params);
+    }
+
+    private static Predicate endDTRange0(CriteriaBuilder cb, Path<String> date,
+            Path<String> time, String endDate, String endTime,
+            boolean matchUnknown, List<Object> params) {
         ParameterExpression<String> paramEndDate =
                 setParam(cb, params, endDate);
         ParameterExpression<String> paramEndTime =
@@ -138,14 +145,15 @@ public class RangeMatching extends Matching {
         Predicate endDayTimeUnknown =
                 cb.and(cb.equal(date, paramEndDate), cb.equal(time, "*"));
         Predicate endDayPrevious = cb.lessThan(date, paramEndDate);
+        Predicate predicate =
+                cb.or(cb.or(endDayTime, endDayTimeUnknown), endDayPrevious);
         if (matchUnknown) {
             Predicate unknown =
                     cb.or(cb.equal(date, "*"), cb.and(cb.lessThanOrEqualTo(
                             date, paramEndDate), cb.equal(time, "*")));
-            return cb.or(cb.or(endDayTime, endDayTimeUnknown), cb.or(
-                    endDayPrevious, unknown));
+            return cb.or(predicate, unknown);
         } else
-            return cb.or(cb.or(endDayTime, endDayTimeUnknown), endDayPrevious);
+            return predicate;
     }
 
     private static Predicate range(CriteriaBuilder cb, Path<String> field,
