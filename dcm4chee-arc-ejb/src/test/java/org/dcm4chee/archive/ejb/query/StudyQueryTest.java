@@ -88,6 +88,20 @@ public class StudyQueryTest {
     }
 
     @Test
+    public void testBySOPClassInStudy() throws Exception {
+        query
+                .find(null, new String[] { "CT5", "DCM4CHEE_TESTDATA" },
+                        sopClassesInStudy("1.2.840.10008.5.1.4.1.1.11.1"),
+                        false, false);
+        assertTrue(query.hasMoreMatches());
+        String studyUID =
+                query.nextMatch().getString(Tag.StudyInstanceUID, null);
+        assertFalse(query.hasMoreMatches());
+        assertTrue(studyUID.equals("1.2.40.0.13.1.1.99.2"));
+        query.close();
+    }
+
+    @Test
     public void testByDateTime() throws Exception {
         query.find(null, RangeMatching, studyDateTimeRange("20110620",
                 "103000.000"), false, false);
@@ -252,6 +266,12 @@ public class StudyQueryTest {
     private Attributes modalitiesInStudy(String value) {
         Attributes attrs = new Attributes(1);
         attrs.setString(Tag.ModalitiesInStudy, VR.CS, value);
+        return attrs;
+    }
+
+    private Attributes sopClassesInStudy(String value) {
+        Attributes attrs = new Attributes(1);
+        attrs.setString(Tag.SOPClassesInStudy, VR.UI, value);
         return attrs;
     }
 

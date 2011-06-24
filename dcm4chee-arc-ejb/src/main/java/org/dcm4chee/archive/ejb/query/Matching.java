@@ -48,6 +48,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
+import javax.persistence.metamodel.SingularAttribute;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.PersonName;
@@ -204,8 +205,9 @@ class Matching {
         return cb.equal(field, param);
     }
 
-    private static Predicate modalitiesInStudySubQuery(CriteriaBuilder cb,
-            String value, Path<Study> study, List<Object> params) {
+    private static Predicate studySeriesSubQuery(CriteriaBuilder cb,
+            SingularAttribute<Series, String> attr, String value,
+            Path<Study> study, List<Object> params) {
         if (value.equals("*"))
             return null;
 
@@ -214,8 +216,25 @@ class Matching {
         Root<Study> studySub = sq.correlate((Root<Study>) study);
         Join<Study, Series> series = studySub.join(Study_.series);
         sq.select(series);
-        ParameterExpression<String> modality = setParam(cb, params, value);
-        sq.where(cb.equal(series.get(Series_.modality), modality));
+        ParameterExpression<String> param = setParam(cb, params, value);
+        sq.where(cb.equal(series.get(attr), param));
+        return cb.exists(sq);
+    }
+
+    private static Predicate studyInstanceSubQuery(CriteriaBuilder cb,
+            SingularAttribute<Instance, String> attr, String value,
+            Path<Study> study, List<Object> params) {
+        if (value.equals("*"))
+            return null;
+
+        CriteriaQuery<String> q = cb.createQuery(String.class);
+        Subquery<Instance> sq = q.subquery(Instance.class);
+        Root<Study> studySub = sq.correlate((Root<Study>) study);
+        Join<Study, Series> series = studySub.join(Study_.series);
+        Join<Series, Instance> instance = series.join(Series_.instances);
+        sq.select(instance);
+        ParameterExpression<String> param = setParam(cb, params, value);
+        sq.where(cb.equal(instance.get(attr), param));
         return cb.exists(sq);
     }
 
@@ -302,9 +321,17 @@ class Matching {
         add(predicates, wildCard(cb, study.get(Study_.accessionNumber),
                 AttributeFilter.getString(keys, Tag.AccessionNumber),
                 matchUnknown, params));
-        add(predicates, modalitiesInStudySubQuery(cb, AttributeFilter
-                .getString(keys, Tag.ModalitiesInStudy), study, params));
+        add(predicates, studySeriesSubQuery(cb, Series_.modality,
+                AttributeFilter.getString(keys, Tag.ModalitiesInStudy), study,
+                params));
+        add(predicates, studyInstanceSubQuery(cb, Instance_.sopClassUID,
+                AttributeFilter.getString(keys, Tag.SOPClassesInStudy), study,
+                params));
         // TODO
+        // issuerOfAccessionNumber - subquery?
+        // externalRetrieveAET - tag?
+        // retrieveAETs - [1-n]
+        // availability - tag?
     }
 
     public static void series(CriteriaBuilder cb, Path<Patient> pat,
