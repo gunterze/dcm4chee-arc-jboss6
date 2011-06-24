@@ -41,11 +41,13 @@ package org.dcm4chee.archive.ejb.query;
 import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.PersonName;
@@ -202,6 +204,21 @@ class Matching {
         return cb.equal(field, param);
     }
 
+    private static Predicate modalitiesInStudySubQuery(CriteriaBuilder cb,
+            String value, Path<Study> study, List<Object> params) {
+        if (value.equals("*"))
+            return null;
+
+        CriteriaQuery<String> q = cb.createQuery(String.class);
+        Subquery<Series> sq = q.subquery(Series.class);
+        Root<Study> studySub = sq.correlate((Root<Study>) study);
+        Join<Study, Series> series = studySub.join(Study_.series);
+        sq.select(series);
+        ParameterExpression<String> modality = setParam(cb, params, value);
+        sq.where(cb.equal(series.get(Series_.modality), modality));
+        return cb.exists(sq);
+    }
+
     static Predicate matchUnknown0(CriteriaBuilder cb, Path<String> field,
             boolean matchUnknown, Predicate predicate) {
         return matchUnknown ? cb.or(predicate, cb.equal(field, "*"))
@@ -255,7 +272,8 @@ class Matching {
         add(predicates, wildCard(cb, pat.get(Patient_.patientSex),
                 AttributeFilter.getString(keys, Tag.PatientSex), matchUnknown,
                 params));
-        // TODO: range matching birthdate
+        RangeMatching.rangeMatch(cb, pat.get(Patient_.patientBirthDate),
+                Tag.PatientBirthDate, keys, matchUnknown, predicates, params);
     }
 
     public static void study(CriteriaBuilder cb, Path<Patient> pat,
@@ -284,10 +302,9 @@ class Matching {
         add(predicates, wildCard(cb, study.get(Study_.accessionNumber),
                 AttributeFilter.getString(keys, Tag.AccessionNumber),
                 matchUnknown, params));
-        // add(predicates, wildCard(cb, study.get(Study_.modalitiesInStudy),
-        // AttributeFilter.getString(keys, Tag.ModalitiesInStudy),
-        // matchUnknown, params));
-        //TODO
+        add(predicates, modalitiesInStudySubQuery(cb, AttributeFilter
+                .getString(keys, Tag.ModalitiesInStudy), study, params));
+        // TODO
     }
 
     public static void series(CriteriaBuilder cb, Path<Patient> pat,
@@ -311,6 +328,9 @@ class Matching {
                 Tag.PerformedProcedureStepStartTime,
                 Tag.PerformedProcedureStepStartDateAndTime, keys, matchUnknown,
                 combinedDateTime, predicates, params);
+        add(predicates, wildCard(cb, series.get(Series_.modality),
+                AttributeFilter.getString(keys, Tag.Modality), matchUnknown,
+                params));
         // TODO
     }
 

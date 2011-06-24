@@ -68,7 +68,8 @@ public class PatientQueryTest {
                 .addClasses(
                         PatientQuery.class,
                         PatientQueryBean.class,
-                        Matching.class);
+                        Matching.class, 
+                        RangeMatching.class);
     }
 
     @EJB
@@ -90,6 +91,21 @@ public class PatientQueryTest {
         query.nextMatch();
         assertFalse(query.hasMoreMatches());
         query.close();
+    }
+
+    @Test
+    public void testByPatientBirthDate() throws Exception {
+        query.find(null, null, patientBirthDate("19551003"), false);
+        assertTrue(query.hasMoreMatches());
+        query.nextMatch();
+        assertFalse(query.hasMoreMatches());
+        query.close();
+    }
+
+    private Attributes patientBirthDate(String date) {
+        Attributes attrs = new Attributes(1);
+        attrs.setString(Tag.PatientBirthDate, VR.DA, date);
+        return attrs;
     }
 
     private Attributes patientName(String name) {

@@ -68,7 +68,8 @@ public class InstanceQueryTest {
                 .addClasses(
                         InstanceQuery.class,
                         InstanceQueryBean.class,
-                        Matching.class);
+                        Matching.class,
+                        RangeMatching.class);
     }
 
     @EJB

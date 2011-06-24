@@ -67,7 +67,8 @@ public class SeriesQueryTest {
                 .addClasses(
                         SeriesQuery.class,
                         SeriesQueryBean.class,
-                        Matching.class);
+                        Matching.class,
+                        RangeMatching.class);
     }
 
     @EJB
@@ -83,10 +84,6 @@ public class SeriesQueryTest {
         query.close();
     }
     
-//    @Test
-//    public void testByPerformedProcedureStepStartTime() throws Exception {
-//	query find(null, )
-//    }
 
     private Attributes modality(String value) {
         Attributes attrs = new Attributes(1);

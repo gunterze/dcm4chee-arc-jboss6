@@ -77,15 +77,15 @@ public class StudyQueryTest {
     @EJB
     private StudyQuery query;
 
-//    @Test
-//    public void testByModalitiesInStudy() throws Exception {
-//        query.find(null, new String[] { "CT5", "DCM4CHEE_TESTDATA" },
-//                modalitiesInStudy("SR"), false, false);
-//        assertTrue(query.hasMoreMatches());
-//        query.nextMatch();
-//        assertFalse(query.hasMoreMatches());
-//        query.close();
-//    }
+    @Test
+    public void testByModalitiesInStudy() throws Exception {
+        query.find(null, new String[] { "CT5", "DCM4CHEE_TESTDATA" },
+                modalitiesInStudy("SR"), false, false);
+        assertTrue(query.hasMoreMatches());
+        query.nextMatch();
+        assertFalse(query.hasMoreMatches());
+        query.close();
+    }
 
     @Test
     public void testByDateTime() throws Exception {
