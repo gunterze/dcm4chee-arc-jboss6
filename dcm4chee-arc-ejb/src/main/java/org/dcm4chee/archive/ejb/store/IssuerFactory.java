@@ -79,9 +79,9 @@ public class IssuerFactory {
     public static Issuer getIssuer(EntityManager em, Attributes issuerItem) {
         return issuerItem != null
                 ? getIssuer(em,
-                    issuerItem.getString(Tag.CodeValue, null),
-                    issuerItem.getString(Tag.CodingSchemeDesignator, null),
-                    issuerItem.getString(Tag.CodingSchemeDesignator, null))
+                    issuerItem.getString(Tag.LocalNamespaceEntityID, null),
+                    issuerItem.getString(Tag.UniversalEntityID, null),
+                    issuerItem.getString(Tag.UniversalEntityIDType, null))
                 : null;
     }
 }

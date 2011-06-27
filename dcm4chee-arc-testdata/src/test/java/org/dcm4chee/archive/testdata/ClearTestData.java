@@ -66,6 +66,7 @@ public class ClearTestData {
     public void removeTestData() {
         removePatient.removePatient("CT5", "DCM4CHEE_TESTDATA");
         removePatient.removePatient("RANGE-MATCHING", "DCM4CHEE_TESTDATA");
-    }
+        removePatient.removePatient("ISSUER_OF_ACCNO", "DCM4CHEE_TESTDATA");
+   }
 
 }

@@ -83,7 +83,10 @@ public class InitTestData {
                 .addAsResource("date-range-4.xml")
                 .addAsResource("date-range-5.xml")
                 .addAsResource("date-range-6.xml")
-                .addAsResource("date-range-7.xml");
+                .addAsResource("date-range-7.xml")
+                .addAsResource("accno-issuer-1.xml")
+                .addAsResource("accno-issuer-2.xml")
+                .addAsResource("accno-issuer-3.xml");
     }
 
     @EJB
@@ -116,6 +119,12 @@ public class InitTestData {
         instanceStore.store(SAXReader.parse("resource:date-range-6.xml", null),
                 SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
         instanceStore.store(SAXReader.parse("resource:date-range-7.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:accno-issuer-1.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:accno-issuer-2.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:accno-issuer-3.xml", null),
                 SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
         instanceStore.close();
     }
