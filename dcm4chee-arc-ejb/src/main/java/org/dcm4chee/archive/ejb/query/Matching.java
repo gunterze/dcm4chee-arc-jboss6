@@ -51,11 +51,17 @@ import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.ItemPointer;
 import org.dcm4che.data.PersonName;
+import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.persistence.AttributeFilter;
+import org.dcm4chee.archive.persistence.Code;
+import org.dcm4chee.archive.persistence.Code_;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.Instance_;
+import org.dcm4chee.archive.persistence.Issuer;
+import org.dcm4chee.archive.persistence.Issuer_;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.Patient_;
 import org.dcm4chee.archive.persistence.Series;
@@ -207,7 +213,8 @@ class Matching {
 
     private static Predicate studySeriesSubQuery(CriteriaBuilder cb,
             SingularAttribute<Series, String> attr, String value,
-            Path<Study> study, List<Object> params) {
+            SingularAttribute<Study, String> nullField, Path<Study> study,
+            boolean matchUnknown, List<Object> params) {
         if (value.equals("*"))
             return null;
 
@@ -218,12 +225,14 @@ class Matching {
         sq.select(series);
         ParameterExpression<String> param = setParam(cb, params, value);
         sq.where(cb.equal(series.get(attr), param));
-        return cb.exists(sq);
+        return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(study
+                .get(nullField))) : cb.exists(sq);
     }
 
     private static Predicate studyInstanceSubQuery(CriteriaBuilder cb,
             SingularAttribute<Instance, String> attr, String value,
-            Path<Study> study, List<Object> params) {
+            SingularAttribute<Study, String> nullField, Path<Study> study,
+            boolean matchUnknown, List<Object> params) {
         if (value.equals("*"))
             return null;
 
@@ -235,7 +244,104 @@ class Matching {
         sq.select(instance);
         ParameterExpression<String> param = setParam(cb, params, value);
         sq.where(cb.equal(instance.get(attr), param));
-        return cb.exists(sq);
+        return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(study
+                .get(nullField))) : cb.exists(sq);
+    }
+
+    private static Predicate issuerOfAccessionNumber(CriteriaBuilder cb,
+            Path<Study> study, Attributes keys, boolean matchUnknown,
+            List<Object> params) {
+        if (!keys.containsValue(Tag.AccessionNumber))
+            return null;
+        Attributes attrs =
+                keys.getNestedDataset(new ItemPointer(
+                        Tag.IssuerOfAccessionNumberSequence));
+        if (attrs.isEmpty())
+            return null;
+        else
+            return studyIssuerSubQuery(cb, attrs, study, params, matchUnknown);
+    }
+
+    private static Predicate studyIssuerSubQuery(CriteriaBuilder cb,
+            Attributes attrs, Path<Study> study, List<Object> params,
+            boolean matchUnknown) {
+        CriteriaQuery<String> q = cb.createQuery(String.class);
+        Subquery<Issuer> sq = q.subquery(Issuer.class);
+        Root<Study> studySub = sq.correlate((Root<Study>) study);
+        Join<Study, Issuer> issuer =
+                studySub.join(Study_.issuerOfAccessionNumber);
+        sq.select(issuer);
+        Predicate predicate = null;
+        if (attrs.containsValue(Tag.LocalNamespaceEntityID)) {
+            String value = (String) attrs.getValue(Tag.LocalNamespaceEntityID);
+            ParameterExpression<String> param = setParam(cb, params, value);
+            predicate = cb.equal(issuer.get(Issuer_.entityID), param);
+        }
+        if (attrs.containsValue(Tag.UniversalEntityID)) {
+            String value = attrs.getString(Tag.UniversalEntityID, null);
+            ParameterExpression<String> param = setParam(cb, params, value);
+            Predicate UID = cb.equal(issuer.get(Issuer_.entityUID), param);
+            if (attrs.containsValue(Tag.UniversalEntityIDType)) {
+                value = attrs.getString(Tag.UniversalEntityIDType, null);
+                param = setParam(cb, params, value);
+                UID =
+                        cb.and(UID, cb.equal(issuer.get(Issuer_.entityUIDType),
+                                param));
+            }
+            if (predicate == null)
+                predicate = UID;
+            else
+                predicate = cb.and(predicate, UID);
+        }
+        if (predicate == null)
+            return null;
+        sq.where(predicate);
+        return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(study
+                .get(Study_.issuerOfAccessionNumber))) : cb.exists(sq);
+    }
+
+    private static Predicate procedureCodes(CriteriaBuilder cb,
+            Path<Study> study, Attributes keys, boolean matchUnknown,
+            List<Object> params) {
+        Attributes attrs =
+                keys
+                        .getNestedDataset(new ItemPointer(
+                                Tag.ProcedureCodeSequence));
+        if (attrs.isEmpty())
+            return null;
+        else
+            return studyCodesSubQuery(cb, attrs, study, params, matchUnknown);
+    }
+
+    private static Predicate studyCodesSubQuery(CriteriaBuilder cb,
+            Attributes attrs, Path<Study> study, List<Object> params,
+            boolean matchUnknown) {
+        if (!attrs.containsValue(Tag.CodeValue)
+                || !attrs.containsValue(Tag.CodingSchemeDesignator))
+            return null;
+        CriteriaQuery<String> q = cb.createQuery(String.class);
+        Subquery<Code> sq = q.subquery(Code.class);
+        Root<Study> studySub = sq.correlate((Root<Study>) study);
+        Join<Study, Code> codes = studySub.join(Study_.procedureCodes);
+        sq.select(codes);
+        String value = attrs.getString(Tag.CodeValue, null);
+        ParameterExpression<String> param = setParam(cb, params, value);
+        Predicate predicate = cb.equal(codes.get(Code_.codeValue), param);
+        value = attrs.getString(Tag.CodingSchemeDesignator, null);
+        param = setParam(cb, params, value);
+        predicate =
+                cb.and(predicate, cb.equal(codes
+                        .get(Code_.codingSchemeDesignator), param));
+        if (attrs.containsValue(Tag.CodingSchemeVersion)) {
+            value = attrs.getString(Tag.CodingSchemeVersion, null);
+            param = setParam(cb, params, value);
+            predicate =
+                    cb.and(predicate, cb.equal(codes
+                            .get(Code_.codingSchemeVersion), param));
+        }
+        sq.where(predicate);
+        return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(study
+                .get(Study_.procedureCodes))) : cb.exists(sq);
     }
 
     static Predicate matchUnknown0(CriteriaBuilder cb, Path<String> field,
@@ -322,16 +428,15 @@ class Matching {
                 AttributeFilter.getString(keys, Tag.AccessionNumber),
                 matchUnknown, params));
         add(predicates, studySeriesSubQuery(cb, Series_.modality,
-                AttributeFilter.getString(keys, Tag.ModalitiesInStudy), study,
-                params));
+                AttributeFilter.getString(keys, Tag.ModalitiesInStudy),
+                Study_.modalitiesInStudy, study, matchUnknown, params));
         add(predicates, studyInstanceSubQuery(cb, Instance_.sopClassUID,
-                AttributeFilter.getString(keys, Tag.SOPClassesInStudy), study,
+                AttributeFilter.getString(keys, Tag.SOPClassesInStudy),
+                Study_.sopClassesInStudy, study, matchUnknown, params));
+        add(predicates, issuerOfAccessionNumber(cb, study, keys, matchUnknown,
                 params));
+        add(predicates, procedureCodes(cb, study, keys, matchUnknown, params));
         // TODO
-        // issuerOfAccessionNumber - subquery?
-        // externalRetrieveAET - tag?
-        // retrieveAETs - [1-n]
-        // availability - tag?
     }
 
     public static void series(CriteriaBuilder cb, Path<Patient> pat,
