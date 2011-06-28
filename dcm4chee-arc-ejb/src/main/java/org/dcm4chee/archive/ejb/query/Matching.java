@@ -53,7 +53,6 @@ import javax.persistence.metamodel.SingularAttribute;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.ItemPointer;
 import org.dcm4che.data.PersonName;
-import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Code;
@@ -256,7 +255,7 @@ class Matching {
         Attributes attrs =
                 keys.getNestedDataset(new ItemPointer(
                         Tag.IssuerOfAccessionNumberSequence));
-        if (attrs.isEmpty())
+        if (attrs.isEmpty() || attrs == null)
             return null;
         else
             return studyIssuerSubQuery(cb, attrs, study, params, matchUnknown);
@@ -273,17 +272,20 @@ class Matching {
         sq.select(issuer);
         Predicate predicate = null;
         if (attrs.containsValue(Tag.LocalNamespaceEntityID)) {
-            String value = (String) attrs.getValue(Tag.LocalNamespaceEntityID);
-            ParameterExpression<String> param = setParam(cb, params, value);
+            ParameterExpression<String> param =
+                    setParam(cb, params, attrs.getString(
+                            Tag.LocalNamespaceEntityID, null));
             predicate = cb.equal(issuer.get(Issuer_.entityID), param);
         }
         if (attrs.containsValue(Tag.UniversalEntityID)) {
-            String value = attrs.getString(Tag.UniversalEntityID, null);
-            ParameterExpression<String> param = setParam(cb, params, value);
+            ParameterExpression<String> param =
+                    setParam(cb, params, attrs.getString(Tag.UniversalEntityID,
+                            null));
             Predicate UID = cb.equal(issuer.get(Issuer_.entityUID), param);
             if (attrs.containsValue(Tag.UniversalEntityIDType)) {
-                value = attrs.getString(Tag.UniversalEntityIDType, null);
-                param = setParam(cb, params, value);
+                param =
+                        setParam(cb, params, attrs.getString(
+                                Tag.UniversalEntityIDType, null));
                 UID =
                         cb.and(UID, cb.equal(issuer.get(Issuer_.entityUIDType),
                                 param));
@@ -303,11 +305,13 @@ class Matching {
     private static Predicate procedureCodes(CriteriaBuilder cb,
             Path<Study> study, Attributes keys, boolean matchUnknown,
             List<Object> params) {
+        if (!keys.containsValue(Tag.ProcedureCodeSequence))
+            return null;
         Attributes attrs =
                 keys
                         .getNestedDataset(new ItemPointer(
                                 Tag.ProcedureCodeSequence));
-        if (attrs.isEmpty())
+        if (attrs.isEmpty() || attrs == null)
             return null;
         else
             return studyCodesSubQuery(cb, attrs, study, params, matchUnknown);
@@ -324,17 +328,19 @@ class Matching {
         Root<Study> studySub = sq.correlate((Root<Study>) study);
         Join<Study, Code> codes = studySub.join(Study_.procedureCodes);
         sq.select(codes);
-        String value = attrs.getString(Tag.CodeValue, null);
-        ParameterExpression<String> param = setParam(cb, params, value);
+        ParameterExpression<String> param =
+                setParam(cb, params, attrs.getString(Tag.CodeValue, null));
         Predicate predicate = cb.equal(codes.get(Code_.codeValue), param);
-        value = attrs.getString(Tag.CodingSchemeDesignator, null);
-        param = setParam(cb, params, value);
+        param =
+                setParam(cb, params, attrs.getString(
+                        Tag.CodingSchemeDesignator, null));
         predicate =
                 cb.and(predicate, cb.equal(codes
                         .get(Code_.codingSchemeDesignator), param));
         if (attrs.containsValue(Tag.CodingSchemeVersion)) {
-            value = attrs.getString(Tag.CodingSchemeVersion, null);
-            param = setParam(cb, params, value);
+            param =
+                    setParam(cb, params, attrs.getString(
+                            Tag.CodingSchemeVersion, null));
             predicate =
                     cb.and(predicate, cb.equal(codes
                             .get(Code_.codingSchemeVersion), param));

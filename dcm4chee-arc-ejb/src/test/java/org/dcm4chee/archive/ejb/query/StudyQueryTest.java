@@ -48,7 +48,6 @@ import java.util.Collection;
 import javax.ejb.EJB;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.jboss.arquillian.api.Deployment;
@@ -286,7 +285,22 @@ public class StudyQueryTest {
     
     @Test
     public void testByProcedureCodes() throws Exception {
-        //TODO
+        query.find(null, new String[]{ "CT5", "DCM4CHEE_TESTDATA" },
+                procedureCodes("71275", "C5", null), false, false);
+        assertTrue(query.hasMoreMatches());
+        query.nextMatch();
+        assertFalse(query.hasMoreMatches());
+        query.close();
+    }
+    
+    private Attributes procedureCodes(String value, String designator, String version) throws Exception {
+        Attributes attrs = new Attributes(1);
+        Attributes item = new Attributes(3);
+        item.setString(Tag.CodeValue, VR.SH, value);
+        item.setString(Tag.CodingSchemeDesignator, VR.SH, designator);
+        item.setString(Tag.CodingSchemeVersion, VR.SH, version);
+        attrs.newSequence(Tag.ProcedureCodeSequence, 1).add(item);
+        return attrs;
     }
 
     private Attributes issuerOfAccessionNumber(String accno, String id,
