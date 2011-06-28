@@ -63,6 +63,8 @@ import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.Issuer_;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.Patient_;
+import org.dcm4chee.archive.persistence.RequestAttributes;
+import org.dcm4chee.archive.persistence.RequestAttributes_;
 import org.dcm4chee.archive.persistence.Series;
 import org.dcm4chee.archive.persistence.Series_;
 import org.dcm4chee.archive.persistence.Study;
@@ -269,7 +271,18 @@ class Matching {
         Root<Study> studySub = sq.correlate((Root<Study>) study);
         Join<Study, Issuer> issuer =
                 studySub.join(Study_.issuerOfAccessionNumber);
+        Predicate predicate = queryIssuer(cb, attrs, params, issuer);
+        if (predicate == null)
+            return null;
+
         sq.select(issuer);
+        sq.where(predicate);
+        return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(study
+                .get(Study_.issuerOfAccessionNumber))) : cb.exists(sq);
+    }
+
+    private static<T> Predicate queryIssuer(CriteriaBuilder cb, Attributes attrs,
+            List<Object> params, Join<T, Issuer> issuer) {
         Predicate predicate = null;
         if (attrs.containsValue(Tag.LocalNamespaceEntityID)) {
             ParameterExpression<String> param =
@@ -295,11 +308,7 @@ class Matching {
             else
                 predicate = cb.and(predicate, UID);
         }
-        if (predicate == null)
-            return null;
-        sq.where(predicate);
-        return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(study
-                .get(Study_.issuerOfAccessionNumber))) : cb.exists(sq);
+        return predicate;
     }
 
     private static Predicate procedureCodes(CriteriaBuilder cb,
@@ -327,7 +336,6 @@ class Matching {
         Subquery<Code> sq = q.subquery(Code.class);
         Root<Study> studySub = sq.correlate((Root<Study>) study);
         Join<Study, Code> codes = studySub.join(Study_.procedureCodes);
-        sq.select(codes);
         ParameterExpression<String> param =
                 setParam(cb, params, attrs.getString(Tag.CodeValue, null));
         Predicate predicate = cb.equal(codes.get(Code_.codeValue), param);
@@ -345,9 +353,123 @@ class Matching {
                     cb.and(predicate, cb.equal(codes
                             .get(Code_.codingSchemeVersion), param));
         }
+        sq.select(codes);
         sq.where(predicate);
-        return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(study
+        return matchUnknown ? cb.or(cb.exists(sq), cb.isEmpty(study
                 .get(Study_.procedureCodes))) : cb.exists(sq);
+    }
+
+    private static Predicate requestedAttributesSequence(CriteriaBuilder cb,
+            Path<Series> series, Attributes keys, boolean matchUnknown,
+            List<Object> params) {
+        if (!keys.containsValue(Tag.RequestAttributesSequence))
+            return null;
+        Attributes attrs =
+                keys.getNestedDataset(new ItemPointer(
+                        Tag.RequestAttributesSequence));
+        if (attrs.isEmpty() || attrs == null)
+            return null;
+        else
+            return seriesRequestedAttributesSubQuery(cb, attrs, series, params,
+                    matchUnknown);
+    }
+
+    private static Predicate seriesRequestedAttributesSubQuery(
+            CriteriaBuilder cb, Attributes attrs, Path<Series> series,
+            List<Object> params, boolean matchUnknown) {
+        CriteriaQuery<String> q = cb.createQuery(String.class);
+        Subquery<RequestAttributes> sq = q.subquery(RequestAttributes.class);
+        Root<Series> seriesSub = sq.correlate((Root<Series>) series);
+        Join<Series, RequestAttributes> requestedAttributes =
+                seriesSub.join(Series_.requestAttributes);
+        Predicate predicate = null;
+        predicate =
+                addRequestedAttributesSearch(cb, attrs, params,
+                        requestedAttributes, predicate,
+                        Tag.RequestedProcedureID,
+                        RequestAttributes_.requestedProcedureID, matchUnknown);
+        predicate =
+                addRequestedAttributesSearch(cb, attrs, params,
+                        requestedAttributes, predicate,
+                        Tag.ScheduledProcedureStepID,
+                        RequestAttributes_.scheduledProcedureStepID,
+                        matchUnknown);
+        predicate =
+                personName(
+                        cb,
+                        requestedAttributes
+                                .get(RequestAttributes_.requestingPhysician),
+                        requestedAttributes
+                                .get(RequestAttributes_.requestingPhysicianIdeographicName),
+                        requestedAttributes
+                                .get(RequestAttributes_.requestingPhysicianPhoneticName),
+                        AttributeFilter.getString(attrs,
+                                Tag.ReferringPhysicianName), matchUnknown,
+                        params);
+        predicate =
+                addRequestedAttributesSearch(cb, attrs, params,
+                        requestedAttributes, predicate, Tag.StudyInstanceUID,
+                        RequestAttributes_.studyInstanceUID, matchUnknown);
+        predicate =
+            addRequestedAttributesSearch(cb, attrs, params,
+                    requestedAttributes, predicate, Tag.AccessionNumber,
+                    RequestAttributes_.accessionNumber, matchUnknown);
+        if (attrs.contains(Tag.AccessionNumber))
+            predicate = requestedAttributesIssuerSubQuery(cb, attrs, 
+                    requestedAttributes, params, matchUnknown);
+        predicate =
+            addRequestedAttributesSearch(cb, attrs, params,
+                    requestedAttributes, predicate, Tag.ScheduledProcedureStepID,
+                    RequestAttributes_.scheduledProcedureStepID, matchUnknown);
+        predicate =
+            addRequestedAttributesSearch(cb, attrs, params,
+                    requestedAttributes, predicate, Tag.RequestingService,
+                    RequestAttributes_.requestingService, matchUnknown);
+        if (predicate == null)
+            return null;
+
+        sq.select(requestedAttributes);
+        sq.where(predicate);
+        return matchUnknown ? cb.or(cb.exists(sq), cb.isEmpty(series
+                .get(Series_.requestAttributes))) : cb.exists(sq);
+    }
+
+    private static Predicate addRequestedAttributesSearch(CriteriaBuilder cb,
+            Attributes attrs, List<Object> params,
+            Join<Series, RequestAttributes> requestedAttributes,
+            Predicate predicate, int tag,
+            SingularAttribute<RequestAttributes, String> field,
+            boolean matchUnknown) {
+        if (attrs.containsValue(tag)) {
+            ParameterExpression<String> param =
+                    setParam(cb, params, attrs.getString(tag, null));
+            if (predicate == null)
+                predicate = cb.equal(requestedAttributes.get(field), param);
+            else
+                predicate =
+                        cb.and(predicate, cb.equal(requestedAttributes
+                                .get(field), param));
+        }
+        return matchUnknown0(cb, requestedAttributes.get(field), matchUnknown,
+                predicate);
+    }
+    
+    private static Predicate requestedAttributesIssuerSubQuery(CriteriaBuilder cb,
+            Attributes attrs, Path<RequestAttributes> rePath, List<Object> params,
+            boolean matchUnknown) {
+        CriteriaQuery<String> q = cb.createQuery(String.class);
+        Subquery<Issuer> sq = q.subquery(Issuer.class);
+        Root<RequestAttributes> root = sq.correlate((Root<RequestAttributes>) rePath);
+        Join<RequestAttributes, Issuer> issuer =
+                root.join(RequestAttributes_.issuerOfAccessionNumber);
+        Predicate predicate = queryIssuer(cb, attrs, params, issuer);
+        if (predicate == null)
+            return null;
+
+        sq.select(issuer);
+        sq.where(predicate);
+        return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(rePath
+                .get(RequestAttributes_.issuerOfAccessionNumber))) : cb.exists(sq);
     }
 
     static Predicate matchUnknown0(CriteriaBuilder cb, Path<String> field,
@@ -417,6 +539,8 @@ class Matching {
 
         add(predicates, listOfUID(cb, study.get(Study_.studyInstanceUID), keys
                 .getStrings(Tag.StudyInstanceUID), params));
+        add(predicates, wildCard(cb, study.get(Study_.studyID), AttributeFilter
+                .getString(keys, Tag.StudyID), matchUnknown, params));
         add(predicates, personName(cb,
                 study.get(Study_.referringPhysicianName), study
                         .get(Study_.referringPhysicianIdeographicName), study
@@ -442,7 +566,6 @@ class Matching {
         add(predicates, issuerOfAccessionNumber(cb, study, keys, matchUnknown,
                 params));
         add(predicates, procedureCodes(cb, study, keys, matchUnknown, params));
-        // TODO
     }
 
     public static void series(CriteriaBuilder cb, Path<Patient> pat,
@@ -466,9 +589,14 @@ class Matching {
                 Tag.PerformedProcedureStepStartTime,
                 Tag.PerformedProcedureStepStartDateAndTime, keys, matchUnknown,
                 combinedDateTime, predicates, params);
-        add(predicates, wildCard(cb, series.get(Series_.modality),
-                AttributeFilter.getString(keys, Tag.Modality), matchUnknown,
-                params));
+        add(predicates, wildCard(cb, series.get(Series_.seriesNumber),
+                AttributeFilter.getString(keys, Tag.SeriesNumber),
+                matchUnknown, params));
+        add(predicates, wildCard(cb, series.get(Series_.seriesDescription),
+                AttributeFilter.getString(keys, Tag.SeriesDescription),
+                matchUnknown, params));
+        add(predicates, requestedAttributesSequence(cb, series, keys,
+                matchUnknown, params));
         // TODO
     }
 
