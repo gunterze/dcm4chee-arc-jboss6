@@ -38,14 +38,12 @@
 
 package org.dcm4chee.archive.beans.store;
 
-import java.io.IOException;
+import java.io.File;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.net.Association;
-import org.dcm4che.net.PDVInputStream;
 import org.dcm4che.net.Status;
-import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCStoreSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.beans.util.JNDIUtils;
@@ -62,20 +60,22 @@ public class CompositeCStoreSCP extends BasicCStoreSCP {
     }
 
     @Override
-    protected void doCStore(Association as, PresentationContext pc,
-            Attributes rq, PDVInputStream data, Attributes rsp)
-            throws IOException {
+    protected void configure(Association as, DicomInputStream in) {
+        in.setIncludeBulkData(false);
+    }
+
+    @Override
+    protected void store(Association as, Attributes rq, Attributes ds,
+            String tsuid, File dir, File file, Attributes rsp)
+            throws DicomServiceException {
         try {
-            DicomInputStream in = new DicomInputStream(data, pc.getTransferSyntax());
-            in.setIncludeBulkData(false);
-            Attributes ds = in.readDataset(-1, -1);
-            initInstanceStore(as)
-                    .store(ds, as.getCallingAET(), as.getCalledAET(),
-                            null, Availability.ONLINE);
+            initInstanceStore(as).store(ds, as.getCallingAET(),
+                    as.getCalledAET(), null, Availability.ONLINE);
         } catch (Exception e) {
-            throw new DicomServiceException(rq, Status.ProcessingFailure, 
+            throw new DicomServiceException(rq, Status.OutOfResources,
                     causeOf(e));
         }
+        // super.store(as, rq, ds, tsuid, dir, file, rsp);
     }
 
     private static Throwable causeOf(Throwable e) {
