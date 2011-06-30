@@ -63,12 +63,9 @@ public class SeriesQueryTest {
 
     @Deployment
     public static JavaArchive createDeployment() {
-       return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(
-                        SeriesQuery.class,
-                        SeriesQueryBean.class,
-                        Matching.class,
-                        RangeMatching.class);
+        return ShrinkWrap.create(JavaArchive.class, "test.jar").addClasses(
+                SeriesQuery.class, SeriesQueryBean.class, Matching.class,
+                RangeMatching.class);
     }
 
     @EJB
@@ -83,7 +80,18 @@ public class SeriesQueryTest {
         assertFalse(query.hasMoreMatches());
         query.close();
     }
-    
+
+    @Test
+    public void testByRequestAttributesSequence() throws Exception {
+        query.find(null, new String[] { "REQ_ATTRS_SEQ", "DCM4CHEE_TESTDATA" },
+                requestAttributesSequence("P-9913", "9913.1", null,
+                        "A1234", "DCM4CHEE_TESTDATA_ACCNO_ISSUER_1", null,
+                        null), false, false);
+        assertTrue(query.hasMoreMatches());
+        query.nextMatch();
+        assertFalse(query.hasMoreMatches());
+        query.close();
+    }
 
     private Attributes modality(String value) {
         Attributes attrs = new Attributes(1);
@@ -91,4 +99,24 @@ public class SeriesQueryTest {
         return attrs;
     }
 
+    private Attributes requestAttributesSequence(String reqProcId,
+            String schedProcId, String physName, String accNo, String entityId,
+            String entityUid, String entityType) {
+        Attributes item = new Attributes(4);
+        item.setString(Tag.RequestedProcedureID, VR.SH, reqProcId);
+        item.setString(Tag.ScheduledProcedureStepID, VR.SH, schedProcId);
+        item.setString(Tag.ReferringPhysicianName, VR.PN, physName);
+        item.setString(Tag.AccessionNumber, VR.SH, accNo);
+
+        Attributes issuer = new Attributes(3);
+        issuer.setString(Tag.LocalNamespaceEntityID, VR.UT, entityId);
+        issuer.setString(Tag.UniversalEntityID, VR.UT, entityUid);
+        issuer.setString(Tag.UniversalEntityIDType, VR.CS, entityType);
+
+        item.newSequence(Tag.IssuerOfAccessionNumberSequence, 1).add(issuer);
+
+        Attributes attrs = new Attributes(1);
+        attrs.newSequence(Tag.RequestAttributesSequence, 1).add(item);
+        return attrs;
+    }
 }

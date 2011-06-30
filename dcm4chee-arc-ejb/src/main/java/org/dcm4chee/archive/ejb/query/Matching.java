@@ -256,7 +256,7 @@ class Matching {
         Attributes attrs =
                 keys.getNestedDataset(new ItemPointer(
                         Tag.IssuerOfAccessionNumberSequence));
-        if (attrs.isEmpty() || attrs == null)
+        if (attrs == null || attrs.isEmpty())
             return null;
         else
             return studyIssuerSubQuery(cb, attrs, study, params, matchUnknown);
@@ -304,7 +304,7 @@ class Matching {
                 keys
                         .getNestedDataset(new ItemPointer(
                                 Tag.ProcedureCodeSequence));
-        if (attrs.isEmpty() || attrs == null)
+        if (attrs == null || attrs.isEmpty())
             return null;
         else
             return studyCodesSubQuery(cb, attrs, study, params, matchUnknown);
@@ -388,9 +388,18 @@ class Matching {
         add(predicates, wildCard(cb, requestedAttributes
                 .get(RequestAttributes_.accessionNumber), AttributeFilter
                 .getString(attrs, Tag.AccessionNumber), matchUnknown, params));
-        if (attrs.contains(Tag.AccessionNumber))
-            add(predicates, requestedAttributesIssuerSubQuery(cb, attrs,
-                    requestedAttributes, params, matchUnknown));
+        if (attrs.containsValue(Tag.AccessionNumber)) {
+            Attributes seq =
+                    attrs.getNestedDataset(new ItemPointer(
+                            Tag.IssuerOfAccessionNumberSequence));
+            if (seq != null && !seq.isEmpty()) {
+                Join<RequestAttributes, Issuer> issuer =
+                        requestedAttributes
+                                .join(RequestAttributes_.issuerOfAccessionNumber);
+                add(predicates, queryIssuer(cb, attrs, params, issuer,
+                        matchUnknown));
+            }
+        }
         add(predicates, wildCard(cb, requestedAttributes
                 .get(RequestAttributes_.scheduledProcedureStepID),
                 AttributeFilter.getString(attrs, Tag.ScheduledProcedureStepID),
@@ -401,22 +410,6 @@ class Matching {
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
         return matchUnknown ? cb.or(cb.exists(sq), cb.isEmpty(series
                 .get(Series_.requestAttributes))) : cb.exists(sq);
-    }
-
-    private static Predicate requestedAttributesIssuerSubQuery(
-            CriteriaBuilder cb, Attributes attrs,
-            Path<RequestAttributes> rePath, List<Object> params,
-            boolean matchUnknown) {
-        CriteriaQuery<String> q = cb.createQuery(String.class);
-        Subquery<Issuer> sq = q.subquery(Issuer.class);
-        Root<RequestAttributes> root =
-                sq.correlate((Root<RequestAttributes>) rePath);
-        Join<RequestAttributes, Issuer> issuer =
-                root.join(RequestAttributes_.issuerOfAccessionNumber);
-        sq.where(queryIssuer(cb, attrs, params, issuer, matchUnknown));
-        return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(rePath
-                .get(RequestAttributes_.issuerOfAccessionNumber))) : cb
-                .exists(sq);
     }
 
     static Predicate matchUnknown0(CriteriaBuilder cb, Path<String> field,
