@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.ejb.query;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -224,8 +225,7 @@ class Matching {
         Root<Study> studySub = sq.correlate((Root<Study>) study);
         Join<Study, Series> series = studySub.join(Study_.series);
         sq.select(series);
-        ParameterExpression<String> param = setParam(cb, params, value);
-        sq.where(cb.equal(series.get(attr), param));
+        sq.where(wildCard(cb, series.get(attr), value, matchUnknown, params));
         return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(study
                 .get(nullField))) : cb.exists(sq);
     }
@@ -243,8 +243,7 @@ class Matching {
         Join<Study, Series> series = studySub.join(Study_.series);
         Join<Series, Instance> instance = series.join(Series_.instances);
         sq.select(instance);
-        ParameterExpression<String> param = setParam(cb, params, value);
-        sq.where(cb.equal(instance.get(attr), param));
+        sq.where(wildCard(cb, instance.get(attr), value, matchUnknown, params));
         return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(study
                 .get(nullField))) : cb.exists(sq);
     }
@@ -271,44 +270,29 @@ class Matching {
         Root<Study> studySub = sq.correlate((Root<Study>) study);
         Join<Study, Issuer> issuer =
                 studySub.join(Study_.issuerOfAccessionNumber);
-        Predicate predicate = queryIssuer(cb, attrs, params, issuer);
-        if (predicate == null)
-            return null;
-
         sq.select(issuer);
-        sq.where(predicate);
+        sq.where(queryIssuer(cb, attrs, params, issuer, matchUnknown));
         return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(study
                 .get(Study_.issuerOfAccessionNumber))) : cb.exists(sq);
     }
 
-    private static<T> Predicate queryIssuer(CriteriaBuilder cb, Attributes attrs,
-            List<Object> params, Join<T, Issuer> issuer) {
-        Predicate predicate = null;
-        if (attrs.containsValue(Tag.LocalNamespaceEntityID)) {
-            ParameterExpression<String> param =
-                    setParam(cb, params, attrs.getString(
-                            Tag.LocalNamespaceEntityID, null));
-            predicate = cb.equal(issuer.get(Issuer_.entityID), param);
-        }
-        if (attrs.containsValue(Tag.UniversalEntityID)) {
-            ParameterExpression<String> param =
-                    setParam(cb, params, attrs.getString(Tag.UniversalEntityID,
-                            null));
-            Predicate UID = cb.equal(issuer.get(Issuer_.entityUID), param);
-            if (attrs.containsValue(Tag.UniversalEntityIDType)) {
-                param =
-                        setParam(cb, params, attrs.getString(
-                                Tag.UniversalEntityIDType, null));
-                UID =
-                        cb.and(UID, cb.equal(issuer.get(Issuer_.entityUIDType),
-                                param));
-            }
-            if (predicate == null)
-                predicate = UID;
-            else
-                predicate = cb.and(predicate, UID);
-        }
-        return predicate;
+    private static <T> Predicate queryIssuer(CriteriaBuilder cb,
+            Attributes attrs, List<Object> params, Join<T, Issuer> issuer,
+            boolean matchUnknown) {
+        List<Predicate> predicates = new ArrayList<Predicate>();
+        add(predicates, wildCard(cb, issuer.get(Issuer_.entityID),
+                AttributeFilter.getString(attrs, Tag.LocalNamespaceEntityID),
+                matchUnknown, params));
+        add(predicates, wildCard(cb, issuer.get(Issuer_.entityUID),
+                AttributeFilter.getString(attrs, Tag.UniversalEntityID),
+                matchUnknown, params));
+        if (attrs.containsValue(Tag.UniversalEntityID))
+            add(predicates,
+                    wildCard(cb, issuer.get(Issuer_.entityUIDType),
+                            AttributeFilter.getString(attrs,
+                                    Tag.UniversalEntityIDType), matchUnknown,
+                            params));
+        return cb.and(predicates.toArray(new Predicate[predicates.size()]));
     }
 
     private static Predicate procedureCodes(CriteriaBuilder cb,
@@ -336,25 +320,18 @@ class Matching {
         Subquery<Code> sq = q.subquery(Code.class);
         Root<Study> studySub = sq.correlate((Root<Study>) study);
         Join<Study, Code> codes = studySub.join(Study_.procedureCodes);
-        ParameterExpression<String> param =
-                setParam(cb, params, attrs.getString(Tag.CodeValue, null));
-        Predicate predicate = cb.equal(codes.get(Code_.codeValue), param);
-        param =
-                setParam(cb, params, attrs.getString(
-                        Tag.CodingSchemeDesignator, null));
-        predicate =
-                cb.and(predicate, cb.equal(codes
-                        .get(Code_.codingSchemeDesignator), param));
-        if (attrs.containsValue(Tag.CodingSchemeVersion)) {
-            param =
-                    setParam(cb, params, attrs.getString(
-                            Tag.CodingSchemeVersion, null));
-            predicate =
-                    cb.and(predicate, cb.equal(codes
-                            .get(Code_.codingSchemeVersion), param));
-        }
         sq.select(codes);
-        sq.where(predicate);
+        List<Predicate> predicates = new ArrayList<Predicate>();
+        add(predicates, wildCard(cb, codes.get(Code_.codeValue),
+                AttributeFilter.getString(attrs, Tag.CodeValue), matchUnknown,
+                params));
+        add(predicates, wildCard(cb, codes.get(Code_.codingSchemeDesignator),
+                AttributeFilter.getString(attrs, Tag.CodingSchemeDesignator),
+                matchUnknown, params));
+        add(predicates, wildCard(cb, codes.get(Code_.codingSchemeVersion),
+                AttributeFilter.getString(attrs, Tag.CodingSchemeVersion),
+                matchUnknown, params));
+        sq.where(predicates.toArray(new Predicate[predicates.size()]));
         return matchUnknown ? cb.or(cb.exists(sq), cb.isEmpty(study
                 .get(Study_.procedureCodes))) : cb.exists(sq);
     }
@@ -382,19 +359,18 @@ class Matching {
         Root<Series> seriesSub = sq.correlate((Root<Series>) series);
         Join<Series, RequestAttributes> requestedAttributes =
                 seriesSub.join(Series_.requestAttributes);
-        Predicate predicate = null;
-        predicate =
-                addRequestedAttributesSearch(cb, attrs, params,
-                        requestedAttributes, predicate,
-                        Tag.RequestedProcedureID,
-                        RequestAttributes_.requestedProcedureID, matchUnknown);
-        predicate =
-                addRequestedAttributesSearch(cb, attrs, params,
-                        requestedAttributes, predicate,
-                        Tag.ScheduledProcedureStepID,
-                        RequestAttributes_.scheduledProcedureStepID,
-                        matchUnknown);
-        predicate =
+        sq.select(requestedAttributes);
+        List<Predicate> predicates = new ArrayList<Predicate>();
+        add(predicates, wildCard(cb, requestedAttributes
+                .get(RequestAttributes_.requestedProcedureID), AttributeFilter
+                .getString(attrs, Tag.RequestedProcedureID), matchUnknown,
+                params));
+        add(predicates, wildCard(cb, requestedAttributes
+                .get(RequestAttributes_.scheduledProcedureStepID),
+                AttributeFilter.getString(attrs, Tag.ScheduledProcedureStepID),
+                matchUnknown, params));
+        add(
+                predicates,
                 personName(
                         cb,
                         requestedAttributes
@@ -405,71 +381,42 @@ class Matching {
                                 .get(RequestAttributes_.requestingPhysicianPhoneticName),
                         AttributeFilter.getString(attrs,
                                 Tag.ReferringPhysicianName), matchUnknown,
-                        params);
-        predicate =
-                addRequestedAttributesSearch(cb, attrs, params,
-                        requestedAttributes, predicate, Tag.StudyInstanceUID,
-                        RequestAttributes_.studyInstanceUID, matchUnknown);
-        predicate =
-            addRequestedAttributesSearch(cb, attrs, params,
-                    requestedAttributes, predicate, Tag.AccessionNumber,
-                    RequestAttributes_.accessionNumber, matchUnknown);
+                        params));
+        add(predicates, wildCard(cb, requestedAttributes
+                .get(RequestAttributes_.studyInstanceUID), AttributeFilter
+                .getString(attrs, Tag.StudyInstanceUID), matchUnknown, params));
+        add(predicates, wildCard(cb, requestedAttributes
+                .get(RequestAttributes_.accessionNumber), AttributeFilter
+                .getString(attrs, Tag.AccessionNumber), matchUnknown, params));
         if (attrs.contains(Tag.AccessionNumber))
-            predicate = requestedAttributesIssuerSubQuery(cb, attrs, 
-                    requestedAttributes, params, matchUnknown);
-        predicate =
-            addRequestedAttributesSearch(cb, attrs, params,
-                    requestedAttributes, predicate, Tag.ScheduledProcedureStepID,
-                    RequestAttributes_.scheduledProcedureStepID, matchUnknown);
-        predicate =
-            addRequestedAttributesSearch(cb, attrs, params,
-                    requestedAttributes, predicate, Tag.RequestingService,
-                    RequestAttributes_.requestingService, matchUnknown);
-        if (predicate == null)
-            return null;
-
-        sq.select(requestedAttributes);
-        sq.where(predicate);
+            add(predicates, requestedAttributesIssuerSubQuery(cb, attrs,
+                    requestedAttributes, params, matchUnknown));
+        add(predicates, wildCard(cb, requestedAttributes
+                .get(RequestAttributes_.scheduledProcedureStepID),
+                AttributeFilter.getString(attrs, Tag.ScheduledProcedureStepID),
+                matchUnknown, params));
+        add(predicates, wildCard(cb, requestedAttributes
+                .get(RequestAttributes_.requestingService), AttributeFilter
+                .getString(attrs, Tag.RequestingService), matchUnknown, params));
+        sq.where(predicates.toArray(new Predicate[predicates.size()]));
         return matchUnknown ? cb.or(cb.exists(sq), cb.isEmpty(series
                 .get(Series_.requestAttributes))) : cb.exists(sq);
     }
 
-    private static Predicate addRequestedAttributesSearch(CriteriaBuilder cb,
-            Attributes attrs, List<Object> params,
-            Join<Series, RequestAttributes> requestedAttributes,
-            Predicate predicate, int tag,
-            SingularAttribute<RequestAttributes, String> field,
-            boolean matchUnknown) {
-        if (attrs.containsValue(tag)) {
-            ParameterExpression<String> param =
-                    setParam(cb, params, attrs.getString(tag, null));
-            if (predicate == null)
-                predicate = cb.equal(requestedAttributes.get(field), param);
-            else
-                predicate =
-                        cb.and(predicate, cb.equal(requestedAttributes
-                                .get(field), param));
-        }
-        return matchUnknown0(cb, requestedAttributes.get(field), matchUnknown,
-                predicate);
-    }
-    
-    private static Predicate requestedAttributesIssuerSubQuery(CriteriaBuilder cb,
-            Attributes attrs, Path<RequestAttributes> rePath, List<Object> params,
+    private static Predicate requestedAttributesIssuerSubQuery(
+            CriteriaBuilder cb, Attributes attrs,
+            Path<RequestAttributes> rePath, List<Object> params,
             boolean matchUnknown) {
         CriteriaQuery<String> q = cb.createQuery(String.class);
         Subquery<Issuer> sq = q.subquery(Issuer.class);
-        Root<RequestAttributes> root = sq.correlate((Root<RequestAttributes>) rePath);
+        Root<RequestAttributes> root =
+                sq.correlate((Root<RequestAttributes>) rePath);
         Join<RequestAttributes, Issuer> issuer =
                 root.join(RequestAttributes_.issuerOfAccessionNumber);
-        Predicate predicate = queryIssuer(cb, attrs, params, issuer);
-        if (predicate == null)
-            return null;
-
-        sq.select(issuer);
-        sq.where(predicate);
+        sq.where(queryIssuer(cb, attrs, params, issuer, matchUnknown));
         return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(rePath
-                .get(RequestAttributes_.issuerOfAccessionNumber))) : cb.exists(sq);
+                .get(RequestAttributes_.issuerOfAccessionNumber))) : cb
+                .exists(sq);
     }
 
     static Predicate matchUnknown0(CriteriaBuilder cb, Path<String> field,
