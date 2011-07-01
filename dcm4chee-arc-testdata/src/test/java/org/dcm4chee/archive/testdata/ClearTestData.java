@@ -68,6 +68,8 @@ public class ClearTestData {
         removePatient.removePatient("RANGE-MATCHING", "DCM4CHEE_TESTDATA");
         removePatient.removePatient("ISSUER_OF_ACCNO", "DCM4CHEE_TESTDATA");
         removePatient.removePatient("REQ_ATTRS_SEQ", "DCM4CHEE_TESTDATA");
+        removePatient.removePatient("MODS_IN_STUDY", "DCM4CHEE_TESTDATA");
+        removePatient.removePatient("PROC_CODE_SEQ", "DCM4CHEE_TESTDATA");
    }
 
 }

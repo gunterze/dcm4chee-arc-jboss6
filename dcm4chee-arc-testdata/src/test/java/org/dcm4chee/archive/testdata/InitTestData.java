@@ -89,8 +89,16 @@ public class InitTestData {
                 .addAsResource("accno-issuer-3.xml")
                 .addAsResource("req-attrs-seq-1.xml")
                 .addAsResource("req-attrs-seq-2.xml")
-                .addAsResource("req-attrs-seq-3.xml");
-    }
+                .addAsResource("req-attrs-seq-3.xml")
+                .addAsResource("mods-in-study-1.xml")
+                .addAsResource("mods-in-study-2.xml")
+                .addAsResource("mods-in-study-3.xml")
+                .addAsResource("mods-in-study-4.xml")
+                .addAsResource("mods-in-study-5.xml")
+                .addAsResource("proc-code-seq-1.xml")
+                .addAsResource("proc-code-seq-2.xml")
+                .addAsResource("proc-code-seq-3.xml");
+   }
 
     @EJB
     private InstanceStore instanceStore;
@@ -135,7 +143,23 @@ public class InitTestData {
                 SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
         instanceStore.store(SAXReader.parse("resource:req-attrs-seq-3.xml", null),
                 SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-       instanceStore.close();
+        instanceStore.store(SAXReader.parse("resource:mods-in-study-1.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:mods-in-study-2.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:mods-in-study-3.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:mods-in-study-4.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:mods-in-study-5.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:proc-code-seq-1.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:proc-code-seq-2.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.store(SAXReader.parse("resource:proc-code-seq-3.xml", null),
+                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        instanceStore.close();
     }
 
 }
