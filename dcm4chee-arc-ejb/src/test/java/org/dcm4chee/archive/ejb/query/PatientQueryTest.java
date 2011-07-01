@@ -58,6 +58,7 @@ import org.junit.runner.RunWith;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 @RunWith(Arquillian.class)
 public class PatientQueryTest {

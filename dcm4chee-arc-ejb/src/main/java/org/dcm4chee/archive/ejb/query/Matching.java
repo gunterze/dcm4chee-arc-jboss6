@@ -72,6 +72,8 @@ import org.dcm4chee.archive.persistence.Series;
 import org.dcm4chee.archive.persistence.Series_;
 import org.dcm4chee.archive.persistence.Study;
 import org.dcm4chee.archive.persistence.Study_;
+import org.dcm4chee.archive.persistence.VerifyingObserver;
+import org.dcm4chee.archive.persistence.VerifyingObserver_;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -249,6 +251,40 @@ class Matching {
         sq.select(root);
         ArrayList<Predicate> predicates = new ArrayList<Predicate>(4);
         predicates.add(cb.isMember(root, collection));
+        boolean restrict = addCodePredicates(cb, item, params, root, predicates);
+        if (!restrict)
+            return null;
+
+        sq.where(predicates.toArray(new Predicate[predicates.size()]));
+        return matchUnknown 
+                ? cb.or(cb.exists(sq), cb.isEmpty(collection))
+                : cb.exists(sq);
+    }
+
+    private static Predicate withCode(CriteriaBuilder cb,
+            CriteriaQuery<Tuple> cq, Path<Code> path, Attributes item,
+            boolean matchUnknown, List<Object> params) {
+        if (item == null || item.isEmpty())
+            return null;
+
+        Subquery<Code> sq = cq.subquery(Code.class);
+        Root<Code> root = sq.from(Code.class);
+        sq.select(root);
+        ArrayList<Predicate> predicates = new ArrayList<Predicate>(4);
+        predicates.add(cb.equal(root, path));
+        boolean restrict = addCodePredicates(cb, item, params, root, predicates);
+        if (!restrict)
+            return null;
+
+        sq.where(predicates.toArray(new Predicate[predicates.size()]));
+        return matchUnknown 
+                ? cb.or(cb.exists(sq), cb.isNull(path))
+                : cb.exists(sq);
+    }
+
+    private static boolean addCodePredicates(CriteriaBuilder cb, Attributes item,
+            List<Object> params, Root<Code> root,
+            ArrayList<Predicate> predicates) {
         boolean restrict = add(predicates,
                 wildCard(cb, root.get(Code_.codeValue),
                     AttributeFilter.getString(item, Tag.CodeValue),
@@ -263,13 +299,7 @@ class Matching {
                     AttributeFilter.getString(item, Tag.CodingSchemeVersion),
                     false, params))
                 || restrict;
-        if (!restrict)
-            return null;
-
-        sq.where(predicates.toArray(new Predicate[predicates.size()]));
-        return matchUnknown 
-                ? cb.or(cb.exists(sq), cb.isEmpty(collection))
-                : cb.exists(sq);
+        return restrict;
     }
 
     private static Predicate withIssuer(CriteriaBuilder cb,
@@ -303,6 +333,39 @@ class Matching {
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
         return matchUnknown 
                 ? cb.or(cb.exists(sq), cb.isNull(issuer))
+                : cb.exists(sq);
+    }
+    
+    private static Predicate withObserver(CriteriaBuilder cb,
+            CriteriaQuery<Tuple> cq, Expression<Collection<VerifyingObserver>> collection,
+            Attributes item, boolean matchUnknown, List<Object> params) {
+        if (item == null || item.isEmpty())
+            return null;
+
+        Subquery<VerifyingObserver> sq = cq.subquery(VerifyingObserver.class);
+        Root<VerifyingObserver> root = sq.from(VerifyingObserver.class);
+        sq.select(root);
+        ArrayList<Predicate> predicates = new ArrayList<Predicate>(2);
+        predicates.add(cb.isMember(root, collection));
+        boolean restrict = add(predicates, 
+                RangeMatching.rangeMatchDT(cb, 
+                    root.get(VerifyingObserver_.verificationDateTime), 
+                    Tag.VerificationDateTime, 
+                    item, false, params));
+        restrict = add(predicates, 
+                personName(cb, 
+                    root.get(VerifyingObserver_.verifyingObserverName), 
+                    root.get(VerifyingObserver_.verifyingObserverIdeographicName), 
+                    root.get(VerifyingObserver_.verifyingObserverPhoneticName), 
+                    AttributeFilter.getString(item, Tag.VerifyingObserverName), 
+                    false, params))
+                || restrict;
+        if (!restrict)
+            return null;
+
+        sq.where(predicates.toArray(new Predicate[predicates.size()]));
+        return matchUnknown 
+                ? cb.or(cb.exists(sq), cb.isEmpty(collection))
                 : cb.exists(sq);
     }
 
@@ -418,8 +481,8 @@ class Matching {
         add(predicates, wildCard(cb, pat.get(Patient_.patientSex),
                 AttributeFilter.getString(keys, Tag.PatientSex), matchUnknown,
                 params));
-        RangeMatching.rangeMatch(cb, pat.get(Patient_.patientBirthDate),
-                Tag.PatientBirthDate, keys, matchUnknown, predicates, params);
+        add(predicates, RangeMatching.rangeMatch(cb, pat.get(Patient_.patientBirthDate),
+                Tag.PatientBirthDate, keys, matchUnknown, params));
     }
 
     public static void study(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,
@@ -478,6 +541,10 @@ class Matching {
         add(predicates, wildCard(cb, series.get(Series_.modality),
                 AttributeFilter.getString(keys, Tag.Modality), matchUnknown,
                 params));
+        add(predicates, wildCard(cb, series
+                .get(Series_.performedProcedureStepInstanceUID),
+                AttributeFilter.getString(keys, Tag.PerformedProcedureStepID),
+                matchUnknown, params));
         RangeMatching.rangeMatch(cb, series
                 .get(Series_.performedProcedureStepStartDate), series
                 .get(Series_.performedProcedureStepStartTime),
@@ -494,6 +561,10 @@ class Matching {
         add(predicates, requestAttributesSequence(cb, cq,
                 series.get(Series_.requestAttributes),
                 keys.getNestedDataset(new ItemPointer(Tag.RequestAttributesSequence)),
+                matchUnknown, params));
+        add(predicates, withCode(cb, cq, 
+                series.get(Series_.institutionCode),
+                keys.getNestedDataset(new ItemPointer(Tag.InstitutionCodeSequence)), 
                 matchUnknown, params));
     }
 
@@ -515,7 +586,16 @@ class Matching {
         add(predicates, wildCard(cb, inst.get(Instance_.verificationFlag),
                 AttributeFilter.getString(keys, Tag.VerificationFlag),
                 matchUnknown, params));
-        // TODO
+        add(predicates, wildCard(cb, inst.get(Instance_.sopClassUID),
+                AttributeFilter.getString(keys, Tag.SOPClassUID), matchUnknown,
+                params));
+        add(predicates, withCode(cb, cq, inst.get(Instance_.conceptNameCode),
+                keys.getNestedDataset(new ItemPointer(Tag.ConceptNameCodeSequence)),
+                matchUnknown, params));
+        add(predicates, withObserver(cb, cq, 
+                inst.get(Instance_.verifyingObservers),
+                keys.getNestedDataset(new ItemPointer(Tag.VerifyingObserverSequence)), 
+                matchUnknown, params));
     }
 
     static ParameterExpression<String> setParam(CriteriaBuilder cb,

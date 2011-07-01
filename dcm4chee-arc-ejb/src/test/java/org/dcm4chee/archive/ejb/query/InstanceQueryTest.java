@@ -41,14 +41,15 @@ package org.dcm4chee.archive.ejb.query;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+
 import javax.ejb.EJB;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.dcm4chee.archive.ejb.query.InstanceQuery;
-import org.dcm4chee.archive.ejb.query.InstanceQueryBean;
-import org.dcm4chee.archive.ejb.query.Matching;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -58,9 +59,16 @@ import org.junit.runner.RunWith;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 @RunWith(Arquillian.class)
 public class InstanceQueryTest {
+    
+    private static final String[] ConceptCodeSeqPIDs =
+            { "CONCEPT_NAME_CODE_SEQ", "DCM4CHEE_TESTDATA" };
+
+    private static final String[] VerifyingObserverPIDs =
+            { "VERIFYING_OBSERVER_SEQ", "DCM4CHEE_TESTDATA" };
 
     @Deployment
     public static JavaArchive createDeployment() {
@@ -84,6 +92,71 @@ public class InstanceQueryTest {
         assertFalse(query.hasMoreMatches());
         query.close();
     }
+    
+    @Test
+    public void testByConceptCodeSequence() throws Exception {
+        query.find(null, ConceptCodeSeqPIDs, conceptCodeSeq("CONCEPT_NAME_1", 
+                "99DCM4CHEE_TEST", null), false, false);
+        assertTrue(query.hasMoreMatches());
+        ArrayList<String> result = sopInstanceUIDResultList(query);
+        String SOPIUIDs[] = {"1.2.40.0.13.1.1.99.22.1.1"};
+        Collection<String> col = Arrays.asList(SOPIUIDs);
+        assertTrue(result.equals(col));
+        query.close();
+    }
+    
+    @Test
+    public void testByConceptCodeSequenceMatchUnknown() throws Exception {
+        query.find(null, ConceptCodeSeqPIDs, conceptCodeSeq("CONCEPT_NAME_2", 
+                "99DCM4CHEE_TEST", null), true, false);
+        assertTrue(query.hasMoreMatches());
+        ArrayList<String> result = sopInstanceUIDResultList(query);
+        String SOPIUIDs[] = {"1.2.40.0.13.1.1.99.22.1.2", "1.2.40.0.13.1.1.99.22.1.3"};
+        Collection<String> col = Arrays.asList(SOPIUIDs);
+        assertTrue(result.equals(col));
+        query.close();
+    }
+    
+    @Test
+    public void testByVerifyingObserver() throws Exception {
+        query.find(null, VerifyingObserverPIDs, verifyingObserver(
+                "201106300830", "VerifyingObserver1"), false, false);
+        assertTrue(query.hasMoreMatches());
+        ArrayList<String> result = sopInstanceUIDResultList(query);
+        String SOPIUIDs[] = {"1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3"};
+        Collection<String> col = Arrays.asList(SOPIUIDs);
+        assertTrue(equals(result, col));
+        query.close();
+    }
+    
+    @Test
+    public void testByVerifyingObserverMatchUnknown() throws Exception {
+        query.find(null, VerifyingObserverPIDs, verifyingObserver(
+                "201106300830", "VerifyingObserver1"), true, false);
+        assertTrue(query.hasMoreMatches());
+        ArrayList<String> result = sopInstanceUIDResultList(query);
+        String SOPIUIDs[] = {"1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3", 
+                "1.2.40.0.13.1.1.99.23.1.1"};
+        Collection<String> col = Arrays.asList(SOPIUIDs);
+        assertTrue(equals(result, col));
+        query.close();
+    }
+    
+    private boolean equals(ArrayList<String> result, Collection<String> col) {
+        if (result.containsAll(col) && result.size()==col.size())
+            return true;
+        else 
+            return false;
+    }
+
+    private Attributes verifyingObserver(String dateTime, String name) {
+        Attributes attrs = new Attributes(1);
+        Attributes item = new Attributes(2);
+        item.setString(Tag.VerificationDateTime, VR.DT, dateTime);
+        item.setString(Tag.VerifyingObserverName, VR.PN, name);
+        attrs.newSequence(Tag.VerifyingObserverSequence, 1).add(item);
+        return attrs;
+    }
 
     private Attributes verificationFlag(String value) {
         Attributes attrs = new Attributes(2);
@@ -92,4 +165,23 @@ public class InstanceQueryTest {
         return attrs;
     }
 
+    private Attributes conceptCodeSeq(String value, String designator,
+            String version) throws Exception {
+        Attributes attrs = new Attributes(1);
+        Attributes item = new Attributes(3);
+        item.setString(Tag.CodeValue, VR.SH, value);
+        item.setString(Tag.CodingSchemeDesignator, VR.SH, designator);
+        item.setString(Tag.CodingSchemeVersion, VR.SH, version);
+        attrs.newSequence(Tag.ConceptNameCodeSequence, 1).add(item);
+        return attrs;
+    }
+    
+    private ArrayList<String> sopInstanceUIDResultList(InstanceQuery query)
+            throws Exception {
+        ArrayList<String> result = new ArrayList<String>();
+        while (query.hasMoreMatches()) {
+            result.add(query.nextMatch().getString(Tag.SOPInstanceUID, null));
+        }
+        return result;
+    }
 }

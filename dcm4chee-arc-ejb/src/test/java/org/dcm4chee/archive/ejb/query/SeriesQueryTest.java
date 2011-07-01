@@ -57,9 +57,16 @@ import org.junit.runner.RunWith;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 @RunWith(Arquillian.class)
 public class SeriesQueryTest {
+    
+    private static final String[] RequestedAttributesSeqPIDs =
+            { "REQ_ATTRS_SEQ", "DCM4CHEE_TESTDATA" };
+
+    private static final String[] ModalitiesInStudyPIDs =
+            { "MODS_IN_STUDY", "DCM4CHEE_TESTDATA" };
 
     @Deployment
     public static JavaArchive createDeployment() {
@@ -75,21 +82,45 @@ public class SeriesQueryTest {
     public void testByModality() throws Exception {
         query.find(null, new String[] { "CT5", "DCM4CHEE_TESTDATA" },
                 modality("PR"), false, false);
-        assertTrue(query.hasMoreMatches());
-        query.nextMatch();
-        assertFalse(query.hasMoreMatches());
+        assertTrue(countMatches(query, 1));
+        query.close();
+    }
+
+    @Test
+    public void testByModalitiesInStudyPR() throws Exception {
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), false, false);
+        assertTrue(countMatches(query,4));
+        query.close();
+    }
+
+    @Test
+    public void testByModalitiesInStudyMatchUnknownPR() throws Exception {
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), true, false);
+        assertTrue(countMatches(query, 5));
+        query.close();
+    }
+    
+    @Test
+    public void testByModalitiesInStudyCT() throws Exception {
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), false, false);
+        assertTrue(countMatches(query, 2));
+        query.close();
+    }
+
+    @Test
+    public void testByModalitiesInStudyMatchUnknownCT() throws Exception {
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), true, false);
+        assertTrue(countMatches(query, 3));
         query.close();
     }
 
     @Test
     public void testByRequestAttributesSequence() throws Exception {
-        query.find(null, new String[] { "REQ_ATTRS_SEQ", "DCM4CHEE_TESTDATA" },
+        query.find(null, RequestedAttributesSeqPIDs,
                 requestAttributesSequence("P-9913", "9913.1", null,
                         "A1234", "DCM4CHEE_TESTDATA_ACCNO_ISSUER_1", null,
                         null), false, false);
-        assertTrue(query.hasMoreMatches());
-        query.nextMatch();
-        assertFalse(query.hasMoreMatches());
+        assertTrue(countMatches(query, 1));
         query.close();
     }
 
@@ -97,6 +128,21 @@ public class SeriesQueryTest {
         Attributes attrs = new Attributes(1);
         attrs.setString(Tag.Modality, VR.CS, value);
         return attrs;
+    }
+
+    static Attributes modalitiesInStudy(String value) {
+        Attributes attrs = new Attributes(1);
+        attrs.setString(Tag.ModalitiesInStudy, VR.CS, value);
+        return attrs;
+    }
+
+    private boolean countMatches(SeriesQuery query, int count) throws Exception {
+        int i = 0;
+        while(query.hasMoreMatches()){
+            query.nextMatch();
+            i++;
+        }
+        return count==i;
     }
 
     private Attributes requestAttributesSequence(String reqProcId,
