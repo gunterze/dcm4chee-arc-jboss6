@@ -99,7 +99,7 @@ public class StudyQueryBean implements StudyQuery {
                 pat.get(Patient_.encodedAttributes));
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
-        Matching.study(cb, pat, study, pids, keys, matchUnknown,
+        Matching.study(cb, cq, pat, study, pids, keys, matchUnknown,
                 combinedDateTime, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<Tuple> q = em.createQuery(cq);

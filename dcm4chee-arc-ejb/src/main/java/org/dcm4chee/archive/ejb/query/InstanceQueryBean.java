@@ -145,7 +145,7 @@ public class InstanceQueryBean implements InstanceQuery {
         cq.orderBy(cb.asc(series.get(Series_.pk)));
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
-        Matching.instance(cb, pat, study, series, inst, pids, keys,
+        Matching.instance(cb, cq, pat, study, series, inst, pids, keys,
                 matchUnknown, combinedDateTime, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<Tuple> instQuery = em.createQuery(cq);

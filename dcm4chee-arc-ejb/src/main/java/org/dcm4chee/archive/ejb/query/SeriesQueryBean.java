@@ -104,8 +104,8 @@ public class SeriesQueryBean implements SeriesQuery {
                 pat.get(Patient_.encodedAttributes));
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
-        Matching.series(cb, pat, study, series, pids, keys, combinedDateTime,
-                matchUnknown, predicates, params);
+        Matching.series(cb, cq, pat, study, series, pids, keys,
+                combinedDateTime, matchUnknown, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<Tuple> q = em.createQuery(cq);
         int i = 0;

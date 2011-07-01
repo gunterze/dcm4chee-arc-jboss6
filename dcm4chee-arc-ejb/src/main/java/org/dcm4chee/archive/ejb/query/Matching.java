@@ -39,17 +39,19 @@
 package org.dcm4chee.archive.ejb.query;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
-import javax.persistence.metamodel.SingularAttribute;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.ItemPointer;
@@ -85,9 +87,12 @@ class Matching {
                 : ("p" + paramIndex);
     }
 
-    public static void add(List<Predicate> predicates, Predicate e) {
-        if (e != null)
-            predicates.add(e);
+    public static boolean add(List<Predicate> predicates, Predicate e) {
+        if (e == null)
+            return false;
+
+        predicates.add(e);
+        return true;
     }
 
     public static String toLikePattern(String s) {
@@ -149,40 +154,45 @@ class Matching {
         String queryString =
                 pn.getNormalizedQueryString(PersonName.Group.Alphabetic);
         if (value.indexOf('=') == -1) {
-            predicate =
-                    cb.or(wildCard0(cb, alphabethic, queryString, params),
-                            wildCard0(cb, ideographic, queryString, params),
-                            wildCard0(cb, phonetic, queryString, params));
+            predicate = cb.or(
+                    wildCard0(cb, alphabethic, queryString, params),
+                    wildCard0(cb, ideographic, queryString, params),
+                    wildCard0(cb, phonetic, queryString, params));
         } else {
-            predicate =
-                    and(
-                            cb,
-                            wildCard0(cb, alphabethic, queryString, params),
-                            wildCard0(
-                                    cb,
-                                    ideographic,
-                                    pn
-                                            .getNormalizedQueryString(PersonName.Group.Ideographic),
-                                    params),
-                            wildCard0(
-                                    cb,
-                                    phonetic,
-                                    pn
-                                            .getNormalizedQueryString(PersonName.Group.Phonetic),
-                                    params));
+            predicate = and(cb,
+                    wildCard0(cb, alphabethic, queryString, params),
+                    wildCard0(cb, ideographic,
+                            pn.getNormalizedQueryString(PersonName.Group.Ideographic),
+                            params),
+                    wildCard0(cb, phonetic,
+                            pn.getNormalizedQueryString(PersonName.Group.Phonetic),
+                            params));
             if (predicate == null)
                 return null;
         }
-        return matchUnknown ? cb.or(predicate, cb.and(cb
-                .equal(alphabethic, "*"), cb.equal(ideographic, "*"), cb.equal(
-                phonetic, "*"))) : predicate;
+        return matchUnknown 
+                ? cb.or(predicate, cb.and(
+                        cb.equal(alphabethic, "*"),
+                        cb.equal(ideographic, "*"),
+                        cb.equal(phonetic, "*")))
+                : predicate;
     }
 
     private static Predicate and(CriteriaBuilder cb, Predicate p1,
             Predicate p2, Predicate p3) {
-        return p1 != null ? p2 != null ? p3 != null ? cb.and(p1, p2, p3) : cb
-                .and(p1, p2) : p3 != null ? cb.and(p1, p3) : p1
-                : p2 != null ? p3 != null ? cb.and(p2, p3) : p2 : null;
+        return p1 != null 
+                ? p2 != null 
+                    ? p3 != null
+                        ? cb.and(p1, p2, p3)
+                        : cb.and(p1, p2)
+                    : p3 != null 
+                        ? cb.and(p1, p3)
+                        : p1
+                : p2 != null
+                    ? p3 != null 
+                        ? cb.and(p2, p3) 
+                        : p2
+                    : null;
     }
 
     public static Predicate wildCard(CriteriaBuilder cb, Path<String> field,
@@ -213,203 +223,144 @@ class Matching {
         return cb.equal(field, param);
     }
 
-    private static Predicate studySeriesSubQuery(CriteriaBuilder cb,
-            SingularAttribute<Series, String> attr, String value,
-            SingularAttribute<Study, String> nullField, Path<Study> study,
+    private static Predicate modalitiesInStudy(CriteriaBuilder cb,
+            CriteriaQuery<Tuple> cq, Path<Study> study, String modality,
             boolean matchUnknown, List<Object> params) {
-        if (value.equals("*"))
+        if (modality.equals("*"))
             return null;
 
-        CriteriaQuery<String> q = cb.createQuery(String.class);
-        Subquery<Series> sq = q.subquery(Series.class);
-        Root<Study> studySub = sq.correlate((Root<Study>) study);
-        Join<Study, Series> series = studySub.join(Study_.series);
+        Subquery<Series> sq = cq.subquery(Series.class);
+        Root<Series> series = sq.from(Series.class);
         sq.select(series);
-        sq.where(wildCard(cb, series.get(attr), value, matchUnknown, params));
-        return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(study
-                .get(nullField))) : cb.exists(sq);
-    }
-
-    private static Predicate studyInstanceSubQuery(CriteriaBuilder cb,
-            SingularAttribute<Instance, String> attr, String value,
-            SingularAttribute<Study, String> nullField, Path<Study> study,
-            boolean matchUnknown, List<Object> params) {
-        if (value.equals("*"))
-            return null;
-
-        CriteriaQuery<String> q = cb.createQuery(String.class);
-        Subquery<Instance> sq = q.subquery(Instance.class);
-        Root<Study> studySub = sq.correlate((Root<Study>) study);
-        Join<Study, Series> series = studySub.join(Study_.series);
-        Join<Series, Instance> instance = series.join(Series_.instances);
-        sq.select(instance);
-        sq.where(wildCard(cb, instance.get(attr), value, matchUnknown, params));
-        return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(study
-                .get(nullField))) : cb.exists(sq);
-    }
-
-    private static Predicate issuerOfAccessionNumber(CriteriaBuilder cb,
-            Path<Study> study, Attributes keys, boolean matchUnknown,
-            List<Object> params) {
-        if (!keys.containsValue(Tag.AccessionNumber))
-            return null;
-        Attributes attrs =
-                keys.getNestedDataset(new ItemPointer(
-                        Tag.IssuerOfAccessionNumberSequence));
-        if (attrs == null || attrs.isEmpty())
-            return null;
-        else
-            return studyIssuerSubQuery(cb, attrs, study, params, matchUnknown);
-    }
-
-    private static Predicate studyIssuerSubQuery(CriteriaBuilder cb,
-            Attributes attrs, Path<Study> study, List<Object> params,
-            boolean matchUnknown) {
-        CriteriaQuery<String> q = cb.createQuery(String.class);
-        Subquery<Issuer> sq = q.subquery(Issuer.class);
-        Root<Study> studySub = sq.correlate((Root<Study>) study);
-        Join<Study, Issuer> issuer =
-                studySub.join(Study_.issuerOfAccessionNumber);
-        sq.select(issuer);
-        sq.where(queryIssuer(cb, attrs, params, issuer, matchUnknown));
-        return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(study
-                .get(Study_.issuerOfAccessionNumber))) : cb.exists(sq);
-    }
-
-    private static <T> Predicate queryIssuer(CriteriaBuilder cb,
-            Attributes attrs, List<Object> params, Join<T, Issuer> issuer,
-            boolean matchUnknown) {
-        List<Predicate> predicates = new ArrayList<Predicate>();
-        add(predicates, wildCard(cb, issuer.get(Issuer_.entityID),
-                AttributeFilter.getString(attrs, Tag.LocalNamespaceEntityID),
+        sq.where(cb.equal(study, series.get(Series_.study)),
+                wildCard(cb, series.get(Series_.modality), modality,
                 matchUnknown, params));
-        add(predicates, wildCard(cb, issuer.get(Issuer_.entityUID),
-                AttributeFilter.getString(attrs, Tag.UniversalEntityID),
-                matchUnknown, params));
-        if (attrs.containsValue(Tag.UniversalEntityID))
-            add(predicates,
-                    wildCard(cb, issuer.get(Issuer_.entityUIDType),
-                            AttributeFilter.getString(attrs,
-                                    Tag.UniversalEntityIDType), matchUnknown,
-                            params));
-        return cb.and(predicates.toArray(new Predicate[predicates.size()]));
+        return cb.exists(sq);
     }
 
-    private static Predicate procedureCodes(CriteriaBuilder cb,
-            Path<Study> study, Attributes keys, boolean matchUnknown,
-            List<Object> params) {
-        if (!keys.containsValue(Tag.ProcedureCodeSequence))
+    private static Predicate withCode(CriteriaBuilder cb,
+            CriteriaQuery<Tuple> cq, Expression<Collection<Code>> collection,
+            Attributes item, boolean matchUnknown, List<Object> params) {
+        if (item == null || item.isEmpty())
             return null;
-        Attributes attrs =
-                keys
-                        .getNestedDataset(new ItemPointer(
-                                Tag.ProcedureCodeSequence));
-        if (attrs == null || attrs.isEmpty())
-            return null;
-        else
-            return studyCodesSubQuery(cb, attrs, study, params, matchUnknown);
-    }
 
-    private static Predicate studyCodesSubQuery(CriteriaBuilder cb,
-            Attributes attrs, Path<Study> study, List<Object> params,
-            boolean matchUnknown) {
-        if (!attrs.containsValue(Tag.CodeValue)
-                || !attrs.containsValue(Tag.CodingSchemeDesignator))
+        Subquery<Code> sq = cq.subquery(Code.class);
+        Root<Code> root = sq.from(Code.class);
+        sq.select(root);
+        ArrayList<Predicate> predicates = new ArrayList<Predicate>(4);
+        predicates.add(cb.isMember(root, collection));
+        boolean restrict = add(predicates,
+                wildCard(cb, root.get(Code_.codeValue),
+                    AttributeFilter.getString(item, Tag.CodeValue),
+                    false, params));
+        restrict = add(predicates,
+                wildCard(cb, root.get(Code_.codingSchemeDesignator),
+                    AttributeFilter.getString(item, Tag.CodingSchemeDesignator),
+                    false, params))
+                || restrict;
+        restrict = add(predicates,
+                wildCard(cb, root.get(Code_.codingSchemeVersion),
+                    AttributeFilter.getString(item, Tag.CodingSchemeVersion),
+                    false, params))
+                || restrict;
+        if (!restrict)
             return null;
-        CriteriaQuery<String> q = cb.createQuery(String.class);
-        Subquery<Code> sq = q.subquery(Code.class);
-        Root<Study> studySub = sq.correlate((Root<Study>) study);
-        Join<Study, Code> codes = studySub.join(Study_.procedureCodes);
-        sq.select(codes);
-        List<Predicate> predicates = new ArrayList<Predicate>();
-        add(predicates, wildCard(cb, codes.get(Code_.codeValue),
-                AttributeFilter.getString(attrs, Tag.CodeValue), matchUnknown,
-                params));
-        add(predicates, wildCard(cb, codes.get(Code_.codingSchemeDesignator),
-                AttributeFilter.getString(attrs, Tag.CodingSchemeDesignator),
-                matchUnknown, params));
-        add(predicates, wildCard(cb, codes.get(Code_.codingSchemeVersion),
-                AttributeFilter.getString(attrs, Tag.CodingSchemeVersion),
-                matchUnknown, params));
+
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
-        return matchUnknown ? cb.or(cb.exists(sq), cb.isEmpty(study
-                .get(Study_.procedureCodes))) : cb.exists(sq);
+        return matchUnknown 
+                ? cb.or(cb.exists(sq), cb.isEmpty(collection))
+                : cb.exists(sq);
     }
 
-    private static Predicate requestedAttributesSequence(CriteriaBuilder cb,
-            Path<Series> series, Attributes keys, boolean matchUnknown,
-            List<Object> params) {
-        if (!keys.containsValue(Tag.RequestAttributesSequence))
+    private static Predicate withIssuer(CriteriaBuilder cb,
+            CriteriaQuery<Tuple> cq, Path<Issuer> issuer,
+            Attributes item, boolean matchUnknown, List<Object> params) {
+        if (item == null || item.isEmpty())
             return null;
-        Attributes attrs =
-                keys.getNestedDataset(new ItemPointer(
-                        Tag.RequestAttributesSequence));
-        if (attrs.isEmpty() || attrs == null)
+
+        Subquery<Issuer> sq = cq.subquery(Issuer.class);
+        Root<Issuer> root = sq.from(Issuer.class);
+        sq.select(root);
+        ArrayList<Predicate> predicates = new ArrayList<Predicate>(4);
+        predicates.add(cb.equal(root, issuer));
+        boolean restrict = add(predicates,
+                wildCard(cb, root.get(Issuer_.entityID),
+                    AttributeFilter.getString(item, Tag.LocalNamespaceEntityID),
+                    false, params));
+        restrict = add(predicates,
+                wildCard(cb, root.get(Issuer_.entityUID),
+                    AttributeFilter.getString(item, Tag.UniversalEntityID),
+                    false, params))
+                || restrict;
+        restrict = add(predicates,
+                wildCard(cb, root.get(Issuer_.entityUIDType),
+                    AttributeFilter.getString(item, Tag.UniversalEntityIDType),
+                    false, params))
+                || restrict;
+        if (!restrict)
             return null;
-        else
-            return seriesRequestedAttributesSubQuery(cb, attrs, series, params,
-                    matchUnknown);
+
+        sq.where(predicates.toArray(new Predicate[predicates.size()]));
+        return matchUnknown 
+                ? cb.or(cb.exists(sq), cb.isNull(issuer))
+                : cb.exists(sq);
     }
 
-    private static Predicate seriesRequestedAttributesSubQuery(
-            CriteriaBuilder cb, Attributes attrs, Path<Series> series,
-            List<Object> params, boolean matchUnknown) {
-        CriteriaQuery<String> q = cb.createQuery(String.class);
-        Subquery<RequestAttributes> sq = q.subquery(RequestAttributes.class);
-        Root<Series> seriesSub = sq.correlate((Root<Series>) series);
-        Join<Series, RequestAttributes> requestedAttributes =
-                seriesSub.join(Series_.requestAttributes);
-        sq.select(requestedAttributes);
-        List<Predicate> predicates = new ArrayList<Predicate>();
-        add(predicates, wildCard(cb, requestedAttributes
-                .get(RequestAttributes_.requestedProcedureID), AttributeFilter
-                .getString(attrs, Tag.RequestedProcedureID), matchUnknown,
-                params));
-        add(predicates, wildCard(cb, requestedAttributes
-                .get(RequestAttributes_.scheduledProcedureStepID),
-                AttributeFilter.getString(attrs, Tag.ScheduledProcedureStepID),
-                matchUnknown, params));
-        add(
-                predicates,
-                personName(
-                        cb,
-                        requestedAttributes
-                                .get(RequestAttributes_.requestingPhysician),
-                        requestedAttributes
-                                .get(RequestAttributes_.requestingPhysicianIdeographicName),
-                        requestedAttributes
-                                .get(RequestAttributes_.requestingPhysicianPhoneticName),
-                        AttributeFilter.getString(attrs,
-                                Tag.ReferringPhysicianName), matchUnknown,
-                        params));
-        add(predicates, wildCard(cb, requestedAttributes
-                .get(RequestAttributes_.studyInstanceUID), AttributeFilter
-                .getString(attrs, Tag.StudyInstanceUID), matchUnknown, params));
-        add(predicates, wildCard(cb, requestedAttributes
-                .get(RequestAttributes_.accessionNumber), AttributeFilter
-                .getString(attrs, Tag.AccessionNumber), matchUnknown, params));
-        if (attrs.containsValue(Tag.AccessionNumber)) {
-            Attributes seq =
-                    attrs.getNestedDataset(new ItemPointer(
-                            Tag.IssuerOfAccessionNumberSequence));
-            if (seq != null && !seq.isEmpty()) {
-                Join<RequestAttributes, Issuer> issuer =
-                        requestedAttributes
-                                .join(RequestAttributes_.issuerOfAccessionNumber);
-                add(predicates, queryIssuer(cb, attrs, params, issuer,
-                        matchUnknown));
-            }
+    private static Predicate requestAttributesSequence(CriteriaBuilder cb,
+            CriteriaQuery<Tuple> cq,
+            Expression<Collection<RequestAttributes>> collection,
+            Attributes item, boolean matchUnknown, List<Object> params) {
+        if (item == null || item.isEmpty())
+            return null;
+
+        Subquery<RequestAttributes> sq = cq.subquery(RequestAttributes.class);
+        Root<RequestAttributes> root = sq.from(RequestAttributes.class);
+        sq.select(root);
+        ArrayList<Predicate> predicates = new ArrayList<Predicate>(4);
+        predicates.add(cb.isMember(root, collection));
+        boolean restrict = add(predicates, 
+                wildCard(cb, root.get(RequestAttributes_.requestedProcedureID),
+                    AttributeFilter.getString(item, Tag.RequestedProcedureID),
+                    matchUnknown, params));
+        restrict = add(predicates,
+                wildCard(cb, root.get(RequestAttributes_.scheduledProcedureStepID),
+                    AttributeFilter.getString(item, Tag.ScheduledProcedureStepID),
+                    matchUnknown, params))
+                || restrict;
+        restrict = add(predicates,
+                wildCard(cb, root.get(RequestAttributes_.requestingService),
+                    AttributeFilter.getString(item, Tag.RequestingService),
+                    matchUnknown, params))
+                || restrict;
+        restrict = add(predicates,
+                personName(cb,
+                    root.get(RequestAttributes_.requestingPhysician),
+                    root.get(RequestAttributes_.requestingPhysicianIdeographicName),
+                    root.get(RequestAttributes_.requestingPhysicianPhoneticName),
+                    AttributeFilter.getString(item, Tag.ReferringPhysicianName),
+                    matchUnknown, params))
+                || restrict;
+        restrict = add(predicates,
+                listOfUID(cb, root.get(RequestAttributes_.studyInstanceUID),
+                        item.getStrings(Tag.StudyInstanceUID), params))
+                || restrict;
+        if (add(predicates, wildCard(cb, root.get(RequestAttributes_.accessionNumber),
+                AttributeFilter.getString(item, Tag.AccessionNumber),
+                matchUnknown, params))) {
+            add(predicates, withIssuer(cb, cq,
+                    root.get(RequestAttributes_.issuerOfAccessionNumber),
+                    item.getNestedDataset(new ItemPointer(Tag.IssuerOfAccessionNumberSequence)),
+                    matchUnknown, params));
+            restrict = true;
         }
-        add(predicates, wildCard(cb, requestedAttributes
-                .get(RequestAttributes_.scheduledProcedureStepID),
-                AttributeFilter.getString(attrs, Tag.ScheduledProcedureStepID),
-                matchUnknown, params));
-        add(predicates, wildCard(cb, requestedAttributes
-                .get(RequestAttributes_.requestingService), AttributeFilter
-                .getString(attrs, Tag.RequestingService), matchUnknown, params));
+
+        if (!restrict)
+            return null;
+
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
-        return matchUnknown ? cb.or(cb.exists(sq), cb.isEmpty(series
-                .get(Series_.requestAttributes))) : cb.exists(sq);
+        return matchUnknown 
+                ? cb.or(cb.exists(sq), cb.isEmpty(collection))
+                : cb.exists(sq);
     }
 
     static Predicate matchUnknown0(CriteriaBuilder cb, Path<String> field,
@@ -458,10 +409,12 @@ class Matching {
         if (keys == null)
             return;
 
-        add(predicates, personName(cb, pat.get(Patient_.patientName), pat
-                .get(Patient_.patientIdeographicName), pat
-                .get(Patient_.patientPhoneticName), AttributeFilter.getString(
-                keys, Tag.PatientName), matchUnknown, params));
+        add(predicates, personName(cb, 
+                pat.get(Patient_.patientName),
+                pat.get(Patient_.patientIdeographicName),
+                pat.get(Patient_.patientPhoneticName),
+                AttributeFilter.getString(keys, Tag.PatientName),
+                matchUnknown, params));
         add(predicates, wildCard(cb, pat.get(Patient_.patientSex),
                 AttributeFilter.getString(keys, Tag.PatientSex), matchUnknown,
                 params));
@@ -469,9 +422,9 @@ class Matching {
                 Tag.PatientBirthDate, keys, matchUnknown, predicates, params);
     }
 
-    public static void study(CriteriaBuilder cb, Path<Patient> pat,
-            Path<Study> study, String[] pids, Attributes keys,
-            boolean matchUnknown, boolean combinedDateTime,
+    public static void study(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,
+            Path<Patient> pat, Path<Study> study, String[] pids,
+            Attributes keys, boolean matchUnknown, boolean combinedDateTime,
             List<Predicate> predicates, List<Object> params) {
         patient(cb, pat, pids, keys, matchUnknown, predicates, params);
         if (keys == null)
@@ -482,9 +435,9 @@ class Matching {
         add(predicates, wildCard(cb, study.get(Study_.studyID), AttributeFilter
                 .getString(keys, Tag.StudyID), matchUnknown, params));
         add(predicates, personName(cb,
-                study.get(Study_.referringPhysicianName), study
-                        .get(Study_.referringPhysicianIdeographicName), study
-                        .get(Study_.referringPhysicianPhoneticName),
+                study.get(Study_.referringPhysicianName),
+                study.get(Study_.referringPhysicianIdeographicName),
+                study.get(Study_.referringPhysicianPhoneticName),
                 AttributeFilter.getString(keys, Tag.ReferringPhysicianName),
                 matchUnknown, params));
         RangeMatching.rangeMatch(cb, study.get(Study_.studyDate), study
@@ -494,25 +447,28 @@ class Matching {
         add(predicates, wildCard(cb, study.get(Study_.studyDescription),
                 AttributeFilter.getString(keys, Tag.StudyDescription),
                 matchUnknown, params));
-        add(predicates, wildCard(cb, study.get(Study_.accessionNumber),
+        if (add(predicates, wildCard(cb, study.get(Study_.accessionNumber),
                 AttributeFilter.getString(keys, Tag.AccessionNumber),
-                matchUnknown, params));
-        add(predicates, studySeriesSubQuery(cb, Series_.modality,
+                matchUnknown, params))) {
+            add(predicates, withIssuer(cb, cq,
+                    study.get(Study_.issuerOfAccessionNumber),
+                    keys.getNestedDataset(new ItemPointer(Tag.IssuerOfAccessionNumberSequence)),
+                    matchUnknown, params));
+        }
+        add(predicates, modalitiesInStudy(cb, cq, study,
                 AttributeFilter.getString(keys, Tag.ModalitiesInStudy),
-                Study_.modalitiesInStudy, study, matchUnknown, params));
-        add(predicates, studyInstanceSubQuery(cb, Instance_.sopClassUID,
-                AttributeFilter.getString(keys, Tag.SOPClassesInStudy),
-                Study_.sopClassesInStudy, study, matchUnknown, params));
-        add(predicates, issuerOfAccessionNumber(cb, study, keys, matchUnknown,
-                params));
-        add(predicates, procedureCodes(cb, study, keys, matchUnknown, params));
+                matchUnknown, params));
+        add(predicates, withCode(cb, cq, study.get(Study_.procedureCodes),
+                keys.getNestedDataset(new ItemPointer(Tag.ProcedureCodeSequence)),
+                matchUnknown, params));
     }
 
-    public static void series(CriteriaBuilder cb, Path<Patient> pat,
-            Join<Series, Study> study, Path<Series> series, String[] pids,
-            Attributes keys, boolean matchUnknown, boolean combinedDateTime,
-            List<Predicate> predicates, List<Object> params) {
-        study(cb, pat, study, pids, keys, combinedDateTime, matchUnknown,
+    public static void series(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,
+            Path<Patient> pat, Join<Series, Study> study, Path<Series> series,
+            String[] pids, Attributes keys, boolean matchUnknown,
+            boolean combinedDateTime, List<Predicate> predicates,
+            List<Object> params) {
+        study(cb, cq, pat, study, pids, keys, combinedDateTime, matchUnknown,
                 predicates, params);
         if (keys == null)
             return;
@@ -535,23 +491,24 @@ class Matching {
         add(predicates, wildCard(cb, series.get(Series_.seriesDescription),
                 AttributeFilter.getString(keys, Tag.SeriesDescription),
                 matchUnknown, params));
-        add(predicates, requestedAttributesSequence(cb, series, keys,
+        add(predicates, requestAttributesSequence(cb, cq,
+                series.get(Series_.requestAttributes),
+                keys.getNestedDataset(new ItemPointer(Tag.RequestAttributesSequence)),
                 matchUnknown, params));
-        // TODO
     }
 
-    public static void instance(CriteriaBuilder cb, Path<Patient> pat,
-            Join<Series, Study> study, Path<Series> series,
+    public static void instance(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,
+            Path<Patient> pat, Join<Series, Study> study, Path<Series> series,
             Root<Instance> inst, String[] pids, Attributes keys,
             boolean matchUnknown, boolean combinedDateTime,
             List<Predicate> predicates, List<Object> params) {
-        series(cb, pat, study, series, pids, keys, matchUnknown,
+        series(cb, cq, pat, study, series, pids, keys, matchUnknown,
                 combinedDateTime, predicates, params);
         if (keys == null)
             return;
 
-        add(predicates, listOfUID(cb, inst.get(Instance_.sopInstanceUID), keys
-                .getStrings(Tag.SOPInstanceUID), params));
+        add(predicates, listOfUID(cb, inst.get(Instance_.sopInstanceUID), 
+                keys.getStrings(Tag.SOPInstanceUID), params));
         add(predicates, wildCard(cb, inst.get(Instance_.instanceNumber),
                 AttributeFilter.getString(keys, Tag.InstanceNumber),
                 matchUnknown, params));
