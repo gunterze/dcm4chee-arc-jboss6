@@ -61,6 +61,7 @@ public class ClearTestData {
         "MODS_IN_STUDY",
         "PROC_CODE_SEQ",
         "CONCEPT_NAME_CODE_SEQ",
+        "VERIFYING_OBSERVER_SEQ",
     };
 
     @Deployment

@@ -69,6 +69,7 @@ public class InitTestData {
         IssuerFactory.class,
         PatientFactory.class
     };
+
     private static final String[] RESOURCES = {
         "sc-1.xml",
         "pr-1.xml",
@@ -100,6 +101,9 @@ public class InitTestData {
         "concept-name-code-seq-1.xml",
         "concept-name-code-seq-2.xml",
         "concept-name-code-seq-3.xml",
+        "verifying-observer-seq-1.xml",
+        "verifying-observer-seq-2.xml",
+        "verifying-observer-seq-3.xml",
     };
 
     @Deployment

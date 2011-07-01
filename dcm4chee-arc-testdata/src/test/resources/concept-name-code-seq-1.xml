@@ -32,7 +32,7 @@
 <Value number="1">1.2.40.0.13.1.1.99.22.1</Value>
 </DicomAttribute>
 <DicomAttribute keyword="StudyID" tag="00200010" vr="SH">
-<Value number="1">CONCEPT_NAME_CODE_SEQ</Value>
+<Value number="1">CONCEPT_NAME</Value>
 </DicomAttribute>
 <DicomAttribute keyword="SeriesNumber" tag="00200011" vr="IS">
 <Value number="1">1</Value>
