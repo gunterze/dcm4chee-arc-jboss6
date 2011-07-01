@@ -18,7 +18,7 @@
 <Value number="1">PROC_CODE_1</Value>
 </DicomAttribute>
 <DicomAttribute keyword="CodingSchemeDesignator" tag="00080102" vr="SH">
-<Value number="1">99DCM4CHEE_TESTDATA</Value>
+<Value number="1">99DCM4CHEE_TEST</Value>
 </DicomAttribute>
 <DicomAttribute keyword="CodeMeaning" tag="00080104" vr="LO">
 <Value number="1">Meaning of PROC_CODE_1</Value>

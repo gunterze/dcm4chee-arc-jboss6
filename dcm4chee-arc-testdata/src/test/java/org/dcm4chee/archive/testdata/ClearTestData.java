@@ -53,6 +53,16 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class ClearTestData {
 
+    private static final String[] PIDS = {
+        "CT5",
+        "RANGE-MATCHING",
+        "ISSUER_OF_ACCNO",
+        "REQ_ATTRS_SEQ",
+        "MODS_IN_STUDY",
+        "PROC_CODE_SEQ",
+        "CONCEPT_NAME_CODE_SEQ",
+    };
+
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
@@ -64,12 +74,8 @@ public class ClearTestData {
 
     @Test
     public void removeTestData() {
-        removePatient.removePatient("CT5", "DCM4CHEE_TESTDATA");
-        removePatient.removePatient("RANGE-MATCHING", "DCM4CHEE_TESTDATA");
-        removePatient.removePatient("ISSUER_OF_ACCNO", "DCM4CHEE_TESTDATA");
-        removePatient.removePatient("REQ_ATTRS_SEQ", "DCM4CHEE_TESTDATA");
-        removePatient.removePatient("MODS_IN_STUDY", "DCM4CHEE_TESTDATA");
-        removePatient.removePatient("PROC_CODE_SEQ", "DCM4CHEE_TESTDATA");
+        for (String pid : PIDS)
+            removePatient.removePatient(pid, "DCM4CHEE_TESTDATA");
    }
 
 }

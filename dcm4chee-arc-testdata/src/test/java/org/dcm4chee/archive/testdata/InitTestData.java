@@ -62,103 +62,64 @@ public class InitTestData {
 
     private static final String SOURCE_AET = "SOURCE_AET";
     private static final String RETRIEVE_AETS = "RETRIEVE_AET";
+    private static final Class<?>[] CLASSES = {
+        InstanceStore.class,
+        InstanceStoreBean.class,
+        CodeFactory.class,
+        IssuerFactory.class,
+        PatientFactory.class
+    };
+    private static final String[] RESOURCES = {
+        "sc-1.xml",
+        "pr-1.xml",
+        "ct-1.xml",
+        "ct-2.xml",
+        "sr-1.xml",
+        "sr-2.xml",
+        "date-range-1.xml",
+        "date-range-2.xml",
+        "date-range-3.xml",
+        "date-range-4.xml",
+        "date-range-5.xml",
+        "date-range-6.xml",
+        "date-range-7.xml",
+        "accno-issuer-1.xml",
+        "accno-issuer-2.xml",
+        "accno-issuer-3.xml",
+        "req-attrs-seq-1.xml",
+        "req-attrs-seq-2.xml",
+        "req-attrs-seq-3.xml",
+        "mods-in-study-1.xml",
+        "mods-in-study-2.xml",
+        "mods-in-study-3.xml",
+        "mods-in-study-4.xml",
+        "mods-in-study-5.xml",
+        "proc-code-seq-1.xml",
+        "proc-code-seq-2.xml",
+        "proc-code-seq-3.xml",
+        "concept-name-code-seq-1.xml",
+        "concept-name-code-seq-2.xml",
+        "concept-name-code-seq-3.xml",
+    };
 
     @Deployment
     public static JavaArchive createDeployment() {
-       return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(InstanceStore.class,
-                        InstanceStoreBean.class,
-                        CodeFactory.class,
-                        IssuerFactory.class,
-                        PatientFactory.class)
-                .addAsResource("sc-1.xml")
-                .addAsResource("pr-1.xml")
-                .addAsResource("ct-1.xml")
-                .addAsResource("ct-2.xml")
-                .addAsResource("sr-1.xml")
-                .addAsResource("sr-2.xml")
-                .addAsResource("date-range-1.xml")
-                .addAsResource("date-range-2.xml")
-                .addAsResource("date-range-3.xml")
-                .addAsResource("date-range-4.xml")
-                .addAsResource("date-range-5.xml")
-                .addAsResource("date-range-6.xml")
-                .addAsResource("date-range-7.xml")
-                .addAsResource("accno-issuer-1.xml")
-                .addAsResource("accno-issuer-2.xml")
-                .addAsResource("accno-issuer-3.xml")
-                .addAsResource("req-attrs-seq-1.xml")
-                .addAsResource("req-attrs-seq-2.xml")
-                .addAsResource("req-attrs-seq-3.xml")
-                .addAsResource("mods-in-study-1.xml")
-                .addAsResource("mods-in-study-2.xml")
-                .addAsResource("mods-in-study-3.xml")
-                .addAsResource("mods-in-study-4.xml")
-                .addAsResource("mods-in-study-5.xml")
-                .addAsResource("proc-code-seq-1.xml")
-                .addAsResource("proc-code-seq-2.xml")
-                .addAsResource("proc-code-seq-3.xml");
-   }
+       JavaArchive archive = ShrinkWrap.create(JavaArchive.class, "test.jar");
+       for (Class<?> clazz : CLASSES)
+           archive.addClass(clazz);
+       for (String res : RESOURCES)
+           archive.addAsResource(res);
+       return archive;
+    }
 
     @EJB
     private InstanceStore instanceStore;
 
     @Test
     public void storeTestData() throws Exception {
-        instanceStore.store(SAXReader.parse("resource:sc-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:pr-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:ct-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:ct-2.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:sr-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:sr-2.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:date-range-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:date-range-2.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:date-range-3.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:date-range-4.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:date-range-5.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:date-range-6.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:date-range-7.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:accno-issuer-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:accno-issuer-2.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:accno-issuer-3.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:req-attrs-seq-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:req-attrs-seq-2.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:req-attrs-seq-3.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:mods-in-study-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:mods-in-study-2.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:mods-in-study-3.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:mods-in-study-4.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:mods-in-study-5.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:proc-code-seq-1.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:proc-code-seq-2.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
-        instanceStore.store(SAXReader.parse("resource:proc-code-seq-3.xml", null),
-                SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        for (String res : RESOURCES)
+            instanceStore.store(SAXReader.parse("resource:" + res, null),
+                    SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
         instanceStore.close();
     }
 
