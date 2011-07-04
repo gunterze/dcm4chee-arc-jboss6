@@ -9,4 +9,5 @@
 <DicomAttribute keyword="PerformingPhysicianName" tag="00081050" vr="PN"/>
 <DicomAttribute keyword="RequestingPhysician" tag="00321032" vr="PN"/>
 <DicomAttribute keyword="VerifyingObserverName" tag="0040A075" vr="PN"/> 
+<DicomAttribute keyword="TextValue" tag="0040A160" vr="UT"/>
 </NativeDicomModel>

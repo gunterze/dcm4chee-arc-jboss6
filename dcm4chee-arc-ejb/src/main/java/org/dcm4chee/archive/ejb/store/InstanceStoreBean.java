@@ -40,6 +40,7 @@ package org.dcm4chee.archive.ejb.store;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -55,7 +56,9 @@ import org.dcm4che.data.ItemPointer;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.util.StringUtils;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
+import org.dcm4chee.archive.persistence.ContentItem;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.RequestAttributes;
 import org.dcm4chee.archive.persistence.Series;
@@ -90,6 +93,8 @@ public class InstanceStoreBean implements InstanceStore {
                             new ItemPointer(Tag.ConceptNameCodeSequence))));
             inst.setVerifyingObservers(createVerifyingObservers(
                     attrs.getSequence(Tag.VerifyingObserverSequence)));
+            inst.setContentItems(createContentItems(
+                    attrs.getSequence(Tag.ContentSequence)));
             inst.setRetrieveAETs(retrieveAETs);
             inst.setExternalRetrieveAET(externalRetrieveAET);
             inst.setAvailability(availability);
@@ -221,6 +226,34 @@ public class InstanceStoreBean implements InstanceStore {
             list.add(new VerifyingObserver(item));
         return list;
     }
+
+    private Collection<ContentItem> createContentItems(Sequence seq) {
+        if (seq == null || seq.isEmpty())
+            return null;
+
+        Collection<ContentItem> list = new ArrayList<ContentItem>(seq.size());
+        for (Attributes item : seq) {
+            String type = item.getString(Tag.ValueType, null);
+            if ("CODE".equals(type)) {
+                list.add(new ContentItem(
+                        item.getString(Tag.RelationshipType, null),
+                        CodeFactory.getCode(em, item.getNestedDataset(
+                                new ItemPointer(Tag.ConceptNameCodeSequence))),
+                        CodeFactory.getCode(em, item.getNestedDataset(
+                                new ItemPointer(Tag.ConceptCodeSequence)))
+                        ));
+            } else if ("TEXT".equals(type)) {
+                list.add(new ContentItem(
+                        item.getString(Tag.RelationshipType, null),
+                        CodeFactory.getCode(em, item.getNestedDataset(
+                                new ItemPointer(Tag.ConceptNameCodeSequence))),
+                        AttributeFilter.getString(item, Tag.TextValue)
+                        ));
+            }
+        }
+        return list;
+    }
+
 
     private Series getSeries(Attributes attrs, String sourceAET,
             String retrieveAETs, String externalRetrieveAET,

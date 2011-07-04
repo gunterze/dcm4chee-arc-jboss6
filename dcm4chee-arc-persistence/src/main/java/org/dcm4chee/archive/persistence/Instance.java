@@ -165,6 +165,10 @@ public class Instance implements Serializable {
     @JoinColumn(name = "instance_fk")
     private Collection<VerifyingObserver> verifyingObservers;
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "instance_fk")
+    private Collection<ContentItem> contentItems;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "series_fk")
     private Series series;
@@ -297,6 +301,14 @@ public class Instance implements Serializable {
     public void setVerifyingObservers(
             Collection<VerifyingObserver> verifyingObservers) {
         this.verifyingObservers = verifyingObservers;
+    }
+
+    public Collection<ContentItem> getContentItems() {
+        return contentItems;
+    }
+
+    public void setContentItems(Collection<ContentItem> contentItems) {
+        this.contentItems = contentItems;
     }
 
     public Series getSeries() {

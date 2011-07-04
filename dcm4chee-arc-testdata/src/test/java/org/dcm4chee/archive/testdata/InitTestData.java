@@ -106,8 +106,10 @@ public class InitTestData {
         "verifying-observer-seq-3.xml",
         "birthdate-1.xml",
         "birthdate-2.xml",
-        "birthdate-3.xml"
-    };
+        "birthdate-3.xml",
+        "tf-info-1.xml",
+        "tf-info-2.xml",
+   };
 
     @Deployment
     public static JavaArchive createDeployment() {

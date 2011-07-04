@@ -65,6 +65,7 @@ public class ClearTestData {
         "DOB_20010101",
         "DOB_20020202",
         "DOB_NONE",
+        "TF_INFO",
     };
 
     @Deployment
