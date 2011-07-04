@@ -57,6 +57,7 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.ItemPointer;
 import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
+import org.dcm4chee.archive.ejb.query.RangeMatching.FormatDate;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Code;
 import org.dcm4chee.archive.persistence.Code_;
@@ -348,10 +349,10 @@ class Matching {
         ArrayList<Predicate> predicates = new ArrayList<Predicate>(2);
         predicates.add(cb.isMember(root, collection));
         boolean restrict = add(predicates, 
-                RangeMatching.rangeMatchDT(cb, 
+                RangeMatching.rangeMatch(cb, 
                     root.get(VerifyingObserver_.verificationDateTime), 
                     Tag.VerificationDateTime, 
-                    item, false, params));
+                    RangeMatching.FormatDate.DT, item, false, params));
         restrict = add(predicates, 
                 personName(cb, 
                     root.get(VerifyingObserver_.verifyingObserverName), 
@@ -482,7 +483,7 @@ class Matching {
                 AttributeFilter.getString(keys, Tag.PatientSex), matchUnknown,
                 params));
         add(predicates, RangeMatching.rangeMatch(cb, pat.get(Patient_.patientBirthDate),
-                Tag.PatientBirthDate, keys, matchUnknown, params));
+                Tag.PatientBirthDate, RangeMatching.FormatDate.DA,keys, matchUnknown, params));
     }
 
     public static void study(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,

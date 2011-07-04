@@ -206,7 +206,7 @@ public class RangeMatching {
                 predicate, cb.notEqual(field, "*"));
     }
 
-    static private enum FormatDate {
+    static enum FormatDate {
         DA {
             @Override
             String format(Date date) {
@@ -252,7 +252,7 @@ public class RangeMatching {
     }
 
     public static Predicate rangeMatch(CriteriaBuilder cb, Path<String> path,
-            int tag, Attributes keys, boolean matchUnknown, 
+            int tag, FormatDate format, Attributes keys, boolean matchUnknown, 
             List<Object> params) {
         if (!keys.containsValue(tag))
             return null;
@@ -260,19 +260,6 @@ public class RangeMatching {
         else
             return matchUnknown(cb, path, matchUnknown,
                     range(cb, path, keys.getDateRange(tag, null),
-                            FormatDate.DA, params));
+                            format, params));
     }
-    
-    public static Predicate rangeMatchDT(CriteriaBuilder cb, Path<String> path,
-            int tag, Attributes keys, boolean matchUnknown, 
-            List<Object> params) {
-        if (!keys.containsValue(tag))
-            return null;
-        
-        else
-            return matchUnknown(cb, path, matchUnknown,
-                    range(cb, path, keys.getDateRange(tag, null),
-                            FormatDate.DT, params));
-    }
-
 }
