@@ -62,6 +62,9 @@ public class ClearTestData {
         "PROC_CODE_SEQ",
         "CONCEPT_NAME_CODE_SEQ",
         "VERIFYING_OBSERVER_SEQ",
+        "DOB_20010101",
+        "DOB_20020202",
+        "DOB_NONE",
     };
 
     @Deployment

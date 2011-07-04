@@ -104,6 +104,8 @@ public class InitTestData {
         "verifying-observer-seq-1.xml",
         "verifying-observer-seq-2.xml",
         "verifying-observer-seq-3.xml",
+        "birthdate-1.xml",
+        "birthdate-2.xml",
     };
 
     @Deployment
