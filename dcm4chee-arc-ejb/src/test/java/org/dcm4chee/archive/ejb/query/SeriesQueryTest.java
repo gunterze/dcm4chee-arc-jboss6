@@ -80,9 +80,9 @@ public class SeriesQueryTest {
 
     @Test
     public void testByModality() throws Exception {
-        query.find(null, new String[] { "CT5", "DCM4CHEE_TESTDATA" },
+        query.find(null, ModalitiesInStudyPIDs,
                 modality("PR"), false, false);
-        assertTrue(countMatches(query, 1));
+        assertTrue(countMatches(query, 2));
         query.close();
     }
 

@@ -38,7 +38,6 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -63,7 +62,7 @@ import org.junit.runner.RunWith;
  */
 @RunWith(Arquillian.class)
 public class InstanceQueryTest {
-    
+
     private static final String[] ConceptCodeSeqPIDs =
             { "CONCEPT_NAME_CODE_SEQ", "DCM4CHEE_TESTDATA" };
 
@@ -72,12 +71,9 @@ public class InstanceQueryTest {
 
     @Deployment
     public static JavaArchive createDeployment() {
-       return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(
-                        InstanceQuery.class,
-                        InstanceQueryBean.class,
-                        Matching.class,
-                        RangeMatching.class);
+        return ShrinkWrap.create(JavaArchive.class, "test.jar").addClasses(
+                InstanceQuery.class, InstanceQueryBean.class, Matching.class,
+                RangeMatching.class);
     }
 
     @EJB
@@ -85,67 +81,81 @@ public class InstanceQueryTest {
 
     @Test
     public void testByVerificationFlag() throws Exception {
-        query.find(null, new String[] { "CT5", "DCM4CHEE_TESTDATA" },
-                verificationFlag("VERIFIED"), false, false);
-        assertTrue(query.hasMoreMatches());
-        query.nextMatch();
-        assertFalse(query.hasMoreMatches());
+        query.find(null, VerifyingObserverPIDs, verificationFlag("VERIFIED",
+                "SR"), false, false);
+        ArrayList<String> result = sopInstanceUIDResultList(query);
+        String SOPIUIDs[] =
+                { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3" };
+        Collection<String> col = Arrays.asList(SOPIUIDs);
+        assertTrue(equals(result, col));
         query.close();
+        ;
     }
-    
+
     @Test
     public void testByConceptCodeSequence() throws Exception {
-        query.find(null, ConceptCodeSeqPIDs, conceptCodeSeq("CONCEPT_NAME_1", 
+        query.find(null, ConceptCodeSeqPIDs, conceptCodeSeq("CONCEPT_NAME_1",
                 "99DCM4CHEE_TEST", null), false, false);
-        assertTrue(query.hasMoreMatches());
         ArrayList<String> result = sopInstanceUIDResultList(query);
-        String SOPIUIDs[] = {"1.2.40.0.13.1.1.99.22.1.1"};
+        String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.22.1.1" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
-        assertTrue(result.equals(col));
+        assertTrue(equals(result, col));
         query.close();
     }
-    
+
     @Test
     public void testByConceptCodeSequenceMatchUnknown() throws Exception {
-        query.find(null, ConceptCodeSeqPIDs, conceptCodeSeq("CONCEPT_NAME_2", 
+        query.find(null, ConceptCodeSeqPIDs, conceptCodeSeq("CONCEPT_NAME_2",
                 "99DCM4CHEE_TEST", null), true, false);
-        assertTrue(query.hasMoreMatches());
         ArrayList<String> result = sopInstanceUIDResultList(query);
-        String SOPIUIDs[] = {"1.2.40.0.13.1.1.99.22.1.2", "1.2.40.0.13.1.1.99.22.1.3"};
+        String SOPIUIDs[] =
+                { "1.2.40.0.13.1.1.99.22.1.2", "1.2.40.0.13.1.1.99.22.1.3" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
-        assertTrue(result.equals(col));
+        assertTrue(equals(result, col));
         query.close();
     }
-    
+
     @Test
     public void testByVerifyingObserver() throws Exception {
         query.find(null, VerifyingObserverPIDs, verifyingObserver(
                 "201106300830", "VerifyingObserver1"), false, false);
-        assertTrue(query.hasMoreMatches());
         ArrayList<String> result = sopInstanceUIDResultList(query);
-        String SOPIUIDs[] = {"1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3"};
+        String SOPIUIDs[] =
+                { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
         assertTrue(equals(result, col));
         query.close();
     }
-    
+
     @Test
     public void testByVerifyingObserverMatchUnknown() throws Exception {
         query.find(null, VerifyingObserverPIDs, verifyingObserver(
                 "201106300830", "VerifyingObserver1"), true, false);
-        assertTrue(query.hasMoreMatches());
         ArrayList<String> result = sopInstanceUIDResultList(query);
-        String SOPIUIDs[] = {"1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3", 
-                "1.2.40.0.13.1.1.99.23.1.1"};
+        String SOPIUIDs[] =
+                { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3",
+                        "1.2.40.0.13.1.1.99.23.1.1" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
         assertTrue(equals(result, col));
         query.close();
     }
-    
+
+    @Test
+    public void testByVerifyingObserverRange() throws Exception {
+        query.find(null, VerifyingObserverPIDs, verifyingObserver(
+                "201106300000-20110701235900", null), false, false);
+        ArrayList<String> result = sopInstanceUIDResultList(query);
+        String SOPIUIDs[] =
+                { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3" };
+        Collection<String> col = Arrays.asList(SOPIUIDs);
+        assertTrue(equals(result, col));
+        query.close();
+    }
+
     private boolean equals(ArrayList<String> result, Collection<String> col) {
-        if (result.containsAll(col) && result.size()==col.size())
+        if (result.containsAll(col) && result.size() == col.size())
             return true;
-        else 
+        else
             return false;
     }
 
@@ -158,10 +168,10 @@ public class InstanceQueryTest {
         return attrs;
     }
 
-    private Attributes verificationFlag(String value) {
+    private Attributes verificationFlag(String flag, String modality) {
         Attributes attrs = new Attributes(2);
-        attrs.setString(Tag.Modality, VR.CS, "SR");
-        attrs.setString(Tag.VerificationFlag, VR.CS, value);
+        attrs.setString(Tag.Modality, VR.CS, modality);
+        attrs.setString(Tag.VerificationFlag, VR.CS, flag);
         return attrs;
     }
 
@@ -175,7 +185,7 @@ public class InstanceQueryTest {
         attrs.newSequence(Tag.ConceptNameCodeSequence, 1).add(item);
         return attrs;
     }
-    
+
     private ArrayList<String> sopInstanceUIDResultList(InstanceQuery query)
             throws Exception {
         ArrayList<String> result = new ArrayList<String>();

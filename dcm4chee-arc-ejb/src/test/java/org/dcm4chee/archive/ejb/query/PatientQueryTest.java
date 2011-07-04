@@ -41,6 +41,10 @@ package org.dcm4chee.archive.ejb.query;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+
 import javax.ejb.EJB;
 
 import org.dcm4che.data.Attributes;
@@ -63,14 +67,13 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class PatientQueryTest {
 
+    private static String[] patientData = { "DOB*", "DCM4CHEE_TESTDATA" };
+
     @Deployment
     public static JavaArchive createDeployment() {
-       return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(
-                        PatientQuery.class,
-                        PatientQueryBean.class,
-                        Matching.class, 
-                        RangeMatching.class);
+        return ShrinkWrap.create(JavaArchive.class, "test.jar").addClasses(
+                PatientQuery.class, PatientQueryBean.class, Matching.class,
+                RangeMatching.class);
     }
 
     @EJB
@@ -78,10 +81,11 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientID() throws Exception {
-        query.find(null, new String[] { "CT5", "DCM4CHEE_TESTDATA" }, null, false);
-        assertTrue(query.hasMoreMatches());
-        query.nextMatch();
-        assertFalse(query.hasMoreMatches());
+        query.find(null, patientData, null, false);
+        ArrayList<String> result = patientIDResultList(query);
+        String patIDs[] = { "DOB_20010101", "DOB_20020202", "DOB_NONE" };
+        Collection<String> col = Arrays.asList(patIDs);
+        assertTrue(equals(result, col));
         query.close();
     }
 
@@ -96,10 +100,41 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientBirthDate() throws Exception {
-        query.find(null, null, patientBirthDate("19551003"), false);
-        assertTrue(query.hasMoreMatches());
-        query.nextMatch();
-        assertFalse(query.hasMoreMatches());
+        query.find(null, patientData, patientBirthDate("20010101"), false);
+        ArrayList<String> result = patientIDResultList(query);
+        String patIDs[] = { "DOB_20010101" };
+        Collection<String> col = Arrays.asList(patIDs);
+        assertTrue(equals(result, col));
+        query.close();
+    }
+
+    @Test
+    public void testByPatientBirthDateRange() throws Exception {
+        query.find(null, patientData, patientBirthDate("20010101-20020202"), false);
+        ArrayList<String> result = patientIDResultList(query);
+        String patIDs[] = { "DOB_20010101", "DOB_20020202" };
+        Collection<String> col = Arrays.asList(patIDs);
+        assertTrue(equals(result, col));
+        query.close();
+    }
+
+    @Test
+    public void testByPatientBirthDateMatchUnknown() throws Exception {
+        query.find(null, patientData, patientBirthDate("20010101"), true);
+        ArrayList<String> result = patientIDResultList(query);
+        String patIDs[] = { "DOB_20010101", "DOB_NONE" };
+        Collection<String> col = Arrays.asList(patIDs);
+        assertTrue(equals(result, col));
+        query.close();
+    }
+
+    @Test
+    public void testByPatientBirthDateRangeMatchUnknown() throws Exception {
+        query.find(null, patientData, patientBirthDate("20010101-20020202"), true);
+        ArrayList<String> result = patientIDResultList(query);
+        String patIDs[] = { "DOB_20010101", "DOB_20020202", "DOB_NONE" };
+        Collection<String> col = Arrays.asList(patIDs);
+        assertTrue(equals(result, col));
         query.close();
     }
 
@@ -111,9 +146,25 @@ public class PatientQueryTest {
 
     private Attributes patientName(String name) {
         Attributes attrs = new Attributes(2);
-        attrs.setString(Tag.SpecificCharacterSet, VR.CS, 
-                "ISO 2022 IR 6", "ISO 2022 IR 87");
+        attrs.setString(Tag.SpecificCharacterSet, VR.CS, "ISO 2022 IR 6",
+                "ISO 2022 IR 87");
         attrs.setString(Tag.PatientName, VR.PN, name);
         return attrs;
+    }
+
+    private ArrayList<String> patientIDResultList(PatientQuery query)
+            throws Exception {
+        ArrayList<String> result = new ArrayList<String>();
+        while (query.hasMoreMatches()) {
+            result.add(query.nextMatch().getString(Tag.PatientID, null));
+        }
+        return result;
+    }
+
+    private boolean equals(ArrayList<String> result, Collection<String> col) {
+        if (result.containsAll(col) && result.size() == col.size())
+            return true;
+        else
+            return false;
     }
 }
