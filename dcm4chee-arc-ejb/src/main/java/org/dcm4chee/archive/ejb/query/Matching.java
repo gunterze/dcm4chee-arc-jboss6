@@ -251,8 +251,7 @@ class Matching {
         sq.select(root);
         ArrayList<Predicate> predicates = new ArrayList<Predicate>(4);
         predicates.add(cb.isMember(root, collection));
-        boolean restrict = addCodePredicates(cb, item, params, root, predicates);
-        if (!restrict)
+        if (!addCodePredicates(cb, item, params, root, predicates))
             return null;
 
         sq.where(predicates.toArray(new Predicate[predicates.size()]));

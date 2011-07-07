@@ -58,83 +58,72 @@ import org.dcm4chee.archive.persistence.ContentItem_;
 /**
  * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
-public class ContentItemMatching {
+class ContentItemMatching {
 
     public static Predicate withContentItem(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq,
             Expression<Collection<ContentItem>> collection, Attributes item,
             List<Object> params) {
-        Attributes nameCodeSeq = item.getNestedDataset(Tag.ConceptNameCodeSequence);
-        if (invalidCodeSeq(nameCodeSeq))
-            return null;
-        
-        return selectSubquery(cb, cq, collection, item, params, nameCodeSeq,
-                item.getString(Tag.ValueType, null));
+        return withContentItem(cb, cq, collection, item,
+                item.getString(Tag.ValueType, null), params);
     }
 
-    private static Predicate selectSubquery(CriteriaBuilder cb,
+    private static Predicate withContentItem(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq,
             Expression<Collection<ContentItem>> collection, Attributes item,
-            List<Object> params, Attributes nameCodeSeq, String valueType) {
+            String valueType, List<Object> params) {
         if ("CODE".equals(valueType)){
-            Attributes conceptCodeSeq = item.getNestedDataset(Tag.ConceptCodeSequence);
-            if(invalidCodeSeq(conceptCodeSeq))
-                return null;
-            
-            return subquery(cq, cb, collection, nameCodeSeq, conceptCodeSeq,
-                    null, item, params);
+            Attributes conceptCode = item.getNestedDataset(Tag.ConceptCodeSequence);
+            return withContentItem(cq, cb, collection, item, conceptCode, null, params);
         }
         if("TEXT".equals(valueType)){
             String textValue = AttributeFilter.getString(item, Tag.TextValue);
-            return subquery(cq, cb, collection, nameCodeSeq, null,
-                    textValue, item, params);
+            return withContentItem(cq, cb, collection, item, null, textValue, params);
         }
         return null;
     }
 
-    private static Predicate subquery(CriteriaQuery<Tuple> cq, 
+    private static Predicate withContentItem(CriteriaQuery<Tuple> cq, 
             CriteriaBuilder cb, Expression<Collection<ContentItem>> collection, 
-            Attributes nameCodeSeq, Attributes conceptCodeSeq, 
-            String textValue, Attributes item, List<Object> params){
+            Attributes item, Attributes conceptCode, String textValue, List<Object> params) {
         Subquery<ContentItem> sq = cq.subquery(ContentItem.class);
         Root<ContentItem> contentItem = sq.from(ContentItem.class);
         sq.select(contentItem);
         ArrayList<Predicate> predicates = new ArrayList<Predicate>(4);
         predicates.add(cb.isMember(contentItem, collection));
-        boolean restrict = Matching.add(predicates, 
-                Matching.withCode(cb, cq, 
-                        contentItem.get(ContentItem_.conceptName), 
-                        nameCodeSeq, false, params));
-        restrict = Matching.add(predicates, 
-                Matching.wildCard(cb, 
-                        contentItem.get(ContentItem_.relationshipType), 
-                        item.getString(Tag.RelationshipType, null), 
-                        false, params))
-                 || restrict;
-        if ( conceptCodeSeq != null )
-            restrict = Matching.add(predicates, 
-                    Matching.withCode(cb, cq, 
-                            contentItem.get(ContentItem_.conceptCode), 
-                            conceptCodeSeq, false, params))
-                     || restrict;
-        if ( textValue != null )
-            restrict = Matching.add(predicates, 
-                    Matching.wildCard(cb, 
-                            contentItem.get(ContentItem_.textValue), 
-                            textValue,
-                            false, params))
-                     || restrict;
-        if (!restrict)
+        if (!addContentItemPredicates(cq, cb, item, conceptCode,
+                textValue, params, contentItem, predicates))
             return null;
 
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
         return cb.exists(sq);
     }
 
-    private static boolean invalidCodeSeq(Attributes codeSeq) {
-        return codeSeq == null 
-                || codeSeq.isEmpty()
-                || !codeSeq.containsValue(Tag.CodeValue)
-                || !codeSeq.containsValue(Tag.CodingSchemeDesignator);
+    private static boolean addContentItemPredicates(CriteriaQuery<Tuple> cq,
+            CriteriaBuilder cb, Attributes item, Attributes conceptCode,
+            String textValue, List<Object> params,
+            Root<ContentItem> contentItem, ArrayList<Predicate> predicates) {
+        boolean restrict = Matching.add(predicates, 
+                Matching.withCode(cb, cq, 
+                        contentItem.get(ContentItem_.conceptName), 
+                        item.getNestedDataset(Tag.ConceptNameCodeSequence),
+                        false, params));
+        restrict = Matching.add(predicates, 
+                Matching.wildCard(cb, 
+                        contentItem.get(ContentItem_.relationshipType), 
+                        AttributeFilter.getString(item, Tag.RelationshipType),
+                        false, params))
+               || restrict;
+        restrict = Matching.add(predicates, 
+                Matching.withCode(cb, cq, 
+                        contentItem.get(ContentItem_.conceptCode), 
+                        conceptCode, false, params))
+               || restrict;
+        restrict = Matching.add(predicates, 
+                Matching.wildCard(cb, 
+                        contentItem.get(ContentItem_.textValue), 
+                        textValue, false, params))
+               || restrict;
+        return restrict;
     }
 }
