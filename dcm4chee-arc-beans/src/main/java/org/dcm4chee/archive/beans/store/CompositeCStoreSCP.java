@@ -65,8 +65,8 @@ public class CompositeCStoreSCP extends BasicCStoreSCP {
     }
 
     @Override
-    protected void store(Association as, Attributes rq, Attributes ds,
-            String tsuid, File dir, File file, Attributes rsp)
+    protected boolean store(Association as, Attributes rq, Attributes ds,
+            Attributes fmi, File dir, File file, Attributes rsp)
             throws DicomServiceException {
         try {
             initInstanceStore(as).store(ds, as.getCallingAET(),
@@ -75,7 +75,8 @@ public class CompositeCStoreSCP extends BasicCStoreSCP {
             throw new DicomServiceException(rq, Status.OutOfResources,
                     causeOf(e));
         }
-        // super.store(as, rq, ds, tsuid, dir, file, rsp);
+        // super.store(as, rq, ds, fmi, dir, file, rsp);
+        return true;
     }
 
     private static Throwable causeOf(Throwable e) {
