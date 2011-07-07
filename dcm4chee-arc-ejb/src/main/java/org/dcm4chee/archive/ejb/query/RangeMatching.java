@@ -130,13 +130,15 @@ public class RangeMatching {
 
     private static Predicate range(CriteriaBuilder cb, Path<String> field,
             DateRange range, FormatDate dt, List<Object> params) {
-        if (range.getStartDate() == null)
-            return rangeOpenStart(cb, field, dt.format(range.getEndDate()), params);
-        if (range.getEndDate() == null)
-            return rangeOpenEnd(cb, field, dt.format(range.getStartDate()), params);
+        Date startDate = range.getStartDate();
+        Date endDate = range.getEndDate();
+        if (startDate == null)
+            return rangeOpenStart(cb, field, dt.format(endDate), params);
+        if (endDate == null)
+            return rangeOpenEnd(cb, field, dt.format(startDate), params);
         else
-            return rangeInterval(cb, field, range.getStartDate(), 
-                    range.getEndDate(), dt, params);
+            return rangeInterval(cb, field, startDate, 
+                    endDate, dt, params);
     }
 
     private static Predicate rangeOpenEnd(CriteriaBuilder cb,
@@ -224,7 +226,7 @@ public class RangeMatching {
     }
 
     public static Predicate rangeMatch(CriteriaBuilder cb, Path<String> path,
-            int tag, FormatDate format, Attributes keys, boolean matchUnknown, 
+            int tag, FormatDate dt, Attributes keys, boolean matchUnknown, 
             List<Object> params) {
         if (!keys.containsValue(tag))
             return null;
@@ -232,6 +234,6 @@ public class RangeMatching {
         else
             return matchUnknown(cb, path, matchUnknown,
                     range(cb, path, keys.getDateRange(tag, null),
-                            format, params));
+                            dt, params));
     }
 }

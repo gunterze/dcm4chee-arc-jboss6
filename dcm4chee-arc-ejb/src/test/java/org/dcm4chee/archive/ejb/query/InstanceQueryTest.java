@@ -47,6 +47,7 @@ import java.util.Collection;
 import javax.ejb.EJB;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.jboss.arquillian.api.Deployment;
@@ -68,12 +69,15 @@ public class InstanceQueryTest {
 
     private static final String[] VerifyingObserverPIDs =
             { "VERIFYING_OBSERVER_SEQ", "DCM4CHEE_TESTDATA" };
+    
+    private static final String[] TeachingFilePIDs =
+            { "TF_INFO", "DCM4CHEE_TESTDATA" };
 
     @Deployment
     public static JavaArchive createDeployment() {
         return ShrinkWrap.create(JavaArchive.class, "test.jar").addClasses(
                 InstanceQuery.class, InstanceQueryBean.class, Matching.class,
-                RangeMatching.class);
+                RangeMatching.class, ContentItemMatching.class);
     }
 
     @EJB
@@ -151,6 +155,71 @@ public class InstanceQueryTest {
         assertTrue(equals(result, col));
         query.close();
     }
+    
+    @Test
+    public void testByContentItem() throws Exception {
+        Attributes attrs = new Attributes(1);
+        Sequence contentSeq = attrs.newSequence(Tag.ContentSequence, 2);
+        contentSeq.add(contentSequenceItem("TCE101", "IHERADTF", null,
+                "CONTAINS", "Max"));
+        contentSeq.add(contentSequenceItem("TCE104", "IHERADTF", null,
+                "CONTAINS", "Max's Abstract"));
+        query.find(null, TeachingFilePIDs, attrs, false, false);
+        ArrayList<String> result = sopInstanceUIDResultList(query);
+        String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.27.1.1" };
+        Collection<String> col = Arrays.asList(SOPIUIDs);
+        assertTrue(equals(result, col));
+        query.close();
+    }
+    
+    @Test
+    public void testByContentItemSequence() throws Exception {
+        Attributes attrs = new Attributes(1);
+        Sequence contentSeq = attrs.newSequence(Tag.ContentSequence, 2);
+        contentSeq.add(contentSequenceItem("TCE104", "IHERADTF", null,
+                "CONTAINS", "Moritz's Abstract"));
+        contentSeq.add(contentSequenceCodeItem("TCE105", "IHERADTF", null,
+                "466.0", "I9C", null, "CONTAINS"));
+        query.find(null, TeachingFilePIDs, attrs, false, false);
+        ArrayList<String> result = sopInstanceUIDResultList(query);
+        String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.27.1.2" };
+        Collection<String> col = Arrays.asList(SOPIUIDs);
+        assertTrue(equals(result, col));
+        query.close();
+    }
+
+    private Attributes contentSequenceCodeItem(String value, String designator,
+            String version, String value2, String designator2, String version2,
+            String relationshipType) {
+        Attributes item = new Attributes(4);
+        item.setString(Tag.RelationshipType, VR.CS, relationshipType);
+        item.setString(Tag.ValueType, VR.CS, "CODE");
+        Attributes conceptName = new Attributes(3);
+        conceptName.setString(Tag.CodeValue, VR.SH, value);
+        conceptName.setString(Tag.CodingSchemeDesignator, VR.SH, designator);
+        conceptName.setString(Tag.CodingSchemeVersion, VR.SH, version);
+        item.newSequence(Tag.ConceptNameCodeSequence, 1).add(conceptName);
+        Attributes conceptCode = new Attributes(3);
+        conceptCode.setString(Tag.CodeValue, VR.SH, value2);
+        conceptCode.setString(Tag.CodingSchemeDesignator, VR.SH, designator2);
+        conceptCode.setString(Tag.CodingSchemeVersion, VR.SH, version2);
+        item.newSequence(Tag.ConceptCodeSequence, 1).add(conceptCode);
+        return item;
+}
+    
+    private Attributes contentSequenceItem(String value, String designator,
+            String version, String relationshipType, String textValue) {
+        Attributes item = new Attributes(4);
+        item.setString(Tag.RelationshipType, VR.CS, relationshipType);
+        item.setString(Tag.TextValue, VR.UT, textValue);
+        item.setString(Tag.ValueType, VR.CS, "TEXT");
+        Attributes nestedDs = new Attributes(3);
+        nestedDs.setString(Tag.CodeValue, VR.SH, value);
+        nestedDs.setString(Tag.CodingSchemeDesignator, VR.SH, designator);
+        nestedDs.setString(Tag.CodingSchemeVersion, VR.SH, version);
+        item.newSequence(Tag.ConceptNameCodeSequence, 1).add(nestedDs);
+        return item;
+}
 
     private boolean equals(ArrayList<String> result, Collection<String> col) {
         if (result.containsAll(col) && result.size() == col.size())
