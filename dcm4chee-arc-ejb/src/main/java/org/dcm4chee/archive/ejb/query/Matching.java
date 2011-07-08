@@ -599,7 +599,8 @@ class Matching {
         if (contentSeq != null)
             for (Attributes item : contentSeq) {
                 add(predicates, ContentItemMatching.withContentItem(cb, cq, 
-                        inst.get(Instance_.contentItems), item, params));
+                        inst.get(Instance_.contentItems), item, 
+                        item.getString(Tag.ValueType, null), params));
             }
     }
 

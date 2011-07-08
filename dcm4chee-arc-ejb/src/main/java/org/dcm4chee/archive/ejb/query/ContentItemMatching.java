@@ -63,14 +63,6 @@ class ContentItemMatching {
     public static Predicate withContentItem(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq,
             Expression<Collection<ContentItem>> collection, Attributes item,
-            List<Object> params) {
-        return withContentItem(cb, cq, collection, item,
-                item.getString(Tag.ValueType, null), params);
-    }
-
-    private static Predicate withContentItem(CriteriaBuilder cb,
-            CriteriaQuery<Tuple> cq,
-            Expression<Collection<ContentItem>> collection, Attributes item,
             String valueType, List<Object> params) {
         if ("CODE".equals(valueType)){
             Attributes conceptCode = item.getNestedDataset(Tag.ConceptCodeSequence);
