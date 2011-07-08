@@ -64,27 +64,21 @@ class ContentItemMatching {
             CriteriaQuery<Tuple> cq,
             Expression<Collection<ContentItem>> collection, Attributes item,
             String valueType, List<Object> params) {
-        if ("CODE".equals(valueType)){
-            Attributes conceptCode = item.getNestedDataset(Tag.ConceptCodeSequence);
-            return withContentItem(cq, cb, collection, item, conceptCode, null, params);
-        }
-        if("TEXT".equals(valueType)){
-            String textValue = AttributeFilter.getString(item, Tag.TextValue);
-            return withContentItem(cq, cb, collection, item, null, textValue, params);
+        if ("CODE".equals(valueType) || "TEXT".equals(valueType)){
+            return withContentItem(cq, cb, collection, item, params);
         }
         return null;
     }
 
     private static Predicate withContentItem(CriteriaQuery<Tuple> cq, 
             CriteriaBuilder cb, Expression<Collection<ContentItem>> collection, 
-            Attributes item, Attributes conceptCode, String textValue, List<Object> params) {
+            Attributes item, List<Object> params) {
         Subquery<ContentItem> sq = cq.subquery(ContentItem.class);
         Root<ContentItem> contentItem = sq.from(ContentItem.class);
         sq.select(contentItem);
         ArrayList<Predicate> predicates = new ArrayList<Predicate>(4);
         predicates.add(cb.isMember(contentItem, collection));
-        if (!addContentItemPredicates(cq, cb, item, conceptCode,
-                textValue, params, contentItem, predicates))
+        if (!addContentItemPredicates(cq, cb, item, params, contentItem, predicates))
             return null;
 
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
@@ -92,8 +86,7 @@ class ContentItemMatching {
     }
 
     private static boolean addContentItemPredicates(CriteriaQuery<Tuple> cq,
-            CriteriaBuilder cb, Attributes item, Attributes conceptCode,
-            String textValue, List<Object> params,
+            CriteriaBuilder cb, Attributes item, List<Object> params,
             Root<ContentItem> contentItem, ArrayList<Predicate> predicates) {
         boolean restrict = Matching.add(predicates, 
                 Matching.withCode(cb, cq, 
@@ -109,12 +102,12 @@ class ContentItemMatching {
         restrict = Matching.add(predicates, 
                 Matching.withCode(cb, cq, 
                         contentItem.get(ContentItem_.conceptCode), 
-                        conceptCode, false, params))
+                        item.getNestedDataset(Tag.ConceptCodeSequence), false, params))
                || restrict;
         restrict = Matching.add(predicates, 
                 Matching.wildCard(cb, 
                         contentItem.get(ContentItem_.textValue), 
-                        textValue, false, params))
+                        AttributeFilter.getString(item, Tag.TextValue), false, params))
                || restrict;
         return restrict;
     }
