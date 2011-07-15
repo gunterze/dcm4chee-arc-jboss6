@@ -220,4 +220,26 @@
     </attributes>
   </entity>
 
+  <entity class="File">
+    <table name="files" />
+    <sequence-generator name="seq" sequence-name="files_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="FileSystem">
+    <table name="filesystem" />
+    <sequence-generator name="seq" sequence-name="filesystem_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+    </attributes>
+  </entity>
+
 </entity-mappings>
