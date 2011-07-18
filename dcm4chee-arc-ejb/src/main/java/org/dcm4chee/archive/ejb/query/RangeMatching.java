@@ -83,9 +83,8 @@ public class RangeMatching {
         String endDate = DateUtils.formatDA(null, endDateRange);
         if (endDate.equals(startDate))
             return cb.and(cb.equal(date, startDate), 
-                    cb.and(
-                            rangeOpenEnd(cb,time, startTime, params), 
-                            rangeOpenStart(cb, time, endTime, params)));
+                    rangeOpenEnd(cb,time, startTime, params), 
+                    rangeOpenStart(cb, time, endTime, params));
         else
             return cb.and(
                     combinedRangeOpenEnd(cb, date, time, startDate, startTime, params), 
@@ -207,18 +206,20 @@ public class RangeMatching {
             long dateAndTimeTag, Attributes keys, boolean matchUnknown,
             boolean combinedDateTime, List<Predicate> predicates,
             List<Object> params) {
+        final boolean containsDateTag = keys.containsValue(dateTag);
+        final boolean containsTimeTag = keys.containsValue(timeTag);
         if (combinedDateTime 
-                && keys.containsValue(dateTag)
-                && keys.containsValue(timeTag))
+                && containsDateTag
+                && containsTimeTag)
             Matching.add(predicates, matchUnknown(cb, dateField, matchUnknown,
                     combinedRange(cb, dateField, timeField, keys.getDateRange(
                             dateAndTimeTag, null), params)));
         else {
-            if (keys.containsValue(dateTag))
+            if (containsDateTag)
                 Matching.add(predicates, matchUnknown(cb, dateField,
                         matchUnknown, range(cb, dateField, keys.getDateRange(
                                 dateTag, null), FormatDate.DA, params)));
-            if (keys.containsValue(timeTag))
+            if (containsTimeTag)
                 Matching.add(predicates, matchUnknown(cb, timeField,
                         matchUnknown, range(cb, timeField, keys.getDateRange(
                                 timeTag, null), FormatDate.TM, params)));

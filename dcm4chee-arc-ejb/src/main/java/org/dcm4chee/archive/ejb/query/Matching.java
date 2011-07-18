@@ -240,7 +240,7 @@ class Matching {
         return cb.exists(sq);
     }
 
-    static Predicate withCode(CriteriaBuilder cb,
+    private static Predicate withCode(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq, Expression<Collection<Code>> collection,
             Attributes item, boolean matchUnknown, List<Object> params) {
         if (item == null || item.isEmpty())
@@ -255,9 +255,7 @@ class Matching {
             return null;
 
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
-        return matchUnknown 
-                ? cb.or(cb.exists(sq), cb.isEmpty(collection))
-                : cb.exists(sq);
+        return matchUnknown ? cb.or(cb.exists(sq), cb.isEmpty(collection)) : cb.exists(sq);
     }
 
     static Predicate withCode(CriteriaBuilder cb,
@@ -271,8 +269,7 @@ class Matching {
         sq.select(root);
         ArrayList<Predicate> predicates = new ArrayList<Predicate>(4);
         predicates.add(cb.equal(root, path));
-        boolean restrict = addCodePredicates(cb, item, params, root, predicates);
-        if (!restrict)
+        if (!addCodePredicates(cb, item, params, root, predicates))
             return null;
 
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
@@ -420,15 +417,12 @@ class Matching {
             return null;
 
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
-        return matchUnknown 
-                ? cb.or(cb.exists(sq), cb.isEmpty(collection))
-                : cb.exists(sq);
+        return matchUnknown ? cb.or(cb.exists(sq), cb.isEmpty(collection)) : cb.exists(sq);
     }
 
-    static Predicate matchUnknown0(CriteriaBuilder cb, Path<String> field,
+    private static Predicate matchUnknown0(CriteriaBuilder cb, Path<String> field,
             boolean matchUnknown, Predicate predicate) {
-        return matchUnknown ? cb.or(predicate, cb.equal(field, "*"))
-                : predicate;
+        return matchUnknown ? cb.or(predicate, cb.equal(field, "*")) : predicate;
     }
 
     public static Predicate patientID(CriteriaBuilder cb, Path<String> idField,
