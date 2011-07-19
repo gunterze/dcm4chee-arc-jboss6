@@ -64,10 +64,13 @@ class ContentItemMatching {
             CriteriaQuery<Tuple> cq,
             Expression<Collection<ContentItem>> collection, Attributes item,
             String valueType, List<Object> params) {
-        if ("CODE".equals(valueType) || "TEXT".equals(valueType)){
+        if (validValueType(valueType))
             return withContentItem(cq, cb, collection, item, params);
-        }
         return null;
+    }
+
+    private static boolean validValueType(String valueType) {
+        return "CODE".equals(valueType) || "TEXT".equals(valueType);
     }
 
     private static Predicate withContentItem(CriteriaQuery<Tuple> cq, 
