@@ -38,9 +38,12 @@
 
 package org.dcm4chee.archive.ejb.query;
 
+import java.util.EnumSet;
+
 import javax.ejb.Local;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.net.service.Matches;
 
 /**
@@ -52,5 +55,5 @@ public interface PatientQuery extends Matches {
     public static final String JNDI_NAME = "PatientQueryBean/local";
 
     void find(Attributes rq, String[] pids, Attributes keys,
-            boolean matchUnknown);
+            EnumSet<QueryOption> queryOpts, boolean matchUnknown);
 }

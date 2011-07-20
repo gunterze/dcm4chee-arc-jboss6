@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.ejb.query;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -55,6 +56,7 @@ import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.Status;
+import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.Patient_;
@@ -77,7 +79,7 @@ public class PatientQueryBean implements PatientQuery {
 
     @Override
     public void find(Attributes rq, String[] pids, Attributes keys,
-            boolean matchUnknown) {
+            EnumSet<QueryOption> queryOpts, boolean matchUnknown) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<byte[]> cq = cb.createQuery(byte[].class);
         Root<Patient> pat = cq.from(Patient.class);
@@ -85,7 +87,7 @@ public class PatientQueryBean implements PatientQuery {
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
         predicates.add(cb.isNull(pat.get(Patient_.mergedWith)));
-        Matching.patient(cb, pat, pids, keys, matchUnknown, predicates, params);
+        Matching.patient(cb, pat, pids, keys, queryOpts, matchUnknown, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<byte[]> q = em.createQuery(cq);
         int i = 0;

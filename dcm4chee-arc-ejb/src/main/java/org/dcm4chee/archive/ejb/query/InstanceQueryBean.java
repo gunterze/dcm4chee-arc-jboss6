@@ -40,6 +40,7 @@ package org.dcm4chee.archive.ejb.query;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -59,6 +60,7 @@ import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.Status;
+import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Instance;
@@ -90,11 +92,11 @@ public class InstanceQueryBean implements InstanceQuery {
 
     @Override
     public void find(Attributes rq, String[] pids, Attributes keys,
-            boolean matchUnknown, boolean combinedDateTime) {
+            EnumSet<QueryOption> queryOpts, boolean matchUnknown) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         TypedQuery<Tuple> instQuery =
-                buildInstanceQuery(cb, pids, keys, matchUnknown,
-                        combinedDateTime);
+                buildInstanceQuery(cb, pids, keys, queryOpts,
+                        matchUnknown);
         results = instQuery.getResultList().iterator();
         seriesQuery = em.createNamedQuery(Series.FIND_ATTRIBUTES_BY_SERIES_PK);
     }
@@ -129,8 +131,8 @@ public class InstanceQueryBean implements InstanceQuery {
     }
 
     private TypedQuery<Tuple> buildInstanceQuery(CriteriaBuilder cb,
-            String[] pids, Attributes keys, boolean matchUnknown,
-            boolean combinedDateTime) {
+            String[] pids, Attributes keys, EnumSet<QueryOption> queryOpts,
+            boolean matchUnknown) {
         CriteriaQuery<Tuple> cq =  cb.createTupleQuery();
         Root<Instance> inst = cq.from(Instance.class);
         Join<Instance, Series> series = inst.join(Instance_.series);
@@ -146,7 +148,7 @@ public class InstanceQueryBean implements InstanceQuery {
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
         Matching.instance(cb, cq, pat, study, series, inst, pids, keys,
-                matchUnknown, combinedDateTime, predicates, params);
+                queryOpts, matchUnknown, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<Tuple> instQuery = em.createQuery(cq);
         int i = 0;

@@ -110,7 +110,9 @@ public class CompositeCFindSCP extends BasicCFindSCP {
     private Matches patientMatches(Association as, Attributes rq,
             Attributes keys) throws Exception {
         PatientQuery query = (PatientQuery) JNDIUtils.lookup(PatientQuery.JNDI_NAME);
-        query.find(rq, pids(keys), keys, matchUnknown);
+        String cuid = rq.getString(Tag.AffectedSOPClassUID);
+        ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
+        query.find(rq, pids(keys), keys, QueryOption.toOptions(extNeg), matchUnknown);
         return query;
     }
 
@@ -118,9 +120,8 @@ public class CompositeCFindSCP extends BasicCFindSCP {
             Attributes keys) throws Exception {
         String cuid = rq.getString(Tag.AffectedSOPClassUID, null);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        boolean combinedDateTime = QueryOption.hasOption(extNeg, QueryOption.DATETIME);
         StudyQuery query = (StudyQuery) JNDIUtils.lookup(StudyQuery.JNDI_NAME);
-        query.find(rq, pids(keys), keys, matchUnknown, combinedDateTime);
+        query.find(rq, pids(keys), keys, QueryOption.toOptions(extNeg), matchUnknown);
         return query;
     }
 
@@ -128,9 +129,8 @@ public class CompositeCFindSCP extends BasicCFindSCP {
             Attributes keys) throws Exception {
         String cuid = rq.getString(Tag.AffectedSOPClassUID, null);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        boolean combinedDateTime = QueryOption.hasOption(extNeg, QueryOption.DATETIME);
         SeriesQuery query = (SeriesQuery) JNDIUtils.lookup(SeriesQuery.JNDI_NAME);
-        query.find(rq, pids(keys), keys, matchUnknown, combinedDateTime);
+        query.find(rq, pids(keys), keys, QueryOption.toOptions(extNeg), matchUnknown);
         return query;
     }
 
@@ -138,9 +138,8 @@ public class CompositeCFindSCP extends BasicCFindSCP {
             Attributes keys) throws Exception {
         String cuid = rq.getString(Tag.AffectedSOPClassUID, null);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        boolean combinedDateTime = QueryOption.hasOption(extNeg, QueryOption.DATETIME);
         InstanceQuery query = (InstanceQuery) JNDIUtils.lookup(InstanceQuery.JNDI_NAME);
-        query.find(rq, pids(keys), keys, matchUnknown, combinedDateTime);
+        query.find(rq, pids(keys), keys, QueryOption.toOptions(extNeg), matchUnknown);
         return query;
     }
 

@@ -466,9 +466,10 @@ public class Series implements Serializable {
                     pn.getNormalizedString(PersonName.Group.Ideographic, "*");
             performingPhysicianPhoneticName =
                     pn.getNormalizedString(PersonName.Group.Phonetic, "*");
-            //TODO
-            performingPhysicianFamilyNameSoundex = "*";
-            performingPhysicianGivenNameSoundex = "*";
+            performingPhysicianFamilyNameSoundex = AttributeFilter.toFuzzy(
+                    pn.get(PersonName.Component.FamilyName));
+            performingPhysicianGivenNameSoundex = AttributeFilter.toFuzzy(
+                    pn.get(PersonName.Component.GivenName));
         }
         //TODO
         seriesCustomAttribute1 = "*";

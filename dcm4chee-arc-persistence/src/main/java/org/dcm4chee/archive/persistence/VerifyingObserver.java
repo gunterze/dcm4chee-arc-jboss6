@@ -106,9 +106,10 @@ public class VerifyingObserver implements Serializable {
                 pn.getNormalizedString(PersonName.Group.Ideographic, "*");
         verifyingObserverPhoneticName =
                 pn.getNormalizedString(PersonName.Group.Phonetic, "*");
-        //TODO
-        verifyingObserverFamilyNameSoundex = "*";
-        verifyingObserverGivenNameSoundex = "*";
+        verifyingObserverFamilyNameSoundex = AttributeFilter.toFuzzy(
+                pn.get(PersonName.Component.FamilyName));
+        verifyingObserverGivenNameSoundex = AttributeFilter.toFuzzy(
+                pn.get(PersonName.Component.GivenName));
     }
 
     public long getPk() {

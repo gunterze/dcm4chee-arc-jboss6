@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.ejb.query;
 
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -48,6 +49,7 @@ import javax.persistence.criteria.Predicate;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.DateRange;
+import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.util.DateUtils;
 
 /**
@@ -199,12 +201,12 @@ public class RangeMatching {
 
     public static void rangeMatch(CriteriaBuilder cb, Path<String> dateField,
             Path<String> timeField, int dateTag, int timeTag,
-            long dateAndTimeTag, Attributes keys, boolean matchUnknown,
-            boolean combinedDateTime, List<Predicate> predicates,
+            long dateAndTimeTag, Attributes keys, EnumSet<QueryOption> queryOpts,
+            boolean matchUnknown, List<Predicate> predicates,
             List<Object> params) {
         final boolean containsDateTag = keys.containsValue(dateTag);
         final boolean containsTimeTag = keys.containsValue(timeTag);
-        if (combinedDateTime && containsDateTag && containsTimeTag)
+        if (containsDateTag && containsTimeTag && queryOpts.contains(QueryOption.DATETIME))
             Matching.add(predicates, matchUnknown(cb, dateField, matchUnknown,
                     combinedRange(cb, dateField, timeField, keys.getDateRange(
                             dateAndTimeTag, null), params)));

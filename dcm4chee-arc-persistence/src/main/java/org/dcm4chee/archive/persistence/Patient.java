@@ -284,9 +284,10 @@ public class Patient implements Serializable {
                     pn.getNormalizedString(PersonName.Group.Ideographic, "*");
             patientPhoneticName =
                     pn.getNormalizedString(PersonName.Group.Phonetic, "*");
-            //TODO
-            patientFamilyNameSoundex = "*";
-            patientGivenNameSoundex = "*";
+            patientFamilyNameSoundex = AttributeFilter.toFuzzy(
+                    pn.get(PersonName.Component.FamilyName));
+            patientGivenNameSoundex = AttributeFilter.toFuzzy(
+                    pn.get(PersonName.Component.GivenName));
         }
         patientBirthDate = attrs.getString(Tag.PatientBirthDate, "*");
         patientSex = AttributeFilter.getString(attrs, Tag.PatientSex);

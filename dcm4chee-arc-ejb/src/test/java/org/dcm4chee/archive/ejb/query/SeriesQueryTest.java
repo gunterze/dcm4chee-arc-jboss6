@@ -40,11 +40,14 @@ package org.dcm4chee.archive.ejb.query;
 
 import static org.junit.Assert.*;
 
+import java.util.EnumSet;
+
 import javax.ejb.EJB;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4chee.archive.ejb.query.Matching;
 import org.dcm4chee.archive.ejb.query.SeriesQuery;
 import org.dcm4chee.archive.ejb.query.SeriesQueryBean;
@@ -68,6 +71,9 @@ public class SeriesQueryTest {
     private static final String[] ModalitiesInStudyPIDs =
             { "MODS_IN_STUDY", "DCM4CHEE_TESTDATA" };
 
+    private static final EnumSet<QueryOption> NO_QUERY_OPTION =
+            EnumSet.noneOf(QueryOption.class);
+    
     @Deployment
     public static JavaArchive createDeployment() {
         return ShrinkWrap.create(JavaArchive.class, "test.jar").addClasses(
@@ -81,35 +87,35 @@ public class SeriesQueryTest {
     @Test
     public void testByModality() throws Exception {
         query.find(null, ModalitiesInStudyPIDs,
-                modality("PR"), false, false);
+                modality("PR"), NO_QUERY_OPTION, false);
         assertTrue(countMatches(query, 2));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyPR() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), false, false);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), NO_QUERY_OPTION, false);
         assertTrue(countMatches(query,4));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyMatchUnknownPR() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), true, false);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), NO_QUERY_OPTION, true);
         assertTrue(countMatches(query, 5));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyCT() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), false, false);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), NO_QUERY_OPTION, false);
         assertTrue(countMatches(query, 2));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyMatchUnknownCT() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), true, false);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), NO_QUERY_OPTION, true);
         assertTrue(countMatches(query, 3));
         query.close();
     }
@@ -119,7 +125,7 @@ public class SeriesQueryTest {
         query.find(null, RequestedAttributesSeqPIDs,
                 requestAttributesSequence("P-9913", "9913.1", null,
                         "A1234", "DCM4CHEE_TESTDATA_ACCNO_ISSUER_1", null,
-                        null), false, false);
+                        null), NO_QUERY_OPTION, false);
         assertTrue(countMatches(query, 1));
         query.close();
     }

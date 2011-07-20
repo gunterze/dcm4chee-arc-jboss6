@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.ejb.query;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -57,6 +58,7 @@ import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.Status;
+import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Patient;
@@ -81,7 +83,7 @@ public class StudyQueryBean implements StudyQuery {
 
     @Override
     public void find(Attributes rq, String[] pids, Attributes keys,
-            boolean matchUnknown, boolean combinedDateTime) {
+            EnumSet<QueryOption> queryOpts, boolean matchUnknown) {
         this.rq = rq;
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Tuple> cq = cb.createTupleQuery();
@@ -99,8 +101,8 @@ public class StudyQueryBean implements StudyQuery {
                 pat.get(Patient_.encodedAttributes));
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
-        Matching.study(cb, cq, pat, study, pids, keys, matchUnknown,
-                combinedDateTime, predicates, params);
+        Matching.study(cb, cq, pat, study, pids, keys, queryOpts,
+                matchUnknown, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<Tuple> q = em.createQuery(cq);
         int i = 0;

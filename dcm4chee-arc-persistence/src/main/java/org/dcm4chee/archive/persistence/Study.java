@@ -442,9 +442,10 @@ public class Study implements Serializable {
                     pn.getNormalizedString(PersonName.Group.Ideographic, "*");
             referringPhysicianPhoneticName =
                     pn.getNormalizedString(PersonName.Group.Phonetic, "*");
-            //TODO
-            referringPhysicianFamilyNameSoundex = "*";
-            referringPhysicianGivenNameSoundex = "*";
+            referringPhysicianFamilyNameSoundex = AttributeFilter.toFuzzy(
+                    pn.get(PersonName.Component.FamilyName));
+            referringPhysicianGivenNameSoundex = AttributeFilter.toFuzzy(
+                    pn.get(PersonName.Component.GivenName));
         }
         //TODO
         studyCustomAttribute1 = "*";

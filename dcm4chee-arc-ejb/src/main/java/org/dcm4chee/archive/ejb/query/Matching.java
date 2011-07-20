@@ -40,6 +40,7 @@ package org.dcm4chee.archive.ejb.query;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 
 import javax.persistence.Tuple;
@@ -57,6 +58,7 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
+import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Code;
 import org.dcm4chee.archive.persistence.Code_;
@@ -145,12 +147,35 @@ class Matching {
     }
 
     private static Predicate personName(CriteriaBuilder cb,
-            Path<String> alphabethic, Path<String> ideographic,
-            Path<String> phonetic, String value, boolean matchUnknown,
+            Path<String> alphabethic,
+            Path<String> ideographic,
+            Path<String> phonetic,
+            Path<String> familyNameSoundex,
+            Path<String> givenNameSoundex,
+            String value,
+            EnumSet<QueryOption> queryOpts, boolean matchUnknown,
             List<Object> params) {
         if (value.equals("*"))
             return null;
 
+        return queryOpts.contains(QueryOption.FUZZY)
+                ? fuzzyPersonName(cb, familyNameSoundex, givenNameSoundex,
+                        value, matchUnknown, params)
+                : literalPersonName(cb, alphabethic, ideographic, phonetic,
+                        value, matchUnknown, params);
+    }
+
+    private static Predicate fuzzyPersonName(CriteriaBuilder cb,
+            Path<String> familyNameSoundex, Path<String> givenNameSoundex,
+            String value, boolean matchUnknown, List<Object> params) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    private static Predicate literalPersonName(CriteriaBuilder cb,
+            Path<String> alphabethic, Path<String> ideographic,
+            Path<String> phonetic, String value, boolean matchUnknown,
+            List<Object> params) {
         PersonName pn = new PersonName(value);
         Predicate predicate;
         String queryString =
@@ -329,7 +354,7 @@ class Matching {
 
     private static Predicate withObserver(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq, Expression<Collection<VerifyingObserver>> collection,
-            Attributes item, boolean matchUnknown, List<Object> params) {
+            Attributes item, EnumSet<QueryOption> queryOpts, boolean matchUnknown, List<Object> params) {
         if (item == null || item.isEmpty())
             return null;
 
@@ -347,9 +372,11 @@ class Matching {
                 personName(cb, 
                     root.get(VerifyingObserver_.verifyingObserverName), 
                     root.get(VerifyingObserver_.verifyingObserverIdeographicName), 
-                    root.get(VerifyingObserver_.verifyingObserverPhoneticName), 
-                    AttributeFilter.getString(item, Tag.VerifyingObserverName), 
-                    false, params))
+                    root.get(VerifyingObserver_.verifyingObserverPhoneticName),
+                    root.get(VerifyingObserver_.verifyingObserverFamilyNameSoundex),
+                    root.get(VerifyingObserver_.verifyingObserverGivenNameSoundex),
+                    AttributeFilter.getString(item, Tag.VerifyingObserverName),
+                    queryOpts, false, params))
                 || restrict;
         if (!restrict)
             return null;
@@ -361,7 +388,7 @@ class Matching {
     private static Predicate requestAttributesSequence(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq,
             Expression<Collection<RequestAttributes>> collection,
-            Attributes item, boolean matchUnknown, List<Object> params) {
+            Attributes item, EnumSet<QueryOption> queryOpts, boolean matchUnknown, List<Object> params) {
         if (item == null || item.isEmpty())
             return null;
 
@@ -389,8 +416,10 @@ class Matching {
                     root.get(RequestAttributes_.requestingPhysician),
                     root.get(RequestAttributes_.requestingPhysicianIdeographicName),
                     root.get(RequestAttributes_.requestingPhysicianPhoneticName),
+                    root.get(RequestAttributes_.requestingPhysicianFamilyNameSoundex),
+                    root.get(RequestAttributes_.requestingPhysicianGivenNameSoundex),
                     AttributeFilter.getString(item, Tag.ReferringPhysicianName),
-                    matchUnknown, params))
+                    queryOpts, matchUnknown, params))
                 || restrict;
         restrict = add(predicates,
                 listOfUID(cb, root.get(RequestAttributes_.studyInstanceUID),
@@ -463,8 +492,8 @@ class Matching {
     }
 
     public static void patient(CriteriaBuilder cb, Path<Patient> pat,
-            String[] pids, Attributes keys, boolean matchUnknown,
-            List<Predicate> predicates, List<Object> params) {
+            String[] pids, Attributes keys, EnumSet<QueryOption> queryOpts,
+            boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
         add(predicates, patientID(cb, pat.get(Patient_.patientID), pat
                 .get(Patient_.issuerOfPatientID), pids, matchUnknown, params));
         if (keys == null)
@@ -474,8 +503,10 @@ class Matching {
                 pat.get(Patient_.patientName),
                 pat.get(Patient_.patientIdeographicName),
                 pat.get(Patient_.patientPhoneticName),
+                pat.get(Patient_.patientFamilyNameSoundex),
+                pat.get(Patient_.patientGivenNameSoundex),
                 AttributeFilter.getString(keys, Tag.PatientName),
-                matchUnknown, params));
+                queryOpts, matchUnknown, params));
         add(predicates, wildCard(cb, pat.get(Patient_.patientSex),
                 AttributeFilter.getString(keys, Tag.PatientSex), matchUnknown,
                 params));
@@ -485,9 +516,9 @@ class Matching {
 
     public static void study(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,
             Path<Patient> pat, Path<Study> study, String[] pids,
-            Attributes keys, boolean matchUnknown, boolean combinedDateTime,
+            Attributes keys, EnumSet<QueryOption> queryOpts, boolean matchUnknown,
             List<Predicate> predicates, List<Object> params) {
-        patient(cb, pat, pids, keys, matchUnknown, predicates, params);
+        patient(cb, pat, pids, keys, queryOpts, matchUnknown, predicates, params);
         if (keys == null)
             return;
 
@@ -499,11 +530,15 @@ class Matching {
                 study.get(Study_.referringPhysicianName),
                 study.get(Study_.referringPhysicianIdeographicName),
                 study.get(Study_.referringPhysicianPhoneticName),
+                study.get(Study_.referringPhysicianFamilyNameSoundex),
+                study.get(Study_.referringPhysicianGivenNameSoundex),
                 AttributeFilter.getString(keys, Tag.ReferringPhysicianName),
-                matchUnknown, params));
-        RangeMatching.rangeMatch(cb, study.get(Study_.studyDate), study
-                .get(Study_.studyTime), Tag.StudyDate, Tag.StudyTime,
-                Tag.StudyDateAndTime, keys, matchUnknown, combinedDateTime,
+                queryOpts, matchUnknown, params));
+        RangeMatching.rangeMatch(cb,
+                study.get(Study_.studyDate),
+                study.get(Study_.studyTime),
+                Tag.StudyDate, Tag.StudyTime, Tag.StudyDateAndTime,
+                keys, queryOpts, matchUnknown,
                 predicates, params);
         add(predicates, wildCard(cb, study.get(Study_.studyDescription),
                 AttributeFilter.getString(keys, Tag.StudyDescription),
@@ -526,10 +561,10 @@ class Matching {
 
     public static void series(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,
             Path<Patient> pat, Join<Series, Study> study, Path<Series> series,
-            String[] pids, Attributes keys, boolean matchUnknown,
-            boolean combinedDateTime, List<Predicate> predicates,
+            String[] pids, Attributes keys, EnumSet<QueryOption> queryOpts,
+            boolean matchUnknown, List<Predicate> predicates,
             List<Object> params) {
-        study(cb, cq, pat, study, pids, keys, combinedDateTime, matchUnknown,
+        study(cb, cq, pat, study, pids, keys, queryOpts, matchUnknown,
                 predicates, params);
         if (keys == null)
             return;
@@ -548,8 +583,8 @@ class Matching {
                 .get(Series_.performedProcedureStepStartTime),
                 Tag.PerformedProcedureStepStartDate,
                 Tag.PerformedProcedureStepStartTime,
-                Tag.PerformedProcedureStepStartDateAndTime, keys, matchUnknown,
-                combinedDateTime, predicates, params);
+                Tag.PerformedProcedureStepStartDateAndTime, keys, queryOpts,
+                matchUnknown, predicates, params);
         add(predicates, wildCard(cb, series.get(Series_.seriesNumber),
                 AttributeFilter.getString(keys, Tag.SeriesNumber),
                 matchUnknown, params));
@@ -559,7 +594,7 @@ class Matching {
         add(predicates, requestAttributesSequence(cb, cq,
                 series.get(Series_.requestAttributes),
                 keys.getNestedDataset(Tag.RequestAttributesSequence),
-                matchUnknown, params));
+                queryOpts, matchUnknown, params));
         add(predicates, withCode(cb, cq, 
                 series.get(Series_.institutionCode),
                 keys.getNestedDataset(Tag.InstitutionCodeSequence), 
@@ -569,10 +604,10 @@ class Matching {
     public static void instance(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,
             Path<Patient> pat, Join<Series, Study> study, Path<Series> series,
             Root<Instance> inst, String[] pids, Attributes keys,
-            boolean matchUnknown, boolean combinedDateTime,
+            EnumSet<QueryOption> queryOpts, boolean matchUnknown,
             List<Predicate> predicates, List<Object> params) {
-        series(cb, cq, pat, study, series, pids, keys, matchUnknown,
-                combinedDateTime, predicates, params);
+        series(cb, cq, pat, study, series, pids, keys, queryOpts,
+                matchUnknown, predicates, params);
         if (keys == null)
             return;
 
@@ -593,7 +628,7 @@ class Matching {
         add(predicates, withObserver(cb, cq, 
                 inst.get(Instance_.verifyingObservers),
                 keys.getNestedDataset(Tag.VerifyingObserverSequence), 
-                matchUnknown, params));
+                queryOpts, matchUnknown, params));
         Sequence contentSeq = keys.getSequence(Tag.ContentSequence);
         if (contentSeq != null)
             for (Attributes item : contentSeq) {

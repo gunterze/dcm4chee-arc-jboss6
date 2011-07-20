@@ -40,6 +40,8 @@ package org.dcm4chee.archive.persistence;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.io.SAXReader;
+import org.dcm4che.soundex.FuzzyStr;
+import org.dcm4che.soundex.KPhonetik;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -62,6 +64,7 @@ public class AttributeFilter {
     public final static Attributes seriesFilter;
     public final static Attributes instanceFilter;
     public final static Attributes caseInsensitive;
+    public final static FuzzyStr fuzzyStr = new KPhonetik();
 
     static {
         try {
@@ -79,6 +82,12 @@ public class AttributeFilter {
         String val = attrs.getString(tag, null);
         return val != null
                 ? (caseInsensitive.contains(tag) ? val.toUpperCase() : val)
+                : "*";
+    }
+
+    public static String toFuzzy(String val) {
+        return val != null
+                ? fuzzyStr.toFuzzy(val)
                 : "*";
     }
 }
