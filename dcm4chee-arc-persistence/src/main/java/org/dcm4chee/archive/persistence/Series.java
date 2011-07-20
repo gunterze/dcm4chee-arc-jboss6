@@ -60,7 +60,6 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.ItemPointer;
 import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
 import org.dcm4che.util.DateUtils;
@@ -437,9 +436,10 @@ public class Series implements Serializable {
         stationName = AttributeFilter.getString(attrs, Tag.StationName);
         bodyPartExamined = AttributeFilter.getString(attrs, Tag.BodyPartExamined);
         laterality = AttributeFilter.getString(attrs, Tag.Laterality);
-        performedProcedureStepInstanceUID =
-            attrs.getNestedString(Tag.ReferencedSOPInstanceUID, "*",
-                    new ItemPointer(Tag.ReferencedPerformedProcedureStepSequence));
+        Attributes refPPS = attrs.getNestedDataset(Tag.ReferencedPerformedProcedureStepSequence);
+        performedProcedureStepInstanceUID = refPPS != null
+                ? attrs.getString(Tag.ReferencedSOPInstanceUID, "*")
+                : "*";
         Date dt = attrs.getDate(Tag.PerformedProcedureStepStartDateAndTime, null);
         if (dt != null) {
             performedProcedureStepStartDate = DateUtils.formatDA(null, dt);

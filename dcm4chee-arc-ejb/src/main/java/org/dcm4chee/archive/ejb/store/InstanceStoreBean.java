@@ -52,7 +52,6 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.PersistenceContextType;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.ItemPointer;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.util.StringUtils;
@@ -90,7 +89,7 @@ public class InstanceStoreBean implements InstanceStore {
             inst.setSeries(series);
             inst.setConceptNameCode(
                     CodeFactory.getCode(em, attrs.getNestedDataset(
-                            new ItemPointer(Tag.ConceptNameCodeSequence))));
+                            Tag.ConceptNameCodeSequence)));
             inst.setVerifyingObservers(createVerifyingObservers(
                     attrs.getSequence(Tag.VerifyingObserverSequence)));
             inst.setContentItems(createContentItems(
@@ -238,15 +237,15 @@ public class InstanceStoreBean implements InstanceStore {
                 list.add(new ContentItem(
                         item.getString(Tag.RelationshipType, null),
                         CodeFactory.getCode(em, item.getNestedDataset(
-                                new ItemPointer(Tag.ConceptNameCodeSequence))),
+                                Tag.ConceptNameCodeSequence)),
                         CodeFactory.getCode(em, item.getNestedDataset(
-                                new ItemPointer(Tag.ConceptCodeSequence)))
+                                Tag.ConceptCodeSequence))
                         ));
             } else if ("TEXT".equals(type)) {
                 list.add(new ContentItem(
                         item.getString(Tag.RelationshipType, null),
                         CodeFactory.getCode(em, item.getNestedDataset(
-                                new ItemPointer(Tag.ConceptNameCodeSequence))),
+                                Tag.ConceptNameCodeSequence)),
                         AttributeFilter.getString(item, Tag.TextValue)
                         ));
             }
@@ -271,7 +270,7 @@ public class InstanceStoreBean implements InstanceStore {
             series.setStudy(study);
             series.setInstitutionCode(
                     CodeFactory.getCode(em, attrs.getNestedDataset(
-                            new ItemPointer(Tag.InstitutionCodeSequence))));
+                            Tag.InstitutionCodeSequence)));
             series.setRequestAttributes(createRequestAttributes(
                     attrs.getSequence(Tag.RequestAttributesSequence)));
             series.setSourceAET(sourceAET);
@@ -302,7 +301,7 @@ public class InstanceStoreBean implements InstanceStore {
             RequestAttributes rqAttrs = new RequestAttributes(item);
             rqAttrs.setIssuerOfAccessionNumber(
                     IssuerFactory.getIssuer(em, item.getNestedDataset(
-                            new ItemPointer(Tag.IssuerOfAccessionNumberSequence))));
+                            Tag.IssuerOfAccessionNumberSequence)));
             list.add(rqAttrs);
         }
         return list;
@@ -321,7 +320,7 @@ public class InstanceStoreBean implements InstanceStore {
                     attrs.getSequence(Tag.ProcedureCodeSequence)));
             study.setIssuerOfAccessionNumber(
                     IssuerFactory.getIssuer(em, attrs.getNestedDataset(
-                            new ItemPointer(Tag.IssuerOfAccessionNumberSequence))));
+                            Tag.IssuerOfAccessionNumberSequence)));
             study.setModalitiesInStudy(attrs.getString(Tag.Modality, null));
             study.setSOPClassesInStudy(attrs.getString(Tag.SOPClassUID, null));
             study.setRetrieveAETs(retrieveAETs);
