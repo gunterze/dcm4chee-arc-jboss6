@@ -202,8 +202,7 @@ class Matching {
         if (value.equals("*"))
             return null;
 
-        return matchUnknown0(cb, field, matchUnknown, wildCard0(cb, field,
-                value, params));
+        return matchUnknown0(cb, field, matchUnknown, wildCard0(cb, field, value, params));
     }
 
     private static Predicate wildCard0(CriteriaBuilder cb, Path<String> field,
@@ -240,7 +239,7 @@ class Matching {
         return cb.exists(sq);
     }
 
-    static Predicate withCode(CriteriaBuilder cb,
+    private static Predicate withCode(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq, Expression<Collection<Code>> collection,
             Attributes item, boolean matchUnknown, List<Object> params) {
         if (item == null || item.isEmpty())
@@ -255,9 +254,7 @@ class Matching {
             return null;
 
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
-        return matchUnknown 
-                ? cb.or(cb.exists(sq), cb.isEmpty(collection))
-                : cb.exists(sq);
+        return matchUnknownCollection(cb, collection, matchUnknown, sq);
     }
 
     static Predicate withCode(CriteriaBuilder cb,
@@ -271,14 +268,11 @@ class Matching {
         sq.select(root);
         ArrayList<Predicate> predicates = new ArrayList<Predicate>(4);
         predicates.add(cb.equal(root, path));
-        boolean restrict = addCodePredicates(cb, item, params, root, predicates);
-        if (!restrict)
+        if (!addCodePredicates(cb, item, params, root, predicates))
             return null;
 
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
-        return matchUnknown 
-                ? cb.or(cb.exists(sq), cb.isNull(path))
-                : cb.exists(sq);
+        return matchUnknownPath(cb, path, matchUnknown, sq);
     }
 
     private static boolean addCodePredicates(CriteriaBuilder cb, Attributes item,
@@ -330,11 +324,9 @@ class Matching {
             return null;
 
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
-        return matchUnknown 
-                ? cb.or(cb.exists(sq), cb.isNull(issuer))
-                : cb.exists(sq);
+        return matchUnknownPath(cb, issuer, matchUnknown, sq);
     }
-    
+
     private static Predicate withObserver(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq, Expression<Collection<VerifyingObserver>> collection,
             Attributes item, boolean matchUnknown, List<Object> params) {
@@ -363,9 +355,7 @@ class Matching {
             return null;
 
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
-        return matchUnknown 
-                ? cb.or(cb.exists(sq), cb.isEmpty(collection))
-                : cb.exists(sq);
+        return matchUnknownCollection(cb, collection, matchUnknown, sq);
     }
 
     private static Predicate requestAttributesSequence(CriteriaBuilder cb,
@@ -420,15 +410,23 @@ class Matching {
             return null;
 
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
-        return matchUnknown 
-                ? cb.or(cb.exists(sq), cb.isEmpty(collection))
-                : cb.exists(sq);
+        return matchUnknownCollection(cb, collection, matchUnknown, sq);
     }
 
-    static Predicate matchUnknown0(CriteriaBuilder cb, Path<String> field,
+    private static <T> Predicate matchUnknownCollection(CriteriaBuilder cb,
+            Expression<Collection<T>> collection,
+            boolean matchUnknown, Subquery<T> sq) {
+        return matchUnknown ? cb.or(cb.exists(sq), cb.isEmpty(collection)) : cb.exists(sq);
+    }
+
+    private static <T> Predicate matchUnknownPath(CriteriaBuilder cb,
+            Path<T> issuer, boolean matchUnknown, Subquery<T> sq) {
+        return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(issuer)) : cb.exists(sq);
+    }
+
+    private static Predicate matchUnknown0(CriteriaBuilder cb, Path<String> field,
             boolean matchUnknown, Predicate predicate) {
-        return matchUnknown ? cb.or(predicate, cb.equal(field, "*"))
-                : predicate;
+        return matchUnknown ? cb.or(predicate, cb.equal(field, "*")) : predicate;
     }
 
     public static Predicate patientID(CriteriaBuilder cb, Path<String> idField,
@@ -459,8 +457,9 @@ class Matching {
             Path<String> idField, Path<String> issuerField, String id,
             String issuer, List<Object> params) {
         Predicate predicate = wildCard0(cb, idField, id, params);
-        return issuer == null ? predicate : cb.and(predicate, wildCard0(cb,
-                issuerField, issuer, params));
+        return issuer == null ? 
+                predicate: 
+                cb.and(predicate, wildCard0(cb, issuerField, issuer, params));
     }
 
     public static void patient(CriteriaBuilder cb, Path<Patient> pat,
