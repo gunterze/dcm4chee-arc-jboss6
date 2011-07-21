@@ -61,7 +61,7 @@ public class Utils {
         try {
             DicomOutputStream dos = new DicomOutputStream(out,
                     UID.ExplicitVRLittleEndian);
-            dos.writeDataset(null, attrs);
+            dos.writeDataset(null, tmp);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -87,9 +87,9 @@ public class Utils {
             int numberOfStudyRelatedInstances,
             String modalitiesInStudy,
             String sopClassesInStudy) {
-        attrs.setInt(Tag.NumberOfStudyRelatedSeries, VR.US,
+        attrs.setInt(Tag.NumberOfStudyRelatedSeries, VR.IS,
                 numberOfStudyRelatedSeries);
-        attrs.setInt(Tag.NumberOfStudyRelatedInstances, VR.US,
+        attrs.setInt(Tag.NumberOfStudyRelatedInstances, VR.IS,
                 numberOfStudyRelatedInstances);
         attrs.setString(Tag.ModalitiesInStudy, VR.CS,
                 modalitiesInStudy);
@@ -99,7 +99,7 @@ public class Utils {
 
     public static void setSeriesQueryAttributes(Attributes attrs,
             int numberOfSeriesRelatedInstances) {
-        attrs.setInt(Tag.NumberOfSeriesRelatedInstances, VR.US,
+        attrs.setInt(Tag.NumberOfSeriesRelatedInstances, VR.IS,
                 numberOfSeriesRelatedInstances);
     }
 
