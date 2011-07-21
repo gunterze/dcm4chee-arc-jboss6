@@ -319,10 +319,10 @@ public class Instance implements Serializable {
         this.series = series;
     }
 
-    public void setAttributes(Attributes attrs) {
+    public void setAttributes(Attributes attrs, AttributeFilter filter) {
         sopInstanceUID = attrs.getString(Tag.SOPInstanceUID, null);
         sopClassUID = attrs.getString(Tag.SOPClassUID, null);
-        instanceNumber = AttributeFilter.getString(attrs, Tag.InstanceNumber);
+        instanceNumber = filter.getString(attrs, Tag.InstanceNumber);
         Date dt = attrs.getDate(Tag.ContentDateAndTime, null);
         if (dt != null) {
             contentDate = DateUtils.formatDA(null, dt);
@@ -334,16 +334,15 @@ public class Instance implements Serializable {
             contentDate = "*";
             contentTime = "*";
         }
-        completionFlag = AttributeFilter.getString(attrs, Tag.CompletionFlag);
-        verificationFlag = AttributeFilter.getString(attrs, Tag.VerificationFlag);
+        completionFlag = filter.getString(attrs, Tag.CompletionFlag);
+        verificationFlag = filter.getString(attrs, Tag.VerificationFlag);
 
         //TODO
         instanceCustomAttribute1 = "*";
         instanceCustomAttribute2 = "*";
         instanceCustomAttribute3 = "*";
 
-        encodedAttributes = Utils.encodeAttributes(attrs,
-                AttributeFilter.instanceFilter);
+        encodedAttributes = Utils.encodeAttributes(attrs, filter.instanceFilter);
         
     }
 }

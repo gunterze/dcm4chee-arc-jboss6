@@ -47,10 +47,13 @@ import javax.ejb.EJB;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.dcm4che.io.SAXReader;
 import org.dcm4che.net.pdu.QueryOption;
+import org.dcm4che.soundex.ESoundex;
 import org.dcm4chee.archive.ejb.query.Matching;
 import org.dcm4chee.archive.ejb.query.SeriesQuery;
 import org.dcm4chee.archive.ejb.query.SeriesQueryBean;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -76,56 +79,84 @@ public class SeriesQueryTest {
     
     @Deployment
     public static JavaArchive createDeployment() {
-        return ShrinkWrap.create(JavaArchive.class, "test.jar").addClasses(
-                SeriesQuery.class, SeriesQueryBean.class, Matching.class,
-                RangeMatching.class);
+        return ShrinkWrap.create(JavaArchive.class, "test.jar")
+                .addClasses(
+                        SeriesQuery.class,
+                        SeriesQueryBean.class,
+                        Matching.class,
+                        RangeMatching.class);
     }
 
     @EJB
     private SeriesQuery query;
 
+    private AttributeFilter filter() throws Exception {
+        return new AttributeFilter(
+                SAXReader.parse("resource:dcm4chee-arc/patient-attribute-filter.xml"),
+                SAXReader.parse("resource:dcm4chee-arc/study-attribute-filter.xml"),
+                SAXReader.parse("resource:dcm4chee-arc/series-attribute-filter.xml"),
+                SAXReader.parse("resource:dcm4chee-arc/instance-attribute-filter.xml"),
+                SAXReader.parse("resource:dcm4chee-arc/case-insensitive-attributes.xml"),
+                new ESoundex());
+    }
+
     @Test
     public void testByModality() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs,
-                modality("PR"), NO_QUERY_OPTION, false);
+        query.find(null, ModalitiesInStudyPIDs, modality("PR"), filter(), NO_QUERY_OPTION, false);
         assertTrue(countMatches(query, 2));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyPR() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), NO_QUERY_OPTION, false);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(),
+                NO_QUERY_OPTION, false);
         assertTrue(countMatches(query,4));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyMatchUnknownPR() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), NO_QUERY_OPTION, true);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(),
+                NO_QUERY_OPTION, true);
         assertTrue(countMatches(query, 5));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyCT() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), NO_QUERY_OPTION, false);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(),
+                NO_QUERY_OPTION, false);
         assertTrue(countMatches(query, 2));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyMatchUnknownCT() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), NO_QUERY_OPTION, true);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(),
+                NO_QUERY_OPTION, true);
         assertTrue(countMatches(query, 3));
         query.close();
     }
 
     @Test
     public void testByRequestAttributesSequence() throws Exception {
-        query.find(null, RequestedAttributesSeqPIDs,
-                requestAttributesSequence("P-9913", "9913.1", null,
-                        "A1234", "DCM4CHEE_TESTDATA_ACCNO_ISSUER_1", null,
-                        null), NO_QUERY_OPTION, false);
+        Attributes keys = new Attributes(1);
+
+        Attributes item = new Attributes(4);
+        keys.newSequence(Tag.RequestAttributesSequence, 1).add(item);
+        item.setString(Tag.RequestedProcedureID, VR.SH, "P-9913");
+        item.setString(Tag.ScheduledProcedureStepID, VR.SH, "9913.1");
+        item.setNull(Tag.ReferringPhysicianName, VR.PN);
+        item.setString(Tag.AccessionNumber, VR.SH, "A1234");
+
+        Attributes issuer = new Attributes(3);
+        item.newSequence(Tag.IssuerOfAccessionNumberSequence, 1).add(issuer);
+        issuer.setString(Tag.LocalNamespaceEntityID, VR.UT, "DCM4CHEE_TESTDATA_ACCNO_ISSUER_1");
+        issuer.setNull(Tag.UniversalEntityID, VR.UT);
+        issuer.setNull(Tag.UniversalEntityIDType, VR.CS);
+        
+        query.find(null, RequestedAttributesSeqPIDs, keys, filter(), NO_QUERY_OPTION, false);
         assertTrue(countMatches(query, 1));
         query.close();
     }
@@ -149,26 +180,5 @@ public class SeriesQueryTest {
             i++;
         }
         return count==i;
-    }
-
-    private Attributes requestAttributesSequence(String reqProcId,
-            String schedProcId, String physName, String accNo, String entityId,
-            String entityUid, String entityType) {
-        Attributes item = new Attributes(4);
-        item.setString(Tag.RequestedProcedureID, VR.SH, reqProcId);
-        item.setString(Tag.ScheduledProcedureStepID, VR.SH, schedProcId);
-        item.setString(Tag.ReferringPhysicianName, VR.PN, physName);
-        item.setString(Tag.AccessionNumber, VR.SH, accNo);
-
-        Attributes issuer = new Attributes(3);
-        issuer.setString(Tag.LocalNamespaceEntityID, VR.UT, entityId);
-        issuer.setString(Tag.UniversalEntityID, VR.UT, entityUid);
-        issuer.setString(Tag.UniversalEntityIDType, VR.CS, entityType);
-
-        item.newSequence(Tag.IssuerOfAccessionNumberSequence, 1).add(issuer);
-
-        Attributes attrs = new Attributes(1);
-        attrs.newSequence(Tag.RequestAttributesSequence, 1).add(item);
-        return attrs;
     }
 }

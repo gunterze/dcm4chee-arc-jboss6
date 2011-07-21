@@ -45,6 +45,7 @@ import javax.ejb.Local;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.net.service.Matches;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -54,6 +55,6 @@ public interface InstanceQuery extends Matches {
 
     public static final String JNDI_NAME = "InstanceQueryBean/local";
 
-    void find(Attributes rq, String[] pids, Attributes keys,
+    void find(Attributes rq, String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, boolean matchUnknown);
 }

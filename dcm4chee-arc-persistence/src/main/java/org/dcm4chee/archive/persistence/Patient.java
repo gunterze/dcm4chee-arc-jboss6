@@ -265,11 +265,10 @@ public class Patient implements Serializable {
         return Utils.decodeAttributes(encodedAttributes);
     }
 
-    public void setAttributes(Attributes attrs) {
-        patientID = AttributeFilter.getString(attrs, Tag.PatientID);
-        issuerOfPatientID = 
-                AttributeFilter.getString(attrs, Tag.IssuerOfPatientID);
-        String s = AttributeFilter.getString(attrs, Tag.PatientName);
+    public void setAttributes(Attributes attrs, AttributeFilter filter) {
+        patientID = filter.getString(attrs, Tag.PatientID);
+        issuerOfPatientID = filter.getString(attrs, Tag.IssuerOfPatientID);
+        String s = filter.getString(attrs, Tag.PatientName);
         if (s.equals("*")) {
             patientName = "*";
             patientIdeographicName = "*";
@@ -278,25 +277,19 @@ public class Patient implements Serializable {
             patientGivenNameSoundex = "*";
         } else {
             PersonName pn = new PersonName(s, true);
-            patientName =
-                    pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
-            patientIdeographicName =
-                    pn.getNormalizedString(PersonName.Group.Ideographic, "*");
-            patientPhoneticName =
-                    pn.getNormalizedString(PersonName.Group.Phonetic, "*");
-            patientFamilyNameSoundex = AttributeFilter.toFuzzy(
-                    pn.get(PersonName.Component.FamilyName));
-            patientGivenNameSoundex = AttributeFilter.toFuzzy(
-                    pn.get(PersonName.Component.GivenName));
+            patientName = pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
+            patientIdeographicName = pn.getNormalizedString(PersonName.Group.Ideographic, "*");
+            patientPhoneticName = pn.getNormalizedString(PersonName.Group.Phonetic, "*");
+            patientFamilyNameSoundex = filter.toFuzzy(pn.get(PersonName.Component.FamilyName));
+            patientGivenNameSoundex = filter.toFuzzy(pn.get(PersonName.Component.GivenName));
         }
         patientBirthDate = attrs.getString(Tag.PatientBirthDate, "*");
-        patientSex = AttributeFilter.getString(attrs, Tag.PatientSex);
+        patientSex = filter.getString(attrs, Tag.PatientSex);
         //TODO
         patientCustomAttribute1 = "*";
         patientCustomAttribute2 = "*";
         patientCustomAttribute3 = "*";
 
-        encodedAttributes = Utils.encodeAttributes(attrs,
-                AttributeFilter.patientFilter);
+        encodedAttributes = Utils.encodeAttributes(attrs, filter.patientFilter);
     }
 }

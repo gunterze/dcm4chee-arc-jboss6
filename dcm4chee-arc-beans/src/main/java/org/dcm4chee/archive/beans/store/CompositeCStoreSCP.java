@@ -42,12 +42,14 @@ import java.io.File;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.io.DicomInputStream;
+import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.BasicCStoreSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.beans.util.JNDIUtils;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 
 /**
@@ -68,8 +70,10 @@ public class CompositeCStoreSCP extends BasicCStoreSCP {
     protected boolean store(Association as, Attributes rq, Attributes ds,
             Attributes fmi, File dir, File file, Attributes rsp)
             throws DicomServiceException {
+        ApplicationEntity ae = as.getApplicationEntity();
+        AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
         try {
-            initInstanceStore(as).store(ds, as.getCallingAET(),
+            initInstanceStore(as).store(ds, filter, as.getCallingAET(),
                     as.getCalledAET(), null, Availability.ONLINE);
         } catch (Exception e) {
             throw new DicomServiceException(rq, Status.OutOfResources,

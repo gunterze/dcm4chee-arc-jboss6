@@ -51,6 +51,50 @@
       factoryMethod="newSingleThreadScheduledExecutor" />
   </bean>
 
+  <!-- Attribute Filter -->
+  <bean name="AttributeFilter" class="org.dcm4chee.archive.persistence.AttributeFilter">
+    <constructor>
+      <parameter>
+        <bean name="PatientAttributeFilter" class="org.dcm4che.data.Attributes">
+            <constructor factoryClass="org.dcm4che.io.SAXReader" factoryMethod="parse">
+                <parameter>resource:dcm4chee-arc/patient-attribute-filter.xml</parameter>
+            </constructor>
+        </bean>
+      </parameter>
+      <parameter>
+        <bean name="StudyAttributeFilter" class="org.dcm4che.data.Attributes">
+            <constructor factoryClass="org.dcm4che.io.SAXReader" factoryMethod="parse">
+                <parameter>resource:dcm4chee-arc/study-attribute-filter.xml</parameter>
+            </constructor>
+        </bean>
+      </parameter>
+      <parameter>
+        <bean name="SeriesAttributeFilter" class="org.dcm4che.data.Attributes">
+            <constructor factoryClass="org.dcm4che.io.SAXReader" factoryMethod="parse">
+                <parameter>resource:dcm4chee-arc/series-attribute-filter.xml</parameter>
+            </constructor>
+        </bean>
+      </parameter>
+      <parameter>
+        <bean name="InstanceAttributeFilter" class="org.dcm4che.data.Attributes">
+            <constructor factoryClass="org.dcm4che.io.SAXReader" factoryMethod="parse">
+                <parameter>resource:dcm4chee-arc/instance-attribute-filter.xml</parameter>
+            </constructor>
+        </bean>
+      </parameter>
+      <parameter>
+        <bean name="CaseInsensitveAttributes" class="org.dcm4che.data.Attributes">
+            <constructor factoryClass="org.dcm4che.io.SAXReader" factoryMethod="parse">
+                <parameter>resource:dcm4chee-arc/case-insensitive-attributes.xml</parameter>
+            </constructor>
+        </bean>
+      </parameter>
+      <parameter>
+        <bean name="FuzzyStr" class="org.dcm4che.soundex.ESoundex" />
+      </parameter>
+    </constructor>
+  </bean>
+
   <!-- The DICOM Device -->
   <bean name="Device" class="org.dcm4che.net.Device">
     <constructor>
@@ -66,9 +110,14 @@
     <uncallback method="removeConnection" />
     <incallback method="addApplicationEntity" />
     <uncallback method="removeApplicationEntity" />
+    <install method="setProperty">
+      <parameter>org.dcm4chee.archive.persistence.AttributeFilter</parameter>
+      <parameter><inject bean="AttributeFilter" /></parameter>
+    </install>
     <start method="activate" />
     <stop method="deactivate" />
   </bean>
+
 
   <!-- The DICOM Connection -->
   <bean name="Connection" class="org.dcm4che.net.Connection">

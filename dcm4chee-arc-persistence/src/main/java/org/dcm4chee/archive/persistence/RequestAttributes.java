@@ -67,18 +67,13 @@ public class RequestAttributes implements Serializable {
 
     public RequestAttributes() {}
 
-    public RequestAttributes(Attributes item) {
-        accessionNumber =
-            AttributeFilter.getString(item, Tag.AccessionNumber);
-        studyInstanceUID =
-            AttributeFilter.getString(item, Tag.StudyInstanceUID);
-        requestedProcedureID =
-            AttributeFilter.getString(item, Tag.RequestedProcedureID);
-        scheduledProcedureStepID =
-            AttributeFilter.getString(item, Tag.ScheduledProcedureStepID);
-        requestingService =
-            AttributeFilter.getString(item, Tag.RequestingService);
-        String s = AttributeFilter.getString(item, Tag.RequestingPhysician);
+    public RequestAttributes(Attributes item, AttributeFilter filter) {
+        accessionNumber = filter.getString(item, Tag.AccessionNumber);
+        studyInstanceUID = filter.getString(item, Tag.StudyInstanceUID);
+        requestedProcedureID = filter.getString(item, Tag.RequestedProcedureID);
+        scheduledProcedureStepID = filter.getString(item, Tag.ScheduledProcedureStepID);
+        requestingService = filter.getString(item, Tag.RequestingService);
+        String s = filter.getString(item, Tag.RequestingPhysician);
         if (s.equals("*")) {
             requestingPhysician = "*";
             requestingPhysicianIdeographicName = "*";
@@ -93,9 +88,10 @@ public class RequestAttributes implements Serializable {
                     pn.getNormalizedString(PersonName.Group.Ideographic, "*");
             requestingPhysicianPhoneticName =
                     pn.getNormalizedString(PersonName.Group.Phonetic, "*");
-            //TODO
-            requestingPhysicianFamilyNameSoundex = "*";
-            requestingPhysicianGivenNameSoundex = "*";
+            requestingPhysicianFamilyNameSoundex =
+                    filter.toFuzzy(pn.get(PersonName.Component.FamilyName));
+            requestingPhysicianGivenNameSoundex =
+                    filter.toFuzzy(pn.get(PersonName.Component.GivenName));
         }
     }
 

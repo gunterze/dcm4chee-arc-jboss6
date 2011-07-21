@@ -152,7 +152,7 @@ class Matching {
             Path<String> phonetic,
             Path<String> familyNameSoundex,
             Path<String> givenNameSoundex,
-            String value,
+            String value, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, boolean matchUnknown,
             List<Object> params) {
         if (value.equals("*"))
@@ -160,14 +160,14 @@ class Matching {
 
         return queryOpts.contains(QueryOption.FUZZY)
                 ? fuzzyPersonName(cb, familyNameSoundex, givenNameSoundex,
-                        value, matchUnknown, params)
+                        value, filter, matchUnknown, params)
                 : literalPersonName(cb, alphabethic, ideographic, phonetic,
                         value, matchUnknown, params);
     }
 
     private static Predicate fuzzyPersonName(CriteriaBuilder cb,
             Path<String> familyNameSoundex, Path<String> givenNameSoundex,
-            String value, boolean matchUnknown, List<Object> params) {
+            String value, AttributeFilter filter, boolean matchUnknown, List<Object> params) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -266,7 +266,7 @@ class Matching {
 
     private static Predicate withCode(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq, Expression<Collection<Code>> collection,
-            Attributes item, boolean matchUnknown, List<Object> params) {
+            Attributes item, AttributeFilter filter, boolean matchUnknown, List<Object> params) {
         if (item == null || item.isEmpty())
             return null;
 
@@ -275,7 +275,7 @@ class Matching {
         sq.select(root);
         ArrayList<Predicate> predicates = new ArrayList<Predicate>(4);
         predicates.add(cb.isMember(root, collection));
-        if (!addCodePredicates(cb, item, params, root, predicates))
+        if (!addCodePredicates(cb, item, filter, params, root, predicates))
             return null;
 
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
@@ -283,7 +283,7 @@ class Matching {
     }
 
     static Predicate withCode(CriteriaBuilder cb,
-            CriteriaQuery<Tuple> cq, Path<Code> path, Attributes item,
+            CriteriaQuery<Tuple> cq, Path<Code> path, Attributes item, AttributeFilter filter,
             boolean matchUnknown, List<Object> params) {
         if (item == null || item.isEmpty())
             return null;
@@ -293,7 +293,7 @@ class Matching {
         sq.select(root);
         ArrayList<Predicate> predicates = new ArrayList<Predicate>(4);
         predicates.add(cb.equal(root, path));
-        if (!addCodePredicates(cb, item, params, root, predicates))
+        if (!addCodePredicates(cb, item, filter, params, root, predicates))
             return null;
 
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
@@ -301,28 +301,28 @@ class Matching {
     }
 
     private static boolean addCodePredicates(CriteriaBuilder cb, Attributes item,
-            List<Object> params, Root<Code> root,
+            AttributeFilter filter, List<Object> params, Root<Code> root,
             ArrayList<Predicate> predicates) {
         boolean restrict = add(predicates,
                 wildCard(cb, root.get(Code_.codeValue),
-                    AttributeFilter.getString(item, Tag.CodeValue),
-                    false, params));
+                        filter.getString(item, Tag.CodeValue),
+                        false, params));
         restrict = add(predicates,
                 wildCard(cb, root.get(Code_.codingSchemeDesignator),
-                    AttributeFilter.getString(item, Tag.CodingSchemeDesignator),
-                    false, params))
+                        filter.getString(item, Tag.CodingSchemeDesignator),
+                        false, params))
                 || restrict;
         restrict = add(predicates,
                 wildCard(cb, root.get(Code_.codingSchemeVersion),
-                    AttributeFilter.getString(item, Tag.CodingSchemeVersion),
-                    false, params))
+                        filter.getString(item, Tag.CodingSchemeVersion),
+                        false, params))
                 || restrict;
         return restrict;
     }
 
     private static Predicate withIssuer(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq, Path<Issuer> issuer,
-            Attributes item, boolean matchUnknown, List<Object> params) {
+            Attributes item, AttributeFilter filter, boolean matchUnknown, List<Object> params) {
         if (item == null || item.isEmpty())
             return null;
 
@@ -333,17 +333,17 @@ class Matching {
         predicates.add(cb.equal(root, issuer));
         boolean restrict = add(predicates,
                 wildCard(cb, root.get(Issuer_.entityID),
-                    AttributeFilter.getString(item, Tag.LocalNamespaceEntityID),
-                    false, params));
+                        filter.getString(item, Tag.LocalNamespaceEntityID),
+                        false, params));
         restrict = add(predicates,
                 wildCard(cb, root.get(Issuer_.entityUID),
-                    AttributeFilter.getString(item, Tag.UniversalEntityID),
-                    false, params))
+                        filter.getString(item, Tag.UniversalEntityID),
+                        false, params))
                 || restrict;
         restrict = add(predicates,
                 wildCard(cb, root.get(Issuer_.entityUIDType),
-                    AttributeFilter.getString(item, Tag.UniversalEntityIDType),
-                    false, params))
+                        filter.getString(item, Tag.UniversalEntityIDType),
+                        false, params))
                 || restrict;
         if (!restrict)
             return null;
@@ -354,7 +354,8 @@ class Matching {
 
     private static Predicate withObserver(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq, Expression<Collection<VerifyingObserver>> collection,
-            Attributes item, EnumSet<QueryOption> queryOpts, boolean matchUnknown, List<Object> params) {
+            Attributes item, AttributeFilter filter, EnumSet<QueryOption> queryOpts,
+            boolean matchUnknown, List<Object> params) {
         if (item == null || item.isEmpty())
             return null;
 
@@ -375,8 +376,8 @@ class Matching {
                     root.get(VerifyingObserver_.verifyingObserverPhoneticName),
                     root.get(VerifyingObserver_.verifyingObserverFamilyNameSoundex),
                     root.get(VerifyingObserver_.verifyingObserverGivenNameSoundex),
-                    AttributeFilter.getString(item, Tag.VerifyingObserverName),
-                    queryOpts, false, params))
+                    filter.getString(item, Tag.VerifyingObserverName),
+                    filter,queryOpts, false, params))
                 || restrict;
         if (!restrict)
             return null;
@@ -388,7 +389,8 @@ class Matching {
     private static Predicate requestAttributesSequence(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq,
             Expression<Collection<RequestAttributes>> collection,
-            Attributes item, EnumSet<QueryOption> queryOpts, boolean matchUnknown, List<Object> params) {
+            Attributes item, AttributeFilter filter, EnumSet<QueryOption> queryOpts,
+            boolean matchUnknown, List<Object> params) {
         if (item == null || item.isEmpty())
             return null;
 
@@ -399,17 +401,17 @@ class Matching {
         predicates.add(cb.isMember(root, collection));
         boolean restrict = add(predicates, 
                 wildCard(cb, root.get(RequestAttributes_.requestedProcedureID),
-                    AttributeFilter.getString(item, Tag.RequestedProcedureID),
-                    matchUnknown, params));
+                        filter.getString(item, Tag.RequestedProcedureID),
+                        matchUnknown, params));
         restrict = add(predicates,
                 wildCard(cb, root.get(RequestAttributes_.scheduledProcedureStepID),
-                    AttributeFilter.getString(item, Tag.ScheduledProcedureStepID),
-                    matchUnknown, params))
+                        filter.getString(item, Tag.ScheduledProcedureStepID),
+                        matchUnknown, params))
                 || restrict;
         restrict = add(predicates,
                 wildCard(cb, root.get(RequestAttributes_.requestingService),
-                    AttributeFilter.getString(item, Tag.RequestingService),
-                    matchUnknown, params))
+                        filter.getString(item, Tag.RequestingService),
+                        matchUnknown, params))
                 || restrict;
         restrict = add(predicates,
                 personName(cb,
@@ -418,7 +420,7 @@ class Matching {
                     root.get(RequestAttributes_.requestingPhysicianPhoneticName),
                     root.get(RequestAttributes_.requestingPhysicianFamilyNameSoundex),
                     root.get(RequestAttributes_.requestingPhysicianGivenNameSoundex),
-                    AttributeFilter.getString(item, Tag.ReferringPhysicianName),
+                    filter.getString(item, Tag.ReferringPhysicianName), filter,
                     queryOpts, matchUnknown, params))
                 || restrict;
         restrict = add(predicates,
@@ -426,12 +428,12 @@ class Matching {
                         item.getStrings(Tag.StudyInstanceUID), params))
                 || restrict;
         if (add(predicates, wildCard(cb, root.get(RequestAttributes_.accessionNumber),
-                AttributeFilter.getString(item, Tag.AccessionNumber),
+                filter.getString(item, Tag.AccessionNumber),
                 matchUnknown, params))) {
             add(predicates, withIssuer(cb, cq,
                     root.get(RequestAttributes_.issuerOfAccessionNumber),
                     item.getNestedDataset(Tag.IssuerOfAccessionNumberSequence),
-                    matchUnknown, params));
+                    filter, matchUnknown, params));
             restrict = true;
         }
 
@@ -492,8 +494,9 @@ class Matching {
     }
 
     public static void patient(CriteriaBuilder cb, Path<Patient> pat,
-            String[] pids, Attributes keys, EnumSet<QueryOption> queryOpts,
-            boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
+            String[] pids, Attributes keys, AttributeFilter filter,
+            EnumSet<QueryOption> queryOpts, boolean matchUnknown,
+            List<Predicate> predicates, List<Object> params) {
         add(predicates, patientID(cb, pat.get(Patient_.patientID), pat
                 .get(Patient_.issuerOfPatientID), pids, matchUnknown, params));
         if (keys == null)
@@ -505,34 +508,34 @@ class Matching {
                 pat.get(Patient_.patientPhoneticName),
                 pat.get(Patient_.patientFamilyNameSoundex),
                 pat.get(Patient_.patientGivenNameSoundex),
-                AttributeFilter.getString(keys, Tag.PatientName),
+                filter.getString(keys, Tag.PatientName), filter,
                 queryOpts, matchUnknown, params));
         add(predicates, wildCard(cb, pat.get(Patient_.patientSex),
-                AttributeFilter.getString(keys, Tag.PatientSex), matchUnknown,
+                filter.getString(keys, Tag.PatientSex), matchUnknown,
                 params));
         add(predicates, RangeMatching.rangeMatch(cb, pat.get(Patient_.patientBirthDate),
                 Tag.PatientBirthDate, RangeMatching.FormatDate.DA, keys, matchUnknown, params));
     }
 
     public static void study(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,
-            Path<Patient> pat, Path<Study> study, String[] pids,
-            Attributes keys, EnumSet<QueryOption> queryOpts, boolean matchUnknown,
+            Path<Patient> pat, Path<Study> study, String[] pids, Attributes keys,
+            AttributeFilter filter, EnumSet<QueryOption> queryOpts, boolean matchUnknown,
             List<Predicate> predicates, List<Object> params) {
-        patient(cb, pat, pids, keys, queryOpts, matchUnknown, predicates, params);
+        patient(cb, pat, pids, keys, filter, queryOpts, matchUnknown, predicates, params);
         if (keys == null)
             return;
 
         add(predicates, listOfUID(cb, study.get(Study_.studyInstanceUID), keys
                 .getStrings(Tag.StudyInstanceUID), params));
-        add(predicates, wildCard(cb, study.get(Study_.studyID), AttributeFilter
-                .getString(keys, Tag.StudyID), matchUnknown, params));
+        add(predicates, wildCard(cb, study.get(Study_.studyID),
+                filter.getString(keys, Tag.StudyID), matchUnknown, params));
         add(predicates, personName(cb,
                 study.get(Study_.referringPhysicianName),
                 study.get(Study_.referringPhysicianIdeographicName),
                 study.get(Study_.referringPhysicianPhoneticName),
                 study.get(Study_.referringPhysicianFamilyNameSoundex),
                 study.get(Study_.referringPhysicianGivenNameSoundex),
-                AttributeFilter.getString(keys, Tag.ReferringPhysicianName),
+                filter.getString(keys, Tag.ReferringPhysicianName), filter,
                 queryOpts, matchUnknown, params));
         RangeMatching.rangeMatch(cb,
                 study.get(Study_.studyDate),
@@ -541,30 +544,30 @@ class Matching {
                 keys, queryOpts, matchUnknown,
                 predicates, params);
         add(predicates, wildCard(cb, study.get(Study_.studyDescription),
-                AttributeFilter.getString(keys, Tag.StudyDescription),
+                filter.getString(keys, Tag.StudyDescription),
                 matchUnknown, params));
         if (add(predicates, wildCard(cb, study.get(Study_.accessionNumber),
-                AttributeFilter.getString(keys, Tag.AccessionNumber),
+                filter.getString(keys, Tag.AccessionNumber),
                 matchUnknown, params))) {
             add(predicates, withIssuer(cb, cq,
                     study.get(Study_.issuerOfAccessionNumber),
                     keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence),
-                    matchUnknown, params));
+                    filter, matchUnknown, params));
         }
         add(predicates, modalitiesInStudy(cb, cq, study,
-                AttributeFilter.getString(keys, Tag.ModalitiesInStudy),
+                filter.getString(keys, Tag.ModalitiesInStudy),
                 matchUnknown, params));
         add(predicates, withCode(cb, cq, study.get(Study_.procedureCodes),
                 keys.getNestedDataset(Tag.ProcedureCodeSequence),
-                matchUnknown, params));
+                filter, matchUnknown, params));
     }
 
     public static void series(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,
             Path<Patient> pat, Join<Series, Study> study, Path<Series> series,
-            String[] pids, Attributes keys, EnumSet<QueryOption> queryOpts,
-            boolean matchUnknown, List<Predicate> predicates,
-            List<Object> params) {
-        study(cb, cq, pat, study, pids, keys, queryOpts, matchUnknown,
+            String[] pids, Attributes keys, AttributeFilter filter,
+            EnumSet<QueryOption> queryOpts, boolean matchUnknown,
+            List<Predicate> predicates, List<Object> params) {
+        study(cb, cq, pat, study, pids, keys, filter, queryOpts, matchUnknown,
                 predicates, params);
         if (keys == null)
             return;
@@ -572,11 +575,11 @@ class Matching {
         add(predicates, listOfUID(cb, series.get(Series_.seriesInstanceUID),
                 keys.getStrings(Tag.SeriesInstanceUID), params));
         add(predicates, wildCard(cb, series.get(Series_.modality),
-                AttributeFilter.getString(keys, Tag.Modality), matchUnknown,
+                filter.getString(keys, Tag.Modality), matchUnknown,
                 params));
         add(predicates, wildCard(cb, series
                 .get(Series_.performedProcedureStepInstanceUID),
-                AttributeFilter.getString(keys, Tag.PerformedProcedureStepID),
+                filter.getString(keys, Tag.PerformedProcedureStepID),
                 matchUnknown, params));
         RangeMatching.rangeMatch(cb, series
                 .get(Series_.performedProcedureStepStartDate), series
@@ -586,27 +589,27 @@ class Matching {
                 Tag.PerformedProcedureStepStartDateAndTime, keys, queryOpts,
                 matchUnknown, predicates, params);
         add(predicates, wildCard(cb, series.get(Series_.seriesNumber),
-                AttributeFilter.getString(keys, Tag.SeriesNumber),
+                filter.getString(keys, Tag.SeriesNumber),
                 matchUnknown, params));
         add(predicates, wildCard(cb, series.get(Series_.seriesDescription),
-                AttributeFilter.getString(keys, Tag.SeriesDescription),
+                filter.getString(keys, Tag.SeriesDescription),
                 matchUnknown, params));
         add(predicates, requestAttributesSequence(cb, cq,
                 series.get(Series_.requestAttributes),
-                keys.getNestedDataset(Tag.RequestAttributesSequence),
+                keys.getNestedDataset(Tag.RequestAttributesSequence), filter,
                 queryOpts, matchUnknown, params));
         add(predicates, withCode(cb, cq, 
                 series.get(Series_.institutionCode),
-                keys.getNestedDataset(Tag.InstitutionCodeSequence), 
+                keys.getNestedDataset(Tag.InstitutionCodeSequence), filter,
                 matchUnknown, params));
     }
 
     public static void instance(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,
             Path<Patient> pat, Join<Series, Study> study, Path<Series> series,
-            Root<Instance> inst, String[] pids, Attributes keys,
+            Root<Instance> inst, String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, boolean matchUnknown,
             List<Predicate> predicates, List<Object> params) {
-        series(cb, cq, pat, study, series, pids, keys, queryOpts,
+        series(cb, cq, pat, study, series, pids, keys, filter, queryOpts,
                 matchUnknown, predicates, params);
         if (keys == null)
             return;
@@ -614,26 +617,26 @@ class Matching {
         add(predicates, listOfUID(cb, inst.get(Instance_.sopInstanceUID), 
                 keys.getStrings(Tag.SOPInstanceUID), params));
         add(predicates, wildCard(cb, inst.get(Instance_.instanceNumber),
-                AttributeFilter.getString(keys, Tag.InstanceNumber),
+                filter.getString(keys, Tag.InstanceNumber),
                 matchUnknown, params));
         add(predicates, wildCard(cb, inst.get(Instance_.verificationFlag),
-                AttributeFilter.getString(keys, Tag.VerificationFlag),
+                filter.getString(keys, Tag.VerificationFlag),
                 matchUnknown, params));
         add(predicates, wildCard(cb, inst.get(Instance_.sopClassUID),
-                AttributeFilter.getString(keys, Tag.SOPClassUID), matchUnknown,
+                filter.getString(keys, Tag.SOPClassUID), matchUnknown,
                 params));
         add(predicates, withCode(cb, cq, inst.get(Instance_.conceptNameCode),
-                keys.getNestedDataset(Tag.ConceptNameCodeSequence),
+                keys.getNestedDataset(Tag.ConceptNameCodeSequence), filter,
                 matchUnknown, params));
         add(predicates, withObserver(cb, cq, 
                 inst.get(Instance_.verifyingObservers),
-                keys.getNestedDataset(Tag.VerifyingObserverSequence), 
-                queryOpts, matchUnknown, params));
+                keys.getNestedDataset(Tag.VerifyingObserverSequence),
+                filter, queryOpts, matchUnknown, params));
         Sequence contentSeq = keys.getSequence(Tag.ContentSequence);
         if (contentSeq != null)
             for (Attributes item : contentSeq) {
                 add(predicates, ContentItemMatching.withContentItem(cb, cq, 
-                        inst.get(Instance_.contentItems), item, 
+                        inst.get(Instance_.contentItems), item, filter,
                         item.getString(Tag.ValueType, null), params));
             }
     }

@@ -39,53 +39,51 @@
 package org.dcm4chee.archive.persistence;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.io.SAXReader;
 import org.dcm4che.soundex.FuzzyStr;
-import org.dcm4che.soundex.KPhonetik;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 public class AttributeFilter {
 
-    private static final String PATIENT_ATTRIBUTE_FILTER =
-            "resource:patient-attribute-filter.xml";
-    private static final String STUDY_ATTRIBUTE_FILTER =
-            "resource:study-attribute-filter.xml";
-    private static final String SERIES_ATTRIBUTE_FILTER =
-            "resource:series-attribute-filter.xml";
-    private static final String INSTANCE_ATTRIBUTE_FILTER =
-            "resource:instance-attribute-filter.xml";
-    private static final String CASE_INSENSITIVE_ATTRIBUTES =
-            "resource:case-insensitive-attributes.xml";
+    final Attributes patientFilter;
+    final Attributes studyFilter;
+    final Attributes seriesFilter;
+    final Attributes instanceFilter;
+    private final Attributes caseInsensitive;
+    private final FuzzyStr fuzzyStr;
 
-    public final static Attributes patientFilter;
-    public final static Attributes studyFilter;
-    public final static Attributes seriesFilter;
-    public final static Attributes instanceFilter;
-    public final static Attributes caseInsensitive;
-    public final static FuzzyStr fuzzyStr = new KPhonetik();
-
-    static {
-        try {
-            patientFilter = SAXReader.parse(PATIENT_ATTRIBUTE_FILTER, null);
-            studyFilter = SAXReader.parse(STUDY_ATTRIBUTE_FILTER, null);
-            seriesFilter = SAXReader.parse(SERIES_ATTRIBUTE_FILTER, null);
-            instanceFilter = SAXReader.parse(INSTANCE_ATTRIBUTE_FILTER, null);
-            caseInsensitive = SAXReader.parse(CASE_INSENSITIVE_ATTRIBUTES, null);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public AttributeFilter(Attributes patientFilter, Attributes studyFilter,
+            Attributes seriesFilter, Attributes instanceFilter,
+            Attributes caseInsensitive, FuzzyStr fuzzyStr) {
+        if (patientFilter == null)
+            throw new NullPointerException("patientFilter");
+        if (studyFilter == null)
+            throw new NullPointerException("studyFilter");
+        if (seriesFilter == null)
+            throw new NullPointerException("seriesFilter");
+        if (instanceFilter == null)
+            throw new NullPointerException("instanceFilter");
+        if (caseInsensitive == null)
+            throw new NullPointerException("caseInsensitive");
+        if (fuzzyStr == null)
+            throw new NullPointerException("fuzzyStr");
+        this.patientFilter = patientFilter;
+        this.studyFilter = studyFilter;
+        this.seriesFilter = seriesFilter;
+        this.instanceFilter = instanceFilter;
+        this.caseInsensitive = caseInsensitive;
+        this.fuzzyStr = fuzzyStr;
     }
 
-    public static String getString(Attributes attrs, int tag) {
+    public String getString(Attributes attrs, int tag) {
         String val = attrs.getString(tag, null);
         return val != null
                 ? (caseInsensitive.contains(tag) ? val.toUpperCase() : val)
                 : "*";
     }
 
-    public static String toFuzzy(String val) {
+    public String toFuzzy(String val) {
         return val != null
                 ? fuzzyStr.toFuzzy(val)
                 : "*";

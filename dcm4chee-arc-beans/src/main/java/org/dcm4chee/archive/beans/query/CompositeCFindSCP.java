@@ -43,6 +43,7 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.AttributesValidator;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.Status;
@@ -56,6 +57,7 @@ import org.dcm4chee.archive.ejb.query.InstanceQuery;
 import org.dcm4chee.archive.ejb.query.PatientQuery;
 import org.dcm4chee.archive.ejb.query.SeriesQuery;
 import org.dcm4chee.archive.ejb.query.StudyQuery;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -112,7 +114,9 @@ public class CompositeCFindSCP extends BasicCFindSCP {
         PatientQuery query = (PatientQuery) JNDIUtils.lookup(PatientQuery.JNDI_NAME);
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        query.find(rq, pids(keys), keys, QueryOption.toOptions(extNeg), matchUnknown);
+        ApplicationEntity ae = as.getApplicationEntity();
+        AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
+        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), matchUnknown);
         return query;
     }
 
@@ -121,7 +125,9 @@ public class CompositeCFindSCP extends BasicCFindSCP {
         String cuid = rq.getString(Tag.AffectedSOPClassUID, null);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         StudyQuery query = (StudyQuery) JNDIUtils.lookup(StudyQuery.JNDI_NAME);
-        query.find(rq, pids(keys), keys, QueryOption.toOptions(extNeg), matchUnknown);
+        ApplicationEntity ae = as.getApplicationEntity();
+        AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
+        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), matchUnknown);
         return query;
     }
 
@@ -130,7 +136,9 @@ public class CompositeCFindSCP extends BasicCFindSCP {
         String cuid = rq.getString(Tag.AffectedSOPClassUID, null);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         SeriesQuery query = (SeriesQuery) JNDIUtils.lookup(SeriesQuery.JNDI_NAME);
-        query.find(rq, pids(keys), keys, QueryOption.toOptions(extNeg), matchUnknown);
+        ApplicationEntity ae = as.getApplicationEntity();
+        AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
+        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), matchUnknown);
         return query;
     }
 
@@ -139,7 +147,9 @@ public class CompositeCFindSCP extends BasicCFindSCP {
         String cuid = rq.getString(Tag.AffectedSOPClassUID, null);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         InstanceQuery query = (InstanceQuery) JNDIUtils.lookup(InstanceQuery.JNDI_NAME);
-        query.find(rq, pids(keys), keys, QueryOption.toOptions(extNeg), matchUnknown);
+        ApplicationEntity ae = as.getApplicationEntity();
+        AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
+        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), matchUnknown);
         return query;
     }
 

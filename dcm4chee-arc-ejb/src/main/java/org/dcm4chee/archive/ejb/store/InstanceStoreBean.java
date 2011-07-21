@@ -70,34 +70,30 @@ import org.dcm4chee.archive.persistence.VerifyingObserver;
 @Stateful
 public class InstanceStoreBean implements InstanceStore {
 
-    @PersistenceContext(unitName = "dcm4chee-arc",
-            type = PersistenceContextType.EXTENDED)
+    @PersistenceContext(unitName = "dcm4chee-arc", type = PersistenceContextType.EXTENDED)
     private EntityManager em;
-    private final HashMap<String,Series> cachedSeries =
-            new HashMap<String,Series>();
+    private final HashMap<String,Series> cachedSeries = new HashMap<String,Series>();
 
     @Override
-    public Instance store(Attributes attrs, String sourceAET,
-             String retrieveAETs, String externalRetrieveAET,
-             Availability availability) {
+    public Instance store(Attributes attrs, AttributeFilter filter, String sourceAET,
+             String retrieveAETs, String externalRetrieveAET, Availability availability) {
         try {
             return findInstance(attrs.getString(Tag.SOPInstanceUID, null));
         } catch (NoResultException e) {
             Instance inst = new Instance();
-            Series series = getSeries(attrs, sourceAET, retrieveAETs,
+            Series series = getSeries(attrs, filter, sourceAET, retrieveAETs,
                     externalRetrieveAET, availability);
             inst.setSeries(series);
             inst.setConceptNameCode(
-                    CodeFactory.getCode(em, attrs.getNestedDataset(
-                            Tag.ConceptNameCodeSequence)));
+                    CodeFactory.getCode(em, attrs.getNestedDataset(Tag.ConceptNameCodeSequence)));
             inst.setVerifyingObservers(createVerifyingObservers(
-                    attrs.getSequence(Tag.VerifyingObserverSequence)));
+                    attrs.getSequence(Tag.VerifyingObserverSequence), filter));
             inst.setContentItems(createContentItems(
-                    attrs.getSequence(Tag.ContentSequence)));
+                    attrs.getSequence(Tag.ContentSequence), filter));
             inst.setRetrieveAETs(retrieveAETs);
             inst.setExternalRetrieveAET(externalRetrieveAET);
             inst.setAvailability(availability);
-            inst.setAttributes(attrs);
+            inst.setAttributes(attrs, filter);
             em.persist(inst);
             Study study = series.getStudy();
             incNumberOfSeriesRelatedInstances(series);
@@ -215,18 +211,18 @@ public class InstanceStoreBean implements InstanceStore {
         series.incNumberOfSeriesRelatedInstances();
     }
 
-    private List<VerifyingObserver> createVerifyingObservers(Sequence seq) {
+    private List<VerifyingObserver> createVerifyingObservers(Sequence seq, AttributeFilter filter) {
         if (seq == null || seq.isEmpty())
             return null;
 
         ArrayList<VerifyingObserver> list =
                 new ArrayList<VerifyingObserver>(seq.size());
         for (Attributes item : seq)
-            list.add(new VerifyingObserver(item));
+            list.add(new VerifyingObserver(item, filter));
         return list;
     }
 
-    private Collection<ContentItem> createContentItems(Sequence seq) {
+    private Collection<ContentItem> createContentItems(Sequence seq, AttributeFilter filter) {
         if (seq == null || seq.isEmpty())
             return null;
 
@@ -246,7 +242,7 @@ public class InstanceStoreBean implements InstanceStore {
                         item.getString(Tag.RelationshipType, null),
                         CodeFactory.getCode(em, item.getNestedDataset(
                                 Tag.ConceptNameCodeSequence)),
-                        AttributeFilter.getString(item, Tag.TextValue)
+                                filter.getString(item, Tag.TextValue)
                         ));
             }
         }
@@ -254,9 +250,8 @@ public class InstanceStoreBean implements InstanceStore {
     }
 
 
-    private Series getSeries(Attributes attrs, String sourceAET,
-            String retrieveAETs, String externalRetrieveAET,
-            Availability availability) {
+    private Series getSeries(Attributes attrs, AttributeFilter filter, String sourceAET,
+            String retrieveAETs, String externalRetrieveAET, Availability availability) {
         String seriesIUID = attrs.getString(Tag.SeriesInstanceUID, null);
         Series series = cachedSeries.get(seriesIUID);
         if (series != null)
@@ -265,19 +260,17 @@ public class InstanceStoreBean implements InstanceStore {
             series = findSeries(seriesIUID);
         } catch (NoResultException e) {
             series = new Series();
-            Study study = getStudy(attrs, retrieveAETs, externalRetrieveAET,
-                    availability);
+            Study study = getStudy(attrs, filter, retrieveAETs, externalRetrieveAET, availability);
             series.setStudy(study);
             series.setInstitutionCode(
-                    CodeFactory.getCode(em, attrs.getNestedDataset(
-                            Tag.InstitutionCodeSequence)));
+                    CodeFactory.getCode(em, attrs.getNestedDataset(Tag.InstitutionCodeSequence)));
             series.setRequestAttributes(createRequestAttributes(
-                    attrs.getSequence(Tag.RequestAttributesSequence)));
+                    attrs.getSequence(Tag.RequestAttributesSequence), filter));
             series.setSourceAET(sourceAET);
             series.setRetrieveAETs(retrieveAETs);
             series.setExternalRetrieveAET(externalRetrieveAET);
             series.setAvailability(availability);
-            series.setAttributes(attrs);
+            series.setAttributes(attrs, filter);
             em.persist(series);
             incNumberOfStudyRelatedSeries(study);
         }
@@ -291,14 +284,14 @@ public class InstanceStoreBean implements InstanceStore {
         cachedSeries.clear();
     }
 
-    private List<RequestAttributes> createRequestAttributes(Sequence seq) {
+    private List<RequestAttributes> createRequestAttributes(Sequence seq, AttributeFilter filter) {
         if (seq == null || seq.isEmpty())
             return null;
 
         ArrayList<RequestAttributes> list =
                 new ArrayList<RequestAttributes>(seq.size());
         for (Attributes item : seq) {
-            RequestAttributes rqAttrs = new RequestAttributes(item);
+            RequestAttributes rqAttrs = new RequestAttributes(item, filter);
             rqAttrs.setIssuerOfAccessionNumber(
                     IssuerFactory.getIssuer(em, item.getNestedDataset(
                             Tag.IssuerOfAccessionNumberSequence)));
@@ -307,15 +300,14 @@ public class InstanceStoreBean implements InstanceStore {
         return list;
     }
 
-    private Study getStudy(Attributes attrs, String retrieveAETs,
+    private Study getStudy(Attributes attrs, AttributeFilter filter, String retrieveAETs,
             String externalRetrieveAET, Availability availability) {
         try {
             return findStudy(attrs.getString(Tag.StudyInstanceUID, null));
         } catch (NoResultException e) {
             Study study = new Study();
             study.setPatient(
-                    PatientFactory.followMergedWith(
-                            PatientFactory.getPatient(em, attrs)));
+                    PatientFactory.followMergedWith(PatientFactory.getPatient(em, attrs, filter)));
             study.setProcedureCodes(CodeFactory.createCodes(em,
                     attrs.getSequence(Tag.ProcedureCodeSequence)));
             study.setIssuerOfAccessionNumber(
@@ -326,7 +318,7 @@ public class InstanceStoreBean implements InstanceStore {
             study.setRetrieveAETs(retrieveAETs);
             study.setExternalRetrieveAET(externalRetrieveAET);
             study.setAvailability(availability);
-            study.setAttributes(attrs);
+            study.setAttributes(attrs, filter);
             em.persist(study);
             return study;
         }

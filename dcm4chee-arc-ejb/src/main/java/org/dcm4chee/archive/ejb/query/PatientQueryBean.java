@@ -58,6 +58,7 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.Patient_;
 import org.dcm4chee.archive.persistence.Utils;
@@ -78,7 +79,7 @@ public class PatientQueryBean implements PatientQuery {
     private boolean optionalKeyNotSupported;
 
     @Override
-    public void find(Attributes rq, String[] pids, Attributes keys,
+    public void find(Attributes rq, String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, boolean matchUnknown) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<byte[]> cq = cb.createQuery(byte[].class);
@@ -87,7 +88,7 @@ public class PatientQueryBean implements PatientQuery {
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
         predicates.add(cb.isNull(pat.get(Patient_.mergedWith)));
-        Matching.patient(cb, pat, pids, keys, queryOpts, matchUnknown, predicates, params);
+        Matching.patient(cb, pat, pids, keys, filter, queryOpts, matchUnknown, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<byte[]> q = em.createQuery(cq);
         int i = 0;

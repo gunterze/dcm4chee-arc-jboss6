@@ -41,6 +41,7 @@ package org.dcm4chee.archive.ejb.store;
 import javax.ejb.Local;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Instance;
 
@@ -52,7 +53,7 @@ public interface InstanceStore {
 
     public static final String JNDI_NAME = "InstanceStoreBean/local";
 
-    Instance store(Attributes attrs, String sourceAET,
+    Instance store(Attributes attrs, AttributeFilter filter, String sourceAET,
             String retrieveAETs, String externalRetrieveAET,
             Availability availability);
 

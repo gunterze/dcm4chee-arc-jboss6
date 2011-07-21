@@ -424,18 +424,16 @@ public class Series implements Serializable {
         return instances;
     }
 
-    public void setAttributes(Attributes attrs) {
+    public void setAttributes(Attributes attrs, AttributeFilter filter) {
         seriesInstanceUID = attrs.getString(Tag.SeriesInstanceUID, null);
-        seriesNumber = AttributeFilter.getString(attrs, Tag.SeriesNumber);
-        seriesDescription =
-            AttributeFilter.getString(attrs, Tag.SeriesDescription);
-        institutionName = AttributeFilter.getString(attrs, Tag.InstitutionName);
-        institutionalDepartmentName =
-            AttributeFilter.getString(attrs, Tag.InstitutionalDepartmentName);
-        modality = AttributeFilter.getString(attrs, Tag.Modality);
-        stationName = AttributeFilter.getString(attrs, Tag.StationName);
-        bodyPartExamined = AttributeFilter.getString(attrs, Tag.BodyPartExamined);
-        laterality = AttributeFilter.getString(attrs, Tag.Laterality);
+        seriesNumber = filter.getString(attrs, Tag.SeriesNumber);
+        seriesDescription = filter.getString(attrs, Tag.SeriesDescription);
+        institutionName = filter.getString(attrs, Tag.InstitutionName);
+        institutionalDepartmentName = filter.getString(attrs, Tag.InstitutionalDepartmentName);
+        modality = filter.getString(attrs, Tag.Modality);
+        stationName = filter.getString(attrs, Tag.StationName);
+        bodyPartExamined = filter.getString(attrs, Tag.BodyPartExamined);
+        laterality = filter.getString(attrs, Tag.Laterality);
         Attributes refPPS = attrs.getNestedDataset(Tag.ReferencedPerformedProcedureStepSequence);
         performedProcedureStepInstanceUID = refPPS != null
                 ? attrs.getString(Tag.ReferencedSOPInstanceUID, "*")
@@ -451,7 +449,7 @@ public class Series implements Serializable {
             performedProcedureStepStartDate = "*";
             performedProcedureStepStartTime = "*";
         }
-        String s = AttributeFilter.getString(attrs, Tag.PerformingPhysicianName);
+        String s = filter.getString(attrs, Tag.PerformingPhysicianName);
         if (s.equals("*")) {
             performingPhysicianName = "*";
             performingPhysicianIdeographicName = "*";
@@ -466,18 +464,17 @@ public class Series implements Serializable {
                     pn.getNormalizedString(PersonName.Group.Ideographic, "*");
             performingPhysicianPhoneticName =
                     pn.getNormalizedString(PersonName.Group.Phonetic, "*");
-            performingPhysicianFamilyNameSoundex = AttributeFilter.toFuzzy(
-                    pn.get(PersonName.Component.FamilyName));
-            performingPhysicianGivenNameSoundex = AttributeFilter.toFuzzy(
-                    pn.get(PersonName.Component.GivenName));
+            performingPhysicianFamilyNameSoundex =
+                    filter.toFuzzy(pn.get(PersonName.Component.FamilyName));
+            performingPhysicianGivenNameSoundex =
+                    filter.toFuzzy(pn.get(PersonName.Component.GivenName));
         }
         //TODO
         seriesCustomAttribute1 = "*";
         seriesCustomAttribute2 = "*";
         seriesCustomAttribute3 = "*";
 
-        encodedAttributes = Utils.encodeAttributes(attrs,
-                AttributeFilter.seriesFilter);
+        encodedAttributes = Utils.encodeAttributes(attrs, filter.seriesFilter);
         
     }
 }

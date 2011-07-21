@@ -51,10 +51,13 @@ import javax.ejb.EJB;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.dcm4che.io.SAXReader;
 import org.dcm4che.net.pdu.QueryOption;
+import org.dcm4che.soundex.ESoundex;
 import org.dcm4chee.archive.ejb.query.Matching;
 import org.dcm4chee.archive.ejb.query.PatientQuery;
 import org.dcm4chee.archive.ejb.query.PatientQueryBean;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -79,17 +82,30 @@ public class PatientQueryTest {
 
     @Deployment
     public static JavaArchive createDeployment() {
-        return ShrinkWrap.create(JavaArchive.class, "test.jar").addClasses(
-                PatientQuery.class, PatientQueryBean.class, Matching.class,
-                RangeMatching.class);
+        return ShrinkWrap.create(JavaArchive.class, "test.jar")
+                .addClasses(
+                        PatientQuery.class,
+                        PatientQueryBean.class,
+                        Matching.class,
+                        RangeMatching.class);
     }
 
     @EJB
     private PatientQuery query;
 
-    @Test
+    private AttributeFilter filter() throws Exception {
+        return new AttributeFilter(
+                SAXReader.parse("resource:dcm4chee-arc/patient-attribute-filter.xml"),
+                SAXReader.parse("resource:dcm4chee-arc/study-attribute-filter.xml"),
+                SAXReader.parse("resource:dcm4chee-arc/series-attribute-filter.xml"),
+                SAXReader.parse("resource:dcm4chee-arc/instance-attribute-filter.xml"),
+                SAXReader.parse("resource:dcm4chee-arc/case-insensitive-attributes.xml"),
+                new ESoundex());
+    }
+
+     @Test
     public void testByPatientID() throws Exception {
-        query.find(null, patientData, null, NO_QUERY_OPTION, false);
+        query.find(null, patientData, null, filter(), NO_QUERY_OPTION, false);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_20020202", "DOB_NONE" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -99,7 +115,7 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientName() throws Exception {
-        query.find(null, null, patientName("大宮^省吾"), NO_QUERY_OPTION, false);
+        query.find(null, null, patientName("大宮^省吾"), filter(), NO_QUERY_OPTION, false);
         assertTrue(query.hasMoreMatches());
         query.nextMatch();
         assertFalse(query.hasMoreMatches());
@@ -108,7 +124,8 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientBirthDate() throws Exception {
-        query.find(null, patientData, patientBirthDate("20010101"), NO_QUERY_OPTION, false);
+        query.find(null, patientData, patientBirthDate("20010101"), filter(),
+                NO_QUERY_OPTION, false);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -118,7 +135,8 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientBirthDateRange() throws Exception {
-        query.find(null, patientData, patientBirthDate("20010101-20020202"), NO_QUERY_OPTION, false);
+        query.find(null, patientData, patientBirthDate("20010101-20020202"), filter(),
+                NO_QUERY_OPTION, false);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_20020202" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -128,7 +146,8 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientBirthDateMatchUnknown() throws Exception {
-        query.find(null, patientData, patientBirthDate("20010101"), NO_QUERY_OPTION, true);
+        query.find(null, patientData, patientBirthDate("20010101"), filter(),
+                NO_QUERY_OPTION, true);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_NONE" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -138,7 +157,8 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientBirthDateRangeMatchUnknown() throws Exception {
-        query.find(null, patientData, patientBirthDate("20010101-20020202"), NO_QUERY_OPTION, true);
+        query.find(null, patientData, patientBirthDate("20010101-20020202"), filter(),
+                NO_QUERY_OPTION, true);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_20020202", "DOB_NONE" };
         Collection<String> col = Arrays.asList(patIDs);

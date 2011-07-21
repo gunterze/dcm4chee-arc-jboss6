@@ -60,6 +60,7 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.Patient_;
@@ -84,7 +85,7 @@ public class SeriesQueryBean implements SeriesQuery {
     private boolean optionalKeyNotSupported;
 
     @Override
-    public void find(Attributes rq, String[] pids, Attributes keys,
+    public void find(Attributes rq, String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, boolean matchUnknown) {
         this.rq = rq;
         CriteriaBuilder cb = em.getCriteriaBuilder();
@@ -106,7 +107,7 @@ public class SeriesQueryBean implements SeriesQuery {
                 pat.get(Patient_.encodedAttributes));
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
-        Matching.series(cb, cq, pat, study, series, pids, keys,
+        Matching.series(cb, cq, pat, study, series, pids, keys, filter,
                 queryOpts, matchUnknown, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<Tuple> q = em.createQuery(cq);

@@ -410,11 +410,10 @@ public class Study implements Serializable {
         return series;
     }
 
-    public void setAttributes(Attributes attrs) {
+    public void setAttributes(Attributes attrs, AttributeFilter filter) {
         studyInstanceUID = attrs.getString(Tag.StudyInstanceUID, null);
-        studyID = AttributeFilter.getString(attrs, Tag.StudyID);
-        studyDescription =
-                AttributeFilter.getString(attrs, Tag.StudyDescription);
+        studyID = filter.getString(attrs, Tag.StudyID);
+        studyDescription = filter.getString(attrs, Tag.StudyDescription);
         Date dt = attrs.getDate(Tag.StudyDateAndTime, null);
         if (dt != null) {
             studyDate = DateUtils.formatDA(null, dt);
@@ -425,9 +424,8 @@ public class Study implements Serializable {
             studyDate = "*";
             studyTime = "*";
         }
-        accessionNumber =
-                AttributeFilter.getString(attrs, Tag.AccessionNumber);
-        String s = AttributeFilter.getString(attrs, Tag.ReferringPhysicianName);
+        accessionNumber = filter.getString(attrs, Tag.AccessionNumber);
+        String s = filter.getString(attrs, Tag.ReferringPhysicianName);
         if (s.equals("*")) {
             referringPhysicianName = "*";
             referringPhysicianIdeographicName = "*";
@@ -442,18 +440,17 @@ public class Study implements Serializable {
                     pn.getNormalizedString(PersonName.Group.Ideographic, "*");
             referringPhysicianPhoneticName =
                     pn.getNormalizedString(PersonName.Group.Phonetic, "*");
-            referringPhysicianFamilyNameSoundex = AttributeFilter.toFuzzy(
-                    pn.get(PersonName.Component.FamilyName));
-            referringPhysicianGivenNameSoundex = AttributeFilter.toFuzzy(
-                    pn.get(PersonName.Component.GivenName));
+            referringPhysicianFamilyNameSoundex =
+                    filter.toFuzzy(pn.get(PersonName.Component.FamilyName));
+            referringPhysicianGivenNameSoundex =
+                    filter.toFuzzy(pn.get(PersonName.Component.GivenName));
         }
         //TODO
         studyCustomAttribute1 = "*";
         studyCustomAttribute2 = "*";
         studyCustomAttribute3 = "*";
 
-        encodedAttributes = Utils.encodeAttributes(attrs,
-                AttributeFilter.studyFilter);
+        encodedAttributes = Utils.encodeAttributes(attrs, filter.studyFilter);
         
     }
 }

@@ -55,25 +55,25 @@ import org.dcm4chee.archive.persistence.Patient;
  */
 public class PatientFactory {
 
-    public static Patient getPatient(EntityManager em, Attributes attrs) {
+    public static Patient getPatient(EntityManager em, Attributes attrs, AttributeFilter filter) {
         try {
-            return findPatient(em, attrs);
+            return findPatient(em, attrs, filter);
         } catch (NoResultException e) {
-            return createNewPatient(em, attrs);
+            return createNewPatient(em, attrs, filter);
         } catch (NonUniqueResultException e) {
-            return createNewPatient(em, attrs);
+            return createNewPatient(em, attrs, filter);
         }
     }
 
-    private static Patient findPatient(EntityManager em, Attributes attrs) {
-        String pid = AttributeFilter.getString(attrs, Tag.PatientID);
+    private static Patient findPatient(EntityManager em, Attributes attrs, AttributeFilter filter) {
+        String pid = filter.getString(attrs, Tag.PatientID);
         if (pid.equals("*"))
             throw new NonUniqueResultException();
         List<Patient> list =
             em.createNamedQuery(Patient.FIND_BY_PATIENT_ID, Patient.class)
                 .setParameter(1, pid)
                 .getResultList();
-        String issuer1 = AttributeFilter.getString(attrs, Tag.IssuerOfPatientID);
+        String issuer1 = filter.getString(attrs, Tag.IssuerOfPatientID);
         if (!issuer1.equals("*"))
             for (Iterator<Patient> it = list.iterator(); it.hasNext();) {
                 Patient pat = it.next();
@@ -94,9 +94,10 @@ public class PatientFactory {
         return patient;
     }
 
-    private static Patient createNewPatient(EntityManager em, Attributes attrs) {
+    private static Patient createNewPatient(EntityManager em, Attributes attrs,
+            AttributeFilter filter) {
         Patient patient = new Patient();
-        patient.setAttributes(attrs);
+        patient.setAttributes(attrs, filter);
         em.persist(patient);
         return patient;
     }

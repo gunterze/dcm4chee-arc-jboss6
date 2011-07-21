@@ -41,11 +41,13 @@ package org.dcm4chee.archive.testdata;
 import javax.ejb.EJB;
 
 import org.dcm4che.io.SAXReader;
+import org.dcm4che.soundex.ESoundex;
 import org.dcm4chee.archive.ejb.store.CodeFactory;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.ejb.store.InstanceStoreBean;
 import org.dcm4chee.archive.ejb.store.IssuerFactory;
 import org.dcm4chee.archive.ejb.store.PatientFactory;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -126,8 +128,15 @@ public class InitTestData {
 
     @Test
     public void storeTestData() throws Exception {
+        AttributeFilter filter = new AttributeFilter(
+                SAXReader.parse("resource:dcm4chee-arc/patient-attribute-filter.xml", null),
+                SAXReader.parse("resource:dcm4chee-arc/study-attribute-filter.xml", null),
+                SAXReader.parse("resource:dcm4chee-arc/series-attribute-filter.xml", null),
+                SAXReader.parse("resource:dcm4chee-arc/instance-attribute-filter.xml", null),
+                SAXReader.parse("resource:dcm4chee-arc/case-insensitive-attributes.xml", null),
+                new ESoundex());
         for (String res : RESOURCES)
-            instanceStore.store(SAXReader.parse("resource:" + res, null),
+            instanceStore.store(SAXReader.parse("resource:" + res, null), filter,
                     SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
         instanceStore.close();
     }

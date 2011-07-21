@@ -43,11 +43,13 @@ import static org.junit.Assert.*;
 import javax.ejb.EJB;
 
 import org.dcm4che.io.SAXReader;
+import org.dcm4che.soundex.KPhonetik;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.ejb.store.CodeFactory;
 import org.dcm4chee.archive.ejb.store.InstanceStoreBean;
 import org.dcm4chee.archive.ejb.store.IssuerFactory;
 import org.dcm4chee.archive.ejb.store.PatientFactory;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.Series;
@@ -95,14 +97,21 @@ public class InstanceStoreTest {
 
     @Test
     public void storeTest() throws Exception {
+        AttributeFilter filter = new AttributeFilter(
+                SAXReader.parse("resource:dcm4chee-arc/patient-attribute-filter.xml", null),
+                SAXReader.parse("resource:dcm4chee-arc/study-attribute-filter.xml", null),
+                SAXReader.parse("resource:dcm4chee-arc/series-attribute-filter.xml", null),
+                SAXReader.parse("resource:dcm4chee-arc/instance-attribute-filter.xml", null),
+                SAXReader.parse("resource:dcm4chee-arc/case-insensitive-attributes.xml", null),
+                new KPhonetik());
         Instance ct1 = 
-            instanceStore.store(SAXReader.parse("resource:ct-1.xml", null),
+            instanceStore.store(SAXReader.parse("resource:ct-1.xml", null), filter,
                 SOURCE_AET, "AET_1\\AET_2", "AET_3", Availability.ONLINE);
         Instance ct2 =
-            instanceStore.store(SAXReader.parse("resource:ct-2.xml", null),
+            instanceStore.store(SAXReader.parse("resource:ct-2.xml", null), filter,
                 SOURCE_AET, "AET_2", "AET_3", Availability.NEARLINE);
         Instance pr1 =
-            instanceStore.store(SAXReader.parse("resource:pr-1.xml", null),
+            instanceStore.store(SAXReader.parse("resource:pr-1.xml", null), filter,
                 SOURCE_AET, "AET_1\\AET_2", "AET_4", Availability.ONLINE);
         instanceStore.close();
         Series ctSeries = ct1.getSeries();

@@ -63,9 +63,9 @@ class ContentItemMatching {
     public static Predicate withContentItem(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq,
             Expression<Collection<ContentItem>> collection, Attributes item,
-            String valueType, List<Object> params) {
+            AttributeFilter filter, String valueType, List<Object> params) {
         if (validValueType(valueType))
-            return withContentItem(cq, cb, collection, item, params);
+            return withContentItem(cq, cb, collection, item, filter, params);
         return null;
     }
 
@@ -75,13 +75,13 @@ class ContentItemMatching {
 
     private static Predicate withContentItem(CriteriaQuery<Tuple> cq, 
             CriteriaBuilder cb, Expression<Collection<ContentItem>> collection, 
-            Attributes item, List<Object> params) {
+            Attributes item, AttributeFilter filter, List<Object> params) {
         Subquery<ContentItem> sq = cq.subquery(ContentItem.class);
         Root<ContentItem> contentItem = sq.from(ContentItem.class);
         sq.select(contentItem);
         ArrayList<Predicate> predicates = new ArrayList<Predicate>(4);
         predicates.add(cb.isMember(contentItem, collection));
-        if (!addContentItemPredicates(cq, cb, item, params, contentItem, predicates))
+        if (!addContentItemPredicates(cq, cb, item, filter, params, contentItem, predicates))
             return null;
 
         sq.where(predicates.toArray(new Predicate[predicates.size()]));
@@ -89,29 +89,29 @@ class ContentItemMatching {
     }
 
     private static boolean addContentItemPredicates(CriteriaQuery<Tuple> cq,
-            CriteriaBuilder cb, Attributes item, List<Object> params,
+            CriteriaBuilder cb, Attributes item, AttributeFilter filter, List<Object> params,
             Root<ContentItem> contentItem, ArrayList<Predicate> predicates) {
         boolean restrict = Matching.add(predicates, 
                 Matching.withCode(cb, cq, 
                         contentItem.get(ContentItem_.conceptName), 
-                        item.getNestedDataset(Tag.ConceptNameCodeSequence),
+                        item.getNestedDataset(Tag.ConceptNameCodeSequence), filter,
                         false, params));
-        restrict = Matching.add(predicates, 
-                Matching.wildCard(cb, 
-                        contentItem.get(ContentItem_.relationshipType), 
-                        AttributeFilter.getString(item, Tag.RelationshipType),
+        restrict = Matching.add(predicates,
+                Matching.wildCard(cb,
+                        contentItem.get(ContentItem_.relationshipType),
+                        filter.getString(item, Tag.RelationshipType),
                         false, params))
-               || restrict;
-        restrict = Matching.add(predicates, 
+                || restrict;
+        restrict = Matching.add(predicates,
                 Matching.withCode(cb, cq, 
                         contentItem.get(ContentItem_.conceptCode), 
-                        item.getNestedDataset(Tag.ConceptCodeSequence), false, params))
-               || restrict;
+                        item.getNestedDataset(Tag.ConceptCodeSequence), filter, false, params))
+                || restrict;
         restrict = Matching.add(predicates, 
                 Matching.wildCard(cb, 
                         contentItem.get(ContentItem_.textValue), 
-                        AttributeFilter.getString(item, Tag.TextValue), false, params))
-               || restrict;
+                        filter.getString(item, Tag.TextValue), false, params))
+                || restrict;
         return restrict;
     }
 }
