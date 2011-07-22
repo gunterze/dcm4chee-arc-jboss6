@@ -168,8 +168,33 @@ class Matching {
     private static Predicate fuzzyPersonName(CriteriaBuilder cb,
             Path<String> familyNameSoundex, Path<String> givenNameSoundex,
             String value, AttributeFilter filter, boolean matchUnknown, List<Object> params) {
-        // TODO Auto-generated method stub
-        return null;
+        PersonName pn = new PersonName(value);
+        String fuzzyGivenName = filter.toFuzzy(pn.get(PersonName.Component.GivenName));
+        String fuzzyFamilyName = filter.toFuzzy(pn.get(PersonName.Component.FamilyName));
+        if(containsWildcard(value)){
+            fuzzyFamilyName = fuzzyFamilyName.concat("*");
+            fuzzyGivenName = fuzzyGivenName.concat("*");
+        }
+        Predicate predicate;
+        if (fuzzyGivenName.equals("*") || fuzzyGivenName.equals("**"))
+            predicate = cb.or(
+                    wildCard0(cb, familyNameSoundex, fuzzyFamilyName, params),
+                    wildCard0(cb, givenNameSoundex, fuzzyFamilyName, params));
+        else
+            predicate = cb.or(
+                    cb.and(
+                        wildCard0(cb, givenNameSoundex, fuzzyGivenName, params),
+                        wildCard0(cb, familyNameSoundex, fuzzyFamilyName, params)),
+                    cb.and(
+                        wildCard0(cb, givenNameSoundex, fuzzyFamilyName, params),
+                        wildCard0(cb, familyNameSoundex, fuzzyGivenName, params)));
+        if (predicate == null)
+            return null;
+        
+        return matchUnknown ?
+                cb.or(cb.and(predicate, cb.equal(givenNameSoundex, "*")),
+                      cb.and(cb.equal(givenNameSoundex, "*"), cb.equal(familyNameSoundex, "*"))):
+                predicate;
     }
 
     private static Predicate literalPersonName(CriteriaBuilder cb,
@@ -451,8 +476,8 @@ class Matching {
     }
 
     private static <T> Predicate matchUnknownPath(CriteriaBuilder cb,
-            Path<T> issuer, boolean matchUnknown, Subquery<T> sq) {
-        return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(issuer)) : cb.exists(sq);
+            Path<T> path, boolean matchUnknown, Subquery<T> sq) {
+        return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(path)) : cb.exists(sq);
     }
 
     private static Predicate matchUnknown0(CriteriaBuilder cb, Path<String> field,

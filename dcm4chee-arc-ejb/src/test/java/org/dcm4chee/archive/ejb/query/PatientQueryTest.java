@@ -103,7 +103,7 @@ public class PatientQueryTest {
                 new ESoundex());
     }
 
-     @Test
+    @Test
     public void testByPatientID() throws Exception {
         query.find(null, patientData, null, filter(), NO_QUERY_OPTION, false);
         ArrayList<String> result = patientIDResultList(query);
@@ -115,7 +115,7 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientName() throws Exception {
-        query.find(null, null, patientName("大宮^省吾"), filter(), NO_QUERY_OPTION, false);
+        query.find(null, null, patientName("大宮^省吾", true), filter(), NO_QUERY_OPTION, false);
         assertTrue(query.hasMoreMatches());
         query.nextMatch();
         assertFalse(query.hasMoreMatches());
@@ -165,6 +165,28 @@ public class PatientQueryTest {
         assertTrue(equals(result, col));
         query.close();
     }
+    
+    @Test
+    public void testByPatientNameSoundex1() throws Exception {
+        query.find(null, null, patientName("TEST DOB*", false), filter(), 
+                FUZZY_PERSON_NAME, false);
+        ArrayList<String> result = patientIDResultList(query);
+        String patIDs[] = { "DOB_20010101", "DOB_20020202", "DOB_NONE" };
+        Collection<String> col = Arrays.asList(patIDs);
+        assertTrue(equals(result, col));
+        query.close();
+    }
+    
+    @Test
+    public void testByPatientNameSoundex2() throws Exception {
+        query.find(null, null, patientName("OOMIYA^SHOUGO", false), filter(), 
+                FUZZY_PERSON_NAME, false);
+        ArrayList<String> result = patientIDResultList(query);
+        String patIDs[] = { "CT5" };
+        Collection<String> col = Arrays.asList(patIDs);
+        assertTrue(equals(result, col));
+        query.close();
+    }
 
     private Attributes patientBirthDate(String date) {
         Attributes attrs = new Attributes(1);
@@ -172,13 +194,15 @@ public class PatientQueryTest {
         return attrs;
     }
 
-    private Attributes patientName(String name) {
+    private Attributes patientName(String name, boolean specificChar) {
         Attributes attrs = new Attributes(2);
-        attrs.setString(Tag.SpecificCharacterSet, VR.CS, "ISO 2022 IR 6",
+        if(specificChar)
+            attrs.setString(Tag.SpecificCharacterSet, VR.CS, "ISO 2022 IR 6",
                 "ISO 2022 IR 87");
         attrs.setString(Tag.PatientName, VR.PN, name);
         return attrs;
     }
+    
 
     private ArrayList<String> patientIDResultList(PatientQuery query)
             throws Exception {
