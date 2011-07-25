@@ -14,7 +14,7 @@
 <Value number="1">OT</Value>
 </DicomAttribute>
 <DicomAttribute keyword="StudyDescription" tag="00081030" vr="LO">
-<Value number="1">Test data for fuzzy person name matching</Value>
+<Value number="1">Test data for literal person name matching</Value>
 </DicomAttribute>
 <DicomAttribute keyword="PatientName" tag="00100010" vr="PN">
 <PersonName number="1">
