@@ -66,6 +66,10 @@ public class ClearTestData {
         "DOB_20020202",
         "DOB_NONE",
         "TF_INFO",
+        "FUZZY_GEORGE",
+        "FUZZY_JOERG",
+        "FUZZY_LUKE",
+        "FUZZY_NONE",
     };
 
     @Deployment

@@ -111,6 +111,10 @@ public class InitTestData {
         "birthdate-3.xml",
         "tf-info-1.xml",
         "tf-info-2.xml",
+        "fuzzy-1.xml",
+        "fuzzy-2.xml",
+        "fuzzy-3.xml",
+        "fuzzy-4.xml",
    };
 
     @Deployment
