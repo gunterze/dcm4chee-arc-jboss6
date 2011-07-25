@@ -115,6 +115,7 @@ public class InitTestData {
         "fuzzy-2.xml",
         "fuzzy-3.xml",
         "fuzzy-4.xml",
+        "personname-1.xml",
    };
 
     @Deployment
