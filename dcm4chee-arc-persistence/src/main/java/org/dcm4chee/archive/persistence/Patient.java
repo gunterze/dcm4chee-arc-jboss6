@@ -285,10 +285,10 @@ public class Patient implements Serializable {
         }
         patientBirthDate = attrs.getString(Tag.PatientBirthDate, "*");
         patientSex = filter.getString(attrs, Tag.PatientSex);
-        //TODO
-        patientCustomAttribute1 = "*";
-        patientCustomAttribute2 = "*";
-        patientCustomAttribute3 = "*";
+
+        patientCustomAttribute1 = filter.selectPatientCustomAttribute1(attrs);
+        patientCustomAttribute2 = filter.selectPatientCustomAttribute2(attrs);
+        patientCustomAttribute3 = filter.selectPatientCustomAttribute2(attrs);
 
         encodedAttributes = Utils.encodeAttributes(attrs, filter.patientFilter);
     }

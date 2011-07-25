@@ -445,10 +445,9 @@ public class Study implements Serializable {
             referringPhysicianGivenNameSoundex =
                     filter.toFuzzy(pn.get(PersonName.Component.GivenName));
         }
-        //TODO
-        studyCustomAttribute1 = "*";
-        studyCustomAttribute2 = "*";
-        studyCustomAttribute3 = "*";
+        studyCustomAttribute1 = filter.selectStudyCustomAttribute1(attrs);
+        studyCustomAttribute2 = filter.selectStudyCustomAttribute2(attrs);
+        studyCustomAttribute3 = filter.selectStudyCustomAttribute3(attrs);
 
         encodedAttributes = Utils.encodeAttributes(attrs, filter.studyFilter);
         

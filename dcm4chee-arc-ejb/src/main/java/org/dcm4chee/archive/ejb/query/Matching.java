@@ -582,6 +582,15 @@ class Matching {
                 params));
         add(predicates, RangeMatching.rangeMatch(cb, pat.get(Patient_.patientBirthDate),
                 Tag.PatientBirthDate, RangeMatching.FormatDate.DA, keys, matchUnknown, params));
+        add(predicates, wildCard(cb, pat.get(Patient_.patientCustomAttribute1),
+                filter.selectPatientCustomAttribute1(keys),
+                matchUnknown, params));
+        add(predicates, wildCard(cb, pat.get(Patient_.patientCustomAttribute2),
+                filter.selectPatientCustomAttribute2(keys),
+                matchUnknown, params));
+        add(predicates, wildCard(cb, pat.get(Patient_.patientCustomAttribute3),
+                filter.selectPatientCustomAttribute3(keys),
+                matchUnknown, params));
     }
 
     public static void study(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,
@@ -627,6 +636,15 @@ class Matching {
         add(predicates, withCode(cb, cq, study.get(Study_.procedureCodes),
                 keys.getNestedDataset(Tag.ProcedureCodeSequence),
                 filter, matchUnknown, params));
+        add(predicates, wildCard(cb, study.get(Study_.studyCustomAttribute1),
+                filter.selectStudyCustomAttribute1(keys),
+                matchUnknown, params));
+        add(predicates, wildCard(cb, study.get(Study_.studyCustomAttribute2),
+                filter.selectStudyCustomAttribute2(keys),
+                matchUnknown, params));
+        add(predicates, wildCard(cb, study.get(Study_.studyCustomAttribute3),
+                filter.selectStudyCustomAttribute3(keys),
+                matchUnknown, params));
     }
 
     public static void series(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,
@@ -669,6 +687,15 @@ class Matching {
                 series.get(Series_.institutionCode),
                 keys.getNestedDataset(Tag.InstitutionCodeSequence), filter,
                 matchUnknown, params));
+        add(predicates, wildCard(cb, series.get(Series_.seriesCustomAttribute1),
+                filter.selectSeriesCustomAttribute1(keys),
+                matchUnknown, params));
+        add(predicates, wildCard(cb, series.get(Series_.seriesCustomAttribute2),
+                filter.selectSeriesCustomAttribute2(keys),
+                matchUnknown, params));
+        add(predicates, wildCard(cb, series.get(Series_.seriesCustomAttribute3),
+                filter.selectSeriesCustomAttribute3(keys),
+                matchUnknown, params));
     }
 
     public static void instance(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,
@@ -706,6 +733,15 @@ class Matching {
                         inst.get(Instance_.contentItems), item, filter,
                         item.getString(Tag.ValueType, null), params));
             }
+        add(predicates, wildCard(cb, inst.get(Instance_.instanceCustomAttribute1),
+                filter.selectInstanceCustomAttribute1(keys),
+                matchUnknown, params));
+        add(predicates, wildCard(cb, inst.get(Instance_.instanceCustomAttribute2),
+                filter.selectInstanceCustomAttribute2(keys),
+                matchUnknown, params));
+        add(predicates, wildCard(cb, inst.get(Instance_.instanceCustomAttribute3),
+                filter.selectInstanceCustomAttribute3(keys),
+                matchUnknown, params));
     }
 
     static ParameterExpression<String> setParam(CriteriaBuilder cb,
