@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.persistence;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.ValueSelector;
 import org.dcm4che.soundex.FuzzyStr;
 
 /**
@@ -52,6 +53,18 @@ public class AttributeFilter {
     final Attributes instanceFilter;
     private final Attributes caseInsensitive;
     private final FuzzyStr fuzzyStr;
+    ValueSelector patientCustomAttribute1;
+    ValueSelector patientCustomAttribute2;
+    ValueSelector patientCustomAttribute3;
+    ValueSelector studyCustomAttribute1;
+    ValueSelector studyCustomAttribute2;
+    ValueSelector studyCustomAttribute3;
+    ValueSelector seriesCustomAttribute1;
+    ValueSelector seriesCustomAttribute2;
+    ValueSelector seriesCustomAttribute3;
+    ValueSelector instanceCustomAttribute1;
+    ValueSelector instanceCustomAttribute2;
+    ValueSelector instanceCustomAttribute3;
 
     public AttributeFilter(Attributes patientFilter, Attributes studyFilter,
             Attributes seriesFilter, Attributes instanceFilter,
@@ -76,6 +89,54 @@ public class AttributeFilter {
         this.fuzzyStr = fuzzyStr;
     }
 
+    public final void setPatientCustomAttribute1(ValueSelector selector) {
+        this.patientCustomAttribute1 = selector;
+    }
+
+    public final void setPatientCustomAttribute2(ValueSelector selector) {
+        this.patientCustomAttribute2 = selector;
+    }
+
+    public final void setPatientCustomAttribute3(ValueSelector selector) {
+        this.patientCustomAttribute3 = selector;
+    }
+
+    public final void setStudyCustomAttribute1(ValueSelector selector) {
+        this.studyCustomAttribute1 = selector;
+    }
+
+    public final void setStudyCustomAttribute2(ValueSelector selector) {
+        this.studyCustomAttribute2 = selector;
+    }
+
+    public final void setStudyCustomAttribute3(ValueSelector selector) {
+        this.studyCustomAttribute3 = selector;
+    }
+
+    public final void setSeriesCustomAttribute1(ValueSelector selector) {
+        this.seriesCustomAttribute1 = selector;
+    }
+
+    public final void setSeriesCustomAttribute2(ValueSelector selector) {
+        this.seriesCustomAttribute2 = selector;
+    }
+
+    public final void setSeriesCustomAttribute3(ValueSelector selector) {
+        this.seriesCustomAttribute3 = selector;
+    }
+
+    public final void setInstanceCustomAttribute1(ValueSelector selector) {
+        this.instanceCustomAttribute1 = selector;
+    }
+
+    public final void setInstanceCustomAttribute2(ValueSelector selector) {
+        this.instanceCustomAttribute2 = selector;
+    }
+
+    public final void setInstanceCustomAttribute3(ValueSelector selector) {
+        this.instanceCustomAttribute3 = selector;
+    }
+
     public String getString(Attributes attrs, int tag) {
         String val = attrs.getString(tag, null);
         return val != null
@@ -87,5 +148,64 @@ public class AttributeFilter {
         return val != null
                 ? fuzzyStr.toFuzzy(val)
                 : "*";
+    }
+
+    public String selectPatientCustomAttribute1(Attributes attrs) {
+        return selectStringValue(patientCustomAttribute1, attrs);
+    }
+
+    public String selectPatientCustomAttribute2(Attributes attrs) {
+        return selectStringValue(patientCustomAttribute2, attrs);
+    }
+
+    public String selectPatientCustomAttribute3(Attributes attrs) {
+        return selectStringValue(patientCustomAttribute3, attrs);
+    }
+
+    public String selectStudyCustomAttribute1(Attributes attrs) {
+        return selectStringValue(studyCustomAttribute1, attrs);
+    }
+
+    public String selectStudyCustomAttribute2(Attributes attrs) {
+        return selectStringValue(studyCustomAttribute2, attrs);
+    }
+
+    public String selectStudyCustomAttribute3(Attributes attrs) {
+        return selectStringValue(studyCustomAttribute3, attrs);
+    }
+
+    public String selectSeriesCustomAttribute1(Attributes attrs) {
+        return selectStringValue(seriesCustomAttribute1, attrs);
+    }
+
+    public String selectSeriesCustomAttribute2(Attributes attrs) {
+        return selectStringValue(seriesCustomAttribute2, attrs);
+    }
+
+    public String selectSeriesCustomAttribute3(Attributes attrs) {
+        return selectStringValue(instanceCustomAttribute3, attrs);
+    }
+
+    public String selectInstanceCustomAttribute1(Attributes attrs) {
+        return selectStringValue(instanceCustomAttribute1, attrs);
+    }
+
+    public String selectInstanceCustomAttribute2(Attributes attrs) {
+        return selectStringValue(instanceCustomAttribute2, attrs);
+    }
+
+    public String selectInstanceCustomAttribute3(Attributes attrs) {
+        return selectStringValue(instanceCustomAttribute3, attrs);
+    }
+
+    private String selectStringValue(ValueSelector selector, Attributes attrs) {
+        if (selector != null) {
+            String val = selector.selectStringValue(attrs, null);
+            if (val != null)
+                return caseInsensitive.contains(selector.tag(), selector.privateCreator())
+                        ? val.toUpperCase()
+                        : val;
+        }
+        return "*";
     }
 }

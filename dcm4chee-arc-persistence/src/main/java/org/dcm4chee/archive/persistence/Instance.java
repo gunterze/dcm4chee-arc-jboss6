@@ -337,10 +337,9 @@ public class Instance implements Serializable {
         completionFlag = filter.getString(attrs, Tag.CompletionFlag);
         verificationFlag = filter.getString(attrs, Tag.VerificationFlag);
 
-        //TODO
-        instanceCustomAttribute1 = "*";
-        instanceCustomAttribute2 = "*";
-        instanceCustomAttribute3 = "*";
+        instanceCustomAttribute1 = filter.selectInstanceCustomAttribute1(attrs);
+        instanceCustomAttribute2 = filter.selectInstanceCustomAttribute2(attrs);
+        instanceCustomAttribute3 = filter.selectInstanceCustomAttribute3(attrs);
 
         encodedAttributes = Utils.encodeAttributes(attrs, filter.instanceFilter);
         

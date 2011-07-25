@@ -469,10 +469,9 @@ public class Series implements Serializable {
             performingPhysicianGivenNameSoundex =
                     filter.toFuzzy(pn.get(PersonName.Component.GivenName));
         }
-        //TODO
-        seriesCustomAttribute1 = "*";
-        seriesCustomAttribute2 = "*";
-        seriesCustomAttribute3 = "*";
+        seriesCustomAttribute1 = filter.selectSeriesCustomAttribute1(attrs);
+        seriesCustomAttribute2 = filter.selectSeriesCustomAttribute2(attrs);
+        seriesCustomAttribute3 = filter.selectSeriesCustomAttribute3(attrs);
 
         encodedAttributes = Utils.encodeAttributes(attrs, filter.seriesFilter);
         
