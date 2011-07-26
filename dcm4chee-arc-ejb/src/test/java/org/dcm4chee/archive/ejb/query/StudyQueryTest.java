@@ -94,7 +94,8 @@ public class StudyQueryTest {
                         StudyQuery.class,
                         StudyQueryBean.class,
                         Matching.class,
-                        RangeMatching.class);
+                        RangeMatching.class,
+                        PersonNameMatching.class);
     }
 
     @EJB

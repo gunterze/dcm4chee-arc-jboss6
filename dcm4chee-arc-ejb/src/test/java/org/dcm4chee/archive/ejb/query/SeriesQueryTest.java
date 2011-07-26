@@ -84,7 +84,8 @@ public class SeriesQueryTest {
                         SeriesQuery.class,
                         SeriesQueryBean.class,
                         Matching.class,
-                        RangeMatching.class);
+                        RangeMatching.class,
+                        PersonNameMatching.class);
     }
 
     @EJB

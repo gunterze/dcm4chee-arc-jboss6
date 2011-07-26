@@ -89,7 +89,8 @@ public class InstanceQueryTest {
                         InstanceQueryBean.class,
                         Matching.class,
                         RangeMatching.class,
-                        ContentItemMatching.class);
+                        ContentItemMatching.class,
+                        PersonNameMatching.class);
     }
 
     @EJB

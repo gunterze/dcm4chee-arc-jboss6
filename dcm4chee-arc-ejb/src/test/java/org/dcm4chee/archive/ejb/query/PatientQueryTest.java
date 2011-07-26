@@ -89,7 +89,8 @@ public class PatientQueryTest {
                         PatientQuery.class,
                         PatientQueryBean.class,
                         Matching.class,
-                        RangeMatching.class);
+                        RangeMatching.class,
+                        PersonNameMatching.class);
     }
 
     @EJB

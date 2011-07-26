@@ -55,7 +55,6 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.net.pdu.QueryOption;
@@ -146,145 +145,7 @@ class Matching {
         return field.in(pes);
     }
 
-    private static Predicate personName(CriteriaBuilder cb,
-            Path<String> alphabethic,
-            Path<String> ideographic,
-            Path<String> phonetic,
-            Path<String> familyNameSoundex,
-            Path<String> givenNameSoundex,
-            String value, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, boolean matchUnknown,
-            List<Object> params) {
-        if (value.equals("*"))
-            return null;
-
-        return queryOpts.contains(QueryOption.FUZZY)
-                ? fuzzyPersonName(cb, familyNameSoundex, givenNameSoundex,
-                        value, filter, matchUnknown, params)
-                : literalPersonName(cb, alphabethic, ideographic, phonetic,
-                        value, matchUnknown, params);
-    }
-
-    private static Predicate fuzzyPersonName(CriteriaBuilder cb,
-            Path<String> familyNameSoundex, Path<String> givenNameSoundex,
-            String value, AttributeFilter filter, boolean matchUnknown, List<Object> params) {
-        PersonName pn = new PersonName(value);
-        boolean containsFamilyName = !pn.isEmpty(PersonName.Component.FamilyName);
-        boolean containsGivenName = !pn.isEmpty(PersonName.Component.GivenName);
-        if (containsFamilyName && containsGivenName)
-            return fuzzyNames(cb, filter, familyNameSoundex, givenNameSoundex, 
-                    pn.get(PersonName.Component.FamilyName), pn.get(PersonName.Component.GivenName), 
-                    matchUnknown, params);
-        else if (containsGivenName)
-            return fuzzyName(cb, filter, familyNameSoundex, givenNameSoundex, 
-                    pn.get(PersonName.Component.GivenName), matchUnknown, params);
-        else if (containsFamilyName)
-            return fuzzyName(cb, filter, familyNameSoundex, givenNameSoundex, 
-                    pn.get(PersonName.Component.FamilyName), matchUnknown, params);
-        return null;
-    }
-
-    private static Predicate fuzzyNames(CriteriaBuilder cb, AttributeFilter filter, 
-            Path<String> familyNameSoundex, Path<String> givenNameSoundex,
-            String givenName, String familyName, 
-            boolean matchUnknown, List<Object> params) {
-        String fuzzyFamilyName = filter.toFuzzy(familyName);
-        String fuzzyGivenName = filter.toFuzzy(givenName);
-        Predicate names = 
-            cb.and(fuzzyPersonNameWildCard(cb, givenNameSoundex, givenName, fuzzyGivenName, params),
-                   fuzzyPersonNameWildCard(cb, familyNameSoundex, familyName, fuzzyFamilyName, params));
-        Predicate namesSwap = 
-            cb.and(fuzzyPersonNameWildCard(cb, givenNameSoundex, familyName, fuzzyFamilyName, params),
-                   fuzzyPersonNameWildCard(cb, familyNameSoundex, givenName, fuzzyGivenName, params));
-        return matchUnknown
-                    ? unknownFuzzyNames(cb, familyNameSoundex, givenNameSoundex, familyName, 
-                            givenName, fuzzyFamilyName, fuzzyGivenName, names, namesSwap, params)
-                    : cb.or(names, namesSwap);
-    }
-    
-    private static Predicate unknownFuzzyNames(CriteriaBuilder cb, 
-            Path<String> familyNameSoundex, Path<String> givenNameSoundex, 
-            String familyName, String givenName, 
-            String fuzzyFamilyName, String fuzzyGivenName,
-            Predicate names, Predicate namesSwap, 
-            List<Object> params){
-        ArrayList<Predicate> predicates = new ArrayList<Predicate>(7);
-        predicates.add(names);
-        predicates.add(namesSwap);
-        predicates.add(cb.and(fuzzyPersonNameWildCard(cb, givenNameSoundex, givenName, 
-                fuzzyGivenName, params), cb.equal(familyNameSoundex, "*")));
-        predicates.add(cb.and(fuzzyPersonNameWildCard(cb, familyNameSoundex, familyName, 
-                fuzzyFamilyName, params), cb.equal(givenNameSoundex, "*")));
-        predicates.add(cb.and(fuzzyPersonNameWildCard(cb, givenNameSoundex, familyName, 
-                fuzzyFamilyName, params), cb.equal(familyNameSoundex, "*")));
-        predicates.add(cb.and(fuzzyPersonNameWildCard(cb, familyNameSoundex, givenName, 
-                fuzzyGivenName, params), cb.equal(givenNameSoundex, "*")));
-        predicates.add(cb.and(cb.equal(givenNameSoundex, "*"), 
-                cb.equal(familyNameSoundex, "*")));
-        return cb.or(predicates.toArray(new Predicate[predicates.size()]));
-    }
-
-    private static Predicate fuzzyName(CriteriaBuilder cb, AttributeFilter filter, 
-            Path<String> familyNameSoundex, Path<String> givenNameSoundex,
-            String name, boolean matchUnknown, List<Object> params) {
-        String fuzzyName = filter.toFuzzy(name);
-        Predicate predicate = cb.or(
-                fuzzyPersonNameWildCard(cb, familyNameSoundex, name, fuzzyName, params),
-                fuzzyPersonNameWildCard(cb, givenNameSoundex, name, fuzzyName, params));
-        return matchUnknown 
-                    ? cb.or(predicate, cb.and(cb.equal(givenNameSoundex, "*"), 
-                            cb.equal(familyNameSoundex, "*")))
-                    : predicate;
-    }
-
-    private static Predicate fuzzyPersonNameWildCard(CriteriaBuilder cb, 
-            Path<String> field, String name, String fuzzy, List<Object> params) {
-        if (name.endsWith("*"))
-            return likeValue(cb, field, fuzzy, params);
-        return singleValue0(cb, field, fuzzy, params);
-    }
-
-    private static Predicate likeValue(CriteriaBuilder cb, Path<String> field,
-            String value, List<Object> params) {
-        String pattern = value.concat("%");
-        ParameterExpression<String> param = setParam(cb, params, pattern);
-        return cb.like(field, param);
-    }
-
-    private static Predicate literalPersonName(CriteriaBuilder cb,
-            Path<String> alphabethic, Path<String> ideographic,
-            Path<String> phonetic, String value, boolean matchUnknown,
-            List<Object> params) {
-        PersonName pn = new PersonName(value);
-        Predicate predicate;
-        String queryString =
-                pn.getNormalizedQueryString(PersonName.Group.Alphabetic);
-        if (value.indexOf('=') == -1) {
-            predicate = cb.or(
-                    wildCard0(cb, alphabethic, queryString, params),
-                    wildCard0(cb, ideographic, queryString, params),
-                    wildCard0(cb, phonetic, queryString, params));
-        } else {
-            predicate = and(cb,
-                    wildCard0(cb, alphabethic, queryString, params),
-                    wildCard0(cb, ideographic,
-                            pn.getNormalizedQueryString(PersonName.Group.Ideographic),
-                            params),
-                    wildCard0(cb, phonetic,
-                            pn.getNormalizedQueryString(PersonName.Group.Phonetic),
-                            params));
-            if (predicate == null)
-                return null;
-        }
-        return matchUnknown 
-                ? cb.or(predicate, cb.and(
-                        cb.equal(alphabethic, "*"),
-                        cb.equal(ideographic, "*"),
-                        cb.equal(phonetic, "*")))
-                : predicate;
-    }
-
-    private static Predicate and(CriteriaBuilder cb, Predicate p1,
+    static Predicate and(CriteriaBuilder cb, Predicate p1,
             Predicate p2, Predicate p3) {
         return p1 != null 
                 ? p2 != null 
@@ -309,7 +170,7 @@ class Matching {
         return matchUnknown0(cb, field, matchUnknown, wildCard0(cb, field, value, params));
     }
 
-    private static Predicate wildCard0(CriteriaBuilder cb, Path<String> field,
+    static Predicate wildCard0(CriteriaBuilder cb, Path<String> field,
             String value, List<Object> params) {
         if (!Matching.containsWildcard(value))
             return singleValue0(cb, field, value, params);
@@ -322,7 +183,7 @@ class Matching {
         return cb.like(field, param);
     }
 
-    private static Predicate singleValue0(CriteriaBuilder cb,
+    static Predicate singleValue0(CriteriaBuilder cb,
             Path<String> field, String value, List<Object> params) {
         ParameterExpression<String> param = setParam(cb, params, value);
         return cb.equal(field, param);
@@ -449,7 +310,7 @@ class Matching {
                     Tag.VerificationDateTime, 
                     RangeMatching.FormatDate.DT, item, false, params));
         restrict = add(predicates, 
-                personName(cb, 
+                PersonNameMatching.personName(cb, 
                     root.get(VerifyingObserver_.verifyingObserverName), 
                     root.get(VerifyingObserver_.verifyingObserverIdeographicName), 
                     root.get(VerifyingObserver_.verifyingObserverPhoneticName),
@@ -493,7 +354,7 @@ class Matching {
                         matchUnknown, params))
                 || restrict;
         restrict = add(predicates,
-                personName(cb,
+                PersonNameMatching.personName(cb,
                     root.get(RequestAttributes_.requestingPhysician),
                     root.get(RequestAttributes_.requestingPhysicianIdeographicName),
                     root.get(RequestAttributes_.requestingPhysicianPhoneticName),
@@ -581,7 +442,7 @@ class Matching {
         if (keys == null)
             return;
 
-        add(predicates, personName(cb, 
+        add(predicates, PersonNameMatching.personName(cb, 
                 pat.get(Patient_.patientName),
                 pat.get(Patient_.patientIdeographicName),
                 pat.get(Patient_.patientPhoneticName),
@@ -617,7 +478,7 @@ class Matching {
                 .getStrings(Tag.StudyInstanceUID), params));
         add(predicates, wildCard(cb, study.get(Study_.studyID),
                 filter.getString(keys, Tag.StudyID), matchUnknown, params));
-        add(predicates, personName(cb,
+        add(predicates, PersonNameMatching.personName(cb,
                 study.get(Study_.referringPhysicianName),
                 study.get(Study_.referringPhysicianIdeographicName),
                 study.get(Study_.referringPhysicianPhoneticName),
@@ -754,6 +615,7 @@ class Matching {
         add(predicates, wildCard(cb, inst.get(Instance_.instanceCustomAttribute3),
                 filter.selectInstanceCustomAttribute3(keys),
                 matchUnknown, params));
+        //TODO contentDateTime matching
     }
 
     static ParameterExpression<String> setParam(CriteriaBuilder cb,
