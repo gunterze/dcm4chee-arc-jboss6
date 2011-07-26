@@ -127,7 +127,7 @@ public class CompositeCFindSCP extends BasicCFindSCP {
         StudyQuery query = (StudyQuery) JNDIUtils.lookup(StudyQuery.JNDI_NAME);
         ApplicationEntity ae = as.getApplicationEntity();
         AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
-        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), matchUnknown);
+        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), matchUnknown, roles());
         return query;
     }
 
@@ -138,7 +138,7 @@ public class CompositeCFindSCP extends BasicCFindSCP {
         SeriesQuery query = (SeriesQuery) JNDIUtils.lookup(SeriesQuery.JNDI_NAME);
         ApplicationEntity ae = as.getApplicationEntity();
         AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
-        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), matchUnknown);
+        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), matchUnknown, roles());
         return query;
     }
 
@@ -149,8 +149,13 @@ public class CompositeCFindSCP extends BasicCFindSCP {
         InstanceQuery query = (InstanceQuery) JNDIUtils.lookup(InstanceQuery.JNDI_NAME);
         ApplicationEntity ae = as.getApplicationEntity();
         AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
-        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), matchUnknown);
+        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), matchUnknown, roles());
         return query;
+    }
+
+    private String[] roles() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     private String[] pids(Attributes keys) {
