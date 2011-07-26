@@ -242,4 +242,15 @@
     </attributes>
   </entity>
 
+  <entity class="StudyPermission">
+    <table name="study_permission" />
+    <sequence-generator name="seq" sequence-name="study_permission_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+    </attributes>
+  </entity>
+
 </entity-mappings>

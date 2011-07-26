@@ -102,7 +102,7 @@ public class SeriesQueryTest {
 
     @Test
     public void testByModality() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modality("PR"), filter(), NO_QUERY_OPTION, false);
+        query.find(null, ModalitiesInStudyPIDs, modality("PR"), filter(), NO_QUERY_OPTION, false, null);
         assertTrue(countMatches(query, 2));
         query.close();
     }
@@ -110,7 +110,7 @@ public class SeriesQueryTest {
     @Test
     public void testByModalitiesInStudyPR() throws Exception {
         query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(),
-                NO_QUERY_OPTION, false);
+                NO_QUERY_OPTION, false, null);
         assertTrue(countMatches(query,4));
         query.close();
     }
@@ -118,7 +118,7 @@ public class SeriesQueryTest {
     @Test
     public void testByModalitiesInStudyMatchUnknownPR() throws Exception {
         query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(),
-                NO_QUERY_OPTION, true);
+                NO_QUERY_OPTION, true, null);
         assertTrue(countMatches(query, 5));
         query.close();
     }
@@ -126,7 +126,7 @@ public class SeriesQueryTest {
     @Test
     public void testByModalitiesInStudyCT() throws Exception {
         query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(),
-                NO_QUERY_OPTION, false);
+                NO_QUERY_OPTION, false, null);
         assertTrue(countMatches(query, 2));
         query.close();
     }
@@ -134,7 +134,7 @@ public class SeriesQueryTest {
     @Test
     public void testByModalitiesInStudyMatchUnknownCT() throws Exception {
         query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(),
-                NO_QUERY_OPTION, true);
+                NO_QUERY_OPTION, true, null);
         assertTrue(countMatches(query, 3));
         query.close();
     }
@@ -156,7 +156,7 @@ public class SeriesQueryTest {
         issuer.setNull(Tag.UniversalEntityID, VR.UT);
         issuer.setNull(Tag.UniversalEntityIDType, VR.CS);
         
-        query.find(null, RequestedAttributesSeqPIDs, keys, filter(), NO_QUERY_OPTION, false);
+        query.find(null, RequestedAttributesSeqPIDs, keys, filter(), NO_QUERY_OPTION, false, null);
         assertTrue(countMatches(query, 1));
         query.close();
     }

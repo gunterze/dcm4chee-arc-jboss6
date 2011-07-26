@@ -36,25 +36,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.ejb.query;
+package org.dcm4chee.archive.ejb.permission;
 
-import java.util.EnumSet;
+import java.util.List;
 
 import javax.ejb.Local;
 
-import org.dcm4che.data.Attributes;
-import org.dcm4che.net.service.Matches;
-import org.dcm4che.net.pdu.QueryOption;
-import org.dcm4chee.archive.persistence.AttributeFilter;
+import org.dcm4chee.archive.persistence.Action;
+import org.dcm4chee.archive.persistence.StudyPermission;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @Local
-public interface StudyQuery extends Matches {
+public interface StudyPermissionManager {
 
-    public static final String JNDI_NAME = "StudyQueryBean/local";
+    List<StudyPermission> findStudyPermissions(String studyInstanceUID);
 
-    public void find(Attributes rq, String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, boolean matchUnknown, String[] roles);
+    boolean hasStudyPermission(String studyInstanceUID, String role, Action action);
+
+    boolean hasStudyExportPermission(String studyInstanceUID, String role, String destination);
+
+    boolean grantStudyPermission(String studyInstanceUID, String role, Action action);
+
+    boolean grantStudyExportPermission(String studyInstanceUID, String role, String destination);
+
+    boolean revokeStudyPermission(String studyInstanceUID, String role, Action action);
+
+    boolean revokeStudyExportPermission(String studyInstanceUID, String role, String destination);
 }

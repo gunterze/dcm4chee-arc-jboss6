@@ -108,7 +108,7 @@ public class InstanceQueryTest {
     @Test
     public void testByVerificationFlag() throws Exception {
         query.find(null, VerifyingObserverPIDs, verificationFlag("VERIFIED", "SR"), filter(),
-                NO_QUERY_OPTION, false);
+                NO_QUERY_OPTION, false, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
@@ -122,7 +122,7 @@ public class InstanceQueryTest {
     public void testByConceptCodeSequence() throws Exception {
         query.find(null, ConceptCodeSeqPIDs,
                 conceptCodeSeq("CONCEPT_NAME_1", "99DCM4CHEE_TEST", null), filter(),
-                NO_QUERY_OPTION, false);
+                NO_QUERY_OPTION, false, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.22.1.1" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
@@ -134,7 +134,7 @@ public class InstanceQueryTest {
     public void testByConceptCodeSequenceMatchUnknown() throws Exception {
         query.find(null, ConceptCodeSeqPIDs,
                 conceptCodeSeq("CONCEPT_NAME_2", "99DCM4CHEE_TEST", null), filter(),
-                NO_QUERY_OPTION, true);
+                NO_QUERY_OPTION, true, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] =
                 { "1.2.40.0.13.1.1.99.22.1.2", "1.2.40.0.13.1.1.99.22.1.3" };
@@ -147,7 +147,7 @@ public class InstanceQueryTest {
     public void testByVerifyingObserver() throws Exception {
         query.find(null, VerifyingObserverPIDs,
                 verifyingObserver("201106300830", "VerifyingObserver1"), filter(),
-                NO_QUERY_OPTION, false);
+                NO_QUERY_OPTION, false, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] =
                 { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3" };
@@ -160,7 +160,7 @@ public class InstanceQueryTest {
     public void testByVerifyingObserverMatchUnknown() throws Exception {
         query.find(null, VerifyingObserverPIDs,
                 verifyingObserver("201106300830", "VerifyingObserver1"), filter(),
-                NO_QUERY_OPTION, true);
+                NO_QUERY_OPTION, true, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] =
                 { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3",
@@ -174,7 +174,7 @@ public class InstanceQueryTest {
     public void testByVerifyingObserverRange() throws Exception {
         query.find(null, VerifyingObserverPIDs,
                 verifyingObserver("201106300000-20110701235900", null), filter(),
-                NO_QUERY_OPTION, false);
+                NO_QUERY_OPTION, false, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] =
                 { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3" };
@@ -191,7 +191,7 @@ public class InstanceQueryTest {
                 "CONTAINS", "Max"));
         contentSeq.add(contentSequenceItem("TCE104", "IHERADTF", null,
                 "CONTAINS", "Max's Abstract"));
-        query.find(null, TeachingFilePIDs, attrs, filter(), NO_QUERY_OPTION, false);
+        query.find(null, TeachingFilePIDs, attrs, filter(), NO_QUERY_OPTION, false, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.27.1.1" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
@@ -207,7 +207,7 @@ public class InstanceQueryTest {
                 "CONTAINS", "Moritz's Abstract"));
         contentSeq.add(contentSequenceCodeItem("TCE105", "IHERADTF", null,
                 "466.0", "I9C", null, "CONTAINS"));
-        query.find(null, TeachingFilePIDs, attrs, filter(), NO_QUERY_OPTION, false);
+        query.find(null, TeachingFilePIDs, attrs, filter(), NO_QUERY_OPTION, false, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.27.1.2" };
         Collection<String> col = Arrays.asList(SOPIUIDs);

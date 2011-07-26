@@ -608,7 +608,7 @@ class Matching {
     public static void study(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,
             Path<Patient> pat, Path<Study> study, String[] pids, Attributes keys,
             AttributeFilter filter, EnumSet<QueryOption> queryOpts, boolean matchUnknown,
-            List<Predicate> predicates, List<Object> params) {
+            String[] roles, List<Predicate> predicates, List<Object> params) {
         patient(cb, pat, pids, keys, filter, queryOpts, matchUnknown, predicates, params);
         if (keys == null)
             return;
@@ -663,8 +663,8 @@ class Matching {
             Path<Patient> pat, Join<Series, Study> study, Path<Series> series,
             String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, boolean matchUnknown,
-            List<Predicate> predicates, List<Object> params) {
-        study(cb, cq, pat, study, pids, keys, filter, queryOpts, matchUnknown,
+            String[] roles, List<Predicate> predicates, List<Object> params) {
+        study(cb, cq, pat, study, pids, keys, filter, queryOpts, matchUnknown, roles,
                 predicates, params);
         if (keys == null)
             return;
@@ -714,9 +714,9 @@ class Matching {
             Path<Patient> pat, Join<Series, Study> study, Path<Series> series,
             Root<Instance> inst, String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, boolean matchUnknown,
-            List<Predicate> predicates, List<Object> params) {
+            String[] roles, List<Predicate> predicates, List<Object> params) {
         series(cb, cq, pat, study, series, pids, keys, filter, queryOpts,
-                matchUnknown, predicates, params);
+                matchUnknown, roles, predicates, params);
         if (keys == null)
             return;
 
