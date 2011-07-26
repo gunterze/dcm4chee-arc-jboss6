@@ -54,7 +54,6 @@ import org.junit.runner.RunWith;
 public class ClearTestData {
 
     private static final String[] PIDS = {
-        "CT5",
         "RANGE-MATCHING",
         "ISSUER_OF_ACCNO",
         "REQ_ATTRS_SEQ",

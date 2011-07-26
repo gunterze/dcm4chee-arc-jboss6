@@ -73,12 +73,6 @@ public class InitTestData {
     };
 
     private static final String[] RESOURCES = {
-        "sc-1.xml",
-        "pr-1.xml",
-        "ct-1.xml",
-        "ct-2.xml",
-        "sr-1.xml",
-        "sr-2.xml",
         "date-range-1.xml",
         "date-range-2.xml",
         "date-range-3.xml",
@@ -115,7 +109,7 @@ public class InitTestData {
         "fuzzy-2.xml",
         "fuzzy-3.xml",
         "fuzzy-4.xml",
-        "personname-1.xml",
+        "person-name-1.xml",
    };
 
     @Deployment
