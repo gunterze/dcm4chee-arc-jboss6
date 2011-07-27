@@ -615,7 +615,9 @@ class Matching {
         add(predicates, wildCard(cb, inst.get(Instance_.instanceCustomAttribute3),
                 filter.selectInstanceCustomAttribute3(keys),
                 matchUnknown, params));
-        //TODO contentDateTime matching
+        RangeMatching.rangeMatch(cb, inst.get(Instance_.contentDate), 
+                inst.get(Instance_.contentTime), Tag.ContentDate, Tag.ContentTime, 
+                Tag.ContentDateAndTime, keys, queryOpts, matchUnknown, predicates, params);
     }
 
     static ParameterExpression<String> setParam(CriteriaBuilder cb,

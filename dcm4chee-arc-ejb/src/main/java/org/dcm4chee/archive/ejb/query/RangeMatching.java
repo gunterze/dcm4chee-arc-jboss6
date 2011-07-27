@@ -170,7 +170,7 @@ public class RangeMatching {
         return predicate;
     }
 
-    static Predicate matchUnknown(CriteriaBuilder cb, Path<String> field,
+    static private Predicate matchUnknown(CriteriaBuilder cb, Path<String> field,
             boolean matchUnknown, Predicate predicate) {
         return matchUnknown ? 
                 cb.or(predicate, cb.equal(field, "*")): 
