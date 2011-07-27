@@ -58,6 +58,7 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.net.pdu.QueryOption;
+import org.dcm4chee.archive.persistence.Action;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Code;
 import org.dcm4chee.archive.persistence.Code_;
@@ -72,6 +73,8 @@ import org.dcm4chee.archive.persistence.RequestAttributes_;
 import org.dcm4chee.archive.persistence.Series;
 import org.dcm4chee.archive.persistence.Series_;
 import org.dcm4chee.archive.persistence.Study;
+import org.dcm4chee.archive.persistence.StudyPermission;
+import org.dcm4chee.archive.persistence.StudyPermission_;
 import org.dcm4chee.archive.persistence.Study_;
 import org.dcm4chee.archive.persistence.VerifyingObserver;
 import org.dcm4chee.archive.persistence.VerifyingObserver_;
@@ -326,6 +329,26 @@ class Matching {
         return matchUnknownCollection(cb, collection, matchUnknown, sq);
     }
 
+    private static Predicate checkPermission(CriteriaBuilder cb, CriteriaQuery<Tuple> cq, 
+            Path<Study> study, String[] roles, Action action, List<Object> params) {
+        if (roles == null || roles.length == 0)
+            return null;
+        
+        Subquery<StudyPermission> sq = cq.subquery(StudyPermission.class);
+        Root<StudyPermission> root = sq.from(StudyPermission.class);
+        sq.select(root);
+        ArrayList<Predicate> predicates = new ArrayList<Predicate>();
+        predicates.add(cb.equal(study.get(Study_.studyInstanceUID), 
+                root.get(StudyPermission_.studyInstanceUID)));
+        predicates.add(cb.equal(root.get(StudyPermission_.action), action));
+        ArrayList<Predicate> rolesPredicate = new ArrayList<Predicate>();
+        for (String role : roles)
+            rolesPredicate.add(cb.equal(root.get(StudyPermission_.role), role));
+        predicates.add(cb.or(rolesPredicate.toArray(new Predicate[rolesPredicate.size()])));
+        sq.where(predicates.toArray(new Predicate[predicates.size()]));
+        return cb.exists(sq);
+    }
+
     private static Predicate requestAttributesSequence(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq,
             Expression<Collection<RequestAttributes>> collection,
@@ -518,6 +541,7 @@ class Matching {
         add(predicates, wildCard(cb, study.get(Study_.studyCustomAttribute3),
                 filter.selectStudyCustomAttribute3(keys),
                 matchUnknown, params));
+        add(predicates, checkPermission(cb, cq, study, roles, Action.QUERY, params));
     }
 
     public static void series(CriteriaBuilder cb, CriteriaQuery<Tuple> cq,

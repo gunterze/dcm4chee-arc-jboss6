@@ -115,7 +115,6 @@ public class InstanceQueryTest {
         Collection<String> col = Arrays.asList(SOPIUIDs);
         assertTrue(equals(result, col));
         query.close();
-        ;
     }
 
 

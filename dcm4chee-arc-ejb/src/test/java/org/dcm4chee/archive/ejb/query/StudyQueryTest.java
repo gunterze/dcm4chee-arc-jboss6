@@ -54,11 +54,15 @@ import org.dcm4che.data.VR;
 import org.dcm4che.io.SAXReader;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.soundex.ESoundex;
+import org.dcm4chee.archive.ejb.permission.StudyPermissionManager;
+import org.dcm4chee.archive.ejb.permission.StudyPermissionManagerBean;
+import org.dcm4chee.archive.persistence.Action;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -95,11 +99,16 @@ public class StudyQueryTest {
                         StudyQueryBean.class,
                         Matching.class,
                         RangeMatching.class,
-                        PersonNameMatching.class);
+                        PersonNameMatching.class,
+                        StudyPermissionManager.class,
+                        StudyPermissionManagerBean.class);
     }
 
     @EJB
     private StudyQuery query;
+    
+    @EJB
+    private StudyPermissionManager mgr;
 
     private AttributeFilter filter() throws Exception {
         return new AttributeFilter(
@@ -160,7 +169,7 @@ public class StudyQueryTest {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange(null, "1030-"), filter(),
                 NO_QUERY_OPTION, false, null);
         assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyUIDResultList(query);
+        ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
                 { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
                         "1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6" };
@@ -174,7 +183,7 @@ public class StudyQueryTest {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange(null, "-1430"), filter(),
                 NO_QUERY_OPTION, false, null);
         assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyUIDResultList(query);
+        ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
                 { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
                         "1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6" };
@@ -188,7 +197,7 @@ public class StudyQueryTest {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange("20110620", "103000.000"),
                 filter(), NO_QUERY_OPTION, true, null);
         assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyUIDResultList(query);
+        ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] = { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.8","1.2.40.0.13.1.1.99.9" };
         Collection<String> col = Arrays.asList(studyUIDs);
         assertTrue(equals(result, col));
@@ -200,7 +209,7 @@ public class StudyQueryTest {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange(null, "1030-1430"), filter(),
                 NO_QUERY_OPTION, false, null);
         assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyUIDResultList(query);
+        ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
                 { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
                         "1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6" };
@@ -214,7 +223,7 @@ public class StudyQueryTest {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange("20100620-20110620", null),
                 filter(), NO_QUERY_OPTION, false, null);
         assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyUIDResultList(query);
+        ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
                 { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
                         "1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6",
@@ -229,7 +238,7 @@ public class StudyQueryTest {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange("20100620-20110620", "1030-1430"),
                 filter(), NO_QUERY_OPTION, false, null);
         assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyUIDResultList(query);
+        ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
                 { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
                         "1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6" };
@@ -243,7 +252,7 @@ public class StudyQueryTest {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange("20100620-20110620", "1040-1430"),
                 filter(), COMBINED_DATE_TIME, false, null);
         assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyUIDResultList(query);
+        ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
                 { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
                         "1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
@@ -258,7 +267,7 @@ public class StudyQueryTest {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange("20100620-", "1040-"), filter(),
                 COMBINED_DATE_TIME, false, null);
         assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyUIDResultList(query);
+        ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
                 { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
                         "1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
@@ -273,7 +282,7 @@ public class StudyQueryTest {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange("-20110620", "-1420"), filter(),
                 COMBINED_DATE_TIME, false, null);
         assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyUIDResultList(query);
+        ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
                 { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.5",
                         "1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
@@ -288,7 +297,7 @@ public class StudyQueryTest {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange("20100620-20110620", "1040-1430"),
                 filter(), COMBINED_DATE_TIME, true, null);
         assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyUIDResultList(query);
+        ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
                 { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
                         "1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
@@ -332,6 +341,33 @@ public class StudyQueryTest {
                 NO_QUERY_OPTION, true, null);
         assertTrue(countMatches(query, 2));
         query.close();
+    }
+    
+    @Before
+    public void clearDB(){
+        mgr.revokeStudyPermission("1.2.40.0.13.1.1.99.10", "DCM4CHEE_TEST", Action.QUERY);
+        mgr.revokeStudyPermission("1.2.40.0.13.1.1.99.11", "DCM4CHEE_TEST", Action.QUERY);
+        mgr.revokeStudyPermission("1.2.40.0.13.1.1.99.12", "DCM4CHEE_TEST", Action.QUERY);
+    }
+
+    @Test
+    public void testByStudyPermission() throws Exception {
+        String StudyIUIDs[] = { "1.2.40.0.13.1.1.99.10", "1.2.40.0.13.1.1.99.11", 
+        "1.2.40.0.13.1.1.99.12" };
+        Collection<String> col = Arrays.asList(StudyIUIDs);
+        for (String studyIUID : StudyIUIDs)
+            assertTrue(mgr.grantStudyPermission(studyIUID, "DCM4CHEE_TEST", Action.QUERY));
+        query.find(null, null, new Attributes(), filter(), NO_QUERY_OPTION, false, 
+                new String[] { "DCM4CHEE_TEST" , "FooBar" });
+        ArrayList<String> result = studyIUIDResultList(query);
+        assertTrue(equals(result, col));
+        query.find(null, null, new Attributes(), filter(), NO_QUERY_OPTION, false, 
+                new String[] { "FooBar" });
+        result = studyIUIDResultList(query);
+        assertFalse(equals(result, col));
+        query.close();
+        for (String studyIUID : StudyIUIDs)
+            assertTrue(mgr.revokeStudyPermission(studyIUID, "DCM4CHEE_TEST", Action.QUERY));
     }
 
     private boolean equals(ArrayList<String> result, Collection<String> col) {
@@ -385,7 +421,7 @@ public class StudyQueryTest {
         return attrs;
     }
 
-    private ArrayList<String> studyUIDResultList(StudyQuery query)
+    private ArrayList<String> studyIUIDResultList(StudyQuery query)
             throws Exception {
         ArrayList<String> result = new ArrayList<String>();
         while (query.hasMoreMatches()) {
