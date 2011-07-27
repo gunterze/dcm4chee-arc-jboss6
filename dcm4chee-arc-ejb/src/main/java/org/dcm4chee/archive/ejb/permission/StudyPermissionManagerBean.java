@@ -42,7 +42,8 @@ import java.util.List;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnit;
 
 import org.dcm4chee.archive.persistence.Action;
 import org.dcm4chee.archive.persistence.StudyPermission;
@@ -53,18 +54,33 @@ import org.dcm4chee.archive.persistence.StudyPermission;
 @Stateless
 public class StudyPermissionManagerBean implements StudyPermissionManager {
 
-    @PersistenceContext(unitName = "dcm4chee-arc")
-    private EntityManager em;
+    @PersistenceUnit(unitName = "dcm4chee-arc")
+    private EntityManagerFactory emf;
 
     @Override
     public List<StudyPermission> findStudyPermissions(String studyInstanceUID) {
-        return em.createNamedQuery(StudyPermission.FIND_BY_STUDY_INSTANCE_UID, StudyPermission.class)
-                .setParameter(1, studyInstanceUID)
-                .getResultList();
+        EntityManager em = emf.createEntityManager();
+        try {
+            return em.createNamedQuery(StudyPermission.FIND_BY_STUDY_INSTANCE_UID, StudyPermission.class)
+                    .setParameter(1, studyInstanceUID)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public boolean hasStudyPermission(String studyInstanceUID, String role, Action action) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            return hasStudyPermission(studyInstanceUID, role, action, em);
+        } finally {
+            em.close();
+        }
+    }
+
+    private static boolean hasStudyPermission(String studyInstanceUID, String role, Action action,
+            EntityManager em) {
         return !em.createNamedQuery(StudyPermission.CHECK_PERMISSION)
                 .setParameter(1, studyInstanceUID)
                 .setParameter(2, role)
@@ -74,6 +90,16 @@ public class StudyPermissionManagerBean implements StudyPermissionManager {
 
     @Override
     public boolean hasStudyExportPermission(String studyInstanceUID, String role, String dest) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            return hasStudyExportPermission(studyInstanceUID, role, dest, em);
+        } finally {
+            em.close();
+        }
+   }
+
+    private static boolean hasStudyExportPermission(String studyInstanceUID, String role,
+            String dest, EntityManager em) {
         return !em.createNamedQuery(StudyPermission.CHECK_EXPORT_PERMISSION)
                 .setParameter(1, studyInstanceUID)
                 .setParameter(2, role)
@@ -83,38 +109,58 @@ public class StudyPermissionManagerBean implements StudyPermissionManager {
 
     @Override
     public boolean grantStudyPermission(String studyInstanceUID, String role, Action action) {
-        if (hasStudyPermission(studyInstanceUID, role, action))
-            return false;
+        EntityManager em = emf.createEntityManager();
+        try {
+            if (hasStudyPermission(studyInstanceUID, role, action, em))
+                return false;
 
-        em.persist(new StudyPermission(studyInstanceUID, role, action));
-        return true;
+            em.persist(new StudyPermission(studyInstanceUID, role, action));
+            return true;
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public boolean grantStudyExportPermission(String studyInstanceUID, String role, String dest) {
-        if (hasStudyExportPermission(studyInstanceUID, role, dest))
-            return false;
+        EntityManager em = emf.createEntityManager();
+        try {
+            if (hasStudyExportPermission(studyInstanceUID, role, dest, em))
+                return false;
 
-        em.persist(new StudyPermission(studyInstanceUID, role, dest));
-        return true;
+            em.persist(new StudyPermission(studyInstanceUID, role, dest));
+            return true;
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public boolean revokeStudyPermission(String studyInstanceUID, String role, Action action) {
-        return em.createNamedQuery(StudyPermission.REVOKE_PERMISSION)
-                .setParameter(1, studyInstanceUID)
-                .setParameter(2, role)
-                .setParameter(3, action)
-                .executeUpdate() > 0;
+        EntityManager em = emf.createEntityManager();
+        try {
+            return em.createNamedQuery(StudyPermission.REVOKE_PERMISSION)
+                    .setParameter(1, studyInstanceUID)
+                    .setParameter(2, role)
+                    .setParameter(3, action)
+                    .executeUpdate() > 0;
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public boolean revokeStudyExportPermission(String studyInstanceUID, String role, String dest) {
-        return em.createNamedQuery(StudyPermission.REVOKE_EXPORT_PERMISSION)
-                .setParameter(1, studyInstanceUID)
-                .setParameter(2, role)
-                .setParameter(3, dest)
-                .executeUpdate() > 0;
+        EntityManager em = emf.createEntityManager();
+        try {
+            return em.createNamedQuery(StudyPermission.REVOKE_EXPORT_PERMISSION)
+                    .setParameter(1, studyInstanceUID)
+                    .setParameter(2, role)
+                    .setParameter(3, dest)
+                    .executeUpdate() > 0;
+        } finally {
+            em.close();
+        }
     }
 
 }
