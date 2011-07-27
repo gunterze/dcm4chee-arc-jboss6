@@ -79,8 +79,8 @@ class PersonNameMatching {
             Path<String> familyNameSoundex, Path<String> givenNameSoundex,
             String value, AttributeFilter filter, boolean matchUnknown, List<Object> params) {
         PersonName pn = new PersonName(value);
-        boolean containsFamilyName = !pn.isEmpty(PersonName.Component.FamilyName);
-        boolean containsGivenName = !pn.isEmpty(PersonName.Component.GivenName);
+        boolean containsFamilyName = pn.containst(PersonName.Component.FamilyName);
+        boolean containsGivenName = pn.containst(PersonName.Component.GivenName);
         if (containsFamilyName && containsGivenName)
             return PersonNameMatching.fuzzyNames(cb, filter, familyNameSoundex, givenNameSoundex, 
                     pn.get(PersonName.Component.FamilyName), pn.get(PersonName.Component.GivenName), 
