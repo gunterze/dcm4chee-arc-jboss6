@@ -69,30 +69,32 @@ class PersonNameMatching {
             return;
     
         if (queryOpts.contains(QueryOption.FUZZY))
-            predicates.add(PersonNameMatching.fuzzyPersonName(cb, 
-                    familyNameSoundex, givenNameSoundex, value, filter, matchUnknown, params));
+            PersonNameMatching.fuzzyPersonName(cb, 
+                    familyNameSoundex, givenNameSoundex, value, filter, 
+                    matchUnknown, params, predicates);
         else
-            predicates.add(PersonNameMatching.literalPersonName(cb, 
-                    alphabethic, ideographic, phonetic, value, matchUnknown, params));
+            PersonNameMatching.literalPersonName(cb, 
+                    alphabethic, ideographic, phonetic, value, 
+                    matchUnknown, params, predicates);
     }
 
-    static private Predicate fuzzyPersonName(CriteriaBuilder cb,
+    static private void fuzzyPersonName(CriteriaBuilder cb,
             Path<String> familyNameSoundex, Path<String> givenNameSoundex,
-            String value, AttributeFilter filter, boolean matchUnknown, List<Object> params) {
+            String value, AttributeFilter filter, 
+            boolean matchUnknown, List<Object> params, List<Predicate> predicates) {
         PersonName pn = new PersonName(value);
         boolean containsFamilyName = pn.containst(PersonName.Component.FamilyName);
         boolean containsGivenName = pn.containst(PersonName.Component.GivenName);
         if (containsFamilyName && containsGivenName)
-            return PersonNameMatching.fuzzyNames(cb, filter, familyNameSoundex, givenNameSoundex, 
+            predicates.add(PersonNameMatching.fuzzyNames(cb, filter, familyNameSoundex, givenNameSoundex, 
                     pn.get(PersonName.Component.FamilyName), pn.get(PersonName.Component.GivenName), 
-                    matchUnknown, params);
+                    matchUnknown, params));
         else if (containsGivenName)
-            return PersonNameMatching.fuzzyName(cb, filter, familyNameSoundex, givenNameSoundex, 
-                    pn.get(PersonName.Component.GivenName), matchUnknown, params);
+            predicates.add(PersonNameMatching.fuzzyName(cb, filter, familyNameSoundex, givenNameSoundex, 
+                    pn.get(PersonName.Component.GivenName), matchUnknown, params));
         else if (containsFamilyName)
-            return PersonNameMatching.fuzzyName(cb, filter, familyNameSoundex, givenNameSoundex, 
-                    pn.get(PersonName.Component.FamilyName), matchUnknown, params);
-        return null;
+            predicates.add(PersonNameMatching.fuzzyName(cb, filter, familyNameSoundex, givenNameSoundex, 
+                    pn.get(PersonName.Component.FamilyName), matchUnknown, params));
     }
 
     static private Predicate fuzzyNames(CriteriaBuilder cb, AttributeFilter filter, 
@@ -162,37 +164,42 @@ class PersonNameMatching {
         return cb.like(field, param);
     }
 
-    static private Predicate literalPersonName(CriteriaBuilder cb,
+    static private void literalPersonName(CriteriaBuilder cb,
             Path<String> alphabethic, Path<String> ideographic,
             Path<String> phonetic, String value, boolean matchUnknown,
-            List<Object> params) {
+            List<Object> params, List<Predicate> predicates) {
         PersonName pn = new PersonName(value);
+        ArrayList<Predicate> namePredicates = new ArrayList<Predicate>(3);
         Predicate predicate;
         String queryString =
                 pn.getNormalizedQueryString(PersonName.Group.Alphabetic);
         if (value.indexOf('=') == -1) {
-            predicate = cb.or(
-                    Matching.wildCard0(cb, alphabethic, queryString, params),
-                    Matching.wildCard0(cb, ideographic, queryString, params),
-                    Matching.wildCard0(cb, phonetic, queryString, params));
+            Matching.wildCard(cb, alphabethic, queryString, 
+                    matchUnknown, params, namePredicates);
+            Matching.wildCard(cb, ideographic, queryString, 
+                    matchUnknown, params, namePredicates);
+            Matching.wildCard(cb, phonetic, queryString, 
+                    matchUnknown, params, namePredicates);
+            predicate = cb.or(namePredicates.toArray(new Predicate[namePredicates.size()]));
         } else {
-            predicate = Matching.and(cb,
-                    Matching.wildCard0(cb, alphabethic, queryString, params),
-                    Matching.wildCard0(cb, ideographic,
-                            pn.getNormalizedQueryString(PersonName.Group.Ideographic),
-                            params),
-                    Matching.wildCard0(cb, phonetic,
-                            pn.getNormalizedQueryString(PersonName.Group.Phonetic),
-                            params));
-            if (predicate == null)
-                return null;
+            Matching.wildCard(cb, alphabethic, queryString, 
+                    matchUnknown, params, namePredicates);
+            Matching.wildCard(cb, ideographic,
+                    pn.getNormalizedQueryString(PersonName.Group.Ideographic),
+                    matchUnknown, params, namePredicates);
+            Matching.wildCard(cb, phonetic,
+                    pn.getNormalizedQueryString(PersonName.Group.Phonetic),
+                    matchUnknown, params, namePredicates);
+            predicate = cb.and(namePredicates.toArray(new Predicate[namePredicates.size()]));
         }
-        return matchUnknown 
-                ? cb.or(predicate, cb.and(
-                        cb.equal(alphabethic, "*"),
-                        cb.equal(ideographic, "*"),
-                        cb.equal(phonetic, "*")))
-                : predicate;
+        if (predicate != null){
+            if (matchUnknown)
+                predicates.add(cb.or(predicate, cb.and(
+                            cb.equal(alphabethic, "*"),
+                            cb.equal(ideographic, "*"),
+                            cb.equal(phonetic, "*"))));
+            else
+                predicates.add(predicate);
+        }
     }
-
 }

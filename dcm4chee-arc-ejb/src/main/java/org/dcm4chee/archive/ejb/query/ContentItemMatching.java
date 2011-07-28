@@ -82,11 +82,11 @@ class ContentItemMatching {
         sq.select(contentItem);
         ArrayList<Predicate> contentItemPredicates = new ArrayList<Predicate>(4);
         contentItemPredicates.add(cb.isMember(contentItem, collection));
-        if (!addContentItemPredicates(cq, cb, item, filter, params, contentItem, contentItemPredicates))
-            return;
-
-        sq.where(contentItemPredicates.toArray(new Predicate[contentItemPredicates.size()]));
-        predicates.add(cb.exists(sq));
+        if (addContentItemPredicates(cq, cb, item, filter, params, 
+                contentItem, contentItemPredicates)) {
+            sq.where(contentItemPredicates.toArray(new Predicate[contentItemPredicates.size()]));
+            predicates.add(cb.exists(sq));
+        }
     }
 
     private static boolean addContentItemPredicates(CriteriaQuery<Tuple> cq,

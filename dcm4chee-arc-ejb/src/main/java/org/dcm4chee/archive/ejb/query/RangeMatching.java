@@ -207,10 +207,8 @@ public class RangeMatching {
         final boolean containsTimeTag = keys.containsValue(timeTag);
         if (containsDateTag && containsTimeTag && queryOpts.contains(QueryOption.DATETIME))
             predicates.add(matchUnknown(cb, dateField, matchUnknown,
-                            combinedRange(cb, 
-                                    dateField, timeField, 
-                                    keys.getDateRange(dateAndTimeTag, null), 
-                                    params)));
+                    combinedRange(cb, dateField, timeField, 
+                            keys.getDateRange(dateAndTimeTag, null), params)));
         else {
             if (containsDateTag)
                 predicates.add(matchUnknown(cb, dateField,

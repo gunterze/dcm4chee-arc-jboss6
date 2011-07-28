@@ -122,6 +122,19 @@ public class PatientQueryTest {
         assertTrue(query.hasMoreMatches());
         query.nextMatch();
         assertFalse(query.hasMoreMatches());
+        query.find(null, fuzzyPatientData, patientName("LUCAS^GEORGE=", false), filter(), 
+                NO_QUERY_OPTION, false);
+        ArrayList<String> result = patientIDResultList(query);
+        String patIDs[] = { "FUZZY_GEORGE" };
+        Collection<String> col = Arrays.asList(patIDs);
+        assertTrue(equals(result, col));
+        query.find(null, null, 
+                patientName("OOMIYA^SHOUGO=大宮^省吾=オオミヤ^ショウゴ",  true), filter(), 
+                NO_QUERY_OPTION, false);
+        result = patientIDResultList(query);
+        patIDs = new String[]{ "PERSON_NAME" };
+        col = Arrays.asList(patIDs);
+        assertTrue(equals(result, col));
         query.close();
     }
 
