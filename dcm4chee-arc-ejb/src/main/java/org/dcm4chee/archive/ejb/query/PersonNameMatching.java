@@ -56,7 +56,7 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
  */
 class PersonNameMatching {
 
-    static Predicate personName(CriteriaBuilder cb,
+    static void personName(CriteriaBuilder cb, 
             Path<String> alphabethic,
             Path<String> ideographic,
             Path<String> phonetic,
@@ -64,15 +64,16 @@ class PersonNameMatching {
             Path<String> givenNameSoundex,
             String value, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, boolean matchUnknown,
-            List<Object> params) {
+            List<Object> params, List<Predicate> predicates) {
         if (value.equals("*"))
-            return null;
+            return;
     
-        return queryOpts.contains(QueryOption.FUZZY)
-                ? PersonNameMatching.fuzzyPersonName(cb, familyNameSoundex, givenNameSoundex,
-                        value, filter, matchUnknown, params)
-                : PersonNameMatching.literalPersonName(cb, alphabethic, ideographic, phonetic,
-                        value, matchUnknown, params);
+        if (queryOpts.contains(QueryOption.FUZZY))
+            predicates.add(PersonNameMatching.fuzzyPersonName(cb, 
+                    familyNameSoundex, givenNameSoundex, value, filter, matchUnknown, params));
+        else
+            predicates.add(PersonNameMatching.literalPersonName(cb, 
+                    alphabethic, ideographic, phonetic, value, matchUnknown, params));
     }
 
     static private Predicate fuzzyPersonName(CriteriaBuilder cb,

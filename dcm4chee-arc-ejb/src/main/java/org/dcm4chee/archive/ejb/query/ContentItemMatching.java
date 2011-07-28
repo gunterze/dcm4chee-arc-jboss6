@@ -60,58 +60,54 @@ import org.dcm4chee.archive.persistence.ContentItem_;
  */
 class ContentItemMatching {
 
-    public static Predicate withContentItem(CriteriaBuilder cb,
+    public static void withContentItem(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq,
             Expression<Collection<ContentItem>> collection, Attributes item,
-            AttributeFilter filter, String valueType, List<Object> params) {
+            AttributeFilter filter, String valueType, 
+            List<Object> params, List<Predicate> predicates) {
         if (validValueType(valueType))
-            return withContentItem(cq, cb, collection, item, filter, params);
-        return null;
+            withContentItem(cq, cb, collection, item, filter, params, predicates);
     }
 
     private static boolean validValueType(String valueType) {
         return "CODE".equals(valueType) || "TEXT".equals(valueType);
     }
 
-    private static Predicate withContentItem(CriteriaQuery<Tuple> cq, 
+    private static void withContentItem(CriteriaQuery<Tuple> cq, 
             CriteriaBuilder cb, Expression<Collection<ContentItem>> collection, 
-            Attributes item, AttributeFilter filter, List<Object> params) {
+            Attributes item, AttributeFilter filter, 
+            List<Object> params, List<Predicate> predicates) {
         Subquery<ContentItem> sq = cq.subquery(ContentItem.class);
         Root<ContentItem> contentItem = sq.from(ContentItem.class);
         sq.select(contentItem);
-        ArrayList<Predicate> predicates = new ArrayList<Predicate>(4);
-        predicates.add(cb.isMember(contentItem, collection));
-        if (!addContentItemPredicates(cq, cb, item, filter, params, contentItem, predicates))
-            return null;
+        ArrayList<Predicate> contentItemPredicates = new ArrayList<Predicate>(4);
+        contentItemPredicates.add(cb.isMember(contentItem, collection));
+        if (!addContentItemPredicates(cq, cb, item, filter, params, contentItem, contentItemPredicates))
+            return;
 
-        sq.where(predicates.toArray(new Predicate[predicates.size()]));
-        return cb.exists(sq);
+        sq.where(contentItemPredicates.toArray(new Predicate[contentItemPredicates.size()]));
+        predicates.add(cb.exists(sq));
     }
 
     private static boolean addContentItemPredicates(CriteriaQuery<Tuple> cq,
             CriteriaBuilder cb, Attributes item, AttributeFilter filter, List<Object> params,
             Root<ContentItem> contentItem, ArrayList<Predicate> predicates) {
-        boolean restrict = Matching.add(predicates, 
-                Matching.withCode(cb, cq, 
-                        contentItem.get(ContentItem_.conceptName), 
-                        item.getNestedDataset(Tag.ConceptNameCodeSequence), filter,
-                        false, params));
-        restrict = Matching.add(predicates,
-                Matching.wildCard(cb,
-                        contentItem.get(ContentItem_.relationshipType),
-                        filter.getString(item, Tag.RelationshipType),
-                        false, params))
-                || restrict;
-        restrict = Matching.add(predicates,
-                Matching.withCode(cb, cq, 
-                        contentItem.get(ContentItem_.conceptCode), 
-                        item.getNestedDataset(Tag.ConceptCodeSequence), filter, false, params))
-                || restrict;
-        restrict = Matching.add(predicates, 
-                Matching.wildCard(cb, 
-                        contentItem.get(ContentItem_.textValue), 
-                        filter.getString(item, Tag.TextValue), false, params))
-                || restrict;
-        return restrict;
+        Matching.withCode(cb, cq, 
+                contentItem.get(ContentItem_.conceptName), 
+                item.getNestedDataset(Tag.ConceptNameCodeSequence), filter,
+                false, params, predicates);
+        Matching.wildCard(cb,
+                contentItem.get(ContentItem_.relationshipType),
+                filter.getString(item, Tag.RelationshipType),
+                false, params, predicates);
+        Matching.withCode(cb, cq, 
+                contentItem.get(ContentItem_.conceptCode), 
+                item.getNestedDataset(Tag.ConceptCodeSequence), filter, 
+                false, params, predicates);
+        Matching.wildCard(cb, 
+                contentItem.get(ContentItem_.textValue), 
+                filter.getString(item, Tag.TextValue), 
+                false, params, predicates);
+        return !predicates.isEmpty();
     }
 }

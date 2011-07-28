@@ -199,36 +199,37 @@ public class RangeMatching {
         abstract String format(Date date);
     }
 
-    public static void rangeMatch(CriteriaBuilder cb, Path<String> dateField,
-            Path<String> timeField, int dateTag, int timeTag,
+    public static void rangeMatch(CriteriaBuilder cb, 
+            Path<String> dateField, Path<String> timeField, int dateTag, int timeTag,
             long dateAndTimeTag, Attributes keys, EnumSet<QueryOption> queryOpts,
-            boolean matchUnknown, List<Predicate> predicates,
-            List<Object> params) {
+            boolean matchUnknown, List<Object> params, List<Predicate> predicates) {
         final boolean containsDateTag = keys.containsValue(dateTag);
         final boolean containsTimeTag = keys.containsValue(timeTag);
         if (containsDateTag && containsTimeTag && queryOpts.contains(QueryOption.DATETIME))
-            Matching.add(predicates, matchUnknown(cb, dateField, matchUnknown,
-                    combinedRange(cb, dateField, timeField, keys.getDateRange(
-                            dateAndTimeTag, null), params)));
+            predicates.add(matchUnknown(cb, dateField, matchUnknown,
+                            combinedRange(cb, 
+                                    dateField, timeField, 
+                                    keys.getDateRange(dateAndTimeTag, null), 
+                                    params)));
         else {
             if (containsDateTag)
-                Matching.add(predicates, matchUnknown(cb, dateField,
+                predicates.add(matchUnknown(cb, dateField,
                         matchUnknown, range(cb, dateField, keys.getDateRange(
                                 dateTag, null), FormatDate.DA, params)));
             if (containsTimeTag)
-                Matching.add(predicates, matchUnknown(cb, timeField,
+                predicates.add(matchUnknown(cb, timeField,
                         matchUnknown, range(cb, timeField, keys.getDateRange(
                                 timeTag, null), FormatDate.TM, params)));
         }
     }
 
-    public static Predicate rangeMatch(CriteriaBuilder cb, Path<String> path,
-            int tag, FormatDate dt, Attributes keys, boolean matchUnknown, 
-            List<Object> params) {
+    public static void rangeMatch(CriteriaBuilder cb, 
+            Path<String> path, int tag, FormatDate dt, Attributes keys, 
+            boolean matchUnknown, List<Object> params, List<Predicate> predicates) {
         if (!keys.containsValue(tag))
-            return null;
+            return;
         
-        return matchUnknown(cb, path, matchUnknown,
-                range(cb, path, keys.getDateRange(tag, null), dt, params));
+        predicates.add(matchUnknown(cb, path, matchUnknown,
+                range(cb, path, keys.getDateRange(tag, null), dt, params)));
     }
 }
