@@ -154,7 +154,7 @@ class PersonNameMatching {
             Path<String> field, String name, String fuzzy, List<Object> params) {
         if (name.endsWith("*"))
             return PersonNameMatching.likeValue(cb, field, fuzzy, params);
-        return Matching.singleValue0(cb, field, fuzzy, params);
+        return Matching.singleValuePredicate(cb, field, fuzzy, params);
     }
 
     static private Predicate likeValue(CriteriaBuilder cb, Path<String> field,

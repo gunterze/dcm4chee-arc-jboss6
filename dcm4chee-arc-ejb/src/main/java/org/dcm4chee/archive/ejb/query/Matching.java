@@ -129,7 +129,7 @@ class Matching {
             return;
 
         if (values.length == 1)
-            predicates.add(singleValue0(cb, field, values[0], params));
+            predicates.add(singleValuePredicate(cb, field, values[0], params));
         
         else {
             ParameterExpression<String>[] pes =
@@ -150,13 +150,13 @@ class Matching {
 
         Predicate predicate = wildCardPredicate(cb, field, value, params);
         if (predicate != null)
-            predicates.add(matchUnknown0(cb, field, matchUnknown, predicate));
+            predicates.add(matchUnknown(cb, field, matchUnknown, predicate));
     }
 
     private static Predicate wildCardPredicate(CriteriaBuilder cb, Path<String> field,
             String value, List<Object> params) {
         if (!Matching.containsWildcard(value))
-            return singleValue0(cb, field, value, params);
+            return singleValuePredicate(cb, field, value, params);
 
         String pattern = Matching.toLikePattern(value);
         if (pattern.equals("%"))
@@ -166,7 +166,7 @@ class Matching {
         return cb.like(field, param);
     }
 
-    static Predicate singleValue0(CriteriaBuilder cb,
+    static Predicate singleValuePredicate(CriteriaBuilder cb,
             Path<String> field, String value, List<Object> params) {
         ParameterExpression<String> param = setParam(cb, params, value);
         return cb.equal(field, param);
@@ -182,7 +182,7 @@ class Matching {
         Root<Series> series = sq.from(Series.class);
         sq.select(series);
         sq.where(cb.equal(study, series.get(Series_.study)),
-                matchUnknown0(cb, series.get(Series_.modality), matchUnknown, 
+                matchUnknown(cb, series.get(Series_.modality), matchUnknown, 
                         wildCardPredicate(cb, series.get(Series_.modality), modality, params)));
         predicates.add(cb.exists(sq));
     }
@@ -405,7 +405,7 @@ class Matching {
         return matchUnknown ? cb.or(cb.exists(sq), cb.isNull(path)) : cb.exists(sq);
     }
 
-    private static Predicate matchUnknown0(CriteriaBuilder cb, Path<String> field,
+    private static Predicate matchUnknown(CriteriaBuilder cb, Path<String> field,
             boolean matchUnknown, Predicate predicate) {
         return matchUnknown
             ? cb.or(predicate, cb.equal(field, "*"))
@@ -419,23 +419,23 @@ class Matching {
 
         Predicate predicate =
                 pids.length == 1 
-                    ? patientID0(cb, idField, issuerField, pids[0], pids[1], params) 
-                    : patientID0(cb, idField, issuerField, pids, params);
-        predicates.add(matchUnknown0(cb, idField, matchUnknown, predicate));
+                    ? patientIDPredicate(cb, idField, issuerField, pids[0], pids[1], params) 
+                    : patientIDPredicates(cb, idField, issuerField, pids, params);
+        predicates.add(matchUnknown(cb, idField, matchUnknown, predicate));
     }
 
-    private static Predicate patientID0(CriteriaBuilder cb,
+    private static Predicate patientIDPredicates(CriteriaBuilder cb,
             Path<String> idField, Path<String> issuerField, String[] pids,
             List<Object> params) {
         Predicate[] predicates = new Predicate[pids.length >> 1];
         for (int i = 0, j = 0; i < predicates.length; i++, j++, j++)
             predicates[i] =
-                    patientID0(cb, idField, issuerField, pids[j], pids[j + 1],
+                    patientIDPredicate(cb, idField, issuerField, pids[j], pids[j + 1],
                             params);
         return cb.or(predicates);
     }
 
-    private static Predicate patientID0(CriteriaBuilder cb,
+    private static Predicate patientIDPredicate(CriteriaBuilder cb,
             Path<String> idField, Path<String> issuerField, String id,
             String issuer, List<Object> params) {
         Predicate predicate = wildCardPredicate(cb, idField, id, params);
