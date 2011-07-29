@@ -82,12 +82,12 @@ public class RequestAttributes implements Serializable {
             requestingPhysicianGivenNameSoundex = "*";
         } else {
             PersonName pn = new PersonName(s);
-            requestingPhysician =
-                    pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
-            requestingPhysicianIdeographicName =
-                    pn.getNormalizedString(PersonName.Group.Ideographic, "*");
-            requestingPhysicianPhoneticName =
-                    pn.getNormalizedString(PersonName.Group.Phonetic, "*");
+            requestingPhysician = pn.contains(PersonName.Group.Alphabetic) 
+                    ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
+            requestingPhysicianIdeographicName = pn.contains(PersonName.Group.Ideographic)
+                    ? pn.toString(PersonName.Group.Ideographic, false) : "*";
+            requestingPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
+                    ? pn.toString(PersonName.Group.Phonetic, false) : "*";
             requestingPhysicianFamilyNameSoundex =
                     filter.toFuzzy(pn.get(PersonName.Component.FamilyName));
             requestingPhysicianGivenNameSoundex =

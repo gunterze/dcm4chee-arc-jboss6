@@ -434,12 +434,12 @@ public class Study implements Serializable {
             referringPhysicianGivenNameSoundex = "*";
         } else {
             PersonName pn = new PersonName(s, true);
-            referringPhysicianName =
-                    pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
-            referringPhysicianIdeographicName =
-                    pn.getNormalizedString(PersonName.Group.Ideographic, "*");
-            referringPhysicianPhoneticName =
-                    pn.getNormalizedString(PersonName.Group.Phonetic, "*");
+            referringPhysicianName = pn.contains(PersonName.Group.Alphabetic) 
+                    ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
+            referringPhysicianIdeographicName = pn.contains(PersonName.Group.Ideographic)
+                    ? pn.toString(PersonName.Group.Ideographic, false) : "*";
+            referringPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
+                    ? pn.toString(PersonName.Group.Phonetic, false) : "*";
             referringPhysicianFamilyNameSoundex =
                     filter.toFuzzy(pn.get(PersonName.Component.FamilyName));
             referringPhysicianGivenNameSoundex =

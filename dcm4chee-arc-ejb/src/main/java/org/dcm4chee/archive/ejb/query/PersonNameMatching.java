@@ -48,6 +48,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 
 import org.dcm4che.data.PersonName;
+import org.dcm4che.data.PersonName.Group;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 
@@ -169,37 +170,37 @@ class PersonNameMatching {
             Path<String> phonetic, String value, boolean matchUnknown,
             List<Predicate> predicates, List<Object> params) {
         PersonName pn = new PersonName(value);
-        ArrayList<Predicate> namePredicates = new ArrayList<Predicate>(3);
-        Predicate predicate;
-        String queryString =
-                pn.getNormalizedQueryString(PersonName.Group.Alphabetic);
         if (value.indexOf('=') == -1) {
-            Matching.wildCard(cb, alphabethic, queryString, 
-                    matchUnknown, namePredicates, params);
-            Matching.wildCard(cb, ideographic, queryString, 
-                    matchUnknown, namePredicates, params);
-            Matching.wildCard(cb, phonetic, queryString, 
-                    matchUnknown, namePredicates, params);
-            predicate = cb.or(namePredicates.toArray(new Predicate[namePredicates.size()]));
-        } else {
-            Matching.wildCard(cb, alphabethic, queryString, 
-                    matchUnknown, namePredicates, params);
-            Matching.wildCard(cb, ideographic,
-                    pn.getNormalizedQueryString(PersonName.Group.Ideographic),
-                    matchUnknown, namePredicates, params);
-            Matching.wildCard(cb, phonetic,
-                    pn.getNormalizedQueryString(PersonName.Group.Phonetic),
-                    matchUnknown, namePredicates, params);
-            predicate = cb.and(namePredicates.toArray(new Predicate[namePredicates.size()]));
-        }
-        if (predicate != null){
+            String queryString = toQueryString(pn, PersonName.Group.Alphabetic);
+            ArrayList<Predicate> namePredicates = new ArrayList<Predicate>(4);
+            Matching.wildCard(cb, alphabethic, queryString, false, namePredicates, params);
+            Matching.wildCard(cb, ideographic, queryString, false, namePredicates, params);
+            Matching.wildCard(cb, phonetic, queryString, false, namePredicates, params);
             if (matchUnknown)
-                predicates.add(cb.or(predicate, cb.and(
-                            cb.equal(alphabethic, "*"),
-                            cb.equal(ideographic, "*"),
-                            cb.equal(phonetic, "*"))));
-            else
-                predicates.add(predicate);
+                namePredicates.add(cb.and(
+                        cb.equal(alphabethic, "*"),
+                        cb.equal(ideographic, "*"),
+                        cb.equal(phonetic, "*")));
+            predicates.add(cb.or(namePredicates.toArray(new Predicate[namePredicates.size()])));
+        } else {
+            wildCard(cb, alphabethic, pn, PersonName.Group.Alphabetic, matchUnknown,
+                    predicates, params);
+            wildCard(cb, ideographic, pn, PersonName.Group.Ideographic, matchUnknown,
+                    predicates, params);
+            wildCard(cb, phonetic, pn, PersonName.Group.Phonetic, matchUnknown,
+                    predicates, params);
         }
+    }
+
+    private static void wildCard(CriteriaBuilder cb, Path<String> path,
+            PersonName pn, Group group, boolean matchUnknown,
+            List<Predicate> predicates, List<Object> params) {
+        if (pn.contains(group))
+            Matching.wildCard(cb, path, toQueryString(pn, group), matchUnknown, predicates, params);
+    }
+
+    private static String toQueryString(PersonName pn, PersonName.Group g) {
+        String s = pn.toString(g, true);
+        return (s.endsWith("*") || pn.contains(g, PersonName.Component.NameSuffix)) ? s : s + "^*";
     }
 }

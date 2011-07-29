@@ -277,9 +277,12 @@ public class Patient implements Serializable {
             patientGivenNameSoundex = "*";
         } else {
             PersonName pn = new PersonName(s, true);
-            patientName = pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
-            patientIdeographicName = pn.getNormalizedString(PersonName.Group.Ideographic, "*");
-            patientPhoneticName = pn.getNormalizedString(PersonName.Group.Phonetic, "*");
+            patientName = pn.contains(PersonName.Group.Alphabetic) 
+                    ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
+            patientIdeographicName = pn.contains(PersonName.Group.Ideographic)
+                    ? pn.toString(PersonName.Group.Ideographic, false) : "*";
+            patientPhoneticName = pn.contains(PersonName.Group.Phonetic)
+                    ? pn.toString(PersonName.Group.Phonetic, false) : "*";
             patientFamilyNameSoundex = filter.toFuzzy(pn.get(PersonName.Component.FamilyName));
             patientGivenNameSoundex = filter.toFuzzy(pn.get(PersonName.Component.GivenName));
         }

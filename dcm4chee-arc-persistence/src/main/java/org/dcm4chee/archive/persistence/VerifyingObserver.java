@@ -100,9 +100,12 @@ public class VerifyingObserver implements Serializable {
         verificationDateTime = DateUtils.formatDT(null, dt);
         String s = filter.getString(attrs, Tag.VerifyingObserverName);
         PersonName pn = new PersonName(s, true);
-        verifyingObserverName = pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
-        verifyingObserverIdeographicName = pn.getNormalizedString(PersonName.Group.Ideographic, "*");
-        verifyingObserverPhoneticName = pn.getNormalizedString(PersonName.Group.Phonetic, "*");
+        verifyingObserverName = pn.contains(PersonName.Group.Alphabetic) 
+                ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
+        verifyingObserverIdeographicName = pn.contains(PersonName.Group.Ideographic)
+                ? pn.toString(PersonName.Group.Ideographic, false) : "*";
+        verifyingObserverPhoneticName = pn.contains(PersonName.Group.Phonetic)
+                ? pn.toString(PersonName.Group.Phonetic, false) : "*";
         verifyingObserverFamilyNameSoundex = filter.toFuzzy(pn.get(PersonName.Component.FamilyName));
         verifyingObserverGivenNameSoundex = filter.toFuzzy(pn.get(PersonName.Component.GivenName));
     }

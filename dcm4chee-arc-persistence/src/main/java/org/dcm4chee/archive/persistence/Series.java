@@ -458,12 +458,12 @@ public class Series implements Serializable {
             performingPhysicianGivenNameSoundex = "*";
         } else {
             PersonName pn = new PersonName(s, true);
-            performingPhysicianName =
-                    pn.getNormalizedString(PersonName.Group.Alphabetic, "*");
-            performingPhysicianIdeographicName =
-                    pn.getNormalizedString(PersonName.Group.Ideographic, "*");
-            performingPhysicianPhoneticName =
-                    pn.getNormalizedString(PersonName.Group.Phonetic, "*");
+            performingPhysicianName = pn.contains(PersonName.Group.Alphabetic) 
+                    ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
+            performingPhysicianIdeographicName = pn.contains(PersonName.Group.Ideographic)
+                    ? pn.toString(PersonName.Group.Ideographic, false) : "*";
+            performingPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
+                    ? pn.toString(PersonName.Group.Phonetic, false) : "*";
             performingPhysicianFamilyNameSoundex =
                     filter.toFuzzy(pn.get(PersonName.Component.FamilyName));
             performingPhysicianGivenNameSoundex =
