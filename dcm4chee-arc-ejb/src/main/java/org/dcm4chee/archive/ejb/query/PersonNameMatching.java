@@ -64,24 +64,24 @@ class PersonNameMatching {
             Path<String> givenNameSoundex,
             String value, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, boolean matchUnknown,
-            List<Object> params, List<Predicate> predicates) {
+            List<Predicate> predicates, List<Object> params) {
         if (value.equals("*"))
             return;
     
         if (queryOpts.contains(QueryOption.FUZZY))
             PersonNameMatching.fuzzyPersonName(cb, 
                     familyNameSoundex, givenNameSoundex, value, filter, 
-                    matchUnknown, params, predicates);
+                    matchUnknown, predicates, params);
         else
             PersonNameMatching.literalPersonName(cb, 
                     alphabethic, ideographic, phonetic, value, 
-                    matchUnknown, params, predicates);
+                    matchUnknown, predicates, params);
     }
 
     static private void fuzzyPersonName(CriteriaBuilder cb,
             Path<String> familyNameSoundex, Path<String> givenNameSoundex,
             String value, AttributeFilter filter, 
-            boolean matchUnknown, List<Object> params, List<Predicate> predicates) {
+            boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
         PersonName pn = new PersonName(value);
         boolean containsFamilyName = pn.containst(PersonName.Component.FamilyName);
         boolean containsGivenName = pn.containst(PersonName.Component.GivenName);
@@ -160,14 +160,14 @@ class PersonNameMatching {
     static private Predicate likeValue(CriteriaBuilder cb, Path<String> field,
             String value, List<Object> params) {
         String pattern = value.concat("%");
-        ParameterExpression<String> param = Matching.setParam(cb, params, pattern);
+        ParameterExpression<String> param = Matching.setParam(cb, pattern, params);
         return cb.like(field, param);
     }
 
     static private void literalPersonName(CriteriaBuilder cb,
             Path<String> alphabethic, Path<String> ideographic,
             Path<String> phonetic, String value, boolean matchUnknown,
-            List<Object> params, List<Predicate> predicates) {
+            List<Predicate> predicates, List<Object> params) {
         PersonName pn = new PersonName(value);
         ArrayList<Predicate> namePredicates = new ArrayList<Predicate>(3);
         Predicate predicate;
@@ -175,21 +175,21 @@ class PersonNameMatching {
                 pn.getNormalizedQueryString(PersonName.Group.Alphabetic);
         if (value.indexOf('=') == -1) {
             Matching.wildCard(cb, alphabethic, queryString, 
-                    matchUnknown, params, namePredicates);
+                    matchUnknown, namePredicates, params);
             Matching.wildCard(cb, ideographic, queryString, 
-                    matchUnknown, params, namePredicates);
+                    matchUnknown, namePredicates, params);
             Matching.wildCard(cb, phonetic, queryString, 
-                    matchUnknown, params, namePredicates);
+                    matchUnknown, namePredicates, params);
             predicate = cb.or(namePredicates.toArray(new Predicate[namePredicates.size()]));
         } else {
             Matching.wildCard(cb, alphabethic, queryString, 
-                    matchUnknown, params, namePredicates);
+                    matchUnknown, namePredicates, params);
             Matching.wildCard(cb, ideographic,
                     pn.getNormalizedQueryString(PersonName.Group.Ideographic),
-                    matchUnknown, params, namePredicates);
+                    matchUnknown, namePredicates, params);
             Matching.wildCard(cb, phonetic,
                     pn.getNormalizedQueryString(PersonName.Group.Phonetic),
-                    matchUnknown, params, namePredicates);
+                    matchUnknown, namePredicates, params);
             predicate = cb.and(namePredicates.toArray(new Predicate[namePredicates.size()]));
         }
         if (predicate != null){

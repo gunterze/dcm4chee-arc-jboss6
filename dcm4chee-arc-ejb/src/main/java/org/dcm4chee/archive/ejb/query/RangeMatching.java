@@ -95,9 +95,9 @@ public class RangeMatching {
             Path<String> date, Path<String> time, String startDate,
             String startTime, List<Object> params) {
         ParameterExpression<String> paramStartDate =
-                Matching.setParam(cb, params, startDate);
+                Matching.setParam(cb, startDate, params);
         ParameterExpression<String> paramStartTime =
-                Matching.setParam(cb, params, startTime);
+                Matching.setParam(cb, startTime, params);
         Predicate startDayTime =
                 cb.and(
                         cb.equal(date, paramStartDate), 
@@ -114,9 +114,9 @@ public class RangeMatching {
             Path<String> date, Path<String> time, String endDate,
             String endTime, List<Object> params) {
         ParameterExpression<String> paramEndDate =
-                Matching.setParam(cb, params, endDate);
+                Matching.setParam(cb, endDate, params);
         ParameterExpression<String> paramEndTime =
-                Matching.setParam(cb, params, endTime);
+                Matching.setParam(cb, endTime, params);
         Predicate endDayTime =
                 cb.and(
                         cb.equal(date, paramEndDate), 
@@ -141,14 +141,14 @@ public class RangeMatching {
     private static Predicate rangeStart(CriteriaBuilder cb,
             Path<String> field, String start, List<Object> params) {
         ParameterExpression<String> paramStart =
-                Matching.setParam(cb, params, start);
+                Matching.setParam(cb, start, params);
         return cb.greaterThanOrEqualTo(field, paramStart);
     }
 
     private static Predicate rangeEnd(CriteriaBuilder cb,
             Path<String> field, String end, List<Object> params) {
         ParameterExpression<String> paramEnd =
-                Matching.setParam(cb, params, end);
+                Matching.setParam(cb, end, params);
         return cb.lessThanOrEqualTo(field, paramEnd);
     }
 
@@ -159,12 +159,12 @@ public class RangeMatching {
         String start = dt.format(startDate);
         String end = dt.format(endDate);
         ParameterExpression<String> paramStart =
-                Matching.setParam(cb, params, start);
+                Matching.setParam(cb, start, params);
         if (end.equals(start))
             predicate = cb.equal(field, paramStart);
         else {
             ParameterExpression<String> paramEnd =
-                    Matching.setParam(cb, params, end);
+                    Matching.setParam(cb, end, params);
             predicate = cb.between(field, paramStart, paramEnd);
         }
         return predicate;
@@ -202,7 +202,7 @@ public class RangeMatching {
     public static void rangeMatch(CriteriaBuilder cb, 
             Path<String> dateField, Path<String> timeField, int dateTag, int timeTag,
             long dateAndTimeTag, Attributes keys, EnumSet<QueryOption> queryOpts,
-            boolean matchUnknown, List<Object> params, List<Predicate> predicates) {
+            boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
         final boolean containsDateTag = keys.containsValue(dateTag);
         final boolean containsTimeTag = keys.containsValue(timeTag);
         if (containsDateTag && containsTimeTag && queryOpts.contains(QueryOption.DATETIME))
@@ -223,7 +223,7 @@ public class RangeMatching {
 
     public static void rangeMatch(CriteriaBuilder cb, 
             Path<String> path, int tag, FormatDate dt, Attributes keys, 
-            boolean matchUnknown, List<Object> params, List<Predicate> predicates) {
+            boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
         if (!keys.containsValue(tag))
             return;
         

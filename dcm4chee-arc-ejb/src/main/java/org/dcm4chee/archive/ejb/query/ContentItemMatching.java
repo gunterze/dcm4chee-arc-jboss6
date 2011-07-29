@@ -64,9 +64,9 @@ class ContentItemMatching {
             CriteriaQuery<Tuple> cq,
             Expression<Collection<ContentItem>> collection, Attributes item,
             AttributeFilter filter, String valueType, 
-            List<Object> params, List<Predicate> predicates) {
+            List<Predicate> predicates, List<Object> params) {
         if (validValueType(valueType))
-            withContentItem(cq, cb, collection, item, filter, params, predicates);
+            withContentItem(cq, cb, collection, item, filter, predicates, params);
     }
 
     private static boolean validValueType(String valueType) {
@@ -76,7 +76,7 @@ class ContentItemMatching {
     private static void withContentItem(CriteriaQuery<Tuple> cq, 
             CriteriaBuilder cb, Expression<Collection<ContentItem>> collection, 
             Attributes item, AttributeFilter filter, 
-            List<Object> params, List<Predicate> predicates) {
+            List<Predicate> predicates, List<Object> params) {
         Subquery<ContentItem> sq = cq.subquery(ContentItem.class);
         Root<ContentItem> contentItem = sq.from(ContentItem.class);
         sq.select(contentItem);
@@ -95,19 +95,19 @@ class ContentItemMatching {
         Matching.withCode(cb, cq, 
                 contentItem.get(ContentItem_.conceptName), 
                 item.getNestedDataset(Tag.ConceptNameCodeSequence), filter,
-                false, params, predicates);
+                false, predicates, params);
         Matching.wildCard(cb,
                 contentItem.get(ContentItem_.relationshipType),
                 filter.getString(item, Tag.RelationshipType),
-                false, params, predicates);
+                false, predicates, params);
         Matching.withCode(cb, cq, 
                 contentItem.get(ContentItem_.conceptCode), 
                 item.getNestedDataset(Tag.ConceptCodeSequence), filter, 
-                false, params, predicates);
+                false, predicates, params);
         Matching.wildCard(cb, 
                 contentItem.get(ContentItem_.textValue), 
                 filter.getString(item, Tag.TextValue), 
-                false, params, predicates);
+                false, predicates, params);
         return !predicates.isEmpty();
     }
 }
