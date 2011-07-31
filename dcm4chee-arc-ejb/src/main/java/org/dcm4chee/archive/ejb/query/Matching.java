@@ -129,7 +129,7 @@ class Matching {
             return;
 
         if (values.length == 1)
-            predicates.add(singleValuePredicate(cb, field, values[0], params));
+            singleValue(cb, field, values[0], false, predicates, params);
         
         else {
             ParameterExpression<String>[] pes =
@@ -147,29 +147,23 @@ class Matching {
             boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
         if (value.equals("*"))
             return;
-
-        Predicate predicate = wildCardPredicate(cb, field, value, params);
-        if (predicate != null)
-            predicates.add(matchUnknown(cb, field, matchUnknown, predicate));
+        
+        if (Matching.containsWildcard(value)) {
+            String pattern = Matching.toLikePattern(value);
+            if (!pattern.equals("%")){
+                ParameterExpression<String> param = setParam(cb, pattern, params);
+                predicates.add(matchUnknown(cb, field, matchUnknown, cb.like(field, param)));
+            }
+        }
+        else
+            singleValue(cb, field, value, matchUnknown, predicates, params);
     }
 
-    private static Predicate wildCardPredicate(CriteriaBuilder cb, Path<String> field,
-            String value, List<Object> params) {
-        if (!Matching.containsWildcard(value))
-            return singleValuePredicate(cb, field, value, params);
-
-        String pattern = Matching.toLikePattern(value);
-        if (pattern.equals("%"))
-            return null;
-
-        ParameterExpression<String> param = setParam(cb, pattern, params);
-        return cb.like(field, param);
-    }
-
-    static Predicate singleValuePredicate(CriteriaBuilder cb,
-            Path<String> field, String value, List<Object> params) {
+    static void singleValue(CriteriaBuilder cb,
+            Path<String> field, String value, 
+            boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
         ParameterExpression<String> param = setParam(cb, value, params);
-        return cb.equal(field, param);
+        predicates.add(matchUnknown(cb, field, matchUnknown, cb.equal(field, param)));
     }
 
     private static void modalitiesInStudy(CriteriaBuilder cb,
@@ -180,10 +174,13 @@ class Matching {
 
         Subquery<Series> sq = cq.subquery(Series.class);
         Root<Series> series = sq.from(Series.class);
+        ArrayList<Predicate> modPredicates = new ArrayList<Predicate>(1);
+        wildCard(cb, series.get(Series_.modality), modality, matchUnknown, modPredicates, params);
+        if (modPredicates.isEmpty())
+            return;
+        
         sq.select(series);
-        sq.where(cb.equal(study, series.get(Series_.study)),
-                matchUnknown(cb, series.get(Series_.modality), matchUnknown, 
-                        wildCardPredicate(cb, series.get(Series_.modality), modality, params)));
+        sq.where(cb.equal(study, series.get(Series_.study)), modPredicates.get(0));
         predicates.add(cb.exists(sq));
     }
 
@@ -197,12 +194,13 @@ class Matching {
         Root<Code> root = sq.from(Code.class);
         ArrayList<Predicate> codePredicates = addCodePredicates(cb, item, root, filter, 
                 matchUnknown, params);
-        if (!codePredicates.isEmpty()) {
-            codePredicates.add(cb.isMember(root, collection));
-            sq.select(root);
-            sq.where(codePredicates.toArray(new Predicate[codePredicates.size()]));
-            predicates.add(matchUnknownCollection(cb, collection, matchUnknown, sq));
-        }
+        if (codePredicates.isEmpty())
+            return;
+        
+        codePredicates.add(cb.isMember(root, collection));
+        sq.select(root);
+        sq.where(codePredicates.toArray(new Predicate[codePredicates.size()]));
+        predicates.add(matchUnknownCollection(cb, collection, matchUnknown, sq));
     }
 
     static void withCode(CriteriaBuilder cb, CriteriaQuery<Tuple> cq, 
@@ -215,12 +213,13 @@ class Matching {
         Root<Code> root = sq.from(Code.class);
         ArrayList<Predicate> codePredicates = addCodePredicates(cb, item, root, filter, 
                 matchUnknown, params);
-        if (!codePredicates.isEmpty()) {
-            codePredicates.add(cb.equal(root, path));
-            sq.select(root);
-            sq.where(codePredicates.toArray(new Predicate[codePredicates.size()]));
-            predicates.add(matchUnknownPath(cb, path, matchUnknown, sq));
-        }
+        if (codePredicates.isEmpty())
+            return;
+        
+        codePredicates.add(cb.equal(root, path));
+        sq.select(root);
+        sq.where(codePredicates.toArray(new Predicate[codePredicates.size()]));
+        predicates.add(matchUnknownPath(cb, path, matchUnknown, sq));
     }
 
     private static ArrayList<Predicate> addCodePredicates(CriteriaBuilder cb, 
@@ -252,12 +251,13 @@ class Matching {
         Subquery<Issuer> sq = cq.subquery(Issuer.class);
         Root<Issuer> root = sq.from(Issuer.class);
         ArrayList<Predicate> issuerPredicates = addIssuerPredicates(cb, root, item, filter, params);
-        if (!issuerPredicates.isEmpty()) {
-            issuerPredicates.add(cb.equal(root, issuer));
-            sq.select(root);
-            sq.where(issuerPredicates.toArray(new Predicate[issuerPredicates.size()]));
-            predicates.add(matchUnknownPath(cb, issuer, matchUnknown, sq));
-        }
+        if (issuerPredicates.isEmpty())
+            return;
+        
+        issuerPredicates.add(cb.equal(root, issuer));
+        sq.select(root);
+        sq.where(issuerPredicates.toArray(new Predicate[issuerPredicates.size()]));
+        predicates.add(matchUnknownPath(cb, issuer, matchUnknown, sq));
     }
 
     private static ArrayList<Predicate> addIssuerPredicates(CriteriaBuilder cb,
@@ -286,12 +286,13 @@ class Matching {
         Root<VerifyingObserver> root = sq.from(VerifyingObserver.class);
         ArrayList<Predicate> observerPredicates = addObserverPredicates(cb, root, item, filter, 
                 queryOpts, params);
-        if (!observerPredicates.isEmpty()) {
-            observerPredicates.add(cb.isMember(root, collection));
-            sq.select(root);
-            sq.where(observerPredicates.toArray(new Predicate[observerPredicates.size()]));
-            predicates.add(matchUnknownCollection(cb, collection, matchUnknown, sq));
-        }
+        if (observerPredicates.isEmpty())
+            return;
+        
+        observerPredicates.add(cb.isMember(root, collection));
+        sq.select(root);
+        sq.where(observerPredicates.toArray(new Predicate[observerPredicates.size()]));
+        predicates.add(matchUnknownCollection(cb, collection, matchUnknown, sq));
     }
 
     private static ArrayList<Predicate> addObserverPredicates(CriteriaBuilder cb,
@@ -348,11 +349,12 @@ class Matching {
         sq.select(root);
         ArrayList<Predicate> sequencePredicates = addSequencePredicates(cb, cq, root, collection, 
                 item, filter, queryOpts, matchUnknown, params);
-        if (!sequencePredicates.isEmpty()){
-            sequencePredicates.add(cb.isMember(root, collection));
-            sq.where(sequencePredicates.toArray(new Predicate[sequencePredicates.size()]));
-            predicates.add(matchUnknownCollection(cb, collection, matchUnknown, sq));
-        }
+        if (sequencePredicates.isEmpty())
+            return;
+        
+        sequencePredicates.add(cb.isMember(root, collection));
+        sq.where(sequencePredicates.toArray(new Predicate[sequencePredicates.size()]));
+        predicates.add(matchUnknownCollection(cb, collection, matchUnknown, sq));
     }
 
     private static ArrayList<Predicate> addSequencePredicates(CriteriaBuilder cb,
@@ -415,31 +417,32 @@ class Matching {
         if (pids == null || pids.length == 0)
             return;
 
-        Predicate predicate =
-                pids.length == 1 
-                    ? patientIDPredicate(cb, idField, issuerField, pids[0], pids[1], params) 
-                    : patientIDPredicates(cb, idField, issuerField, pids, params);
-        predicates.add(matchUnknown(cb, idField, matchUnknown, predicate));
+        if (pids.length == 1)
+            singlePatientID(cb, idField, issuerField, pids[0], pids[1], matchUnknown, predicates, params);
+        else
+            listOfPatientIDs(cb, idField, issuerField, pids, matchUnknown, predicates, params);
     }
 
-    private static Predicate patientIDPredicates(CriteriaBuilder cb,
+    private static void listOfPatientIDs(CriteriaBuilder cb,
             Path<String> idField, Path<String> issuerField, String[] pids,
-            List<Object> params) {
-        Predicate[] predicates = new Predicate[pids.length >> 1];
-        for (int i = 0, j = 0; i < predicates.length; i++, j++, j++)
-            predicates[i] =
-                    patientIDPredicate(cb, idField, issuerField, pids[j], pids[j + 1],
-                            params);
-        return cb.or(predicates);
+            boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
+        ArrayList<Predicate> pidPredicates = new ArrayList<Predicate>(pids.length);
+        for (int i = 0, j = 0; i < pids.length-1; i++, j++, j++)
+            singlePatientID(cb, idField, issuerField, pids[j], pids[j + 1], matchUnknown, pidPredicates, params);
+        predicates.add(cb.or(pidPredicates.toArray(new Predicate[pidPredicates.size()])));
     }
 
-    private static Predicate patientIDPredicate(CriteriaBuilder cb,
-            Path<String> idField, Path<String> issuerField, String id,
-            String issuer, List<Object> params) {
-        Predicate predicate = wildCardPredicate(cb, idField, id, params);
-        return issuer == null 
-            ? predicate
-            : cb.and(predicate, wildCardPredicate(cb, issuerField, issuer, params));
+    private static void singlePatientID(CriteriaBuilder cb,
+            Path<String> idField, Path<String> issuerField, String id, String issuer, 
+            boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
+        if (issuer == null)
+            wildCard(cb, idField, id, matchUnknown, predicates, params);
+        else {
+            ArrayList<Predicate> pidPredicates = new ArrayList<Predicate>(2);
+            wildCard(cb, idField, id, matchUnknown, pidPredicates, params);
+            wildCard(cb, issuerField, issuer, matchUnknown, pidPredicates, params);
+            predicates.add(cb.and(pidPredicates.toArray(new Predicate[pidPredicates.size()])));
+        }
     }
 
     public static void patient(CriteriaBuilder cb, Path<Patient> pat,

@@ -87,21 +87,21 @@ class PersonNameMatching {
         boolean containsFamilyName = pn.containst(PersonName.Component.FamilyName);
         boolean containsGivenName = pn.containst(PersonName.Component.GivenName);
         if (containsFamilyName && containsGivenName)
-            predicates.add(PersonNameMatching.fuzzyNames(cb, filter, familyNameSoundex, givenNameSoundex, 
+            PersonNameMatching.fuzzyNames(cb, filter, familyNameSoundex, givenNameSoundex, 
                     pn.get(PersonName.Component.FamilyName), pn.get(PersonName.Component.GivenName), 
-                    matchUnknown, params));
+                    matchUnknown, predicates, params);
         else if (containsGivenName)
-            predicates.add(PersonNameMatching.fuzzyName(cb, filter, familyNameSoundex, givenNameSoundex, 
-                    pn.get(PersonName.Component.GivenName), matchUnknown, params));
+            PersonNameMatching.fuzzyName(cb, filter, familyNameSoundex, givenNameSoundex, 
+                    pn.get(PersonName.Component.GivenName), matchUnknown, predicates, params);
         else if (containsFamilyName)
-            predicates.add(PersonNameMatching.fuzzyName(cb, filter, familyNameSoundex, givenNameSoundex, 
-                    pn.get(PersonName.Component.FamilyName), matchUnknown, params));
+            PersonNameMatching.fuzzyName(cb, filter, familyNameSoundex, givenNameSoundex, 
+                    pn.get(PersonName.Component.FamilyName), matchUnknown, predicates, params);
     }
 
-    static private Predicate fuzzyNames(CriteriaBuilder cb, AttributeFilter filter, 
+    static private void fuzzyNames(CriteriaBuilder cb, AttributeFilter filter, 
             Path<String> familyNameSoundex, Path<String> givenNameSoundex,
             String givenName, String familyName, 
-            boolean matchUnknown, List<Object> params) {
+            boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
         String fuzzyFamilyName = filter.toFuzzy(familyName);
         String fuzzyGivenName = filter.toFuzzy(givenName);
         Predicate names = 
@@ -110,52 +110,60 @@ class PersonNameMatching {
         Predicate namesSwap = 
             cb.and(PersonNameMatching.fuzzyNameWildCard(cb, givenNameSoundex, familyName, fuzzyFamilyName, params),
                    PersonNameMatching.fuzzyNameWildCard(cb, familyNameSoundex, givenName, fuzzyGivenName, params));
-        return matchUnknown
-                    ? PersonNameMatching.unknownFuzzyNames(cb, familyNameSoundex, givenNameSoundex, familyName, 
-                            givenName, fuzzyFamilyName, fuzzyGivenName, names, namesSwap, params)
-                    : cb.or(names, namesSwap);
+        if (matchUnknown)
+            PersonNameMatching.unknownFuzzyNames(cb, familyNameSoundex, givenNameSoundex, familyName, 
+                    givenName, fuzzyFamilyName, fuzzyGivenName, names, namesSwap, predicates, params);
+        else
+            predicates.add(cb.or(names, namesSwap));
     }
 
-    static private Predicate unknownFuzzyNames(CriteriaBuilder cb, 
+    static private void unknownFuzzyNames(CriteriaBuilder cb, 
             Path<String> familyNameSoundex, Path<String> givenNameSoundex, 
             String familyName, String givenName, 
             String fuzzyFamilyName, String fuzzyGivenName,
             Predicate names, Predicate namesSwap, 
-            List<Object> params){
-        ArrayList<Predicate> predicates = new ArrayList<Predicate>(7);
-        predicates.add(names);
-        predicates.add(namesSwap);
-        predicates.add(cb.and(PersonNameMatching.fuzzyNameWildCard(cb, givenNameSoundex, givenName, 
+            List<Predicate> predicates, List<Object> params){
+        ArrayList<Predicate> fuzzyPredicates = new ArrayList<Predicate>(7);
+        fuzzyPredicates.add(names);
+        fuzzyPredicates.add(namesSwap);
+        fuzzyPredicates.add(cb.and(PersonNameMatching.fuzzyNameWildCard(cb, givenNameSoundex, givenName, 
                 fuzzyGivenName, params), cb.equal(familyNameSoundex, "*")));
-        predicates.add(cb.and(PersonNameMatching.fuzzyNameWildCard(cb, familyNameSoundex, familyName, 
+        fuzzyPredicates.add(cb.and(PersonNameMatching.fuzzyNameWildCard(cb, familyNameSoundex, familyName, 
                 fuzzyFamilyName, params), cb.equal(givenNameSoundex, "*")));
-        predicates.add(cb.and(PersonNameMatching.fuzzyNameWildCard(cb, givenNameSoundex, familyName, 
+        fuzzyPredicates.add(cb.and(PersonNameMatching.fuzzyNameWildCard(cb, givenNameSoundex, familyName, 
                 fuzzyFamilyName, params), cb.equal(familyNameSoundex, "*")));
-        predicates.add(cb.and(PersonNameMatching.fuzzyNameWildCard(cb, familyNameSoundex, givenName, 
+        fuzzyPredicates.add(cb.and(PersonNameMatching.fuzzyNameWildCard(cb, familyNameSoundex, givenName, 
                 fuzzyGivenName, params), cb.equal(givenNameSoundex, "*")));
-        predicates.add(cb.and(cb.equal(givenNameSoundex, "*"), 
+        fuzzyPredicates.add(cb.and(cb.equal(givenNameSoundex, "*"), 
                 cb.equal(familyNameSoundex, "*")));
-        return cb.or(predicates.toArray(new Predicate[predicates.size()]));
+        predicates.add(cb.or(fuzzyPredicates.toArray(new Predicate[fuzzyPredicates.size()])));
     }
 
-    static private Predicate fuzzyName(CriteriaBuilder cb, AttributeFilter filter, 
+    static private void fuzzyName(CriteriaBuilder cb, AttributeFilter filter, 
             Path<String> familyNameSoundex, Path<String> givenNameSoundex,
-            String name, boolean matchUnknown, List<Object> params) {
+            String name, boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
         String fuzzyName = filter.toFuzzy(name);
         Predicate predicate = cb.or(
                 PersonNameMatching.fuzzyNameWildCard(cb, familyNameSoundex, name, fuzzyName, params),
                 PersonNameMatching.fuzzyNameWildCard(cb, givenNameSoundex, name, fuzzyName, params));
-        return matchUnknown 
-                    ? cb.or(predicate, cb.and(cb.equal(givenNameSoundex, "*"), 
-                            cb.equal(familyNameSoundex, "*")))
-                    : predicate;
+        if (matchUnknown)
+            predicates.add(cb.or(predicate, cb.and(cb.equal(givenNameSoundex, "*"), 
+                            cb.equal(familyNameSoundex, "*"))));
+        else
+            predicates.add(predicate);
     }
 
     static private Predicate fuzzyNameWildCard(CriteriaBuilder cb, 
             Path<String> field, String name, String fuzzy, List<Object> params) {
         if (name.endsWith("*"))
             return PersonNameMatching.likeValue(cb, field, fuzzy, params);
-        return Matching.singleValuePredicate(cb, field, fuzzy, params);
+        return PersonNameMatching.singleValue(cb, field, fuzzy, params);
+    }
+
+    private static Predicate singleValue(CriteriaBuilder cb, Path<String> field, String value,
+            List<Object> params) {
+        ParameterExpression<String> param = Matching.setParam(cb, value, params);
+        return cb.equal(field, param);
     }
 
     static private Predicate likeValue(CriteriaBuilder cb, Path<String> field,
