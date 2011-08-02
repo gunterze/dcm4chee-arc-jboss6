@@ -91,51 +91,54 @@ public class SeriesQueryTest {
     @EJB
     private SeriesQuery query;
 
-    private AttributeFilter filter() throws Exception {
-        return new AttributeFilter(
+    private AttributeFilter filter(boolean matchUnknown) throws Exception {
+        AttributeFilter filter = new AttributeFilter(
                 SAXReader.parse("resource:dcm4chee-arc/patient-attribute-filter.xml"),
                 SAXReader.parse("resource:dcm4chee-arc/study-attribute-filter.xml"),
                 SAXReader.parse("resource:dcm4chee-arc/series-attribute-filter.xml"),
                 SAXReader.parse("resource:dcm4chee-arc/instance-attribute-filter.xml"),
                 SAXReader.parse("resource:dcm4chee-arc/case-insensitive-attributes.xml"),
                 new ESoundex());
+        filter.setMatchUnknown(matchUnknown);
+        return filter;
     }
 
     @Test
     public void testByModality() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modality("PR"), filter(), NO_QUERY_OPTION, false, null);
+        query.find(null, ModalitiesInStudyPIDs, modality("PR"), filter(false),
+                NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 2));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyPR() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(),
-                NO_QUERY_OPTION, false, null);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(false),
+                NO_QUERY_OPTION, null);
         assertTrue(countMatches(query,4));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyMatchUnknownPR() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(),
-                NO_QUERY_OPTION, true, null);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(true),
+                NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 5));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyCT() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(),
-                NO_QUERY_OPTION, false, null);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(false),
+                NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 2));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyMatchUnknownCT() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(),
-                NO_QUERY_OPTION, true, null);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(true),
+                NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 3));
         query.close();
     }
@@ -157,7 +160,7 @@ public class SeriesQueryTest {
         issuer.setNull(Tag.UniversalEntityID, VR.UT);
         issuer.setNull(Tag.UniversalEntityIDType, VR.CS);
         
-        query.find(null, RequestedAttributesSeqPIDs, keys, filter(), NO_QUERY_OPTION, false, null);
+        query.find(null, RequestedAttributesSeqPIDs, keys, filter(false), NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 1));
         query.close();
     }

@@ -96,20 +96,22 @@ public class InstanceQueryTest {
     @EJB
     private InstanceQuery query;
 
-    private AttributeFilter filter() throws Exception {
-        return new AttributeFilter(
+    private AttributeFilter filter(boolean matchUnknown) throws Exception {
+        AttributeFilter filter = new AttributeFilter(
                 SAXReader.parse("resource:dcm4chee-arc/patient-attribute-filter.xml"),
                 SAXReader.parse("resource:dcm4chee-arc/study-attribute-filter.xml"),
                 SAXReader.parse("resource:dcm4chee-arc/series-attribute-filter.xml"),
                 SAXReader.parse("resource:dcm4chee-arc/instance-attribute-filter.xml"),
                 SAXReader.parse("resource:dcm4chee-arc/case-insensitive-attributes.xml"),
                 new ESoundex());
+        filter.setMatchUnknown(matchUnknown);
+        return filter;
     }
 
     @Test
     public void testByVerificationFlag() throws Exception {
-        query.find(null, VerifyingObserverPIDs, verificationFlag("VERIFIED", "SR"), filter(),
-                NO_QUERY_OPTION, false, null);
+        query.find(null, VerifyingObserverPIDs, verificationFlag("VERIFIED", "SR"), filter(false),
+                NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
@@ -121,8 +123,8 @@ public class InstanceQueryTest {
     @Test
     public void testByConceptCodeSequence() throws Exception {
         query.find(null, ConceptCodeSeqPIDs,
-                conceptCodeSeq("CONCEPT_NAME_1", "99DCM4CHEE_TEST", null), filter(),
-                NO_QUERY_OPTION, false, null);
+                conceptCodeSeq("CONCEPT_NAME_1", "99DCM4CHEE_TEST", null), filter(false),
+                NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.22.1.1" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
@@ -133,8 +135,8 @@ public class InstanceQueryTest {
     @Test
     public void testByConceptCodeSequenceMatchUnknown() throws Exception {
         query.find(null, ConceptCodeSeqPIDs,
-                conceptCodeSeq("CONCEPT_NAME_2", "99DCM4CHEE_TEST", null), filter(),
-                NO_QUERY_OPTION, true, null);
+                conceptCodeSeq("CONCEPT_NAME_2", "99DCM4CHEE_TEST", null), filter(true),
+                NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] =
                 { "1.2.40.0.13.1.1.99.22.1.2", "1.2.40.0.13.1.1.99.22.1.3" };
@@ -146,8 +148,8 @@ public class InstanceQueryTest {
     @Test
     public void testByVerifyingObserver() throws Exception {
         query.find(null, VerifyingObserverPIDs,
-                verifyingObserver("201106300830", "VerifyingObserver1"), filter(),
-                NO_QUERY_OPTION, false, null);
+                verifyingObserver("201106300830", "VerifyingObserver1"), filter(false),
+                NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] =
                 { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3" };
@@ -159,8 +161,8 @@ public class InstanceQueryTest {
     @Test
     public void testByVerifyingObserverMatchUnknown() throws Exception {
         query.find(null, VerifyingObserverPIDs,
-                verifyingObserver("201106300830", "VerifyingObserver1"), filter(),
-                NO_QUERY_OPTION, true, null);
+                verifyingObserver("201106300830", "VerifyingObserver1"), filter(true),
+                NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] =
                 { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3",
@@ -173,8 +175,8 @@ public class InstanceQueryTest {
     @Test
     public void testByVerifyingObserverRange() throws Exception {
         query.find(null, VerifyingObserverPIDs,
-                verifyingObserver("201106300000-20110701235900", null), filter(),
-                NO_QUERY_OPTION, false, null);
+                verifyingObserver("201106300000-20110701235900", null), filter(false),
+                NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] =
                 { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3" };
@@ -191,7 +193,7 @@ public class InstanceQueryTest {
                 "CONTAINS", "Max"));
         contentSeq.add(contentSequenceItem("TCE104", "IHERADTF", null,
                 "CONTAINS", "Max's Abstract"));
-        query.find(null, TeachingFilePIDs, attrs, filter(), NO_QUERY_OPTION, false, null);
+        query.find(null, TeachingFilePIDs, attrs, filter(false), NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.27.1.1" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
@@ -207,7 +209,7 @@ public class InstanceQueryTest {
                 "CONTAINS", "Moritz's Abstract"));
         contentSeq.add(contentSequenceCodeItem("TCE105", "IHERADTF", null,
                 "466.0", "I9C", null, "CONTAINS"));
-        query.find(null, TeachingFilePIDs, attrs, filter(), NO_QUERY_OPTION, false, null);
+        query.find(null, TeachingFilePIDs, attrs, filter(false), NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.27.1.2" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
@@ -232,8 +234,8 @@ public class InstanceQueryTest {
         conceptCode.setString(Tag.CodingSchemeVersion, VR.SH, version2);
         item.newSequence(Tag.ConceptCodeSequence, 1).add(conceptCode);
         return item;
-}
-    
+    }
+
     private Attributes contentSequenceItem(String value, String designator,
             String version, String relationshipType, String textValue) {
         Attributes item = new Attributes(4);
@@ -246,7 +248,7 @@ public class InstanceQueryTest {
         nestedDs.setString(Tag.CodingSchemeVersion, VR.SH, version);
         item.newSequence(Tag.ConceptNameCodeSequence, 1).add(nestedDs);
         return item;
-}
+    }
 
     private boolean equals(ArrayList<String> result, Collection<String> col) {
         if (result.containsAll(col) && result.size() == col.size())

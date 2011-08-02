@@ -56,5 +56,5 @@ public interface PatientQuery extends Matches {
     public static final String JNDI_NAME = "PatientQueryBean/local";
 
     void find(Attributes rq, String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, boolean matchUnknown);
+            EnumSet<QueryOption> queryOpts);
 }

@@ -56,5 +56,5 @@ public interface InstanceQuery extends Matches {
     public static final String JNDI_NAME = "InstanceQueryBean/local";
 
     void find(Attributes rq, String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, boolean matchUnknown, String[] roles);
+            EnumSet<QueryOption> queryOpts, String[] roles);
 }

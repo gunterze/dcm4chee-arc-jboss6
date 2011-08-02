@@ -86,7 +86,7 @@ public class SeriesQueryBean implements SeriesQuery {
 
     @Override
     public void find(Attributes rq, String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, boolean matchUnknown, String[] roles) {
+            EnumSet<QueryOption> queryOpts, String[] roles) {
         this.rq = rq;
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Tuple> cq = cb.createTupleQuery();
@@ -108,7 +108,7 @@ public class SeriesQueryBean implements SeriesQuery {
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
         Matching.series(cb, cq, pat, study, series, pids, keys, filter,
-                queryOpts, matchUnknown, roles, predicates, params);
+                queryOpts, roles, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<Tuple> q = em.createQuery(cq);
         int i = 0;

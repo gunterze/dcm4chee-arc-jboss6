@@ -80,7 +80,7 @@ public class PatientQueryBean implements PatientQuery {
 
     @Override
     public void find(Attributes rq, String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, boolean matchUnknown) {
+            EnumSet<QueryOption> queryOpts) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<byte[]> cq = cb.createQuery(byte[].class);
         Root<Patient> pat = cq.from(Patient.class);
@@ -88,7 +88,7 @@ public class PatientQueryBean implements PatientQuery {
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
         predicates.add(cb.isNull(pat.get(Patient_.mergedWith)));
-        Matching.patient(cb, pat, pids, keys, filter, queryOpts, matchUnknown, predicates, params);
+        Matching.patient(cb, pat, pids, keys, filter, queryOpts, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<byte[]> q = em.createQuery(cq);
         int i = 0;

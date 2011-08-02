@@ -65,7 +65,6 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
 public class CompositeCFindSCP extends BasicCFindSCP {
 
     private final String[] qrLevels;
-    private boolean matchUnknown;
 
     public CompositeCFindSCP(Device device, String sopClass,
             String... qrLevels) {
@@ -116,7 +115,7 @@ public class CompositeCFindSCP extends BasicCFindSCP {
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         ApplicationEntity ae = as.getApplicationEntity();
         AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
-        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), matchUnknown);
+        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg));
         return query;
     }
 
@@ -127,7 +126,7 @@ public class CompositeCFindSCP extends BasicCFindSCP {
         StudyQuery query = (StudyQuery) JNDIUtils.lookup(StudyQuery.JNDI_NAME);
         ApplicationEntity ae = as.getApplicationEntity();
         AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
-        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), matchUnknown, roles());
+        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), roles());
         return query;
     }
 
@@ -138,7 +137,7 @@ public class CompositeCFindSCP extends BasicCFindSCP {
         SeriesQuery query = (SeriesQuery) JNDIUtils.lookup(SeriesQuery.JNDI_NAME);
         ApplicationEntity ae = as.getApplicationEntity();
         AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
-        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), matchUnknown, roles());
+        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), roles());
         return query;
     }
 
@@ -149,7 +148,7 @@ public class CompositeCFindSCP extends BasicCFindSCP {
         InstanceQuery query = (InstanceQuery) JNDIUtils.lookup(InstanceQuery.JNDI_NAME);
         ApplicationEntity ae = as.getApplicationEntity();
         AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
-        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), matchUnknown, roles());
+        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), roles());
         return query;
     }
 

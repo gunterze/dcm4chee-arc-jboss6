@@ -84,7 +84,7 @@ public class StudyQueryBean implements StudyQuery {
 
     @Override
     public void find(Attributes rq, String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, boolean matchUnknown, String[] roles) {
+            EnumSet<QueryOption> queryOpts, String[] roles) {
         this.rq = rq;
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Tuple> cq = cb.createTupleQuery();
@@ -103,7 +103,7 @@ public class StudyQueryBean implements StudyQuery {
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
         Matching.study(cb, cq, pat, study, pids, keys, filter, queryOpts,
-                matchUnknown, roles, predicates, params);
+                roles, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<Tuple> q = em.createQuery(cq);
         int i = 0;

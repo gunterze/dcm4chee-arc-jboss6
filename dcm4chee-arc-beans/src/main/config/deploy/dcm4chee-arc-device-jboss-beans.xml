@@ -93,6 +93,7 @@
         <bean name="FuzzyStr" class="org.dcm4che.soundex.ESoundex" />
       </parameter>
     </constructor>
+    <property name="matchUnknown">true</property>
   </bean>
 
   <!-- The DICOM Device -->

@@ -53,6 +53,7 @@ public class AttributeFilter {
     final Attributes instanceFilter;
     private final Attributes caseInsensitive;
     private final FuzzyStr fuzzyStr;
+    private boolean matchUnknown;
     ValueSelector patientCustomAttribute1;
     ValueSelector patientCustomAttribute2;
     ValueSelector patientCustomAttribute3;
@@ -87,6 +88,14 @@ public class AttributeFilter {
         this.instanceFilter = instanceFilter;
         this.caseInsensitive = caseInsensitive;
         this.fuzzyStr = fuzzyStr;
+    }
+
+    public final boolean isMatchUnknown() {
+        return matchUnknown;
+    }
+
+    public final void setMatchUnknown(boolean matchUnknown) {
+        this.matchUnknown = matchUnknown;
     }
 
     public final void setPatientCustomAttribute1(ValueSelector selector) {

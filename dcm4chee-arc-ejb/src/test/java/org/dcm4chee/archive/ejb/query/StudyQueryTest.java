@@ -110,44 +110,46 @@ public class StudyQueryTest {
     @EJB
     private StudyPermissionManager mgr;
 
-    private AttributeFilter filter() throws Exception {
-        return new AttributeFilter(
+    private AttributeFilter filter(boolean matchUnknown) throws Exception {
+        AttributeFilter filter = new AttributeFilter(
                 SAXReader.parse("resource:dcm4chee-arc/patient-attribute-filter.xml"),
                 SAXReader.parse("resource:dcm4chee-arc/study-attribute-filter.xml"),
                 SAXReader.parse("resource:dcm4chee-arc/series-attribute-filter.xml"),
                 SAXReader.parse("resource:dcm4chee-arc/instance-attribute-filter.xml"),
                 SAXReader.parse("resource:dcm4chee-arc/case-insensitive-attributes.xml"),
                 new ESoundex());
+        filter.setMatchUnknown(matchUnknown);
+        return filter;
     }
 
     @Test
     public void testByModalitiesInStudyPR() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(),
-                NO_QUERY_OPTION, false, null);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(false),
+                NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 2));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyMatchUnknownPR() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(),
-                NO_QUERY_OPTION, true, null);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(true),
+                NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 3));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyCT() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(),
-                NO_QUERY_OPTION, false, null);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(false),
+                NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 1));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyMatchUnknownCT() throws Exception {
-        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(),
-                NO_QUERY_OPTION, true, null);
+        query.find(null, ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(true),
+                NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 2));
         query.close();
     }
@@ -155,7 +157,7 @@ public class StudyQueryTest {
     @Test
     public void testByDateTime() throws Exception {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange("20110620", "103000.000"),
-                filter(), NO_QUERY_OPTION, false, null);
+                filter(false), NO_QUERY_OPTION, null);
         assertTrue(query.hasMoreMatches());
         String studyUID =
                 query.nextMatch().getString(Tag.StudyInstanceUID);
@@ -166,8 +168,8 @@ public class StudyQueryTest {
 
     @Test
     public void testByOpenEndTime() throws Exception {
-        query.find(null, RangeMatchingPIDs, studyDateTimeRange(null, "1030-"), filter(),
-                NO_QUERY_OPTION, false, null);
+        query.find(null, RangeMatchingPIDs, studyDateTimeRange(null, "1030-"), filter(false),
+                NO_QUERY_OPTION, null);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
@@ -180,8 +182,8 @@ public class StudyQueryTest {
 
     @Test
     public void testByOpenStartTime() throws Exception {
-        query.find(null, RangeMatchingPIDs, studyDateTimeRange(null, "-1430"), filter(),
-                NO_QUERY_OPTION, false, null);
+        query.find(null, RangeMatchingPIDs, studyDateTimeRange(null, "-1430"), filter(false),
+                NO_QUERY_OPTION, null);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
@@ -195,7 +197,7 @@ public class StudyQueryTest {
     @Test
     public void testByDateTimeMatchUnknown() throws Exception {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange("20110620", "103000.000"),
-                filter(), NO_QUERY_OPTION, true, null);
+                filter(true), NO_QUERY_OPTION, null);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] = { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.8","1.2.40.0.13.1.1.99.9" };
@@ -206,8 +208,8 @@ public class StudyQueryTest {
 
     @Test
     public void testByTimeRange() throws Exception {
-        query.find(null, RangeMatchingPIDs, studyDateTimeRange(null, "1030-1430"), filter(),
-                NO_QUERY_OPTION, false, null);
+        query.find(null, RangeMatchingPIDs, studyDateTimeRange(null, "1030-1430"), filter(false),
+                NO_QUERY_OPTION, null);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
@@ -221,7 +223,7 @@ public class StudyQueryTest {
     @Test
     public void testByDateRange() throws Exception {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange("20100620-20110620", null),
-                filter(), NO_QUERY_OPTION, false, null);
+                filter(false), NO_QUERY_OPTION, null);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
@@ -236,7 +238,7 @@ public class StudyQueryTest {
     @Test
     public void testByDateTimeRange() throws Exception {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange("20100620-20110620", "1030-1430"),
-                filter(), NO_QUERY_OPTION, false, null);
+                filter(false), NO_QUERY_OPTION, null);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
@@ -250,7 +252,7 @@ public class StudyQueryTest {
     @Test
     public void testByDateTimeRangeCombined() throws Exception {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange("20100620-20110620", "1040-1430"),
-                filter(), COMBINED_DATE_TIME, false, null);
+                filter(false), COMBINED_DATE_TIME, null);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
@@ -264,8 +266,8 @@ public class StudyQueryTest {
 
     @Test
     public void testByDateTimeRangeCombinedOpenEndRange() throws Exception {
-        query.find(null, RangeMatchingPIDs, studyDateTimeRange("20100620-", "1040-"), filter(),
-                COMBINED_DATE_TIME, false, null);
+        query.find(null, RangeMatchingPIDs, studyDateTimeRange("20100620-", "1040-"),
+                filter(false), COMBINED_DATE_TIME, null);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
@@ -279,8 +281,8 @@ public class StudyQueryTest {
 
     @Test
     public void testByDateTimeRangeCombinedOpenStartRange() throws Exception {
-        query.find(null, RangeMatchingPIDs, studyDateTimeRange("-20110620", "-1420"), filter(),
-                COMBINED_DATE_TIME, false, null);
+        query.find(null, RangeMatchingPIDs, studyDateTimeRange("-20110620", "-1420"),
+                filter(false), COMBINED_DATE_TIME, null);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
@@ -295,7 +297,7 @@ public class StudyQueryTest {
     @Test
     public void testByDateTimeRangeCombinedMatchUnknown() throws Exception {
         query.find(null, RangeMatchingPIDs, studyDateTimeRange("20100620-20110620", "1040-1430"),
-                filter(), COMBINED_DATE_TIME, true, null);
+                filter(true), COMBINED_DATE_TIME, null);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
@@ -311,7 +313,7 @@ public class StudyQueryTest {
     public void testByIssuerOfAccessionNumber() throws Exception {
         query.find(null, AccessionNumberPIDs,
                 issuerOfAccessionNumber("A1234", "DCM4CHEE_TESTDATA_ACCNO_ISSUER_1", null, null),
-                filter(), NO_QUERY_OPTION, false, null);
+                filter(false), NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 1));
         query.close();
     }
@@ -320,7 +322,7 @@ public class StudyQueryTest {
     public void testByIssuerOfAccessionNumberMatchUnknown() throws Exception {
         query.find(null, AccessionNumberPIDs,
                 issuerOfAccessionNumber("A1234","DCM4CHEE_TESTDATA_ACCNO_ISSUER_2", null, null),
-                filter(), NO_QUERY_OPTION, true, null);
+                filter(true), NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 2));
         query.close();
     }
@@ -328,8 +330,8 @@ public class StudyQueryTest {
     @Test
     public void testByProcedureCodes() throws Exception {
         query.find(null, ProcedureCodesPIDs,
-                procedureCodes("PROC_CODE_1", "99DCM4CHEE_TEST", null), filter(),
-                NO_QUERY_OPTION, false, null);
+                procedureCodes("PROC_CODE_1", "99DCM4CHEE_TEST", null), filter(false),
+                NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 1));
         query.close();
     }
@@ -337,8 +339,8 @@ public class StudyQueryTest {
     @Test
     public void testByProcedureCodesMatchUnknown() throws Exception {
         query.find(null, ProcedureCodesPIDs,
-                procedureCodes("PROC_CODE_2", "99DCM4CHEE_TEST", null), filter(),
-                NO_QUERY_OPTION, true, null);
+                procedureCodes("PROC_CODE_2", "99DCM4CHEE_TEST", null), filter(true),
+                NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 2));
         query.close();
     }
@@ -357,11 +359,11 @@ public class StudyQueryTest {
         Collection<String> col = Arrays.asList(StudyIUIDs);
         for (String studyIUID : StudyIUIDs)
             assertTrue(mgr.grantStudyPermission(studyIUID, "DCM4CHEE_TEST", Action.QUERY));
-        query.find(null, null, new Attributes(), filter(), NO_QUERY_OPTION, false, 
+        query.find(null, null, new Attributes(), filter(false), NO_QUERY_OPTION, 
                 new String[] { "DCM4CHEE_TEST" , "FooBar" });
         ArrayList<String> result = studyIUIDResultList(query);
         assertTrue(equals(result, col));
-        query.find(null, null, new Attributes(), filter(), NO_QUERY_OPTION, false, 
+        query.find(null, null, new Attributes(), filter(false), NO_QUERY_OPTION,
                 new String[] { "FooBar" });
         result = studyIUIDResultList(query);
         assertFalse(equals(result, col));

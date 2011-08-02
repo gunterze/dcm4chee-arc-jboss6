@@ -93,10 +93,10 @@ public class InstanceQueryBean implements InstanceQuery {
 
     @Override
     public void find(Attributes rq, String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, boolean matchUnknown, String[] roles) {
+            EnumSet<QueryOption> queryOpts, String[] roles) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         TypedQuery<Tuple> instQuery =
-                buildInstanceQuery(cb, pids, keys, filter, queryOpts, matchUnknown, roles);
+                buildInstanceQuery(cb, pids, keys, filter, queryOpts, roles);
         results = instQuery.getResultList().iterator();
         seriesQuery = em.createNamedQuery(Series.FIND_ATTRIBUTES_BY_SERIES_PK);
     }
@@ -132,7 +132,7 @@ public class InstanceQueryBean implements InstanceQuery {
 
     private TypedQuery<Tuple> buildInstanceQuery(CriteriaBuilder cb,
             String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, boolean matchUnknown, String[] roles) {
+            EnumSet<QueryOption> queryOpts, String[] roles) {
         CriteriaQuery<Tuple> cq =  cb.createTupleQuery();
         Root<Instance> inst = cq.from(Instance.class);
         Join<Instance, Series> series = inst.join(Instance_.series);
@@ -148,7 +148,7 @@ public class InstanceQueryBean implements InstanceQuery {
         List<Predicate> predicates = new ArrayList<Predicate>();
         List<Object> params = new ArrayList<Object>();
         Matching.instance(cb, cq, pat, study, series, inst, pids, keys, filter,
-                queryOpts, matchUnknown, roles, predicates, params);
+                queryOpts, roles, predicates, params);
         cq.where(predicates.toArray(new Predicate[predicates.size()]));
         TypedQuery<Tuple> instQuery = em.createQuery(cq);
         int i = 0;
