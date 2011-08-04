@@ -58,6 +58,9 @@ import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.ContentItem;
+import org.dcm4chee.archive.persistence.FileRef;
+import org.dcm4chee.archive.persistence.FileSystem;
+import org.dcm4chee.archive.persistence.FileSystemStatus;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.RequestAttributes;
 import org.dcm4chee.archive.persistence.Series;
@@ -127,6 +130,19 @@ public class InstanceStoreBean implements InstanceStore {
             em.flush();
             return inst;
         }
+    }
+
+    @Override
+    public FileSystem selectFileSystem(String groupID) {
+        return em.createNamedQuery(FileSystem.FIND_BY_GROUP_ID_AND_STATUD, FileSystem.class)
+                .setParameter(1, groupID)
+                .setParameter(2, FileSystemStatus.RW)
+                .getSingleResult();
+    }
+
+    @Override
+    public void store(FileRef fileRef) {
+        em.persist(fileRef);
     }
 
     private static String common(String aets1, String aets2) {

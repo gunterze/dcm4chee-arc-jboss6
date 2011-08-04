@@ -47,6 +47,8 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -57,9 +59,24 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "filesystem")
+@NamedQueries({
+@NamedQuery(
+    name = "FileSystem.findByGroupID",
+    query = "SELECT fs FROM FileSystem fs WHERE fs.groupID = ?1"),
+@NamedQuery(
+    name = "FileSystem.findByGroupIDAndStatus",
+    query = "SELECT fs FROM FileSystem fs WHERE fs.groupID = ?1 AND fs.status = ?2"),
+@NamedQuery(
+    name = "FileSystem.getGroupIDs",
+    query = "SELECT DISTINCT fs.groupID FROM FileSystem fs")
+})
 public class FileSystem implements Serializable {
 
     private static final long serialVersionUID = -5237294062957988389L;
+
+    public static final String FIND_BY_GROUP_ID = "FileSystem.findByGroupID";
+    public static final String FIND_BY_GROUP_ID_AND_STATUD = "FileSystem.findByGroupIDAndStatus";
+    public static final String GET_GROUP_IDS = "FileSystem.getGroupIDs";
 
     @Id
     @GeneratedValue

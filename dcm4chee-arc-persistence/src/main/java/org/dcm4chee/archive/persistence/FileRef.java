@@ -59,7 +59,7 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "files")
-public class File implements Serializable {
+public class FileRef implements Serializable {
 
     private static final long serialVersionUID = 1735835006678974580L;
 
@@ -84,17 +84,23 @@ public class File implements Serializable {
     @Column(name = "file_size", updatable = false)
     private long fileSize;
 
-    @Basic(optional = false)
-    @Column(name = "file_status")
-    private int fileStatus;
-
     @ManyToOne(fetch=FetchType.LAZY)
-    @JoinColumn(name = "instance_fk")
+    @JoinColumn(name = "instance_fk", updatable = false)
     private Instance instance;
 
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name = "filesystem_fk", updatable = false)
     private FileSystem fileSystem;
+
+    public FileRef() {};
+
+    public FileRef(Instance instance, FileSystem fileSystem,
+            String filePath, String transferSyntaxUID, long fileSize) {
+        this.instance = instance;
+        this.fileSystem = fileSystem;
+        this.filePath = filePath;
+        this.fileSize = fileSize;
+    }
 
     @PrePersist
     public void onPrePersist() {
@@ -114,48 +120,20 @@ public class File implements Serializable {
         return filePath;
     }
 
-    public void setFilePath(String filePath) {
-        this.filePath = filePath;
-    }
-
     public String getTransferSyntaxUID() {
         return transferSyntaxUID;
-    }
-
-    public void setTransferSyntaxUID(String transferSyntaxUID) {
-        this.transferSyntaxUID = transferSyntaxUID;
     }
 
     public long getFileSize() {
         return fileSize;
     }
 
-    public void setFileSize(long fileSize) {
-        this.fileSize = fileSize;
-    }
-
-    public int getFileStatus() {
-        return fileStatus;
-    }
-
-    public void setFileStatus(int fileStatus) {
-        this.fileStatus = fileStatus;
-    }
-
     public Instance getInstance() {
         return instance;
     }
 
-    public void setInstance(Instance instance) {
-        this.instance = instance;
-    }
-
     public FileSystem getFileSystem() {
         return fileSystem;
-    }
-
-    public void setFileSystem(FileSystem fileSystem) {
-        this.fileSystem = fileSystem;
     }
 
     @Override
@@ -164,7 +142,6 @@ public class File implements Serializable {
                 + ", path=" + filePath
                 + ", tsuid=" + transferSyntaxUID
                 + ", size=" + fileSize
-                + ", status=" + fileStatus
                 + "]";
     }
 }

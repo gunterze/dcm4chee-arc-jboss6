@@ -43,6 +43,8 @@ import javax.ejb.Local;
 import org.dcm4che.data.Attributes;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
+import org.dcm4chee.archive.persistence.FileRef;
+import org.dcm4chee.archive.persistence.FileSystem;
 import org.dcm4chee.archive.persistence.Instance;
 
 /**
@@ -58,5 +60,9 @@ public interface InstanceStore {
             Availability availability);
 
     void close();
+
+    FileSystem selectFileSystem(String groupID);
+
+    void store(FileRef fileRef);
 
 }
