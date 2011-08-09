@@ -59,10 +59,13 @@ public interface InstanceStore {
             String retrieveAETs, String externalRetrieveAET,
             Availability availability);
 
+    boolean store(Attributes ds, AttributeFilter attributeFilterFor, String sourceAET,
+            FileRef fileRef);
+
     void close();
 
-    FileSystem selectFileSystem(String groupID);
+    boolean initFileSystem(String groupID, String retrieveAET);
 
-    void store(FileRef fileRef);
+    FileSystem selectFileSystem(String groupID);
 
 }

@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.ejb.store;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -76,6 +77,17 @@ public class InstanceStoreBean implements InstanceStore {
     @PersistenceContext(unitName = "dcm4chee-arc", type = PersistenceContextType.EXTENDED)
     private EntityManager em;
     private final HashMap<String,Series> cachedSeries = new HashMap<String,Series>();
+
+    @Override
+    public boolean store(Attributes attrs, AttributeFilter filter, String sourceAET,
+            FileRef fileRef) {
+        FileSystem fs = fileRef.getFileSystem();
+        Instance inst = store(attrs, filter, sourceAET, fs.getRetrieveAET(), null,
+                fs.getAvailability());
+        fileRef.setInstance(inst);
+        em.persist(fileRef);
+        return true;
+    }
 
     @Override
     public Instance store(Attributes attrs, AttributeFilter filter, String sourceAET,
@@ -141,8 +153,20 @@ public class InstanceStoreBean implements InstanceStore {
     }
 
     @Override
-    public void store(FileRef fileRef) {
-        em.persist(fileRef);
+    public boolean initFileSystem(String groupID, String retrieveAET) {
+        if (em.createNamedQuery(FileSystem.COUNT_WITH_GROUP_ID, Long.class)
+                .setParameter(1, groupID)
+                .getSingleResult() > 0)
+            return false;
+
+        FileSystem fs = new FileSystem();
+        fs.setGroupID(groupID);
+        fs.setURI(new File(System.getProperty("jboss.server.data.dir")).toURI().toString());
+        fs.setRetrieveAET(retrieveAET);
+        fs.setAvailability(Availability.ONLINE);
+        fs.setStatus(FileSystemStatus.RW);
+        em.persist(fs);
+        return true;
     }
 
     private static String common(String aets1, String aets2) {

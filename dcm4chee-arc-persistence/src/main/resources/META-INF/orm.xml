@@ -221,7 +221,7 @@
   </entity>
 
   <entity class="FileRef">
-    <table name="files" />
+    <table name="file_ref" />
     <sequence-generator name="seq" sequence-name="files_pk_seq" />
     <attributes>
       <id name="pk">

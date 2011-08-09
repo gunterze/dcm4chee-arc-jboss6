@@ -58,7 +58,7 @@ import javax.persistence.Table;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @Entity
-@Table(name = "files")
+@Table(name = "file_ref")
 public class FileRef implements Serializable {
 
     private static final long serialVersionUID = 1735835006678974580L;
@@ -84,6 +84,10 @@ public class FileRef implements Serializable {
     @Column(name = "file_size", updatable = false)
     private long fileSize;
 
+    @Basic(optional = true)
+    @Column(name = "file_digest", updatable = false)
+    private String digest;
+
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name = "instance_fk", updatable = false)
     private Instance instance;
@@ -94,12 +98,13 @@ public class FileRef implements Serializable {
 
     public FileRef() {};
 
-    public FileRef(Instance instance, FileSystem fileSystem,
-            String filePath, String transferSyntaxUID, long fileSize) {
-        this.instance = instance;
+    public FileRef(FileSystem fileSystem, String filePath, String transferSyntaxUID,
+            long fileSize, String digest) {
         this.fileSystem = fileSystem;
         this.filePath = filePath;
+        this.transferSyntaxUID = transferSyntaxUID;
         this.fileSize = fileSize;
+        this.digest = digest;
     }
 
     @PrePersist
@@ -128,8 +133,16 @@ public class FileRef implements Serializable {
         return fileSize;
     }
 
+    public String getDigest() {
+        return digest;
+    }
+
     public Instance getInstance() {
         return instance;
+    }
+
+    public void setInstance(Instance instance) {
+        this.instance = instance;
     }
 
     public FileSystem getFileSystem() {

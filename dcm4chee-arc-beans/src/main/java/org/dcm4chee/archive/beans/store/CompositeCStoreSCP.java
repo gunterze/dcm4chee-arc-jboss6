@@ -39,48 +39,136 @@
 package org.dcm4chee.archive.beans.store;
 
 import java.io.File;
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Random;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
+import org.dcm4che.data.VR;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.BasicCStoreSCP;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4che.util.FilePathFormat;
+import org.dcm4che.util.SafeClose;
+import org.dcm4che.util.TagUtils;
+import org.dcm4chee.archive.beans.util.Configuration;
 import org.dcm4chee.archive.beans.util.JNDIUtils;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
-import org.dcm4chee.archive.persistence.AttributeFilter;
-import org.dcm4chee.archive.persistence.Availability;
+import org.dcm4chee.archive.persistence.FileRef;
+import org.dcm4chee.archive.persistence.FileSystem;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 public class CompositeCStoreSCP extends BasicCStoreSCP {
 
+    private boolean initFileSystem = true;
+ 
     public CompositeCStoreSCP(String... sopClasses) {
         super(sopClasses);
     }
 
     @Override
-    protected void configure(Association as, DicomInputStream in) {
-        in.setIncludeBulkData(false);
+    protected Object selectStorage(Association as, Attributes rq) throws DicomServiceException {
+        try {
+            String fsGroupID = Configuration.fileSystemGroupIDFor(as.getApplicationEntity(),
+                    as.getRemoteAET());
+            InstanceStore store = initInstanceStore(as);
+            if (initFileSystem) {
+                store.initFileSystem(fsGroupID, as.getLocalAET());
+                initFileSystem = false;
+            }
+            return store.selectFileSystem(fsGroupID);
+        } catch (Exception e) {
+            LOG.warn(as + ": Failed to select filesystem:", e);
+            throw new DicomServiceException(rq, Status.OutOfResources, e);
+        }
     }
 
     @Override
-    protected boolean store(Association as, Attributes rq, Attributes ds,
-            Attributes fmi, File dir, File file, Attributes rsp)
+    protected File createFile(Association as, Attributes rq, Object storage)
             throws DicomServiceException {
-        ApplicationEntity ae = as.getApplicationEntity();
-        AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
         try {
-            initInstanceStore(as).store(ds, filter, as.getCallingAET(),
-                    as.getCalledAET(), null, Availability.ONLINE);
+            FileSystem fs = (FileSystem) storage;
+            File tmpDir = new File(fs.getDirectory(), "incoming");
+            tmpDir.mkdirs();
+            return File.createTempFile("dcm", ".dcm", tmpDir);
         } catch (Exception e) {
-            throw new DicomServiceException(rq, Status.OutOfResources,
-                    causeOf(e));
+            LOG.warn(as + ": Failed to create temp file:", e);
+            throw new DicomServiceException(rq, Status.OutOfResources, e);
         }
-        // super.store(as, rq, ds, fmi, dir, file, rsp);
-        return true;
+    }
+
+    @Override
+    protected MessageDigest getMessageDigest(Association as) {
+        String algorithm = Configuration.messageDigestAlgorithmFor(as.getApplicationEntity());
+        try {
+            return algorithm != null ? MessageDigest.getInstance(algorithm) : null;
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    protected File process(Association as, Attributes rq, String tsuid, Attributes rsp,
+            Object storage, File file, MessageDigest digest) throws DicomServiceException {
+        FileSystem fs = (FileSystem) storage;
+        Attributes ds = readDataset(as, rq, file);
+        ApplicationEntity ae = as.getApplicationEntity();
+        FilePathFormat filePathFormatFor = Configuration.filePathFormatFor(ae);
+        File dst = new File(fs.getDirectory(), filePathFormatFor.format(ds));
+        File dir = dst.getParentFile();
+        dir.mkdirs();
+        while (dst.exists()) {
+            dst = new File(dir, TagUtils.toHexString(new Random().nextInt()));
+        }
+        if (file.renameTo(dst))
+            LOG.info(as + ": M-RENAME " + file + " to " + dst);
+        else {
+            LOG.warn(as + ": Failed to M-RENAME " + file + " to " + dst);
+            throw new DicomServiceException(rq, Status.OutOfResources, "Failed to rename file");
+        }
+        String filePath = dst.toURI().toString().substring(fs.getURI().length());
+        InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
+        try {
+            if (store.store(ds,
+                    Configuration.attributeFilterFor(ae), as.getRemoteAET(),
+                    new FileRef(fs, filePath, tsuid, dst.length(), digest(digest))))
+                return null;
+            LOG.info("{}: ignore received object", as);
+        } catch (Exception e) {
+            LOG.warn(as + ": Failed to update DB:", e);
+            String errorComment = causeOf(e).getMessage();
+            if (errorComment.length() > 64)
+                errorComment = errorComment.substring(0, 64);
+            rsp.setInt(Tag.Status, VR.US, Status.OutOfResources);
+            rsp.setString(Tag.ErrorComment, VR.LO, errorComment);
+        }
+        return dst;
+    }
+
+    private String digest(MessageDigest digest) {
+        return digest != null ? TagUtils.toHexString(digest.digest()) : null;
+    }
+
+    private Attributes readDataset(Association as, Attributes rq, File file)
+            throws DicomServiceException {
+        DicomInputStream in = null;
+        try {
+            in = new DicomInputStream(file);
+            in.setIncludeBulkData(false);
+            return in.readDataset(-1, Tag.PixelData);
+        } catch (IOException e) {
+            LOG.warn(as + ": Failed to decode dataset:", e);
+            throw new DicomServiceException(rq, Status.CannotUnderstand);
+        } finally {
+            SafeClose.close(in);
+        }
     }
 
     private static Throwable causeOf(Throwable e) {
@@ -90,7 +178,7 @@ public class CompositeCStoreSCP extends BasicCStoreSCP {
         return e;
     }
 
-    private InstanceStore initInstanceStore(Association as) throws Exception {
+    private InstanceStore initInstanceStore(Association as) {
         InstanceStore store =
                     (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
         if (store == null) {
