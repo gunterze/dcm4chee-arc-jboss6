@@ -38,7 +38,9 @@
 
 package org.dcm4chee.archive.persistence;
 
+import java.io.File;
 import java.io.Serializable;
+import java.net.URI;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -64,6 +66,9 @@ import javax.persistence.Table;
     name = "FileSystem.findByGroupID",
     query = "SELECT fs FROM FileSystem fs WHERE fs.groupID = ?1"),
 @NamedQuery(
+    name = "FileSystem.countWithGroupID",
+    query = "SELECT COUNT(fs) FROM FileSystem fs WHERE fs.groupID = ?1"),
+@NamedQuery(
     name = "FileSystem.findByGroupIDAndStatus",
     query = "SELECT fs FROM FileSystem fs WHERE fs.groupID = ?1 AND fs.status = ?2"),
 @NamedQuery(
@@ -75,6 +80,7 @@ public class FileSystem implements Serializable {
     private static final long serialVersionUID = -5237294062957988389L;
 
     public static final String FIND_BY_GROUP_ID = "FileSystem.findByGroupID";
+    public static final String COUNT_WITH_GROUP_ID = "FileSystem.countWithGroupID";
     public static final String FIND_BY_GROUP_ID_AND_STATUD = "FileSystem.findByGroupIDAndStatus";
     public static final String GET_GROUP_IDS = "FileSystem.getGroupIDs";
 
@@ -88,8 +94,8 @@ public class FileSystem implements Serializable {
     private String groupID;
 
     @Basic(optional = false)
-    @Column(name = "dirpath")
-    private String directoryPath;
+    @Column(name = "fs_uri")
+    private String uri;
 
     @Basic(optional = false)
     @Column(name = "retrieve_aet")
@@ -111,12 +117,12 @@ public class FileSystem implements Serializable {
         return pk;
     }
 
-    public String getDirectoryPath() {
-        return directoryPath;
+    public String getURI() {
+        return uri;
     }
 
-    public void setDirectoryPath(String directoryPath) {
-        this.directoryPath = directoryPath;
+    public void setURI(String uri) {
+        this.uri = uri;
     }
 
     public String getGroupID() {
@@ -159,10 +165,19 @@ public class FileSystem implements Serializable {
         this.nextFileSystem = nextFileSystem;
     }
 
+    public File getDirectory() {
+        try {
+            return new File(new URI(uri));
+        } catch (Exception e) {
+            throw new IllegalStateException(e.getMessage());
+        }
+    }
+
     @Override
     public String toString() {
         return "FileSystem[pk=" + pk
-                + ", dir=" + directoryPath
+                + ", group=" + groupID
+                + ", uri=" + uri
                 + ", avail=" + availability
                 + ", status=" + status
                 + ", aet=" + retrieveAET

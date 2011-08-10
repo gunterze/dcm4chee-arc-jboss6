@@ -96,6 +96,13 @@
     <property name="matchUnknown">true</property>
   </bean>
 
+  <!-- The File Path Format -->
+  <bean name="FilePathFormat" class="org.dcm4che.util.FilePathFormat">
+    <constructor>
+      <parameter>{yyyy}/{MM}/{dd}/#{0020000D}/#{0020000E}/#{00080018}</parameter>
+    </constructor>
+  </bean>
+
   <!-- The DICOM Device -->
   <bean name="Device" class="org.dcm4che.net.Device">
     <constructor>
@@ -114,6 +121,18 @@
     <install method="setProperty">
       <parameter>org.dcm4chee.archive.persistence.AttributeFilter</parameter>
       <parameter><inject bean="AttributeFilter" /></parameter>
+    </install>
+    <install method="setProperty">
+      <parameter>org.dcm4chee.archive.persistence.FileSystem.groupID.*</parameter>
+      <parameter>DEFAULT</parameter>
+    </install>
+    <install method="setProperty">
+      <parameter>org.dcm4che.util.FilePathFormat</parameter>
+      <parameter><inject bean="FilePathFormat" /></parameter>
+    </install>
+    <install method="setProperty">
+      <parameter>org.dcm4chee.archive.persistence.FileRef.digest</parameter>
+      <parameter>MD5</parameter>
     </install>
     <start method="activate" />
     <stop method="deactivate" />
