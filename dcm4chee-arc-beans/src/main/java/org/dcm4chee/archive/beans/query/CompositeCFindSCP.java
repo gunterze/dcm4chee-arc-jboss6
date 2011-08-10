@@ -42,22 +42,19 @@ package org.dcm4chee.archive.beans.query;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.AttributesValidator;
 import org.dcm4che.data.Tag;
-import org.dcm4che.data.VR;
-import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.Status;
-import org.dcm4che.net.pdu.ExtendedNegotiation;
-import org.dcm4che.net.pdu.QueryOption;
+import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCFindSCP;
 import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4che.net.service.Matches;
+import org.dcm4che.net.service.QueryTask;
 import org.dcm4chee.archive.beans.util.JNDIUtils;
+import org.dcm4chee.archive.ejb.query.CompositeQuery;
 import org.dcm4chee.archive.ejb.query.InstanceQuery;
 import org.dcm4chee.archive.ejb.query.PatientQuery;
 import org.dcm4chee.archive.ejb.query.SeriesQuery;
 import org.dcm4chee.archive.ejb.query.StudyQuery;
-import org.dcm4chee.archive.persistence.AttributeFilter;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -73,97 +70,32 @@ public class CompositeCFindSCP extends BasicCFindSCP {
     }
 
     @Override
-    protected Matches calculateMatches(Association as, Attributes rq,
-            Attributes keys) throws DicomServiceException {
+    protected QueryTask calculateMatches(Association as, PresentationContext pc,
+            Attributes rq, Attributes keys) throws DicomServiceException {
         AttributesValidator validator = new AttributesValidator(keys);
         String level = validator.getType1String(
                 Tag.QueryRetrieveLevel, 0, 1, qrLevels);
         check(rq, validator);
         try {
-            switch (level.charAt(1)) {
-            case 'A':
-                return patientMatches(as, rq, keys);
-            case 'T':
-                return studyMatches(as, rq, keys);
-            case 'E':
-                return seriesMatches(as, rq, keys);
-            case 'M':
-                return instanceMatches(as, rq, keys);
-            }
+            return new CompositeQueryTask(as, pc, rq, keys,
+                    (CompositeQuery) JNDIUtils.lookup(jndiNameOf(level)));
         } catch (Exception e) {
             throw new DicomServiceException(rq, Status.UnableToProcess, e);
         }
-        throw new AssertionError();
     }
 
-    @Override
-    protected Attributes adjust(Attributes match, Attributes keys,
-            Association as) {
-        Attributes filtered = new Attributes(match.size());
-        filtered.setString(Tag.QueryRetrieveLevel, VR.CS,
-                keys.getString(Tag.QueryRetrieveLevel, null));
-        filtered.addSelected(match, Tag.SpecificCharacterSet,
-                Tag.RetrieveAETitle, Tag.InstanceAvailability);
-        filtered.addSelected(match, keys);
-        return filtered;
-    }
-
-    private Matches patientMatches(Association as, Attributes rq,
-            Attributes keys) throws Exception {
-        PatientQuery query = (PatientQuery) JNDIUtils.lookup(PatientQuery.JNDI_NAME);
-        String cuid = rq.getString(Tag.AffectedSOPClassUID);
-        ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        ApplicationEntity ae = as.getApplicationEntity();
-        AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
-        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg));
-        return query;
-    }
-
-    private Matches studyMatches(Association as, Attributes rq,
-            Attributes keys) throws Exception {
-        String cuid = rq.getString(Tag.AffectedSOPClassUID, null);
-        ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        StudyQuery query = (StudyQuery) JNDIUtils.lookup(StudyQuery.JNDI_NAME);
-        ApplicationEntity ae = as.getApplicationEntity();
-        AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
-        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), roles());
-        return query;
-    }
-
-    private Matches seriesMatches(Association as, Attributes rq,
-            Attributes keys) throws Exception {
-        String cuid = rq.getString(Tag.AffectedSOPClassUID, null);
-        ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        SeriesQuery query = (SeriesQuery) JNDIUtils.lookup(SeriesQuery.JNDI_NAME);
-        ApplicationEntity ae = as.getApplicationEntity();
-        AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
-        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), roles());
-        return query;
-    }
-
-    private Matches instanceMatches(Association as, Attributes rq,
-            Attributes keys) throws Exception {
-        String cuid = rq.getString(Tag.AffectedSOPClassUID, null);
-        ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        InstanceQuery query = (InstanceQuery) JNDIUtils.lookup(InstanceQuery.JNDI_NAME);
-        ApplicationEntity ae = as.getApplicationEntity();
-        AttributeFilter filter = (AttributeFilter) ae.getProperty(AttributeFilter.class.getName());
-        query.find(rq, pids(keys), keys, filter, QueryOption.toOptions(extNeg), roles());
-        return query;
-    }
-
-    private String[] roles() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    private String[] pids(Attributes keys) {
-        String pid = keys.getString(Tag.PatientID, null);
-        return pid == null
-                ? null 
-                : new String[] { 
-                    pid,
-                    keys.getString(Tag.IssuerOfPatientID, null)};
+    private String jndiNameOf(String level) {
+        switch (level.charAt(1)) {
+        case 'A':
+            return PatientQuery.JNDI_NAME;
+        case 'T':
+            return StudyQuery.JNDI_NAME;
+        case 'E':
+            return SeriesQuery.JNDI_NAME;
+        case 'M':
+            return InstanceQuery.JNDI_NAME;
+        }
+        throw new IllegalArgumentException(level);
     }
 
     private static void check(Attributes rq, AttributesValidator validator)

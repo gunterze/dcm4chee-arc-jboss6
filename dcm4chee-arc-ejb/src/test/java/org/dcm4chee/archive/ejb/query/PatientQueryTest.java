@@ -86,6 +86,7 @@ public class PatientQueryTest {
     public static JavaArchive createDeployment() {
         return ShrinkWrap.create(JavaArchive.class, "test.jar")
                 .addClasses(
+                        CompositeQuery.class,
                         PatientQuery.class,
                         PatientQueryBean.class,
                         Matching.class,
@@ -110,7 +111,7 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientID() throws Exception {
-        query.find(null, dobPatientData, null, filter(false), NO_QUERY_OPTION);
+        query.find(dobPatientData, null, filter(false), NO_QUERY_OPTION, null);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_20020202", "DOB_NONE" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -121,19 +122,19 @@ public class PatientQueryTest {
     @Test
     public void testByPatientName() throws Exception {
         AttributeFilter filter = filter(false);
-        query.find(null, null, patientName("大宮^省吾", true), filter, NO_QUERY_OPTION);
+        query.find(null, patientName("大宮^省吾", true), filter, NO_QUERY_OPTION, null);
         assertTrue(query.hasMoreMatches());
         query.nextMatch();
         assertFalse(query.hasMoreMatches());
-        query.find(null, fuzzyPatientData, patientName("LUCAS^GEORGE=", false), filter, 
-                NO_QUERY_OPTION);
+        query.find(fuzzyPatientData, patientName("LUCAS^GEORGE=", false), filter, 
+                NO_QUERY_OPTION, null);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_GEORGE" };
         Collection<String> col = Arrays.asList(patIDs);
         assertTrue(equals(result, col));
-        query.find(null, null, 
+        query.find(null, 
                 patientName("OOMIYA^SHOUGO=大宮^省吾=オオミヤ^ショウゴ",  true), filter, 
-                NO_QUERY_OPTION);
+                NO_QUERY_OPTION, null);
         result = patientIDResultList(query);
         patIDs = new String[]{ "PERSON_NAME" };
         col = Arrays.asList(patIDs);
@@ -143,8 +144,8 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientBirthDate() throws Exception {
-        query.find(null, dobPatientData, patientBirthDate("20010101"), filter(false),
-                NO_QUERY_OPTION);
+        query.find(dobPatientData, patientBirthDate("20010101"), filter(false),
+                NO_QUERY_OPTION, null);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -154,8 +155,8 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientBirthDateRange() throws Exception {
-        query.find(null, dobPatientData, patientBirthDate("20010101-20020202"), filter(false),
-                NO_QUERY_OPTION);
+        query.find(dobPatientData, patientBirthDate("20010101-20020202"), filter(false),
+                NO_QUERY_OPTION, null);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_20020202" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -165,8 +166,8 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientBirthDateMatchUnknown() throws Exception {
-        query.find(null, dobPatientData, patientBirthDate("20010101"), filter(true),
-                NO_QUERY_OPTION);
+        query.find(dobPatientData, patientBirthDate("20010101"), filter(true),
+                NO_QUERY_OPTION, null);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_NONE" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -176,8 +177,8 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientBirthDateRangeMatchUnknown() throws Exception {
-        query.find(null, dobPatientData, patientBirthDate("20010101-20020202"), filter(true),
-                NO_QUERY_OPTION);
+        query.find(dobPatientData, patientBirthDate("20010101-20020202"), filter(true),
+                NO_QUERY_OPTION, null);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_20020202", "DOB_NONE" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -187,8 +188,8 @@ public class PatientQueryTest {
     
     @Test
     public void testByPatientNameSoundex1() throws Exception {
-        query.find(null, fuzzyPatientData, patientName("LUCAS^GEORGE", false), filter(false), 
-                FUZZY_PERSON_NAME);
+        query.find(fuzzyPatientData, patientName("LUCAS^GEORGE", false), filter(false), 
+                FUZZY_PERSON_NAME, null);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_GEORGE", "FUZZY_JOERG" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -198,8 +199,8 @@ public class PatientQueryTest {
     
     @Test
     public void testByPatientNameSoundex2() throws Exception {
-        query.find(null, fuzzyPatientData, patientName("LUKAS^JÖRG", false), filter(false), 
-                FUZZY_PERSON_NAME);
+        query.find(fuzzyPatientData, patientName("LUKAS^JÖRG", false), filter(false), 
+                FUZZY_PERSON_NAME, null);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_GEORGE", "FUZZY_JOERG" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -209,8 +210,8 @@ public class PatientQueryTest {
     
     @Test
     public void testByPatientNameSoundex3() throws Exception {
-        query.find(null, fuzzyPatientData, patientName("LUKE", false), filter(false), 
-                FUZZY_PERSON_NAME);
+        query.find(fuzzyPatientData, patientName("LUKE", false), filter(false), 
+                FUZZY_PERSON_NAME, null);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_LUKE" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -220,8 +221,8 @@ public class PatientQueryTest {
     
     @Test
     public void testByPatientNameSoundex4() throws Exception {
-        query.find(null, fuzzyPatientData, patientName("LU*", false), filter(false), 
-                FUZZY_PERSON_NAME);
+        query.find(fuzzyPatientData, patientName("LU*", false), filter(false), 
+                FUZZY_PERSON_NAME, null);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_LUKE" , "FUZZY_JOERG", "FUZZY_GEORGE"};
         Collection<String> col = Arrays.asList(patIDs);
@@ -231,8 +232,8 @@ public class PatientQueryTest {
     
     @Test
     public void testByPatientNameSoundex5() throws Exception {
-        query.find(null, fuzzyPatientData, patientName("LU*", false), filter(true), 
-                FUZZY_PERSON_NAME);
+        query.find(fuzzyPatientData, patientName("LU*", false), filter(true), 
+                FUZZY_PERSON_NAME, null);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_LUKE", "FUZZY_JOERG", "FUZZY_GEORGE", "FUZZY_NONE"};
         Collection<String> col = Arrays.asList(patIDs);

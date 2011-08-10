@@ -38,11 +38,13 @@
 
 package org.dcm4chee.archive.ejb.query;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.ejb.EJBException;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
@@ -55,9 +57,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.QueryOption;
-import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.Patient_;
@@ -73,14 +73,13 @@ public class PatientQueryBean implements PatientQuery {
                         type = PersistenceContextType.EXTENDED)
     private EntityManager em;
 
-    private Attributes rq;
     private Iterator<byte[]> results;
 
     private boolean optionalKeyNotSupported;
 
     @Override
-    public void find(Attributes rq, String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts) {
+    public void find(String[] pids, Attributes keys, AttributeFilter filter,
+            EnumSet<QueryOption> queryOpts, String[] roles) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<byte[]> cq = cb.createQuery(byte[].class);
         Root<Patient> pat = cq.from(Patient.class);
@@ -104,22 +103,22 @@ public class PatientQueryBean implements PatientQuery {
     }
 
     @Override
-    public boolean hasMoreMatches() throws DicomServiceException {
+    public boolean hasMoreMatches() {
         checkResults();
         return results.hasNext();
     }
 
     @Override
-    public Attributes nextMatch() throws DicomServiceException {
+    public Attributes nextMatch() {
         checkResults();
+        byte[] result = results.next();
+        Attributes attrs = new Attributes();
         try {
-            byte[] result = results.next();
-            Attributes attrs = new Attributes();
             Utils.decodeAttributes(attrs, result);
-            return attrs;
-        } catch (Exception e) {
-            throw unableToProcess(e);
+        } catch (IOException e) {
+            throw new EJBException(e);
         }
+        return attrs;
     }
 
     @Override
@@ -129,11 +128,6 @@ public class PatientQueryBean implements PatientQuery {
     private void checkResults() {
         if (results == null)
             throw new IllegalStateException("results not initalized");
-    }
-
-    private DicomServiceException unableToProcess(Exception e)
-            throws DicomServiceException {
-        return new DicomServiceException(rq, Status.UnableToProcess, e);
     }
 
 }

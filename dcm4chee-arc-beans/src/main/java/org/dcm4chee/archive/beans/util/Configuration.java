@@ -36,15 +36,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.ejb.query;
+package org.dcm4chee.archive.beans.util;
 
-import javax.ejb.Local;
+import org.dcm4che.net.ApplicationEntity;
+import org.dcm4che.util.FilePathFormat;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Local
-public interface SeriesQuery extends CompositeQuery {
+public class Configuration {
 
-    public static final String JNDI_NAME = "SeriesQueryBean/local";
+    public static AttributeFilter attributeFilterFor(ApplicationEntity ae) {
+        return (AttributeFilter) ae.getProperty("org.dcm4chee.archive.persistence.AttributeFilter");
+    }
+
+    public static String fileSystemGroupIDFor(ApplicationEntity ae, String aet) {
+        String groupID = (String)
+                ae.getProperty("org.dcm4chee.archive.persistence.FileSystem.groupID." + aet);
+        if (groupID == null)
+            groupID = (String)
+                    ae.getProperty("org.dcm4chee.archive.persistence.FileSystem.groupID.*");
+        return groupID;
+    }
+
+    public static FilePathFormat filePathFormatFor(ApplicationEntity ae) {
+        return (FilePathFormat) ae.getProperty("org.dcm4che.util.FilePathFormat");
+    }
+
+    public static String messageDigestAlgorithmFor(ApplicationEntity ae) {
+        return (String) ae.getProperty("org.dcm4chee.archive.persistence.FileRef.digest");
+    }
+
 }

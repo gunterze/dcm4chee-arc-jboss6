@@ -38,11 +38,13 @@
 
 package org.dcm4chee.archive.ejb.query;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.ejb.EJBException;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
@@ -57,9 +59,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.QueryOption;
-import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Patient;
@@ -80,14 +80,12 @@ public class SeriesQueryBean implements SeriesQuery {
                         type = PersistenceContextType.EXTENDED)
     private EntityManager em;
 
-    private Attributes rq;
     private Iterator<Tuple> results;
     private boolean optionalKeyNotSupported;
 
     @Override
-    public void find(Attributes rq, String[] pids, Attributes keys, AttributeFilter filter,
+    public void find(String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, String[] roles) {
-        this.rq = rq;
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Tuple> cq = cb.createTupleQuery();
         Root<Series> series = cq.from(Series.class);
@@ -123,47 +121,43 @@ public class SeriesQueryBean implements SeriesQuery {
     }
 
     @Override
-    public boolean hasMoreMatches() throws DicomServiceException {
+    public boolean hasMoreMatches() {
         checkResults();
-        try {
-            return results.hasNext();
-        } catch (Exception e) {
-            throw unableToProcess(e);
-        }
+        return results.hasNext();
     }
 
     @Override
-    public Attributes nextMatch() throws DicomServiceException {
+    public Attributes nextMatch() {
         checkResults();
+        Tuple tuple = results.next();
+        int numberOfStudyRelatedSeries = tuple.get(0, Integer.class);
+        int numberOfStudyRelatedInstances = tuple.get(1, Integer.class);
+        int numberOfSeriesRelatedInstances = tuple.get(2, Integer.class);
+        String modalitiesInStudy = tuple.get(3, String.class);
+        String sopClassesInStudy = tuple.get(4, String.class);
+        String retrieveAETs = tuple.get(5, String.class);
+        String externalRetrieveAET = tuple.get(6, String.class);
+        Availability availability = tuple.get(7, Availability.class);
+        byte[] seriesAttributes = tuple.get(8, byte[].class);
+        byte[] studyAttributes = tuple.get(9, byte[].class);
+        byte[] patientAttributes = tuple.get(10, byte[].class);
+        Attributes attrs = new Attributes();
         try {
-            Tuple tuple = results.next();
-            int numberOfStudyRelatedSeries = tuple.get(0, Integer.class);
-            int numberOfStudyRelatedInstances = tuple.get(1, Integer.class);
-            int numberOfSeriesRelatedInstances = tuple.get(2, Integer.class);
-            String modalitiesInStudy = tuple.get(3, String.class);
-            String sopClassesInStudy = tuple.get(4, String.class);
-            String retrieveAETs = tuple.get(5, String.class);
-            String externalRetrieveAET = tuple.get(6, String.class);
-            Availability availability = tuple.get(7, Availability.class);
-            byte[] seriesAttributes = tuple.get(8, byte[].class);
-            byte[] studyAttributes = tuple.get(9, byte[].class);
-            byte[] patientAttributes = tuple.get(10, byte[].class);
-            Attributes attrs = new Attributes();
             Utils.decodeAttributes(attrs, patientAttributes);
             Utils.decodeAttributes(attrs, studyAttributes);
             Utils.decodeAttributes(attrs, seriesAttributes);
-            Utils.setStudyQueryAttributes(attrs,
-                    numberOfStudyRelatedSeries,
-                    numberOfStudyRelatedInstances,
-                    modalitiesInStudy,
-                    sopClassesInStudy);
-            Utils.setSeriesQueryAttributes(attrs, numberOfSeriesRelatedInstances);
-            Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
-            Utils.setAvailability(attrs, availability);
-            return attrs;
-        } catch (Exception e) {
-            throw unableToProcess(e);
+        } catch (IOException e) {
+            throw new EJBException(e);
         }
+        Utils.setStudyQueryAttributes(attrs,
+                numberOfStudyRelatedSeries,
+                numberOfStudyRelatedInstances,
+                modalitiesInStudy,
+                sopClassesInStudy);
+        Utils.setSeriesQueryAttributes(attrs, numberOfSeriesRelatedInstances);
+        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
+        Utils.setAvailability(attrs, availability);
+        return attrs;
     }
 
     @Override
@@ -173,11 +167,6 @@ public class SeriesQueryBean implements SeriesQuery {
     private void checkResults() {
         if (results == null)
             throw new IllegalStateException("results not initalized");
-    }
-
-    private DicomServiceException unableToProcess(Exception e)
-            throws DicomServiceException {
-        return new DicomServiceException(rq, Status.UnableToProcess, e);
     }
 
 }

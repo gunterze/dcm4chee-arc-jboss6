@@ -38,11 +38,13 @@
 
 package org.dcm4chee.archive.ejb.query;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.ejb.EJBException;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
@@ -57,9 +59,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.QueryOption;
-import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Patient;
@@ -78,14 +78,12 @@ public class StudyQueryBean implements StudyQuery {
                         type = PersistenceContextType.EXTENDED)
     private EntityManager em;
 
-    private Attributes rq;
     private Iterator<Tuple> results;
     private boolean optionalKeyNotSupported;
 
     @Override
-    public void find(Attributes rq, String[] pids, Attributes keys, AttributeFilter filter,
+    public void find(String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, String[] roles) {
-        this.rq = rq;
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Tuple> cq = cb.createTupleQuery();
         Root<Study> study = cq.from(Study.class);
@@ -119,43 +117,39 @@ public class StudyQueryBean implements StudyQuery {
     }
 
     @Override
-    public boolean hasMoreMatches() throws DicomServiceException {
+    public boolean hasMoreMatches() {
         checkResults();
-        try {
-            return results.hasNext();
-        } catch (Exception e) {
-            throw unableToProcess(e);
-        }
+        return results.hasNext();
     }
 
     @Override
-    public Attributes nextMatch() throws DicomServiceException {
+    public Attributes nextMatch() {
         checkResults();
+        Tuple tuple = results.next();
+        int numberOfStudyRelatedSeries = tuple.get(0, Integer.class);
+        int numberOfStudyRelatedInstances = tuple.get(1, Integer.class);
+        String modalitiesInStudy = tuple.get(2, String.class);
+        String sopClassesInStudy = tuple.get(3, String.class);
+        String retrieveAETs = tuple.get(4, String.class);
+        String externalRetrieveAET = tuple.get(5, String.class);
+        Availability availability = tuple.get(6, Availability.class);
+        byte[] studyAttributes = tuple.get(7, byte[].class);
+        byte[] patientAttributes = tuple.get(8, byte[].class);
+        Attributes attrs = new Attributes();
         try {
-            Tuple tuple = results.next();
-            int numberOfStudyRelatedSeries = tuple.get(0, Integer.class);
-            int numberOfStudyRelatedInstances = tuple.get(1, Integer.class);
-            String modalitiesInStudy = tuple.get(2, String.class);
-            String sopClassesInStudy = tuple.get(3, String.class);
-            String retrieveAETs = tuple.get(4, String.class);
-            String externalRetrieveAET = tuple.get(5, String.class);
-            Availability availability = tuple.get(6, Availability.class);
-            byte[] studyAttributes = tuple.get(7, byte[].class);
-            byte[] patientAttributes = tuple.get(8, byte[].class);
-            Attributes attrs = new Attributes();
             Utils.decodeAttributes(attrs, patientAttributes);
             Utils.decodeAttributes(attrs, studyAttributes);
-            Utils.setStudyQueryAttributes(attrs,
-                    numberOfStudyRelatedSeries,
-                    numberOfStudyRelatedInstances,
-                    modalitiesInStudy,
-                    sopClassesInStudy);
-            Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
-            Utils.setAvailability(attrs, availability);
-            return attrs;
-        } catch (Exception e) {
-            throw unableToProcess(e);
+        } catch (IOException e) {
+            throw new EJBException(e);
         }
+        Utils.setStudyQueryAttributes(attrs,
+                numberOfStudyRelatedSeries,
+                numberOfStudyRelatedInstances,
+                modalitiesInStudy,
+                sopClassesInStudy);
+        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
+        Utils.setAvailability(attrs, availability);
+        return attrs;
     }
 
     @Remove
@@ -164,11 +158,6 @@ public class StudyQueryBean implements StudyQuery {
     private void checkResults() {
         if (results == null)
             throw new IllegalStateException("results not initalized");
-    }
-
-    private DicomServiceException unableToProcess(Exception e)
-            throws DicomServiceException {
-        return new DicomServiceException(rq, Status.UnableToProcess, e);
     }
 
 }
