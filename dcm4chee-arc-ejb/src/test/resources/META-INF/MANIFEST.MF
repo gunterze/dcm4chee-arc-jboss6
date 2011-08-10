@@ -1,1 +1,2 @@
-Dependencies: org.dcm4che,org.slf4j
+Dependencies: org.dcm4che,org.slf4j,org.dcm4che.net
+Class-Path: dcm4chee-arc-persistence-4.0.0-SNAPSHOT-hsql.jar

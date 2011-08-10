@@ -53,8 +53,8 @@
   <description>Session Beans for DICOM Archive J2EE application</description>
   <properties>
     <db>hsql</db>
-    <arquillian.version>1.0.0.CR2</arquillian.version>
-    <shrinkwrap.version>1.0.0-beta-5</shrinkwrap.version>
+    <arquillian.version>1.0.0.CR1</arquillian.version>
+    <shrinkwrap.version>1.0.0-beta-3</shrinkwrap.version>
     <jboss.version>6.0.0.Final</jboss.version>
   </properties>
   <profiles>
@@ -119,6 +119,11 @@
           <artifactId>jboss-as-arquillian-container-remote</artifactId>
           <version>7.0.0.CR1</version>
         </dependency>
+        <dependency>
+          <groupId>jboss</groupId>
+          <artifactId>jnp-client</artifactId>
+          <version>4.0.2</version>
+        </dependency>
       </dependencies>
       <build>
         <plugins>
@@ -176,27 +181,21 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.8.1</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jboss.arquillian.junit</groupId>
       <artifactId>arquillian-junit-container</artifactId>
       <version>${arquillian.version}</version>
-      <type>pom</type>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jboss.arquillian.core</groupId>
       <artifactId>arquillian-core-api</artifactId>
       <version>${arquillian.version}</version>
-      <type>pom</type>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jboss.shrinkwrap</groupId>
       <artifactId>shrinkwrap-impl-base</artifactId>
       <version>${shrinkwrap.version}</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
@@ -207,7 +206,7 @@
         <configuration>
           <ejbVersion>3.1</ejbVersion>
           <archive>
-            <manifestFile>src/test/resources/META-INF/MANIFEST.MF</manifestFile> 
+            <manifestFile>src/test/resources/META-INF/MANIFEST.MF</manifestFile>
           </archive>
         </configuration>
       </plugin>
