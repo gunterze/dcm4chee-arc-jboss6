@@ -38,7 +38,7 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.util.EnumSet;
 
@@ -50,11 +50,8 @@ import org.dcm4che.data.VR;
 import org.dcm4che.io.SAXReader;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.soundex.ESoundex;
-import org.dcm4chee.archive.ejb.query.Matching;
-import org.dcm4chee.archive.ejb.query.SeriesQuery;
-import org.dcm4chee.archive.ejb.query.SeriesQueryBean;
 import org.dcm4chee.archive.persistence.AttributeFilter;
-import org.jboss.arquillian.api.Deployment;
+import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;

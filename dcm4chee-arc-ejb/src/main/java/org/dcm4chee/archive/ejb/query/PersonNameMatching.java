@@ -90,12 +90,12 @@ class PersonNameMatching {
             PersonNameMatching.fuzzyNames(cb, filter, familyNameSoundex, givenNameSoundex, 
                     pn.get(PersonName.Component.FamilyName), pn.get(PersonName.Component.GivenName), 
                     matchUnknown, predicates, params);
-        else if (containsGivenName)
-            PersonNameMatching.fuzzyName(cb, filter, familyNameSoundex, givenNameSoundex, 
-                    pn.get(PersonName.Component.GivenName), matchUnknown, predicates, params);
         else if (containsFamilyName)
             PersonNameMatching.fuzzyName(cb, filter, familyNameSoundex, givenNameSoundex, 
                     pn.get(PersonName.Component.FamilyName), matchUnknown, predicates, params);
+        else if (containsGivenName)
+            PersonNameMatching.fuzzyName(cb, filter, familyNameSoundex, givenNameSoundex, 
+                    pn.get(PersonName.Component.GivenName), matchUnknown, predicates, params);
     }
 
     static private void fuzzyNames(CriteriaBuilder cb, AttributeFilter filter, 

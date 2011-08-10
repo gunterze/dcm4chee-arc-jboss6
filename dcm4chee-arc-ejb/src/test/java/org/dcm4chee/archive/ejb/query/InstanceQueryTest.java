@@ -55,7 +55,7 @@ import org.dcm4che.io.SAXReader;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.soundex.ESoundex;
 import org.dcm4chee.archive.persistence.AttributeFilter;
-import org.jboss.arquillian.api.Deployment;
+import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;

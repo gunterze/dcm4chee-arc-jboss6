@@ -38,23 +38,21 @@
 
 package org.dcm4chee.archive.ejb.store;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import javax.ejb.EJB;
 
 import org.dcm4che.io.SAXReader;
 import org.dcm4che.soundex.ESoundex;
 import org.dcm4che.util.StringUtils;
-import org.dcm4chee.archive.ejb.store.CodeFactory;
-import org.dcm4chee.archive.ejb.store.InstanceStoreBean;
-import org.dcm4chee.archive.ejb.store.IssuerFactory;
-import org.dcm4chee.archive.ejb.store.PatientFactory;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.Series;
 import org.dcm4chee.archive.persistence.Study;
-import org.jboss.arquillian.api.Deployment;
+import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;

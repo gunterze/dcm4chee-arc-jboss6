@@ -37,8 +37,7 @@
    -
    - ***** END LICENSE BLOCK *****  -->
    
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
@@ -54,8 +53,8 @@
   <description>Session Beans for DICOM Archive J2EE application</description>
   <properties>
     <db>hsql</db>
-    <arquillian.version>1.0.0.Alpha5</arquillian.version>
-    <shrinkwrap.version>1.0.0-alpha-12</shrinkwrap.version>
+    <arquillian.version>1.0.0.CR2</arquillian.version>
+    <shrinkwrap.version>1.0.0-beta-5</shrinkwrap.version>
     <jboss.version>6.0.0.Final</jboss.version>
   </properties>
   <profiles>
@@ -106,7 +105,26 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
+              <skip>true</skip>
             </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>jbossas-remote-7</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.jboss.as</groupId>
+          <artifactId>jboss-as-arquillian-container-remote</artifactId>
+          <version>7.0.0.CR1</version>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
           </plugin>
         </plugins>
       </build>
@@ -161,15 +179,23 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.jboss.arquillian</groupId>
-      <artifactId>arquillian-api</artifactId>
+      <groupId>org.jboss.arquillian.junit</groupId>
+      <artifactId>arquillian-junit-container</artifactId>
       <version>${arquillian.version}</version>
+      <type>pom</type>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.jboss.arquillian</groupId>
-      <artifactId>arquillian-junit</artifactId>
+      <groupId>org.jboss.arquillian.core</groupId>
+      <artifactId>arquillian-core-api</artifactId>
       <version>${arquillian.version}</version>
+      <type>pom</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.shrinkwrap</groupId>
+      <artifactId>shrinkwrap-impl-base</artifactId>
+      <version>${shrinkwrap.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -180,6 +206,9 @@
         <version>2.3</version>
         <configuration>
           <ejbVersion>3.1</ejbVersion>
+          <archive>
+            <manifestFile>src/test/resources/META-INF/MANIFEST.MF</manifestFile> 
+          </archive>
         </configuration>
       </plugin>
     </plugins>

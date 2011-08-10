@@ -49,7 +49,7 @@ import org.dcm4chee.archive.ejb.store.IssuerFactory;
 import org.dcm4chee.archive.ejb.store.PatientFactory;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
-import org.jboss.arquillian.api.Deployment;
+import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -64,6 +64,7 @@ public class InitTestData {
 
     private static final String SOURCE_AET = "SOURCE_AET";
     private static final String RETRIEVE_AETS = "RETRIEVE_AET";
+    
     private static final Class<?>[] CLASSES = {
         InstanceStore.class,
         InstanceStoreBean.class,
@@ -109,14 +110,14 @@ public class InitTestData {
         "fuzzy-2.xml",
         "fuzzy-3.xml",
         "fuzzy-4.xml",
-        "person-name-1.xml",
+        "person-name-1.xml"
    };
 
     @Deployment
-    public static JavaArchive createDeployment() {
+    public static JavaArchive createDeployment() throws Exception{
        JavaArchive archive = ShrinkWrap.create(JavaArchive.class, "test.jar");
-       for (Class<?> clazz : CLASSES)
-           archive.addClass(clazz);
+       for (Class<?> cl : CLASSES)
+           archive.addClass(cl);
        for (String res : RESOURCES)
            archive.addAsResource(res);
        return archive;
@@ -139,5 +140,4 @@ public class InitTestData {
                     SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
         instanceStore.close();
     }
-
 }
