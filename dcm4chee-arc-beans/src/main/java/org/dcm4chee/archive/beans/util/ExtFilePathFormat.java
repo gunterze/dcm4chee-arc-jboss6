@@ -50,7 +50,7 @@ import org.dcm4che.util.FilePathFormat;
 public class ExtFilePathFormat extends FilePathFormat {
 
     private int dateTag = -1;
-    private String dateFormat;
+    private SimpleDateFormat dateFormat;
 
     public ExtFilePathFormat(String format) {
         super(format);
@@ -60,23 +60,25 @@ public class ExtFilePathFormat extends FilePathFormat {
         this.dateTag = dateTag;
     }
 
-    public void setDateFormat(String dateFormat) {
-        this.dateFormat = dateFormat.endsWith("/") ? dateFormat : dateFormat + '/';
+    public void setDateFormat(String pattern) {
+        this.dateFormat = new SimpleDateFormat(pattern);
     }
 
     @Override
     public String format(Attributes attrs) {
         String s = super.format(attrs);
-        if (dateFormat == null)
-            return s;
+        return (dateFormat == null) ? s : prefix(attrs) + '/' + s;
+    }
 
+    private String prefix(Attributes attrs) {
         Date date = dateTag == -1 
                 ? new Date()
                 : attrs.getDate(dateTag, null);
-        String prefix = date == null
-                ? dateFormat
-                : new SimpleDateFormat(dateFormat).format(date);
-        return prefix + s;
+        if (date == null)
+            return dateFormat.toPattern();
+        synchronized (dateFormat) {
+            return dateFormat.format(date);
+        }
     }
 
 }
