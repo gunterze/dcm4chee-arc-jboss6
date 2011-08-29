@@ -36,15 +36,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.ejb.query;
+package org.dcm4chee.archive.beans.util;
 
-import javax.ejb.Local;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import org.dcm4che.data.Attributes;
+import org.dcm4che.util.FilePathFormat;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Local
-public interface SeriesQuery extends CompositeQuery {
+public class ExtFilePathFormat extends FilePathFormat {
 
-    public static final String JNDI_NAME = "SeriesQueryBean/local";
+    private int dateTag = -1;
+    private SimpleDateFormat dateFormat;
+
+    public ExtFilePathFormat(String format) {
+        super(format);
+    }
+
+    public void setDateTag(int dateTag) {
+        this.dateTag = dateTag;
+    }
+
+    public void setDateFormat(String pattern) {
+        this.dateFormat = new SimpleDateFormat(pattern);
+    }
+
+    @Override
+    public String format(Attributes attrs) {
+        String s = super.format(attrs);
+        return (dateFormat == null) ? s : prefix(attrs) + '/' + s;
+    }
+
+    private String prefix(Attributes attrs) {
+        Date date = dateTag == -1 
+                ? new Date()
+                : attrs.getDate(dateTag, null);
+        if (date == null)
+            return dateFormat.toPattern();
+        synchronized (dateFormat) {
+            return dateFormat.format(date);
+        }
+    }
+
 }

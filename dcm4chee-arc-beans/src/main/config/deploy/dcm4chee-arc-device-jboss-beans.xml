@@ -97,10 +97,11 @@
   </bean>
 
   <!-- The File Path Format -->
-  <bean name="FilePathFormat" class="org.dcm4che.util.FilePathFormat">
+  <bean name="ExtFilePathFormat" class="org.dcm4chee.archive.beans.util.ExtFilePathFormat">
     <constructor>
-      <parameter>{yyyy}/{MM}/{dd}/#{0020000D}/#{0020000E}/#{00080018}</parameter>
+      <parameter>#{0020000D}/#{0020000E}/#{00080018}</parameter>
     </constructor>
+    <property name="dateFormat">yyyy/MM/dd</property>
   </bean>
 
   <!-- The DICOM Device -->
@@ -128,7 +129,7 @@
     </install>
     <install method="setProperty">
       <parameter>org.dcm4che.util.FilePathFormat</parameter>
-      <parameter><inject bean="FilePathFormat" /></parameter>
+      <parameter><inject bean="ExtFilePathFormat" /></parameter>
     </install>
     <install method="setProperty">
       <parameter>org.dcm4chee.archive.persistence.FileRef.digest</parameter>

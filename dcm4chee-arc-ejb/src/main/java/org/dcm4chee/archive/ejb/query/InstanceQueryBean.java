@@ -44,6 +44,7 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.ejb.EJBException;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
@@ -59,9 +60,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.QueryOption;
-import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Instance;
@@ -84,7 +83,6 @@ public class InstanceQueryBean implements InstanceQuery {
     private EntityManager em;
     private Query seriesQuery;
 
-    private Attributes rq;
     private Iterator<Tuple> results;
 
     private long seriesPk = -1L;
@@ -92,7 +90,7 @@ public class InstanceQueryBean implements InstanceQuery {
     private boolean optionalKeyNotSupported;
 
     @Override
-    public void find(Attributes rq, String[] pids, Attributes keys, AttributeFilter filter,
+    public void find(String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, String[] roles) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         TypedQuery<Tuple> instQuery =
@@ -106,7 +104,7 @@ public class InstanceQueryBean implements InstanceQuery {
         return optionalKeyNotSupported;
     }
 
-    private Attributes querySeriesAttrs(long seriesPk) throws IOException {
+    private Attributes querySeriesAttrs(long seriesPk) {
         Object[] tuple = (Object[])
                 seriesQuery.setParameter(1, seriesPk).getSingleResult();
         int numberOfStudyRelatedSeries = (Integer) tuple[0];
@@ -118,9 +116,13 @@ public class InstanceQueryBean implements InstanceQuery {
         byte[] studyAttributes = (byte[]) tuple[6];
         byte[] patientAttributes = (byte[]) tuple[7];
         Attributes attrs = new Attributes();
-        Utils.decodeAttributes(attrs, patientAttributes);
-        Utils.decodeAttributes(attrs, studyAttributes);
-        Utils.decodeAttributes(attrs, seriesAttributes);
+        try {
+            Utils.decodeAttributes(attrs, patientAttributes);
+            Utils.decodeAttributes(attrs, studyAttributes);
+            Utils.decodeAttributes(attrs, seriesAttributes);
+        } catch (IOException e) {
+            throw new EJBException(e);
+        }
         Utils.setStudyQueryAttributes(attrs,
                 numberOfStudyRelatedSeries,
                 numberOfStudyRelatedInstances,
@@ -158,39 +160,35 @@ public class InstanceQueryBean implements InstanceQuery {
     }
 
     @Override
-    public boolean hasMoreMatches() throws DicomServiceException {
+    public boolean hasMoreMatches() {
         checkResults();
-        try {
-            return results.hasNext();
-        } catch (Exception e) {
-            throw unableToProcess(e);
-        }
+        return results.hasNext();
     }
 
     @Override
-    public Attributes nextMatch() throws DicomServiceException {
+    public Attributes nextMatch() {
         checkResults();
-        try {
-            Tuple tuple = results.next();
-            long seriesPk = tuple.get(0, Long.class);
-            String retrieveAETs = tuple.get(1, String.class);
-            String externalRetrieveAET = tuple.get(2, String.class);
-            Availability availability = tuple.get(3, Availability.class);
-            byte[] instanceAttributes = tuple.get(4, byte[].class);
-            if (this.seriesPk != seriesPk) {
-                this.seriesAttrs = querySeriesAttrs(seriesPk);
-                this.seriesPk = seriesPk;
-            }
-    
-            Attributes attrs = new Attributes();
-            attrs.addAll(seriesAttrs);
-            Utils.decodeAttributes(attrs, instanceAttributes);
-            Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
-            Utils.setAvailability(attrs, availability);
-            return attrs;
-        } catch (Exception e) {
-            throw unableToProcess(e);
+        Tuple tuple = results.next();
+        long seriesPk = tuple.get(0, Long.class);
+        String retrieveAETs = tuple.get(1, String.class);
+        String externalRetrieveAET = tuple.get(2, String.class);
+        Availability availability = tuple.get(3, Availability.class);
+        byte[] instanceAttributes = tuple.get(4, byte[].class);
+        if (this.seriesPk != seriesPk) {
+            this.seriesAttrs = querySeriesAttrs(seriesPk);
+            this.seriesPk = seriesPk;
         }
+
+        Attributes attrs = new Attributes();
+        attrs.addAll(seriesAttrs);
+        try {
+            Utils.decodeAttributes(attrs, instanceAttributes);
+        } catch (IOException e) {
+            throw new EJBException(e);
+        }
+        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
+        Utils.setAvailability(attrs, availability);
+        return attrs;
     }
 
     @Override
@@ -200,11 +198,6 @@ public class InstanceQueryBean implements InstanceQuery {
     private void checkResults() {
         if (results == null)
             throw new IllegalStateException("results not initalized");
-    }
-
-    private DicomServiceException unableToProcess(Exception e)
-            throws DicomServiceException {
-        return new DicomServiceException(rq, Status.UnableToProcess, e);
     }
 
 }

@@ -49,7 +49,6 @@
       <property name="hibernate.show_sql" value="${show_sql}" />
       <property name="hibernate.jdbc.use_get_generated_keys" value="${hibernate.jdbc.use_get_generated_keys}" />
       <property name="hibernate.jdbc.fetch_size" value="${hibernate.jdbc.fetch_size}"/>
-      <property name="hibernate.jdbc.fetch_size" value="${hibernate.jdbc.fetch_size}"/>
     </properties>
   </persistence-unit>
 </persistence>
