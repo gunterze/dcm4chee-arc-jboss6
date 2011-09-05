@@ -150,6 +150,12 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-entitymanager</artifactId>
+      <version>3.6.6.Final</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.jboss.spec.javax.ejb</groupId>
       <artifactId>jboss-ejb-api_3.1_spec</artifactId>
       <version>1.0.0.Final</version>

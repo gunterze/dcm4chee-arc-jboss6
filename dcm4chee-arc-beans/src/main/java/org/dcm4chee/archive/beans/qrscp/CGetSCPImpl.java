@@ -36,52 +36,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.util;
+package org.dcm4chee.archive.beans.qrscp;
 
-import java.util.Map;
-
-import org.dcm4che.net.ApplicationEntity;
-import org.dcm4che.net.Connection;
-import org.dcm4che.util.FilePathFormat;
-import org.dcm4chee.archive.persistence.AttributeFilter;
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.AttributesValidator;
+import org.dcm4che.data.Tag;
+import org.dcm4che.net.Association;
+import org.dcm4che.net.Device;
+import org.dcm4che.net.pdu.ExtendedNegotiation;
+import org.dcm4che.net.pdu.PresentationContext;
+import org.dcm4che.net.pdu.QueryOption;
+import org.dcm4che.net.service.BasicCGetSCP;
+import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4che.net.service.QueryRetrieveLevel;
+import org.dcm4che.net.service.RetrieveTask;
+import org.dcm4chee.archive.beans.util.Configuration;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class Configuration {
+public class CGetSCPImpl extends BasicCGetSCP {
 
-    public static AttributeFilter attributeFilterFor(ApplicationEntity ae) {
-        return (AttributeFilter) ae.getProperty("Storage.AttributeFilter");
+    private final String[] qrLevels;
+    private final boolean studyRoot;
+
+    public CGetSCPImpl(Device device, String[] sopClasses, String... qrLevels) {
+        super(device, sopClasses);
+        this.qrLevels = qrLevels;
+        this.studyRoot = "STUDY".equals(qrLevels[0]);
+   }
+
+    @Override
+    protected RetrieveTask calculateMatches(Association as, PresentationContext pc,
+            Attributes rq, Attributes keys) throws DicomServiceException {
+        AttributesValidator validator = new AttributesValidator(keys);
+        QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(rq, validator, qrLevels);
+        String cuid = rq.getString(Tag.AffectedSOPClassUID);
+        ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
+        boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
+        level.validateRetrieveKeys(rq, validator, studyRoot, relational);
+        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, keys);
+        retrieveTask.setSendPendingRSP(Configuration.isSendPendingCGet(as.getApplicationEntity()));
+        return retrieveTask;
     }
-
-    public static String fileSystemGroupIDFor(ApplicationEntity ae, String aet) {
-        String groupID = (String) ae.getProperty("Storage.fsGroupID." + aet);
-        if (groupID == null)
-            groupID = (String) ae.getProperty("Storage.fsGroupID");
-        return groupID;
-    }
-
-    public static FilePathFormat filePathFormatFor(ApplicationEntity ae) {
-        return (FilePathFormat) ae.getProperty("Storage.filePathFormat");
-    }
-
-    public static String messageDigestAlgorithmFor(ApplicationEntity ae) {
-        return (String) ae.getProperty("Storage.digestAlgorithm");
-    }
-
-    public static boolean isSendPendingCGet(ApplicationEntity ae) {
-        return Boolean.parseBoolean((String) ae.getProperty("Retrieve.sendPendingCGet"));
-    }
-
-    public static long getSendPendingCMoveInterval(ApplicationEntity ae) {
-        return (Long) ae.getProperty("Retrieve.sendPendingCMoveInterval");
-    }
-
-    @SuppressWarnings("unchecked")
-    public static Connection getConnectionTo(ApplicationEntity ae, String aet) {
-        Map<String, Connection> map = (Map<String, Connection>)
-                ae.getProperty("Retrieve.connections");
-        return map.get(aet);
-    }
-
 }

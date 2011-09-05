@@ -36,52 +36,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.util;
+package org.dcm4chee.archive.beans.qrscp;
 
-import java.util.Map;
-
-import org.dcm4che.net.ApplicationEntity;
-import org.dcm4che.net.Connection;
-import org.dcm4che.util.FilePathFormat;
-import org.dcm4chee.archive.persistence.AttributeFilter;
+import org.dcm4che.data.Attributes;
+import org.dcm4che.net.Association;
+import org.dcm4che.net.pdu.PresentationContext;
+import org.dcm4che.net.service.BasicRetrieveTask;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class Configuration {
+class RetrieveTaskImpl extends BasicRetrieveTask {
 
-    public static AttributeFilter attributeFilterFor(ApplicationEntity ae) {
-        return (AttributeFilter) ae.getProperty("Storage.AttributeFilter");
-    }
-
-    public static String fileSystemGroupIDFor(ApplicationEntity ae, String aet) {
-        String groupID = (String) ae.getProperty("Storage.fsGroupID." + aet);
-        if (groupID == null)
-            groupID = (String) ae.getProperty("Storage.fsGroupID");
-        return groupID;
-    }
-
-    public static FilePathFormat filePathFormatFor(ApplicationEntity ae) {
-        return (FilePathFormat) ae.getProperty("Storage.filePathFormat");
-    }
-
-    public static String messageDigestAlgorithmFor(ApplicationEntity ae) {
-        return (String) ae.getProperty("Storage.digestAlgorithm");
-    }
-
-    public static boolean isSendPendingCGet(ApplicationEntity ae) {
-        return Boolean.parseBoolean((String) ae.getProperty("Retrieve.sendPendingCGet"));
-    }
-
-    public static long getSendPendingCMoveInterval(ApplicationEntity ae) {
-        return (Long) ae.getProperty("Retrieve.sendPendingCMoveInterval");
-    }
-
-    @SuppressWarnings("unchecked")
-    public static Connection getConnectionTo(ApplicationEntity ae, String aet) {
-        Map<String, Connection> map = (Map<String, Connection>)
-                ae.getProperty("Retrieve.connections");
-        return map.get(aet);
+    public RetrieveTaskImpl(Association as, PresentationContext pc, 
+            Attributes rq, Attributes keys) {
+        super(as, pc, rq);
     }
 
 }

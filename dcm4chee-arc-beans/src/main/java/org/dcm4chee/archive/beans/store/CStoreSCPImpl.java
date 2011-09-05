@@ -65,11 +65,11 @@ import org.dcm4chee.archive.persistence.FileSystem;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class CompositeCStoreSCP extends BasicCStoreSCP {
+public class CStoreSCPImpl extends BasicCStoreSCP {
 
     private boolean initFileSystem = true;
  
-    public CompositeCStoreSCP(String... sopClasses) {
+    public CStoreSCPImpl(String... sopClasses) {
         super(sopClasses);
     }
 

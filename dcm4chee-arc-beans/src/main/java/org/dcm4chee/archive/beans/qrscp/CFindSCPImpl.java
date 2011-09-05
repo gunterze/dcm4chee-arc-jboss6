@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.query;
+package org.dcm4chee.archive.beans.qrscp;
 
 
 import org.dcm4che.data.Attributes;
@@ -45,9 +45,12 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.Status;
+import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.pdu.PresentationContext;
+import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.net.service.BasicCFindSCP;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.QueryTask;
 import org.dcm4chee.archive.beans.util.JNDIUtils;
 import org.dcm4chee.archive.ejb.query.CompositeQuery;
@@ -59,51 +62,46 @@ import org.dcm4chee.archive.ejb.query.StudyQuery;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class CompositeCFindSCP extends BasicCFindSCP {
+public class CFindSCPImpl extends BasicCFindSCP {
 
     private final String[] qrLevels;
+    private final boolean studyRoot;
 
-    public CompositeCFindSCP(Device device, String sopClass,
+    public CFindSCPImpl(Device device, String sopClass,
             String... qrLevels) {
         super(device, sopClass);
         this.qrLevels = qrLevels;
+        this.studyRoot = "STUDY".equals(qrLevels[0]);
     }
 
     @Override
     protected QueryTask calculateMatches(Association as, PresentationContext pc,
             Attributes rq, Attributes keys) throws DicomServiceException {
         AttributesValidator validator = new AttributesValidator(keys);
-        String level = validator.getType1String(
-                Tag.QueryRetrieveLevel, 0, 1, qrLevels);
-        check(rq, validator);
+        QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(rq, validator, qrLevels);
+        String cuid = rq.getString(Tag.AffectedSOPClassUID);
+        ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
+        boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
+        level.validateQueryKeys(rq, validator, studyRoot, relational);
         try {
-            return new CompositeQueryTask(as, pc, rq, keys,
+            return new QueryTaskImpl(as, pc, rq, keys,
                     (CompositeQuery) JNDIUtils.lookup(jndiNameOf(level)));
         } catch (Exception e) {
             throw new DicomServiceException(rq, Status.UnableToProcess, e);
         }
     }
 
-    private String jndiNameOf(String level) {
-        switch (level.charAt(1)) {
-        case 'A':
+    private String jndiNameOf(QueryRetrieveLevel level) {
+        switch (level) {
+        case PATIENT:
             return PatientQuery.JNDI_NAME;
-        case 'T':
+        case STUDY:
             return StudyQuery.JNDI_NAME;
-        case 'E':
+        case SERIES:
             return SeriesQuery.JNDI_NAME;
-        case 'M':
+        case IMAGE:
             return InstanceQuery.JNDI_NAME;
         }
-        throw new IllegalArgumentException(level);
-    }
-
-    private static void check(Attributes rq, AttributesValidator validator)
-            throws DicomServiceException {
-        if (validator.hasOffendingElements())
-            throw new DicomServiceException(rq,
-                    Status.IdentifierDoesNotMatchSOPClass, validator
-                            .getErrorComment()).setOffendingElements(validator
-                    .getOffendingElements());
+        throw new IllegalArgumentException(level.name());
     }
 }

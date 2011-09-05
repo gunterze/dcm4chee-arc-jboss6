@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.query;
+package org.dcm4chee.archive.beans.qrscp;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
@@ -55,11 +55,11 @@ import org.dcm4chee.archive.ejb.query.CompositeQuery;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class CompositeQueryTask extends BasicQueryTask {
+public class QueryTaskImpl extends BasicQueryTask {
 
     private final CompositeQuery query;
 
-    public CompositeQueryTask(Association as, PresentationContext pc, Attributes rq,
+    public QueryTaskImpl(Association as, PresentationContext pc, Attributes rq,
             Attributes keys, CompositeQuery query) throws DicomServiceException {
         super(as, pc, rq, keys);
         String cuid = rq.getString(Tag.AffectedSOPClassUID, null);

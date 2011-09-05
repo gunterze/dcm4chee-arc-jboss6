@@ -1918,10 +1918,40 @@
   <!-- QUERY/RETRIEVE SERVICE CLASS -->
 
   <!-- Patient Root Query/Retrieve Information Model - FIND -->
-  <bean name="PatientRootQuerySCP" class="org.dcm4che.net.TransferCapability">
+  <bean name="PatientRootFindSCP" class="org.dcm4che.net.TransferCapability">
     <constructor>
       <parameter><null/></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.1.1</parameter>
+      <parameter>SCP</parameter>
+      <parameter>
+        <array>
+          <!-- Implicit VR Little Endian, Transfer Syntax -->
+          <value>1.2.840.10008.1.2</value>
+        </array>
+      </parameter>
+    </constructor>
+  </bean>
+
+  <!-- Patient Root Query/Retrieve Information Model - MOVE -->
+  <bean name="PatientRootMoveSCP" class="org.dcm4che.net.TransferCapability">
+    <constructor>
+      <parameter><null/></parameter>
+      <parameter>1.2.840.10008.5.1.4.1.2.1.2</parameter>
+      <parameter>SCP</parameter>
+      <parameter>
+        <array>
+          <!-- Implicit VR Little Endian, Transfer Syntax -->
+          <value>1.2.840.10008.1.2</value>
+        </array>
+      </parameter>
+    </constructor>
+  </bean>
+
+  <!-- Patient Root Query/Retrieve Information Model - GET -->
+  <bean name="PatientRootGetSCP" class="org.dcm4che.net.TransferCapability">
+    <constructor>
+      <parameter><null/></parameter>
+      <parameter>1.2.840.10008.5.1.4.1.2.1.3</parameter>
       <parameter>SCP</parameter>
       <parameter>
         <array>
@@ -1933,10 +1963,40 @@
   </bean>
 
   <!-- Study Root Query/Retrieve Information Model - FIND -->
-  <bean name="StudyRootQuerySCP" class="org.dcm4che.net.TransferCapability">
+  <bean name="StudyRootFindSCP" class="org.dcm4che.net.TransferCapability">
     <constructor>
       <parameter><null/></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.2.1</parameter>
+      <parameter>SCP</parameter>
+      <parameter>
+        <array>
+          <!-- Implicit VR Little Endian, Transfer Syntax -->
+          <value>1.2.840.10008.1.2</value>
+        </array>
+      </parameter>
+    </constructor>
+  </bean>
+
+  <!-- Study Root Query/Retrieve Information Model - MOVE -->
+  <bean name="StudyRootMoveSCP" class="org.dcm4che.net.TransferCapability">
+    <constructor>
+      <parameter><null/></parameter>
+      <parameter>1.2.840.10008.5.1.4.1.2.2.2</parameter>
+      <parameter>SCP</parameter>
+      <parameter>
+        <array>
+          <!-- Implicit VR Little Endian, Transfer Syntax -->
+          <value>1.2.840.10008.1.2</value>
+        </array>
+      </parameter>
+    </constructor>
+  </bean>
+
+  <!-- Study Root Query/Retrieve Information Model - GET -->
+  <bean name="StudyRootGetSCP" class="org.dcm4che.net.TransferCapability">
+    <constructor>
+      <parameter><null/></parameter>
+      <parameter>1.2.840.10008.5.1.4.1.2.2.3</parameter>
       <parameter>SCP</parameter>
       <parameter>
         <array>
@@ -1948,7 +2008,7 @@
   </bean>
 
   <!-- Retired Patient/Study Only Root Query/Retrieve Information Model - FIND -->
-  <bean name="PatientStudyOnlyQuerySCP" class="org.dcm4che.net.TransferCapability">
+  <bean name="PatientStudyOnlyFindSCP" class="org.dcm4che.net.TransferCapability">
     <constructor>
       <parameter><null/></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.3.1</parameter>
@@ -1962,28 +2022,101 @@
     </constructor>
   </bean>
 
-  <!-- Query Extended Negotiator -->
+ 
+  <!-- Retired Patient/Study Only Root Query/Retrieve Information Model - MOVE -->
+  <bean name="PatientStudyOnlyMoveSCP" class="org.dcm4che.net.TransferCapability">
+    <constructor>
+      <parameter><null/></parameter>
+      <parameter>1.2.840.10008.5.1.4.1.2.3.2</parameter>
+      <parameter>SCP</parameter>
+      <parameter>
+        <array>
+          <!-- Implicit VR Little Endian, Transfer Syntax -->
+          <value>1.2.840.10008.1.2</value>
+        </array>
+      </parameter>
+    </constructor>
+  </bean>
+
+  <!-- Retired Patient/Study Only Root Query/Retrieve Information Model - GET -->
+  <bean name="PatientStudyOnlyGetSCP" class="org.dcm4che.net.TransferCapability">
+    <constructor>
+      <parameter><null/></parameter>
+      <parameter>1.2.840.10008.5.1.4.1.2.3.3</parameter>
+      <parameter>SCP</parameter>
+      <parameter>
+        <array>
+          <!-- Implicit VR Little Endian, Transfer Syntax -->
+          <value>1.2.840.10008.1.2</value>
+        </array>
+      </parameter>
+    </constructor>
+  </bean>
+ 
+  <!-- Query/Retrieve Extended Negotiator -->
   <bean name="QueryExtendedNegotiator" class="org.dcm4che.net.BasicExtendedNegotiator">
     <install bean="ApplicationEntity" method="addExtendedNegotiator">
       <parameter>1.2.840.10008.5.1.4.1.2.1.1</parameter>
       <parameter><this/></parameter>
     </install>
     <install bean="ApplicationEntity" method="addExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.1.2</parameter>
+      <parameter><this/></parameter>
+    </install>
+    <install bean="ApplicationEntity" method="addExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.1.3</parameter>
+      <parameter><this/></parameter>
+    </install>
+    <install bean="ApplicationEntity" method="addExtendedNegotiator">
       <parameter>1.2.840.10008.5.1.4.1.2.2.1</parameter>
+      <parameter><this/></parameter>
+    </install>
+    <install bean="ApplicationEntity" method="addExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.2.2</parameter>
+      <parameter><this/></parameter>
+    </install>
+    <install bean="ApplicationEntity" method="addExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.2.3</parameter>
       <parameter><this/></parameter>
     </install>
     <install bean="ApplicationEntity" method="addExtendedNegotiator">
       <parameter>1.2.840.10008.5.1.4.1.2.3.1</parameter>
       <parameter><this/></parameter>
     </install>
+    <install bean="ApplicationEntity" method="addExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.3.2</parameter>
+      <parameter><this/></parameter>
+    </install>
+    <install bean="ApplicationEntity" method="addExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.3.3</parameter>
+      <parameter><this/></parameter>
+    </install>
     <uninstall bean="ApplicationEntity" method="removeExtendedNegotiator">
       <parameter>1.2.840.10008.5.1.4.1.2.1.1</parameter>
+    </uninstall>
+    <uninstall bean="ApplicationEntity" method="removeExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.1.2</parameter>
+    </uninstall>
+    <uninstall bean="ApplicationEntity" method="removeExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.1.3</parameter>
     </uninstall>
     <uninstall bean="ApplicationEntity" method="removeExtendedNegotiator">
       <parameter>1.2.840.10008.5.1.4.1.2.2.1</parameter>
     </uninstall>
     <uninstall bean="ApplicationEntity" method="removeExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.2.2</parameter>
+    </uninstall>
+    <uninstall bean="ApplicationEntity" method="removeExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.2.3</parameter>
+    </uninstall>
+    <uninstall bean="ApplicationEntity" method="removeExtendedNegotiator">
       <parameter>1.2.840.10008.5.1.4.1.2.3.1</parameter>
+    </uninstall>
+    <uninstall bean="ApplicationEntity" method="removeExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.3.2</parameter>
+    </uninstall>
+    <uninstall bean="ApplicationEntity" method="removeExtendedNegotiator">
+      <parameter>1.2.840.10008.5.1.4.1.2.3.3</parameter>
     </uninstall>
     <constructor>
       <parameter>

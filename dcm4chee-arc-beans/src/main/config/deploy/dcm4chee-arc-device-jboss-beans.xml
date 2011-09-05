@@ -115,25 +115,69 @@
     <property name="scheduledExecutor">
       <inject bean="ScheduledExecutorService" />
     </property>
-    <incallback method="addConnection" />
-    <uncallback method="removeConnection" />
     <incallback method="addApplicationEntity" />
     <uncallback method="removeApplicationEntity" />
     <install method="setProperty">
-      <parameter>org.dcm4chee.archive.persistence.AttributeFilter</parameter>
+      <parameter>Storage.AttributeFilter</parameter>
       <parameter><inject bean="AttributeFilter" /></parameter>
     </install>
     <install method="setProperty">
-      <parameter>org.dcm4chee.archive.persistence.FileSystem.groupID.*</parameter>
+      <parameter>Storage.fsGroupID</parameter>
       <parameter>DEFAULT</parameter>
     </install>
     <install method="setProperty">
-      <parameter>org.dcm4che.util.FilePathFormat</parameter>
+      <parameter>Storage.filePathFormat</parameter>
       <parameter><inject bean="ExtFilePathFormat" /></parameter>
     </install>
     <install method="setProperty">
-      <parameter>org.dcm4chee.archive.persistence.FileRef.digest</parameter>
+      <parameter>Storage.digestAlgorithm</parameter>
       <parameter>MD5</parameter>
+    </install>
+    <install method="setProperty">
+      <parameter>Retrieve.sendPendingCGet</parameter>
+      <parameter>true</parameter>
+    </install>
+    <install method="setProperty">
+      <parameter>Retrieve.sendPendingCMoveInterval</parameter>
+      <parameter>
+        <javabean xmlns="urn:jboss:javabean:2.0" class="java.lang.Long">
+          <constructor>
+            <property name="anLong">5000</property>
+          </constructor>
+        </javabean>
+      </parameter>
+    </install>
+    <install method="setProperty">
+      <parameter>Retrieve.connections</parameter>
+      <parameter>
+        <map keyClass="java.lang.String" valueClass="org.dcm4che.net.Connection">
+          <entry>
+            <key>STORESCP</key>
+            <value>
+              <bean class="org.dcm4che.net.Connection">
+                <property name="hostname">localhost</property>
+                <property name="port">11113</property>
+              </bean>
+            </value>
+          </entry>
+          <entry>
+            <key>STORESCP_TLS</key>
+            <value>
+              <bean class="org.dcm4che.net.Connection">
+                <property name="hostname">localhost</property>
+                <property name="port">2762</property>
+                <property name="tlsCipherSuite">
+                  <array>
+                    <value>SSL_RSA_WITH_NULL_SHA</value>
+                    <value>TLS_RSA_WITH_AES_128_CBC_SHA</value>
+                    <value>TLS_RSA_WITH_3DES_EDE_CBC_SHA</value>
+                  </array>
+                </property>
+              </bean>
+            </value>
+          </entry>
+        </map>
+      </parameter>
     </install>
     <start method="activate" />
     <stop method="deactivate" />
@@ -143,6 +187,18 @@
   <!-- The DICOM Connection -->
   <bean name="Connection" class="org.dcm4che.net.Connection">
     <property name="port">11112</property>
+    <install bean="Device" method="addConnection">
+      <parameter><this/></parameter>
+    </install>
+    <install bean="ApplicationEntity" method="addConnection">
+      <parameter><this/></parameter>
+    </install>
+    <uninstall bean="ApplicationEntity" method="removeConnection">
+      <parameter><this/></parameter>
+    </uninstall>
+    <uninstall bean="Device" method="removeConnection">
+      <parameter><this/></parameter>
+    </uninstall>
   </bean>
 
   <!-- The DICOM Application Entity -->
