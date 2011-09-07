@@ -38,6 +38,8 @@
 
 package org.dcm4chee.archive.beans.qrscp;
 
+import javax.ejb.EJB;
+
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.AttributesValidator;
 import org.dcm4che.data.Tag;
@@ -51,6 +53,7 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4chee.archive.beans.util.Configuration;
+import org.dcm4chee.archive.ejb.retrieve.InstanceFinder;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -59,6 +62,9 @@ public class CGetSCPImpl extends BasicCGetSCP {
 
     private final String[] qrLevels;
     private final boolean studyRoot;
+
+    @EJB
+    private InstanceFinder instanceFinder;
 
     public CGetSCPImpl(Device device, String[] sopClasses, String... qrLevels) {
         super(device, sopClasses);
@@ -75,7 +81,8 @@ public class CGetSCPImpl extends BasicCGetSCP {
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
         level.validateRetrieveKeys(rq, validator, studyRoot, relational);
-        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, keys);
+        RetrieveTaskImpl retrieveTask =
+                new RetrieveTaskImpl(as, pc, rq, keys, instanceFinder, level);
         retrieveTask.setSendPendingRSP(Configuration.isSendPendingCGet(as.getApplicationEntity()));
         return retrieveTask;
     }

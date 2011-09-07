@@ -75,6 +75,12 @@ import org.dcm4che.util.DateUtils;
     query="SELECT s FROM Series s WHERE s.seriesInstanceUID = ?1"),
 @NamedQuery(
     name="Series.findAttributesBySeriesPk",
+    query="SELECT s.encodedAttributes, " +
+                 "s.study.encodedAttributes, " +
+                 "s.study.patient.encodedAttributes " +
+          "FROM Series s WHERE s.pk = ?1"),
+@NamedQuery(
+    name="Series.findQueryAttributesBySeriesPk",
     query="SELECT s.study.numberOfStudyRelatedSeries, " +
                  "s.study.numberOfStudyRelatedInstances, " +
                  "s.numberOfSeriesRelatedInstances, " +
@@ -97,7 +103,9 @@ public class Series implements Serializable {
     public static final String FIND_BY_SERIES_INSTANCE_UID =
             "Series.findBySeriesInstanceUID";
     public static final String FIND_ATTRIBUTES_BY_SERIES_PK =
-            "Series.findAttributesBySeriesPk";
+        "Series.findAttributesBySeriesPk";
+    public static final String FIND_QUERY_ATTRIBUTES_BY_SERIES_PK =
+            "Series.findQueryAttributesBySeriesPk";
     public static final String INC_NUMBER_OF_SERIES_RELATED_INSTANCES =
             "Series.incNumberOfSeriesRelatedInstances";
 

@@ -96,7 +96,7 @@ public class InstanceQueryBean implements InstanceQuery {
         TypedQuery<Tuple> instQuery =
                 buildInstanceQuery(cb, pids, keys, filter, queryOpts, roles);
         results = instQuery.getResultList().iterator();
-        seriesQuery = em.createNamedQuery(Series.FIND_ATTRIBUTES_BY_SERIES_PK);
+        seriesQuery = em.createNamedQuery(Series.FIND_QUERY_ATTRIBUTES_BY_SERIES_PK);
     }
 
     @Override

@@ -38,19 +38,61 @@
 
 package org.dcm4chee.archive.beans.qrscp;
 
+import java.io.IOException;
+
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
+import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.net.Association;
+import org.dcm4che.net.DataWriter;
+import org.dcm4che.net.DataWriterAdapter;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicRetrieveTask;
+import org.dcm4che.net.service.InstanceLocator;
+import org.dcm4che.net.service.QueryRetrieveLevel;
+import org.dcm4che.util.SafeClose;
+import org.dcm4chee.archive.ejb.retrieve.InstanceFinder;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 class RetrieveTaskImpl extends BasicRetrieveTask {
 
-    public RetrieveTaskImpl(Association as, PresentationContext pc, 
-            Attributes rq, Attributes keys) {
+    public RetrieveTaskImpl(Association as, PresentationContext pc, Attributes rq, Attributes keys,
+            InstanceFinder finder, QueryRetrieveLevel level) {
         super(as, pc, rq);
+        switch(level) {
+        case PATIENT:
+            insts.addAll(finder.findByPatientID(keys.getString(Tag.PatientID)));
+            break;
+        case STUDY:
+            for (String iuid : keys.getStrings(Tag.StudyInstanceUID))
+                insts.addAll(finder.findByStudyInstanceUID(iuid));
+            break;
+        case SERIES:
+            for (String iuid : keys.getStrings(Tag.SeriesInstanceUID))
+                insts.addAll(finder.findByStudyInstanceUID(iuid));
+            break;
+        case IMAGE:
+            for (String iuid : keys.getStrings(Tag.SOPInstanceUID))
+                insts.addAll(finder.findBySOPInstanceUID(iuid));
+            break;
+        }
     }
 
-}
+    @Override
+    protected DataWriter createDataWriter(InstanceLocator inst, String tsuid)
+            throws IOException {
+        Attributes attrs;
+        DicomInputStream in = new DicomInputStream(inst.getFile());
+        try {
+            in.setIncludeBulkDataLocator(true);
+            attrs = in.readDataset(-1, -1);
+        } finally {
+            SafeClose.close(in);
+        }
+        attrs.addAll((Attributes) inst.getObject());
+        return new DataWriterAdapter(attrs);
+    }
+
+ }

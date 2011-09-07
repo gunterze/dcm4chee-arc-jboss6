@@ -290,7 +290,7 @@
   </bean>
 
   <!-- Patient Root C-MOVE SCP -->
-  <bean name="PatientRootCMoveSCP" class="org.dcm4chee.archive.beans.qrscp.CMoveSCPImpl">
+  <bean name="PatientRootCMoveSCP" class="org.dcm4chee.archive.beans.qrscp.CMoveSCPImpl" access-mode="ALL">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.1.2</parameter>
@@ -306,7 +306,7 @@
   </bean>
 
   <!-- Study Root C-MOVE SCP -->
-  <bean name="StudyRootCMoveSCP" class="org.dcm4chee.archive.beans.qrscp.CMoveSCPImpl">
+  <bean name="StudyRootCMoveSCP" class="org.dcm4chee.archive.beans.qrscp.CMoveSCPImpl" access-mode="ALL">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.2.2</parameter>
@@ -321,7 +321,7 @@
   </bean>
 
   <!-- Patient/Study Only C-MOVE SCP -->
-  <bean name="PatientStudyOnlyCMoveSCP" class="org.dcm4chee.archive.beans.qrscp.CMoveSCPImpl">
+  <bean name="PatientStudyOnlyCMoveSCP" class="org.dcm4chee.archive.beans.qrscp.CMoveSCPImpl" access-mode="ALL">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.3.2</parameter>
@@ -335,7 +335,7 @@
   </bean>
 
   <!-- Patient Root C-GET SCP -->
-  <bean name="PatientRootCGetSCP" class="org.dcm4chee.archive.beans.qrscp.CGetSCPImpl">
+  <bean name="PatientRootCGetSCP" class="org.dcm4chee.archive.beans.qrscp.CGetSCPImpl" access-mode="ALL">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.1.3</parameter>
@@ -351,7 +351,7 @@
   </bean>
 
   <!-- Study Root C-GET SCP -->
-  <bean name="StudyRootCGetSCP" class="org.dcm4chee.archive.beans.qrscp.CGetSCPImpl">
+  <bean name="StudyRootCGetSCP" class="org.dcm4chee.archive.beans.qrscp.CGetSCPImpl" access-mode="ALL">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.2.3</parameter>
@@ -366,7 +366,7 @@
   </bean>
 
   <!-- Patient/Study Only C-GET SCP -->
-  <bean name="PatientStudyOnlyCGetSCP" class="org.dcm4chee.archive.beans.qrscp.CGetSCPImpl">
+  <bean name="PatientStudyOnlyCGetSCP" class="org.dcm4chee.archive.beans.qrscp.CGetSCPImpl" access-mode="ALL">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.3.3</parameter>

@@ -40,6 +40,8 @@ package org.dcm4chee.archive.beans.qrscp;
 
 import java.io.IOException;
 
+import javax.ejb.EJB;
+
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.AttributesValidator;
 import org.dcm4che.data.Tag;
@@ -56,6 +58,7 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4chee.archive.beans.util.Configuration;
+import org.dcm4chee.archive.ejb.retrieve.InstanceFinder;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -64,6 +67,9 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
 
     private final String[] qrLevels;
     private final boolean studyRoot;
+
+    @EJB
+    private InstanceFinder instanceFinder;
 
     public CMoveSCPImpl(Device device, String[] sopClasses, String... qrLevels) {
         super(device, sopClasses);
@@ -84,7 +90,8 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         if (remote == null)
             throw new DicomServiceException(rq, Status.MoveDestinationUnknown,
                     "Move Destination: " + dest + " unknown");
-        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, keys) {
+        RetrieveTaskImpl retrieveTask =
+            new RetrieveTaskImpl(as, pc, rq, keys, instanceFinder, level) {
 
             @Override
             protected Association getStoreAssociation() throws DicomServiceException {

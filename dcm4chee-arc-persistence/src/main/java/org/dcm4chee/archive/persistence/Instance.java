@@ -71,7 +71,19 @@ import org.dcm4che.util.DateUtils;
 @NamedQueries({
 @NamedQuery(
     name="Instance.findBySOPInstanceUID",
-    query="SELECT i FROM Instance i WHERE i.sopInstanceUID = ?1")
+    query="SELECT i FROM Instance i WHERE i.sopInstanceUID = ?1"),
+@NamedQuery(
+    name="Instance.findBySOPInstanceUIDFetchFiles",
+    query="SELECT i FROM Instance i LEFT JOIN FETCH i.fileRefs WHERE i.sopInstanceUID = ?1"),
+@NamedQuery(
+    name="Instance.findBySeriesInstanceUIDFetchFiles",
+    query="SELECT i FROM Instance i LEFT JOIN FETCH i.fileRefs WHERE i.series.seriesInstanceUID = ?1 ORDER BY i.pk"),
+@NamedQuery(
+    name="Instance.findByStudyInstanceUIDFetchFiles",
+    query="SELECT i FROM Instance i LEFT JOIN FETCH i.fileRefs WHERE i.series.study.studyInstanceUID = ?1 ORDER BY i.pk"),
+@NamedQuery(
+    name="Instance.findByPatientIDFetchFiles",
+    query="SELECT i FROM Instance i LEFT JOIN FETCH i.fileRefs WHERE i.series.study.patient.patientID = ?1 ORDER BY i.pk")
 })
 @Entity
 @Table(name = "instance")
@@ -81,6 +93,14 @@ public class Instance implements Serializable {
 
     public static final String FIND_BY_SOP_INSTANCE_UID =
         "Instance.findBySOPInstanceUID";
+    public static final String FIND_BY_SOP_INSTANCE_UID_FETCH_FILES =
+        "Instance.findBySOPInstanceUIDFetchFiles";
+    public static final String FIND_BY_SERIES_INSTANCE_UID_FETCH_FILES =
+        "Instance.findBySeriesInstanceUIDFetchFiles";
+    public static final String FIND_BY_STUDY_INSTANCE_UID_FETCH_FILES =
+        "Instance.findByStudyInstanceUIDFetchFiles";
+    public static final String FIND_BY_PATIENT_ID_FETCH_FILES =
+        "Instance.findByPatientIDFetchFiles";
 
     @Id
     @GeneratedValue
@@ -168,6 +188,10 @@ public class Instance implements Serializable {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "instance_fk")
     private Collection<ContentItem> contentItems;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "instance_fk")
+    private Collection<FileRef> fileRefs;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "series_fk")
@@ -309,6 +333,10 @@ public class Instance implements Serializable {
 
     public void setContentItems(Collection<ContentItem> contentItems) {
         this.contentItems = contentItems;
+    }
+
+    public Collection<FileRef> getFileRefs() {
+        return fileRefs;
     }
 
     public Series getSeries() {
