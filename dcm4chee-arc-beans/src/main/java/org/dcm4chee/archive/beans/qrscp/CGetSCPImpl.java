@@ -38,6 +38,8 @@
 
 package org.dcm4chee.archive.beans.qrscp;
 
+import java.util.List;
+
 import javax.ejb.EJB;
 
 import org.dcm4che.data.Attributes;
@@ -45,15 +47,17 @@ import org.dcm4che.data.AttributesValidator;
 import org.dcm4che.data.Tag;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Device;
+import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.net.service.BasicCGetSCP;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4chee.archive.beans.util.Configuration;
-import org.dcm4chee.archive.ejb.retrieve.InstanceFinder;
+import org.dcm4chee.archive.ejb.query.CalculateMatches;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -64,7 +68,7 @@ public class CGetSCPImpl extends BasicCGetSCP {
     private final boolean studyRoot;
 
     @EJB
-    private InstanceFinder instanceFinder;
+    private CalculateMatches calculateMatches;
 
     public CGetSCPImpl(Device device, String[] sopClasses, String... qrLevels) {
         super(device, sopClasses);
@@ -81,9 +85,18 @@ public class CGetSCPImpl extends BasicCGetSCP {
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
         level.validateRetrieveKeys(rq, validator, studyRoot, relational);
-        RetrieveTaskImpl retrieveTask =
-                new RetrieveTaskImpl(as, pc, rq, keys, instanceFinder, level);
+        List<InstanceLocator> matches  = calculateMatches(rq, keys);
+        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches);
         retrieveTask.setSendPendingRSP(Configuration.isSendPendingCGet(as.getApplicationEntity()));
         return retrieveTask;
+    }
+
+    private List<InstanceLocator> calculateMatches(Attributes rq, Attributes keys)
+            throws DicomServiceException {
+        try {
+            return calculateMatches.calculateMatches(keys);
+        }  catch (Exception e) {
+            throw new DicomServiceException(rq, Status.UnableToCalculateNumberOfMatches, e);
+        }
     }
 }

@@ -123,8 +123,8 @@ class Matching {
     }
 
     @SuppressWarnings("unchecked")
-    private static void listOfUID(CriteriaBuilder cb, Path<String> field,
-            String[] values, List<Predicate> predicates, List<Object> params) {
+    static void listOfUID(CriteriaBuilder cb, Path<String> field, String[] values,
+            List<Predicate> predicates, List<Object> params) {
         if (values == null || values.length == 0)
             return;
 
@@ -412,6 +412,13 @@ class Matching {
             : predicate;
     }
 
+    static void patientID(CriteriaBuilder cb, Path<Patient> pat, String[] pids,
+            boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
+        patientID(cb, pat.get(Patient_.patientID), pat.get(Patient_.issuerOfPatientID), 
+                pids, matchUnknown, predicates, params);
+    }
+
+
     private static void patientID(CriteriaBuilder cb, Path<String> idField, Path<String> issuerField, String[] pids, 
             boolean matchUnknown, List<Predicate> predicates, List<Object> params) {
         if (pids == null || pids.length == 0)
@@ -448,8 +455,7 @@ class Matching {
     public static void patient(CriteriaBuilder cb, Path<Patient> pat,
             String[] pids, Attributes keys, AttributeFilter filter, EnumSet<QueryOption> queryOpts,
             List<Predicate> predicates, List<Object> params) {
-        patientID(cb, pat.get(Patient_.patientID), pat.get(Patient_.issuerOfPatientID), 
-                pids, filter.isMatchUnknown(), predicates, params);
+        patientID(cb, pat, pids, filter.isMatchUnknown(), predicates, params);
         if (keys == null)
             return;
 

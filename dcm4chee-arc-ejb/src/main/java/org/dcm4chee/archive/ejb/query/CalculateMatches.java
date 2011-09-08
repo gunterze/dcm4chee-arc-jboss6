@@ -36,44 +36,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.qrscp;
+package org.dcm4chee.archive.ejb.query;
 
-import java.io.IOException;
 import java.util.List;
 
+import javax.ejb.Local;
+
 import org.dcm4che.data.Attributes;
-import org.dcm4che.io.DicomInputStream;
-import org.dcm4che.net.Association;
-import org.dcm4che.net.DataWriter;
-import org.dcm4che.net.DataWriterAdapter;
-import org.dcm4che.net.pdu.PresentationContext;
-import org.dcm4che.net.service.BasicRetrieveTask;
 import org.dcm4che.net.service.InstanceLocator;
-import org.dcm4che.util.SafeClose;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-class RetrieveTaskImpl extends BasicRetrieveTask {
+@Local
+public interface CalculateMatches {
 
-    public RetrieveTaskImpl(Association as, PresentationContext pc, Attributes rq,
-            List<InstanceLocator> matches) {
-        super(as, pc, rq, matches);
-    }
+    List<InstanceLocator> calculateMatches(Attributes keys);
 
-    @Override
-    protected DataWriter createDataWriter(InstanceLocator inst, String tsuid)
-            throws IOException {
-        Attributes attrs;
-        DicomInputStream in = new DicomInputStream(inst.getFile());
-        try {
-            in.setIncludeBulkDataLocator(true);
-            attrs = in.readDataset(-1, -1);
-        } finally {
-            SafeClose.close(in);
-        }
-        attrs.addAll((Attributes) inst.getObject());
-        return new DataWriterAdapter(attrs);
-    }
+    List<InstanceLocator> calculateMatches(String[] pids,Attributes keys);
 
- }
+}

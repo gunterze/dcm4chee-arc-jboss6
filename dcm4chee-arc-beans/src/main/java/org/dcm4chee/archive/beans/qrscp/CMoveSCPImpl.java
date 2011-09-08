@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.beans.qrscp;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.ejb.EJB;
 
@@ -55,10 +56,11 @@ import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.net.service.BasicCMoveSCP;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4chee.archive.beans.util.Configuration;
-import org.dcm4chee.archive.ejb.retrieve.InstanceFinder;
+import org.dcm4chee.archive.ejb.query.CalculateMatches;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -69,7 +71,7 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
     private final boolean studyRoot;
 
     @EJB
-    private InstanceFinder instanceFinder;
+    private CalculateMatches calculateMatches;
 
     public CMoveSCPImpl(Device device, String[] sopClasses, String... qrLevels) {
         super(device, sopClasses);
@@ -90,8 +92,8 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         if (remote == null)
             throw new DicomServiceException(rq, Status.MoveDestinationUnknown,
                     "Move Destination: " + dest + " unknown");
-        RetrieveTaskImpl retrieveTask =
-            new RetrieveTaskImpl(as, pc, rq, keys, instanceFinder, level) {
+        List<InstanceLocator> matches = calculateMatches(rq, keys);
+        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches ) {
 
             @Override
             protected Association getStoreAssociation() throws DicomServiceException {
@@ -111,5 +113,15 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         retrieveTask.setSendPendingRSPInterval(
                 Configuration.getSendPendingCMoveInterval(as.getApplicationEntity()));
         return retrieveTask;
+    }
+
+
+    private List<InstanceLocator> calculateMatches(Attributes rq, Attributes keys)
+            throws DicomServiceException {
+        try {
+            return calculateMatches.calculateMatches(keys);
+        }  catch (Exception e) {
+            throw new DicomServiceException(rq, Status.UnableToCalculateNumberOfMatches, e);
+        }
     }
 }

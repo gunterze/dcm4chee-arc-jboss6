@@ -181,7 +181,7 @@
     </install>
     <start method="activate" />
     <stop method="deactivate" />
-    <demand>jndi:InstanceFinderBean</demand>
+    <demand>jndi:CalculateMatchesBean</demand>
   </bean>
 
 
