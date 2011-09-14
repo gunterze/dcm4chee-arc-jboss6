@@ -181,7 +181,7 @@
     </install>
     <start method="activate" />
     <stop method="deactivate" />
-    <demand>jndi:CalculateMatchesBean</demand>
+    <demand>jndi:LocateInstancesBean</demand>
   </bean>
 
 

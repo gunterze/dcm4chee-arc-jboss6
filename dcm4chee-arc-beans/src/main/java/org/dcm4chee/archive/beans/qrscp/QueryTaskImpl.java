@@ -119,11 +119,11 @@ public class QueryTaskImpl extends BasicQueryTask {
     }
 
     private String[] pids(Attributes keys) {
-        String pid = keys.getString(Tag.PatientID, null);
-        return pid == null
+        String pid = keys.getString(Tag.PatientID, "*");
+        return pid.equals("*")
                 ? null 
                 : new String[] { 
                     pid,
-                    keys.getString(Tag.IssuerOfPatientID, null)};
+                    keys.getString(Tag.IssuerOfPatientID, "*")};
     }
 }

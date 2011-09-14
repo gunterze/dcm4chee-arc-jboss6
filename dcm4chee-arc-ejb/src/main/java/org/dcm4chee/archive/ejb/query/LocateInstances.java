@@ -38,60 +38,21 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import java.io.IOException;
-import java.util.EnumSet;
+import java.util.List;
 
-import javax.ejb.EJBException;
-import javax.ejb.Stateful;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
+import javax.ejb.Local;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.net.pdu.QueryOption;
-import org.dcm4chee.archive.ejb.query.metadata.Patient_;
-import org.dcm4chee.archive.persistence.AttributeFilter;
-import org.dcm4chee.archive.persistence.Patient;
-import org.dcm4chee.archive.persistence.Utils;
-import org.hibernate.Criteria;
-import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Projection;
-import org.hibernate.criterion.ProjectionList;
-import org.hibernate.criterion.Projections;
+import org.dcm4che.net.service.InstanceLocator;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateful
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public class PatientQueryBean extends AbstractQueryBean implements PatientQuery {
+@Local
+public interface LocateInstances {
 
-    @Override
-    protected Criteria createCriteria(String[] pids, Attributes keys,AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, String[] roles) {
-        return session().createCriteria(Patient.class, "patient")
-            .setProjection(projection())
-            .add(Criterions.matchPatient(pids, keys, filter, queryOpts));
-    }
+    List<InstanceLocator> find(Attributes keys);
 
-    private Projection projection() {
-        ProjectionList list = Projections.projectionList();
-        list.add(Patient_.pk);
-        list.add(Patient_.encodedAttributes);
-        // just criteria.setProjection(Patient_.encodedAttributes) does not work
-        // because Hibernate tries to cast byte[] to Object[]
-        return list;
-    }
-
-    @Override
-    protected Attributes toAttributes(ScrollableResults results) {
-        byte[] result = (byte[]) results.get(1);
-        Attributes attrs = new Attributes();
-        try {
-            Utils.decodeAttributes(attrs, result);
-        } catch (IOException e) {
-            throw new EJBException(e);
-        }
-        return attrs;
-    }
+    List<InstanceLocator> find(String[] pids,Attributes keys);
 
 }

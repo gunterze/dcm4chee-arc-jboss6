@@ -55,10 +55,18 @@ import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.ContentItem;
 import org.dcm4chee.archive.persistence.ContentItem_;
+import org.hibernate.criterion.Conjunction;
 /**
  * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 class ContentItemMatching {
+
+    public static void addMatch(Attributes item, AttributeFilter filter, Conjunction predicates) {
+        if (!validValueType(item.getString(Tag.ValueType, null)))
+            return;
+        
+        //TODO
+    }
 
     public static void withContentItem(CriteriaBuilder cb,
             CriteriaQuery<Tuple> cq,

@@ -39,74 +39,97 @@
 package org.dcm4chee.archive.ejb.query;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.List;
 
 import javax.ejb.EJBException;
-import javax.ejb.Remove;
 import javax.ejb.Stateful;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceContextType;
-import javax.persistence.Query;
-import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.pdu.QueryOption;
+import org.dcm4chee.archive.ejb.query.metadata.Instance_;
+import org.dcm4chee.archive.ejb.query.metadata.Series_;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Instance;
-import org.dcm4chee.archive.persistence.Instance_;
-import org.dcm4chee.archive.persistence.Patient;
-import org.dcm4chee.archive.persistence.Series;
-import org.dcm4chee.archive.persistence.Series_;
-import org.dcm4chee.archive.persistence.Study;
-import org.dcm4chee.archive.persistence.Study_;
 import org.dcm4chee.archive.persistence.Utils;
+import org.hibernate.Criteria;
+import org.hibernate.Query;
+import org.hibernate.ScrollableResults;
+import org.hibernate.criterion.Projection;
+import org.hibernate.criterion.ProjectionList;
+import org.hibernate.criterion.Projections;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @Stateful
-public class InstanceQueryBean implements InstanceQuery {
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+public class InstanceQueryBean extends AbstractQueryBean implements InstanceQuery {
 
-    @PersistenceContext(unitName = "dcm4chee-arc",
-                        type = PersistenceContextType.EXTENDED)
-    private EntityManager em;
-    private Query seriesQuery;
-
-    private Iterator<Tuple> results;
-
+    private static final String QUERY_SERIES_ATTRS = "select " +
+            "s.study.numberOfStudyRelatedSeries, " +
+            "s.study.numberOfStudyRelatedInstances, " +
+            "s.numberOfSeriesRelatedInstances, " +
+            "s.study.modalitiesInStudy, " +
+            "s.study.sopClassesInStudy, " +
+            "s.encodedAttributes, " +
+            "s.study.encodedAttributes, " +
+            "s.study.patient.encodedAttributes " +
+            "from Series s " +
+            "where s.pk = ?";
     private long seriesPk = -1L;
     private Attributes seriesAttrs;
-    private boolean optionalKeyNotSupported;
+    private Query seriesQuery;
 
     @Override
-    public void find(String[] pids, Attributes keys, AttributeFilter filter,
+    protected Criteria createCriteria(String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, String[] roles) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        TypedQuery<Tuple> instQuery =
-                buildInstanceQuery(cb, pids, keys, filter, queryOpts, roles);
-        results = instQuery.getResultList().iterator();
-        seriesQuery = em.createNamedQuery(Series.FIND_QUERY_ATTRIBUTES_BY_SERIES_PK);
+        seriesQuery = session().createQuery(QUERY_SERIES_ATTRS);
+        return session().createCriteria(Instance.class, "instance")
+            .createAlias("instance.series", "series")
+            .createAlias("series.study", "study")
+            .createAlias("study.patient", "patient")
+            .setProjection(projection())
+            .add(Criterions.matchInstance(pids, keys, filter, queryOpts, roles))
+            .addOrder(Series_.pk.asc());
+    }
+
+    private Projection projection() {
+        ProjectionList select = Projections.projectionList();
+        select.add(Series_.pk);
+        select.add(Instance_.retrieveAETs);
+        select.add(Instance_.externalRetrieveAET);
+        select.add(Instance_.availability);
+        select.add(Instance_.encodedAttributes);
+        return select;
     }
 
     @Override
-    public boolean optionalKeyNotSupported() {
-        return optionalKeyNotSupported;
+    protected Attributes toAttributes(ScrollableResults results) {
+        long seriesPk = results.getLong(0);
+        String retrieveAETs = results.getString(1);
+        String externalRetrieveAET = results.getString(2);
+        Availability availability = (Availability) results.get(3);
+        byte[] instAttributes = (byte[]) results.get(4);
+        if (this.seriesPk != seriesPk) {
+            this.seriesAttrs = querySeriesAttrs(seriesPk);
+            this.seriesPk = seriesPk;
+        }
+        Attributes attrs = new Attributes(seriesAttrs);
+        try {
+            Utils.decodeAttributes(attrs, instAttributes);
+        } catch (IOException e) {
+            throw new EJBException(e);
+        }
+        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
+        Utils.setAvailability(attrs, availability);
+        return attrs;
     }
 
     private Attributes querySeriesAttrs(long seriesPk) {
-        Object[] tuple = (Object[])
-                seriesQuery.setParameter(1, seriesPk).getSingleResult();
+        Object[] tuple = (Object[]) seriesQuery.setParameter(0, seriesPk).uniqueResult();
         int numberOfStudyRelatedSeries = (Integer) tuple[0];
         int numberOfStudyRelatedInstances = (Integer) tuple[1];
         int numberOfSeriesRelatedInstances = (Integer) tuple[2];
@@ -131,73 +154,4 @@ public class InstanceQueryBean implements InstanceQuery {
         Utils.setSeriesQueryAttributes(attrs, numberOfSeriesRelatedInstances);
         return attrs;
     }
-
-    private TypedQuery<Tuple> buildInstanceQuery(CriteriaBuilder cb,
-            String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, String[] roles) {
-        CriteriaQuery<Tuple> cq =  cb.createTupleQuery();
-        Root<Instance> inst = cq.from(Instance.class);
-        Join<Instance, Series> series = inst.join(Instance_.series);
-        Join<Series, Study> study = series.join(Series_.study);
-        Join<Study, Patient> pat = study.join(Study_.patient);
-        cq.multiselect(
-                series.get(Series_.pk),
-                inst.get(Instance_.retrieveAETs),
-                inst.get(Instance_.externalRetrieveAET),
-                inst.get(Instance_.availability),
-                inst.get(Instance_.encodedAttributes));
-        cq.orderBy(cb.asc(series.get(Series_.pk)));
-        List<Predicate> predicates = new ArrayList<Predicate>();
-        List<Object> params = new ArrayList<Object>();
-        Matching.instance(cb, cq, pat, study, series, inst, pids, keys, filter,
-                queryOpts, roles, predicates, params);
-        cq.where(predicates.toArray(new Predicate[predicates.size()]));
-        TypedQuery<Tuple> instQuery = em.createQuery(cq);
-        int i = 0;
-        for (Object param : params)
-            instQuery.setParameter(Matching.paramName(i++), param);
-        return instQuery;
-    }
-
-    @Override
-    public boolean hasMoreMatches() {
-        checkResults();
-        return results.hasNext();
-    }
-
-    @Override
-    public Attributes nextMatch() {
-        checkResults();
-        Tuple tuple = results.next();
-        long seriesPk = tuple.get(0, Long.class);
-        String retrieveAETs = tuple.get(1, String.class);
-        String externalRetrieveAET = tuple.get(2, String.class);
-        Availability availability = tuple.get(3, Availability.class);
-        byte[] instanceAttributes = tuple.get(4, byte[].class);
-        if (this.seriesPk != seriesPk) {
-            this.seriesAttrs = querySeriesAttrs(seriesPk);
-            this.seriesPk = seriesPk;
-        }
-
-        Attributes attrs = new Attributes();
-        attrs.addAll(seriesAttrs);
-        try {
-            Utils.decodeAttributes(attrs, instanceAttributes);
-        } catch (IOException e) {
-            throw new EJBException(e);
-        }
-        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
-        Utils.setAvailability(attrs, availability);
-        return attrs;
-    }
-
-    @Override
-    @Remove
-    public void close() {}
-
-    private void checkResults() {
-        if (results == null)
-            throw new IllegalStateException("results not initalized");
-    }
-
 }

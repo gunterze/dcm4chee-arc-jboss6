@@ -51,11 +51,21 @@ import org.dcm4che.data.PersonName;
 import org.dcm4che.data.PersonName.Group;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4chee.archive.persistence.AttributeFilter;
+import org.hibernate.criterion.Conjunction;
+import org.hibernate.criterion.Property;
 
 /**
  * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
-class PersonNameMatching {
+abstract class PersonNameMatching {
+
+    static void addMatch(Property alpha, Property ideographic, Property phonetic,
+            Property fnsoundex, Property gnsoundex, String value,
+            AttributeFilter filter, EnumSet<QueryOption> queryOpts,
+            boolean matchUnknown, Conjunction predicates) {
+        // TODO Auto-generated method stub
+        
+    }
 
     static void personName(CriteriaBuilder cb, 
             Path<String> alphabethic,

@@ -51,6 +51,8 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.DateRange;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.util.DateUtils;
+import org.hibernate.criterion.Conjunction;
+import org.hibernate.criterion.Property;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -229,5 +231,18 @@ public class RangeMatching {
         
         predicates.add(matchUnknown(cb, path, matchUnknown,
                 range(cb, path, keys.getDateRange(tag, null), dt, params)));
+    }
+
+    public static void addMatch(Property field, int tag, FormatDate dt, Attributes keys,
+            boolean matchUnknown, Conjunction predicates) {
+        //TODO
+    }
+
+    public static void addMatch(Property dateField, Property timeField,
+            int dateTag, int timeTag, long dateAndTimeTag,
+            Attributes keys, EnumSet<QueryOption> queryOpts,
+            boolean matchUnknown, Conjunction predicates) {
+        // TODO
+        
     }
 }

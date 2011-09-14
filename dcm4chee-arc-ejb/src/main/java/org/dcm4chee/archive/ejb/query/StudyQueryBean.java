@@ -39,102 +39,68 @@
 package org.dcm4chee.archive.ejb.query;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.List;
 
 import javax.ejb.EJBException;
-import javax.ejb.Remove;
 import javax.ejb.Stateful;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceContextType;
-import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.pdu.QueryOption;
+import org.dcm4chee.archive.ejb.query.metadata.Patient_;
+import org.dcm4chee.archive.ejb.query.metadata.Study_;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
-import org.dcm4chee.archive.persistence.Patient;
-import org.dcm4chee.archive.persistence.Patient_;
 import org.dcm4chee.archive.persistence.Study;
-import org.dcm4chee.archive.persistence.Study_;
 import org.dcm4chee.archive.persistence.Utils;
+import org.hibernate.Criteria;
+import org.hibernate.ScrollableResults;
+import org.hibernate.criterion.Projection;
+import org.hibernate.criterion.ProjectionList;
+import org.hibernate.criterion.Projections;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @Stateful
-public class StudyQueryBean implements StudyQuery {
-
-    @PersistenceContext(unitName = "dcm4chee-arc",
-                        type = PersistenceContextType.EXTENDED)
-    private EntityManager em;
-
-    private Iterator<Tuple> results;
-    private boolean optionalKeyNotSupported;
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+public class StudyQueryBean extends AbstractQueryBean implements StudyQuery {
 
     @Override
-    public void find(String[] pids, Attributes keys, AttributeFilter filter,
+    protected Criteria createCriteria(String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, String[] roles) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<Tuple> cq = cb.createTupleQuery();
-        Root<Study> study = cq.from(Study.class);
-        Join<Study, Patient> pat = study.join(Study_.patient);
-        cq.multiselect(
-                study.get(Study_.numberOfStudyRelatedSeries),
-                study.get(Study_.numberOfStudyRelatedInstances),
-                study.get(Study_.modalitiesInStudy),
-                study.get(Study_.sopClassesInStudy),
-                study.get(Study_.retrieveAETs),
-                study.get(Study_.externalRetrieveAET),
-                study.get(Study_.availability),
-                study.get(Study_.encodedAttributes),
-                pat.get(Patient_.encodedAttributes));
-        List<Predicate> predicates = new ArrayList<Predicate>();
-        List<Object> params = new ArrayList<Object>();
-        Matching.study(cb, cq, pat, study, pids, keys, filter, queryOpts,
-                roles, predicates, params);
-        cq.where(predicates.toArray(new Predicate[predicates.size()]));
-        TypedQuery<Tuple> q = em.createQuery(cq);
-        int i = 0;
-        for (Object param : params)
-            q.setParameter(Matching.paramName(i++), param);
-        results = q.getResultList().iterator();
+        return session().createCriteria(Study.class, "study")
+            .createAlias("study.patient", "patient")
+            .setProjection(projection())
+            .add(Criterions.matchStudy(pids, keys, filter, queryOpts, roles));
     }
 
-
-    @Override
-    public boolean optionalKeyNotSupported() {
-        return optionalKeyNotSupported;
+    private Projection projection() {
+        ProjectionList list = Projections.projectionList();
+        list.add(Study_.numberOfStudyRelatedSeries);
+        list.add(Study_.numberOfStudyRelatedInstances);
+        list.add(Study_.modalitiesInStudy);
+        list.add(Study_.sopClassesInStudy);
+        list.add(Study_.retrieveAETs);
+        list.add(Study_.externalRetrieveAET);
+        list.add(Study_.availability);
+        list.add(Study_.encodedAttributes);
+        list.add(Patient_.encodedAttributes);
+        return list;
     }
 
     @Override
-    public boolean hasMoreMatches() {
-        checkResults();
-        return results.hasNext();
-    }
-
-    @Override
-    public Attributes nextMatch() {
-        checkResults();
-        Tuple tuple = results.next();
-        int numberOfStudyRelatedSeries = tuple.get(0, Integer.class);
-        int numberOfStudyRelatedInstances = tuple.get(1, Integer.class);
-        String modalitiesInStudy = tuple.get(2, String.class);
-        String sopClassesInStudy = tuple.get(3, String.class);
-        String retrieveAETs = tuple.get(4, String.class);
-        String externalRetrieveAET = tuple.get(5, String.class);
-        Availability availability = tuple.get(6, Availability.class);
-        byte[] studyAttributes = tuple.get(7, byte[].class);
-        byte[] patientAttributes = tuple.get(8, byte[].class);
+    protected Attributes toAttributes(ScrollableResults results) {
+        int numberOfStudyRelatedSeries = results.getInteger(0);
+        int numberOfStudyRelatedInstances = results.getInteger(1);
+        String modalitiesInStudy = results.getString(2);
+        String sopClassesInStudy = results.getString(3);
+        String retrieveAETs = results.getString(4);
+        String externalRetrieveAET = results.getString(5);
+        Availability availability = (Availability) results.get(6);
+        byte[] studyAttributes = (byte[]) results.get(7);
+        byte[] patientAttributes = (byte[]) results.get(8);
         Attributes attrs = new Attributes();
         try {
             Utils.decodeAttributes(attrs, patientAttributes);
@@ -150,14 +116,6 @@ public class StudyQueryBean implements StudyQuery {
         Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
         Utils.setAvailability(attrs, availability);
         return attrs;
-    }
-
-    @Remove
-    public void close() {}
-
-    private void checkResults() {
-        if (results == null)
-            throw new IllegalStateException("results not initalized");
     }
 
 }

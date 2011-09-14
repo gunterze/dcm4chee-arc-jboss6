@@ -57,7 +57,7 @@ import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4chee.archive.beans.util.Configuration;
-import org.dcm4chee.archive.ejb.query.CalculateMatches;
+import org.dcm4chee.archive.ejb.query.LocateInstances;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -68,7 +68,7 @@ public class CGetSCPImpl extends BasicCGetSCP {
     private final boolean studyRoot;
 
     @EJB
-    private CalculateMatches calculateMatches;
+    private LocateInstances calculateMatches;
 
     public CGetSCPImpl(Device device, String[] sopClasses, String... qrLevels) {
         super(device, sopClasses);
@@ -94,7 +94,7 @@ public class CGetSCPImpl extends BasicCGetSCP {
     private List<InstanceLocator> calculateMatches(Attributes rq, Attributes keys)
             throws DicomServiceException {
         try {
-            return calculateMatches.calculateMatches(keys);
+            return calculateMatches.find(keys);
         }  catch (Exception e) {
             throw new DicomServiceException(rq, Status.UnableToCalculateNumberOfMatches, e);
         }

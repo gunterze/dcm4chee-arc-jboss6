@@ -36,23 +36,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.ejb.query;
+package org.dcm4chee.archive.ejb.query.metadata;
 
-import java.util.List;
-
-import javax.ejb.Local;
-
-import org.dcm4che.data.Attributes;
-import org.dcm4che.net.service.InstanceLocator;
+import org.hibernate.criterion.Property;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Local
-public interface CalculateMatches {
-
-    List<InstanceLocator> calculateMatches(Attributes keys);
-
-    List<InstanceLocator> calculateMatches(String[] pids,Attributes keys);
-
+public abstract class Patient_ {
+    public static final Property pk = Property.forName("patient.pk");
+    public static final Property patientID = Property.forName("patient.patientID");
+    public static final Property issuerOfPatientID = Property.forName("patient.issuerOfPatientID");
+    public static final Property patientName = Property.forName("patient.patientName");
+    public static final Property patientIdeographicName = Property.forName("patient.patientIdeographicName");
+    public static final Property patientPhoneticName = Property.forName("patient.patientPhoneticName");
+    public static final Property patientFamilyNameSoundex = Property.forName("patient.patientFamilyNameSoundex");
+    public static final Property patientGivenNameSoundex = Property.forName("patient.patientGivenNameSoundex");
+    public static final Property patientBirthDate = Property.forName("patient.patientBirthDate");
+    public static final Property patientSex = Property.forName("patient.patientSex");
+    public static final Property patientCustomAttribute1 = Property.forName("patient.patientCustomAttribute1");
+    public static final Property patientCustomAttribute2 = Property.forName("patient.patientCustomAttribute2");
+    public static final Property patientCustomAttribute3 = Property.forName("patient.patientCustomAttribute3");
+    public static final Property encodedAttributes = Property.forName("patient.encodedAttributes");
 }

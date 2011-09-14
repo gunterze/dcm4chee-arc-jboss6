@@ -60,7 +60,7 @@ import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4chee.archive.beans.util.Configuration;
-import org.dcm4chee.archive.ejb.query.CalculateMatches;
+import org.dcm4chee.archive.ejb.query.LocateInstances;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -71,7 +71,7 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
     private final boolean studyRoot;
 
     @EJB
-    private CalculateMatches calculateMatches;
+    private LocateInstances calculateMatches;
 
     public CMoveSCPImpl(Device device, String[] sopClasses, String... qrLevels) {
         super(device, sopClasses);
@@ -79,6 +79,7 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         this.studyRoot = "STUDY".equals(qrLevels[0]);
     }
 
+    @Override
     protected RetrieveTask calculateMatches(Association as, PresentationContext pc,
             final Attributes rq, Attributes keys) throws DicomServiceException {
         AttributesValidator validator = new AttributesValidator(keys);
@@ -119,7 +120,7 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
     private List<InstanceLocator> calculateMatches(Attributes rq, Attributes keys)
             throws DicomServiceException {
         try {
-            return calculateMatches.calculateMatches(keys);
+            return calculateMatches.find(keys);
         }  catch (Exception e) {
             throw new DicomServiceException(rq, Status.UnableToCalculateNumberOfMatches, e);
         }
