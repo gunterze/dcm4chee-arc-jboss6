@@ -53,10 +53,9 @@ import org.dcm4chee.archive.persistence.Action;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Code;
 import org.dcm4chee.archive.persistence.Series;
-import org.hibernate.criterion.Conjunction;
+import org.hibernate.Criteria;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
@@ -66,244 +65,194 @@ import org.hibernate.criterion.Subqueries;
  */
 abstract class Criterions {
 
-    static Criterion matchPatient(String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts) {
-        Conjunction predicates = Restrictions.conjunction();
-        addPatientMatch(pids, keys, filter, queryOpts, predicates);
-        return predicates;
-    }
-
-    static Criterion matchStudy(String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, String[] roles) {
-        Conjunction predicates = Restrictions.conjunction();
-        addPatientMatch(pids, keys, filter, queryOpts, predicates);
-        addStudyMatch(keys, filter, queryOpts, roles, predicates);
-        return predicates;
-    }
-
-    static Criterion matchSeries(String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, String[] roles) {
-        Conjunction predicates = Restrictions.conjunction();
-        addPatientMatch(pids, keys, filter, queryOpts, predicates);
-        addStudyMatch(keys, filter, queryOpts, roles, predicates);
-        addSeriesMatch(keys, filter, queryOpts, roles, predicates);
-        return predicates;
-    }
-
-    static Criterion matchInstance(String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, String[] roles) {
-        Conjunction predicates = Restrictions.conjunction();
-        addPatientMatch(pids, keys, filter, queryOpts, predicates);
-        addStudyMatch(keys, filter, queryOpts, roles, predicates);
-        addSeriesMatch(keys, filter, queryOpts, roles, predicates);
-        addInstanceMatch(keys, filter, queryOpts, roles, predicates);
-        return predicates;
-    }
-
-    static Criterion matchInstanceByUIDs(String[] pids, Attributes keys) {
-        Conjunction predicates = Restrictions.conjunction();
-        addPatientIDMatch(pids, false, predicates );
-        addListOfUIDMatch(Study_.studyInstanceUID, keys.getStrings(Tag.StudyInstanceUID), predicates);
-        addListOfUIDMatch(Series_.seriesInstanceUID, keys.getStrings(Tag.SeriesInstanceUID), predicates);
-        addListOfUIDMatch(Instance_.sopInstanceUID, keys.getStrings(Tag.SOPInstanceUID), predicates);
-        return predicates;
-    }
-
-    private static void addPatientMatch(String[] pids, Attributes keys,
-            AttributeFilter filter, EnumSet<QueryOption> queryOpts, Conjunction predicates) {
+    static void addPatientLevelCriteriaTo(Criteria criteria, String[] pids, Attributes keys,
+            AttributeFilter filter, EnumSet<QueryOption> queryOpts) {
         boolean matchUnknown = filter.isMatchUnknown();
-        addPatientIDMatch(pids, matchUnknown, predicates);
-
+        addTo(criteria, pid(pids, matchUnknown));
         if (keys == null)
             return;
-
-        PersonNameMatching.addMatch(Patient_.patientName,
-                    Patient_.patientIdeographicName,
-                    Patient_.patientPhoneticName,
-                    Patient_.patientFamilyNameSoundex,
-                    Patient_.patientGivenNameSoundex,
-                    filter.getString(keys, Tag.PatientName),
-                    filter, queryOpts, matchUnknown, predicates);
-        addWildCardMatch(Patient_.patientSex, filter.getString(keys, Tag.PatientSex),
-                matchUnknown, predicates);
-        RangeMatching.addMatch(Patient_.patientBirthDate, Tag.PatientBirthDate,
-                RangeMatching.FormatDate.DA, keys, matchUnknown, predicates);
-        addWildCardMatch(Patient_.patientCustomAttribute1,
-                filter.selectPatientCustomAttribute1(keys), matchUnknown, predicates);
-        addWildCardMatch(Patient_.patientCustomAttribute2,
-                filter.selectPatientCustomAttribute2(keys), matchUnknown, predicates);
-        addWildCardMatch(Patient_.patientCustomAttribute3,
-                filter.selectPatientCustomAttribute3(keys), matchUnknown, predicates);
+        addTo(criteria, pn(Patient_.patientName,
+                Patient_.patientIdeographicName,
+                Patient_.patientPhoneticName,
+                Patient_.patientFamilyNameSoundex,
+                Patient_.patientGivenNameSoundex,
+                filter.getString(keys, Tag.PatientName),
+                filter, queryOpts.contains(QueryOption.FUZZY), matchUnknown));
+        addTo(criteria, wc(Patient_.patientSex,
+                filter.getString(keys, Tag.PatientSex), matchUnknown));
+        addTo(criteria,
+                da(Patient_.patientBirthDate, keys, Tag.PatientBirthDate, matchUnknown));
+        addTo(criteria, wc(Patient_.patientCustomAttribute1,
+                filter.selectPatientCustomAttribute1(keys), matchUnknown));
+        addTo(criteria, wc(Patient_.patientCustomAttribute2,
+                filter.selectPatientCustomAttribute2(keys), matchUnknown));
+        addTo(criteria, wc(Patient_.patientCustomAttribute3,
+                filter.selectPatientCustomAttribute3(keys), matchUnknown));
     }
 
-   private static void addStudyMatch(Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, String[] roles, Conjunction predicates) {
+    static void addStudyLevelCriteriaTo(Criteria criteria, Attributes keys,
+            AttributeFilter filter, EnumSet<QueryOption> queryOpts, String[] roles) {
         if (keys == null)
             return;
 
         boolean matchUnknown = filter.isMatchUnknown();
-        addListOfUIDMatch(Study_.studyInstanceUID, keys.getStrings(Tag.StudyInstanceUID), predicates);
-        addWildCardMatch(Study_.studyID, filter.getString(keys, Tag.StudyID), matchUnknown, predicates);
-        PersonNameMatching.addMatch(Study_.referringPhysicianName,
+        addTo(criteria, uids(Study_.studyInstanceUID, keys.getStrings(Tag.StudyInstanceUID)));
+        addTo(criteria, wc(Study_.studyID, filter.getString(keys, Tag.StudyID), matchUnknown));
+        addTo(criteria, datm(
+                Study_.studyDate, 
+                Study_.studyTime,
+                Tag.StudyDate,
+                Tag.StudyTime,
+                Tag.StudyDateAndTime,
+                keys, queryOpts.contains(QueryOption.DATETIME), matchUnknown));
+        addTo(criteria, pn(
+                Study_.referringPhysicianName,
                 Study_.referringPhysicianIdeographicName,
                 Study_.referringPhysicianPhoneticName,
                 Study_.referringPhysicianFamilyNameSoundex,
                 Study_.referringPhysicianGivenNameSoundex,
                 filter.getString(keys, Tag.ReferringPhysicianName),
-                filter, queryOpts, matchUnknown, predicates);
-        RangeMatching.addMatch(Study_.studyDate, Study_.studyTime,
-                Tag.StudyDate, Tag.StudyTime, Tag.StudyDateAndTime,
-                keys, queryOpts, matchUnknown, predicates);
-        addWildCardMatch(Study_.studyDescription, filter.getString(keys, Tag.StudyDescription), matchUnknown, predicates);
+                filter, queryOpts.contains(QueryOption.FUZZY), matchUnknown));
+        addTo(criteria, wc(Study_.studyDescription,
+                filter.getString(keys, Tag.StudyDescription), matchUnknown));
         String accNo = filter.getString(keys, Tag.AccessionNumber);
-        addWildCardMatch(Study_.accessionNumber, accNo, matchUnknown, predicates);
+        addTo(criteria, wc(Study_.accessionNumber, accNo, matchUnknown));
         if(!accNo.equals("*"))
-            addIssuerMatch(Study_.issuerOfAccessionNumber,
+            addTo(criteria, issuer(Study_.issuerOfAccessionNumber,
                     keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence),
-                    filter, matchUnknown, predicates);
-        addModalitiesInStudyMatch(filter.getString(keys, Tag.ModalitiesInStudy),
-                matchUnknown, predicates);
-        addCodesMatch(Study_.procedureCodes, "procedureCode", 
-                keys.getNestedDataset(Tag.ProcedureCodeSequence), filter, matchUnknown, predicates);
-        addWildCardMatch(Study_.studyCustomAttribute1,
-                filter.selectStudyCustomAttribute1(keys), matchUnknown, predicates);
-        addWildCardMatch(Study_.studyCustomAttribute2,
-                filter.selectStudyCustomAttribute2(keys), matchUnknown, predicates);
-        addWildCardMatch(Study_.studyCustomAttribute3,
-                filter.selectStudyCustomAttribute3(keys), matchUnknown, predicates);
-        addPermissionMatch(roles, Action.QUERY, predicates);
+                    filter, matchUnknown));
+        addTo(criteria, modsInStudy(filter.getString(keys, Tag.ModalitiesInStudy), matchUnknown));
+        addTo(criteria, codes(Study_.procedureCodes, "procedureCode", 
+                keys.getNestedDataset(Tag.ProcedureCodeSequence), filter, matchUnknown));
+        addTo(criteria, wc(Study_.studyCustomAttribute1,
+                filter.selectStudyCustomAttribute1(keys), matchUnknown));
+        addTo(criteria, wc(Study_.studyCustomAttribute2,
+                filter.selectStudyCustomAttribute2(keys), matchUnknown));
+        addTo(criteria, wc(Study_.studyCustomAttribute3,
+                filter.selectStudyCustomAttribute3(keys), matchUnknown));
+        addTo(criteria, permission(roles, Action.QUERY));
     }
 
-    private static void addSeriesMatch(Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, String[] roles, Conjunction predicates) {
+
+    static void addSeriesLevelCriteriaTo(Criteria criteria, Attributes keys,
+            AttributeFilter filter, EnumSet<QueryOption> queryOpts) {
         if (keys == null)
             return;
 
         boolean matchUnknown = filter.isMatchUnknown();
-        addListOfUIDMatch(Series_.seriesInstanceUID, keys.getStrings(Tag.SeriesInstanceUID), predicates);
-        addWildCardMatch(Series_.seriesCustomAttribute1,
-                filter.selectSeriesCustomAttribute1(keys), matchUnknown, predicates);
-        addWildCardMatch(Series_.modality,
-                filter.getString(keys, Tag.Modality), matchUnknown, predicates);
-        RangeMatching.addMatch(
+        addTo(criteria, uids(Series_.seriesInstanceUID, keys.getStrings(Tag.SeriesInstanceUID)));
+        addTo(criteria, wc(Series_.seriesNumber,
+                filter.getString(keys, Tag.SeriesNumber), matchUnknown));
+        addTo(criteria, wc(Series_.modality,
+                filter.getString(keys, Tag.Modality), matchUnknown));
+        addTo(criteria, datm(
                 Series_.performedProcedureStepStartDate,
                 Series_.performedProcedureStepStartTime,
                 Tag.PerformedProcedureStepStartDate,
                 Tag.PerformedProcedureStepStartTime,
-                Tag.PerformedProcedureStepStartDateAndTime, keys, queryOpts,
-                matchUnknown, predicates);
-        addWildCardMatch(Series_.seriesNumber,
-                filter.getString(keys, Tag.SeriesNumber), matchUnknown, predicates);
-        addWildCardMatch(Series_.seriesDescription,
-                filter.getString(keys, Tag.SeriesDescription), matchUnknown, predicates);
-        addRequestAttributesMatch(
-                keys.getNestedDataset(Tag.RequestAttributesSequence), filter, queryOpts, 
-                matchUnknown, predicates);
-        addCodeMatch(Series_.institutionCode, "institutionCode",
-                keys.getNestedDataset(Tag.InstitutionCodeSequence), filter,
-                matchUnknown, predicates);
-        addWildCardMatch(Series_.seriesCustomAttribute1,
-                filter.selectSeriesCustomAttribute1(keys), matchUnknown, predicates);
-        addWildCardMatch(Series_.seriesCustomAttribute2,
-                filter.selectSeriesCustomAttribute2(keys), matchUnknown, predicates);
-        addWildCardMatch(Series_.seriesCustomAttribute3,
-                filter.selectSeriesCustomAttribute3(keys), matchUnknown, predicates);
+                Tag.PerformedProcedureStepStartDateAndTime,
+                keys, queryOpts.contains(QueryOption.DATETIME), matchUnknown));
+        addTo(criteria, wc(Series_.seriesDescription,
+                filter.getString(keys, Tag.SeriesDescription), matchUnknown));
+        addTo(criteria, requestAttributes(keys.getNestedDataset(Tag.RequestAttributesSequence),
+                filter, queryOpts, matchUnknown));
+        addTo(criteria, code(Series_.institutionCode, "institutionCode",
+                keys.getNestedDataset(Tag.InstitutionCodeSequence), filter, matchUnknown));
+        addTo(criteria, wc(Series_.seriesCustomAttribute1,
+                filter.selectSeriesCustomAttribute1(keys), matchUnknown));
+        addTo(criteria, wc(Series_.seriesCustomAttribute2,
+                filter.selectSeriesCustomAttribute2(keys), matchUnknown));
+        addTo(criteria, wc(Series_.seriesCustomAttribute3,
+                filter.selectSeriesCustomAttribute3(keys), matchUnknown));
     }
 
-    private static void addInstanceMatch(Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, String[] roles, Conjunction predicates) {
+    static void addInstanceLevelCriteriaTo(Criteria criteria, Attributes keys,
+            AttributeFilter filter, EnumSet<QueryOption> queryOpts) {
         if (keys == null)
             return;
 
         boolean matchUnknown = filter.isMatchUnknown();
-        addListOfUIDMatch(Instance_.sopInstanceUID, keys.getStrings(Tag.SOPInstanceUID), predicates);
-        addListOfUIDMatch(Instance_.sopClassUID, keys.getStrings(Tag.SOPClassUID), predicates);
-        addWildCardMatch(Instance_.instanceNumber,
-                filter.getString(keys, Tag.InstanceNumber), matchUnknown, predicates);
-        addWildCardMatch(Instance_.verificationFlag,
-                filter.getString(keys, Tag.VerificationFlag), matchUnknown, predicates);
-        RangeMatching.addMatch(Instance_.contentDate, Instance_.contentTime,
-                Tag.ContentDate, Tag.ContentTime, 
-                Tag.ContentDateAndTime, keys, queryOpts, 
-                matchUnknown, predicates);
-        addCodeMatch(Instance_.conceptNameCode, "conceptNameCode",
-                keys.getNestedDataset(Tag.ConceptNameCodeSequence), filter,
-                matchUnknown, predicates);
-        addObserverMatch(keys.getNestedDataset(Tag.VerifyingObserverSequence),
-                filter, queryOpts, matchUnknown, predicates);
+        addTo(criteria, uids(Instance_.sopInstanceUID, keys.getStrings(Tag.SOPInstanceUID)));
+        addTo(criteria, uids(Instance_.sopClassUID, keys.getStrings(Tag.SOPClassUID)));
+        addTo(criteria, wc(Instance_.instanceNumber,
+                filter.getString(keys, Tag.InstanceNumber), matchUnknown));
+        addTo(criteria, wc(Instance_.verificationFlag,
+                filter.getString(keys, Tag.VerificationFlag), matchUnknown));
+        addTo(criteria, datm(
+                Instance_.contentDate,
+                Instance_.contentTime,
+                Tag.ContentDate,
+                Tag.ContentTime, 
+                Tag.ContentDateAndTime,
+                keys, queryOpts.contains(QueryOption.DATETIME), matchUnknown));
+        addTo(criteria, code(Instance_.conceptNameCode, "conceptNameCode",
+                keys.getNestedDataset(Tag.ConceptNameCodeSequence), filter, matchUnknown));
+        addTo(criteria, verifyingObserver(keys.getNestedDataset(Tag.VerifyingObserverSequence),
+                filter, queryOpts, matchUnknown));
         Sequence contentSeq = keys.getSequence(Tag.ContentSequence);
         if (contentSeq != null)
             for (Attributes item : contentSeq)
-                ContentItemMatching.addMatch(item, filter, predicates);
-        addWildCardMatch(Instance_.instanceCustomAttribute1,
-                filter.selectInstanceCustomAttribute1(keys), matchUnknown, predicates);
-        addWildCardMatch(Instance_.instanceCustomAttribute2,
-                filter.selectInstanceCustomAttribute2(keys), matchUnknown, predicates);
-        addWildCardMatch(Instance_.instanceCustomAttribute3,
-                filter.selectInstanceCustomAttribute3(keys), matchUnknown, predicates);
+                addTo(criteria, contentItem(item, filter));
+        addTo(criteria, wc(Instance_.instanceCustomAttribute1,
+                filter.selectInstanceCustomAttribute1(keys), matchUnknown));
+        addTo(criteria, wc(Instance_.instanceCustomAttribute2,
+                filter.selectInstanceCustomAttribute2(keys), matchUnknown));
+        addTo(criteria, wc(Instance_.instanceCustomAttribute3,
+                filter.selectInstanceCustomAttribute3(keys), matchUnknown));
     }
 
-    private static boolean addPatientIDMatch(String[] pids, boolean matchUnknown,
-            Conjunction predicates) {
+    static void addTo(Criteria criteria, Criterion criterion) {
+        if (criterion != null)
+            criteria.add(criterion);
+    }
+
+    static Criterion pid(String[] pids, boolean matchUnknown) {
         if (pids == null || pids.length == 0)
-            return false;
+            return null;
 
-        if (pids.length == 2)
-            return addPatientIDMatch(pids[0], pids[1], matchUnknown, predicates);
+        Criterion result = null;
+        for (int i = 0; i < pids.length-1; i++, i++)
+            result = or(result, pid(pids[i], pids[i+1], matchUnknown));
 
-        Disjunction or = Restrictions.disjunction();
-        boolean result = false;
-        for (int i = 0; i < pids.length-1; i++, i++) {
-            Conjunction and = Restrictions.conjunction();
-            if (addPatientIDMatch(pids[i], pids[i+1], matchUnknown, and)) {
-                or.add(and);
-                result = true;
-            }
-        }
-        if (result)
-            predicates.add(or);
         return result;
     }
 
-    private static boolean addPatientIDMatch(String pid, String issuer, boolean matchUnknown,
-            Conjunction predicates) {
-        boolean result = addWildCardMatch(Patient_.patientID, pid, matchUnknown, predicates);
-        result = addWildCardMatch(Patient_.issuerOfPatientID, issuer, matchUnknown, predicates)
-                || result;
-        return result;
+    static Criterion or(Criterion lhs, Criterion rhs) {
+        return lhs == null ? rhs : rhs == null ? lhs : Restrictions.or(lhs, rhs);
     }
 
-    static boolean addListOfUIDMatch(String propertyName, String[] values, Conjunction predicates) {
-        if (values == null || values.length == 0 || values[0].equals("*"))
-            return false;
-
-        predicates.add(values.length == 1
-                ? Restrictions.eq(propertyName, values[0])
-                : Restrictions.in(propertyName, values));
-        return true;
+    static Criterion and(Criterion lhs, Criterion rhs) {
+        return lhs == null ? rhs : rhs == null ? lhs : Restrictions.and(lhs, rhs);
     }
 
-    static boolean addWildCardMatch(String propertyName, String value, boolean matchUnknown,
-            Conjunction predicates) {
+    static Criterion pid(String id, String issue, boolean matchUnknown) {
+        Criterion c1 = wc(Patient_.patientID, id, matchUnknown);
+        Criterion c2 = wc(Patient_.issuerOfPatientID, id, matchUnknown);
+        return and(c1, c2);
+    }
+
+    static Criterion wc(String propertyName, String value, boolean matchUnknown) {
         if (value.equals("*"))
-            return false;
+            return null;
 
-        Criterion criterion;
-        if (containsWildcard(value)) {
-            String like = toLikePattern(value);
-            if (like.equals("%"))
-                return false;
-
-            criterion = like(propertyName, like, matchUnknown);
-        } else
-            criterion = eq(propertyName, value, matchUnknown);
-
-        predicates.add(criterion);
-        return true;
+        return containsWildcard(value)
+            ? like(propertyName, toLikePattern(value), matchUnknown)
+            : eq(propertyName, value, matchUnknown);
     }
 
     private static boolean containsWildcard(String s) {
         return s.indexOf('*') >= 0 || s.indexOf('?') >= 0;
+    }
+
+
+    static Criterion like(String propertyName, String value, boolean matchUnknown) {
+        if (value.equals("%"))
+            return null;
+
+        Criterion criterion = Restrictions.like(propertyName, value);
+        if (matchUnknown)
+            criterion = Restrictions.or(criterion, Restrictions.eq(propertyName, "*"));
+        return criterion ;
     }
 
     private static String toLikePattern(String s) {
@@ -331,99 +280,120 @@ abstract class Criterions {
         return like.toString();
     }
 
-    private static void addCodeMatch(String propertyName, String alias, Attributes item,
-            AttributeFilter filter, boolean matchUnknown, Conjunction predicates) {
-        Criterion codeMatch = codeMatch(alias, item, filter);
-        if (codeMatch == null)
-            return;
-
-        String codePk = alias + ".pk";
-        Criterion exists = Subqueries.exists(DetachedCriteria.forClass(Code.class, alias)
-                .setProjection(Projections.property(codePk))
-                .add(Restrictions.eqProperty(propertyName + ".pk", codePk))
-                .add(codeMatch));
-
-        predicates.add(matchUnknown
-                ? Restrictions.or(exists, Restrictions.isNull(propertyName))
-                : exists);
-        
-    }
-
-    private static void addCodesMatch(String propertyName, String alias, Attributes item,
-            AttributeFilter filter, boolean matchUnknown, Conjunction predicates) {
-        Criterion codeMatch = codeMatch(alias, item, filter);
-        if (codeMatch == null)
-            return;
-
-        //TODO
-    }
-
-    private static Criterion codeMatch(String alias, Attributes item, AttributeFilter filter) {
-        if (item == null)
+    static Criterion eq(String propertyName, String value, boolean matchUnknown) {
+        if (value.equals("*"))
             return null;
 
-        Conjunction codeMatch = Restrictions.conjunction();
-        boolean match =  addWildCardMatch(Code_.codeValue(alias),
-                filter.getString(item, Tag.CodeValue), false, codeMatch);
-        match = addWildCardMatch(Code_.codingSchemeDesignator(alias),
-                filter.getString(item, Tag.CodingSchemeDesignator), false, codeMatch)
-            || match;
-        match = addWildCardMatch(Code_.codingSchemeVersion(alias),
-                filter.getString(item, Tag.CodingSchemeVersion), false, codeMatch)
-            || match;
-        return match ? codeMatch : null;
-    }
-
-    private static void addModalitiesInStudyMatch(String value, boolean matchUnknown,
-            Conjunction predicates) {
-        if (value.equals("*"))
-            return;
-
-        predicates.add(Subqueries.exists(DetachedCriteria.forClass(Series.class, "series2")
-            .setProjection(Projections.property("series2.pk"))
-            .add(Restrictions.eqProperty("series2.study", "study"))
-            .add(eq("series2.modality", value, matchUnknown))));
-    }
-
-    private static Criterion like(String propertyName, String value, boolean matchUnknown) {
-        Criterion criterion = Restrictions.like(propertyName, value);
-        if (matchUnknown)
-            criterion = Restrictions.or(criterion, Restrictions.eq(propertyName, "*"));
-        return criterion ;
-    }
-
-    private static Criterion eq(String propertyName, String value, boolean matchUnknown) {
         Criterion criterion = Restrictions.eq(propertyName, value);
         if (matchUnknown)
             criterion = Restrictions.or(criterion, Restrictions.eq(propertyName, "*"));
         return criterion ;
     }
 
-    private static void addIssuerMatch(String string, Attributes nestedDataset,
-            AttributeFilter filter, boolean matchUnknown, Conjunction predicates) {
-        // TODO Auto-generated method stub
-        
+    static Criterion uids(String propertyName, String[] values) {
+        if (values == null || values.length == 0 || values[0].equals("*"))
+            return null;
+
+        return values.length == 1
+                ? Restrictions.eq(propertyName, values[0])
+                : Restrictions.in(propertyName, values);
     }
 
-    private static void addPermissionMatch(String[] roles, Action query,
-            Conjunction predicates) {
+    private static Criterion da(String propertyName, Attributes keys, int tag,
+            boolean matchUnknown) {
         // TODO Auto-generated method stub
-        
+        return null;
     }
 
-    private static void addRequestAttributesMatch(Attributes item,
+    private static Criterion datm(String daProperty, String tmProperty,
+            int daTag, int tmTag, long datmTag, Attributes keys,
+            boolean datetime, boolean matchUnknown) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    private static Criterion pn(String alphabetic, String ideographic, String phonetic,
+            String fnsoundex, String gnsoundex, String value, AttributeFilter filter,
+            boolean fuzzy, boolean matchUnknown) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    private static Criterion code(String propertyName, String alias, Attributes item,
+            AttributeFilter filter, boolean matchUnknown) {
+        Criterion criterion = code(alias, item, filter);
+        if (criterion == null)
+            return null;
+
+        String codePk = alias + ".pk";
+        Criterion exists = Subqueries.exists(DetachedCriteria.forClass(Code.class, alias)
+                .setProjection(Projections.property(codePk))
+                .add(Restrictions.eqProperty(propertyName + ".pk", codePk))
+                .add(criterion));
+
+        return matchUnknown
+                ? Restrictions.or(exists, Restrictions.isNull(propertyName))
+                : exists;
+    }
+
+    private static Criterion codes(String procedurecodes, String string,
+            Attributes nestedDataset, AttributeFilter filter,
+            boolean matchUnknown) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    private static Criterion code(String alias, Attributes item, AttributeFilter filter) {
+        if (item == null)
+            return null;
+
+        return and(
+                eq(Code_.codeValue(alias), filter.getString(item, Tag.CodeValue), false),
+                and(
+                    eq(Code_.codingSchemeDesignator(alias),
+                            filter.getString(item, Tag.CodingSchemeDesignator), false),
+                    eq(Code_.codingSchemeVersion(alias),
+                            filter.getString(item, Tag.CodingSchemeVersion), false)));
+    }
+
+    private static Criterion modsInStudy(String value, boolean matchUnknown) {
+        if (value.equals("*"))
+            return null;
+
+        return Subqueries.exists(DetachedCriteria.forClass(Series.class, "series2")
+            .setProjection(Projections.property("series2.pk"))
+            .add(Restrictions.eqProperty("series2.study", "study"))
+            .add(wc("series2.modality", value, matchUnknown)));
+    }
+
+    private static Criterion issuer(String propertyName, Attributes item,
+            AttributeFilter filter, boolean matchUnknown) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    private static Criterion requestAttributes(Attributes nestedDataset,
             AttributeFilter filter, EnumSet<QueryOption> queryOpts,
-            boolean matchUnknown, Conjunction predicates) {
+            boolean matchUnknown) {
         // TODO Auto-generated method stub
-        
+        return null;
     }
 
-    private static void addObserverMatch(Attributes item,
+    private static Criterion verifyingObserver(Attributes nestedDataset,
             AttributeFilter filter, EnumSet<QueryOption> queryOpts,
-            boolean matchUnknown, Conjunction predicates) {
+            boolean matchUnknown) {
         // TODO Auto-generated method stub
-        
+        return null;
     }
 
+    private static Criterion contentItem(Attributes item, AttributeFilter filter) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
- }
+    private static Criterion permission(String[] roles, Action query) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+}

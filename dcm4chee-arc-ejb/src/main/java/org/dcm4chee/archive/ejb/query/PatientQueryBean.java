@@ -69,8 +69,8 @@ public class PatientQueryBean extends AbstractQueryBean implements PatientQuery 
     protected Criteria createCriteria(String[] pids, Attributes keys,AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, String[] roles) {
         Criteria criteria = session().createCriteria(Patient.class, "patient")
-                    .setProjection(projection())
-                    .add(Criterions.matchPatient(pids, keys, filter, queryOpts));
+                    .setProjection(projection());
+        Criterions.addPatientLevelCriteriaTo(criteria, pids, keys, filter, queryOpts);
         return criteria;
     }
 

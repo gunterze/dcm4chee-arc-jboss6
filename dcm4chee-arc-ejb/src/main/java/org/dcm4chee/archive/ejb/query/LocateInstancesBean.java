@@ -58,6 +58,7 @@ import org.dcm4chee.archive.ejb.query.metadata.FileRef_;
 import org.dcm4chee.archive.ejb.query.metadata.FileSystem_;
 import org.dcm4chee.archive.ejb.query.metadata.Instance_;
 import org.dcm4chee.archive.ejb.query.metadata.Series_;
+import org.dcm4chee.archive.ejb.query.metadata.Study_;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.Utils;
 import org.hibernate.Criteria;
@@ -125,16 +126,23 @@ public class LocateInstancesBean implements LocateInstances {
     }
 
     private Criteria createCriteria(StatelessSession session, String[] pids, Attributes keys) {
-        return session.createCriteria(Instance.class, "instance")
+        Criteria criteria = session.createCriteria(Instance.class, "instance")
                 .createAlias("instance.fileRefs", "fileRef", CriteriaSpecification.LEFT_JOIN)
                 .createAlias("fileRef.fileSystem", "fileSystem", CriteriaSpecification.LEFT_JOIN)
                 .createAlias("instance.series", "series")
                 .createAlias("series.study", "study")
                 .createAlias("study.patient", "patient")
                 .setProjection(projection())
-                .add(Criterions.matchInstanceByUIDs(pids, keys))
                 .addOrder(Order.asc(Series_.pk))
                 .addOrder(Order.asc(Instance_.pk));
+        Criterions.addTo(criteria, Criterions.pid(pids, false));
+        Criterions.addTo(criteria, Criterions.uids(
+                Study_.studyInstanceUID, keys.getStrings(Tag.StudyInstanceUID)));
+        Criterions.addTo(criteria, Criterions.uids(
+                Series_.seriesInstanceUID, keys.getStrings(Tag.SeriesInstanceUID)));
+        Criterions.addTo(criteria, Criterions.uids(
+                Instance_.sopInstanceUID, keys.getStrings(Tag.SOPInstanceUID)));
+       return criteria;
     }
 
     private Projection projection() {

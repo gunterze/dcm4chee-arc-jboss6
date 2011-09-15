@@ -70,10 +70,12 @@ public class StudyQueryBean extends AbstractQueryBean implements StudyQuery {
     @Override
     protected Criteria createCriteria(String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, String[] roles) {
-        return session().createCriteria(Study.class, "study")
-            .createAlias("study.patient", "patient")
-            .setProjection(projection())
-            .add(Criterions.matchStudy(pids, keys, filter, queryOpts, roles));
+        Criteria criteria = session().createCriteria(Study.class, "study")
+                    .createAlias("study.patient", "patient")
+                    .setProjection(projection());
+        Criterions.addPatientLevelCriteriaTo(criteria, pids, keys, filter, queryOpts);
+        Criterions.addStudyLevelCriteriaTo(criteria, keys, filter, queryOpts, roles);
+        return criteria;
     }
 
     private Projection projection() {

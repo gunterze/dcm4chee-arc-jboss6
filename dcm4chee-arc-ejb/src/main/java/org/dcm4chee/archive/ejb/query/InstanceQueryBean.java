@@ -88,13 +88,17 @@ public class InstanceQueryBean extends AbstractQueryBean implements InstanceQuer
     protected Criteria createCriteria(String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, String[] roles) {
         seriesQuery = session().createQuery(QUERY_SERIES_ATTRS);
-        return session().createCriteria(Instance.class, "instance")
+        Criteria criteria = session().createCriteria(Instance.class, "instance")
             .createAlias("instance.series", "series")
             .createAlias("series.study", "study")
             .createAlias("study.patient", "patient")
             .setProjection(projection())
-            .add(Criterions.matchInstance(pids, keys, filter, queryOpts, roles))
             .addOrder(Order.asc(Series_.pk));
+        Criterions.addPatientLevelCriteriaTo(criteria, pids, keys, filter, queryOpts);
+        Criterions.addStudyLevelCriteriaTo(criteria, keys, filter, queryOpts, roles);
+        Criterions.addSeriesLevelCriteriaTo(criteria, keys, filter, queryOpts);
+        Criterions.addInstanceLevelCriteriaTo(criteria, keys, filter, queryOpts);
+        return criteria;
     }
 
     private Projection projection() {

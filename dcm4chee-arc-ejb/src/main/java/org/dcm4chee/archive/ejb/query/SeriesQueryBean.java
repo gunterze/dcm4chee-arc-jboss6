@@ -71,11 +71,14 @@ public class SeriesQueryBean extends AbstractQueryBean implements SeriesQuery {
     @Override
     protected Criteria createCriteria(String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, String[] roles) {
-        return session().createCriteria(Series.class, "series")
-            .createAlias("series.study", "study")
-            .createAlias("study.patient", "patient")
-            .setProjection(projection())
-            .add(Criterions.matchSeries(pids, keys, filter, queryOpts, roles));
+        Criteria criteria = session().createCriteria(Series.class, "series")
+                    .createAlias("series.study", "study")
+                    .createAlias("study.patient", "patient")
+                    .setProjection(projection());
+        Criterions.addPatientLevelCriteriaTo(criteria, pids, keys, filter, queryOpts);
+        Criterions.addStudyLevelCriteriaTo(criteria, keys, filter, queryOpts, roles);
+        Criterions.addSeriesLevelCriteriaTo(criteria, keys, filter, queryOpts);
+        return criteria;
     }
 
     private Projection projection() {
