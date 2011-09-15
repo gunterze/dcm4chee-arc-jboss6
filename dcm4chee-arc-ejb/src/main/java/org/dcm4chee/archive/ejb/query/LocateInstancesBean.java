@@ -65,6 +65,7 @@ import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.Projections;
@@ -132,22 +133,22 @@ public class LocateInstancesBean implements LocateInstances {
                 .createAlias("study.patient", "patient")
                 .setProjection(projection())
                 .add(Criterions.matchInstanceByUIDs(pids, keys))
-                .addOrder(Series_.pk.asc())
-                .addOrder(Instance_.pk.asc());
+                .addOrder(Order.asc(Series_.pk))
+                .addOrder(Order.asc(Instance_.pk));
     }
 
     private Projection projection() {
         ProjectionList list = Projections.projectionList();
-        list.add(FileRef_.transferSyntaxUID);
-        list.add(FileRef_.filePath);
-        list.add(FileSystem_.uri);
-        list.add(Series_.pk);
-        list.add(Instance_.pk);
-        list.add(Instance_.sopClassUID);
-        list.add(Instance_.sopInstanceUID);
-        list.add(Instance_.retrieveAETs);
-        list.add(Instance_.externalRetrieveAET);
-        list.add(Instance_.encodedAttributes);
+        list.add(Projections.property(FileRef_.transferSyntaxUID));
+        list.add(Projections.property(FileRef_.filePath));
+        list.add(Projections.property(FileSystem_.uri));
+        list.add(Projections.property(Series_.pk));
+        list.add(Projections.property(Instance_.pk));
+        list.add(Projections.property(Instance_.sopClassUID));
+        list.add(Projections.property(Instance_.sopInstanceUID));
+        list.add(Projections.property(Instance_.retrieveAETs));
+        list.add(Projections.property(Instance_.externalRetrieveAET));
+        list.add(Projections.property(Instance_.encodedAttributes));
         return list;
     }
 

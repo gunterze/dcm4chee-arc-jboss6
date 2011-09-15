@@ -44,17 +44,22 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.net.pdu.QueryOption;
+import org.dcm4chee.archive.ejb.query.metadata.Code_;
 import org.dcm4chee.archive.ejb.query.metadata.Instance_;
 import org.dcm4chee.archive.ejb.query.metadata.Patient_;
 import org.dcm4chee.archive.ejb.query.metadata.Series_;
 import org.dcm4chee.archive.ejb.query.metadata.Study_;
 import org.dcm4chee.archive.persistence.Action;
 import org.dcm4chee.archive.persistence.AttributeFilter;
+import org.dcm4chee.archive.persistence.Code;
+import org.dcm4chee.archive.persistence.Series;
 import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
-import org.hibernate.criterion.Property;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -153,13 +158,13 @@ abstract class Criterions {
         String accNo = filter.getString(keys, Tag.AccessionNumber);
         addWildCardMatch(Study_.accessionNumber, accNo, matchUnknown, predicates);
         if(!accNo.equals("*"))
-            addIssuerMatch("study.issuerOfAccessionNumber",
+            addIssuerMatch(Study_.issuerOfAccessionNumber,
                     keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence),
                     filter, matchUnknown, predicates);
         addModalitiesInStudyMatch(filter.getString(keys, Tag.ModalitiesInStudy),
                 matchUnknown, predicates);
-        addCodeMatch("study.procedureCodes", keys.getNestedDataset(Tag.ProcedureCodeSequence),
-                filter, matchUnknown, predicates);
+        addCodesMatch(Study_.procedureCodes, "procedureCode", 
+                keys.getNestedDataset(Tag.ProcedureCodeSequence), filter, matchUnknown, predicates);
         addWildCardMatch(Study_.studyCustomAttribute1,
                 filter.selectStudyCustomAttribute1(keys), matchUnknown, predicates);
         addWildCardMatch(Study_.studyCustomAttribute2,
@@ -194,7 +199,7 @@ abstract class Criterions {
         addRequestAttributesMatch(
                 keys.getNestedDataset(Tag.RequestAttributesSequence), filter, queryOpts, 
                 matchUnknown, predicates);
-        addCodeMatch("series_.institutionCode",
+        addCodeMatch(Series_.institutionCode, "institutionCode",
                 keys.getNestedDataset(Tag.InstitutionCodeSequence), filter,
                 matchUnknown, predicates);
         addWildCardMatch(Series_.seriesCustomAttribute1,
@@ -221,7 +226,7 @@ abstract class Criterions {
                 Tag.ContentDate, Tag.ContentTime, 
                 Tag.ContentDateAndTime, keys, queryOpts, 
                 matchUnknown, predicates);
-        addCodeMatch("instance_.conceptNameCode",
+        addCodeMatch(Instance_.conceptNameCode, "conceptNameCode",
                 keys.getNestedDataset(Tag.ConceptNameCodeSequence), filter,
                 matchUnknown, predicates);
         addObserverMatch(keys.getNestedDataset(Tag.VerifyingObserverSequence),
@@ -268,15 +273,17 @@ abstract class Criterions {
         return result;
     }
 
-    static boolean addListOfUIDMatch(Property property, String[] values, Conjunction predicates) {
+    static boolean addListOfUIDMatch(String propertyName, String[] values, Conjunction predicates) {
         if (values == null || values.length == 0 || values[0].equals("*"))
             return false;
 
-        predicates.add(values.length == 1 ? property.eq(values[0]) : property.in(values));
+        predicates.add(values.length == 1
+                ? Restrictions.eq(propertyName, values[0])
+                : Restrictions.in(propertyName, values));
         return true;
     }
 
-    static boolean addWildCardMatch(Property property, String value, boolean matchUnknown,
+    static boolean addWildCardMatch(String propertyName, String value, boolean matchUnknown,
             Conjunction predicates) {
         if (value.equals("*"))
             return false;
@@ -287,12 +294,9 @@ abstract class Criterions {
             if (like.equals("%"))
                 return false;
 
-            criterion = property.like(like);
+            criterion = like(propertyName, like, matchUnknown);
         } else
-            criterion = property.eq(value);
-
-        if (matchUnknown)
-            criterion = Restrictions.or(criterion, property.eq("*"));
+            criterion = eq(propertyName, value, matchUnknown);
 
         predicates.add(criterion);
         return true;
@@ -327,19 +331,75 @@ abstract class Criterions {
         return like.toString();
     }
 
-    private static void addCodeMatch(String string, Attributes nestedDataset,
+    private static void addCodeMatch(String propertyName, String alias, Attributes item,
             AttributeFilter filter, boolean matchUnknown, Conjunction predicates) {
-        // TODO Auto-generated method stub
+        Criterion codeMatch = codeMatch(alias, item, filter);
+        if (codeMatch == null)
+            return;
+
+        String codePk = alias + ".pk";
+        Criterion exists = Subqueries.exists(DetachedCriteria.forClass(Code.class, alias)
+                .setProjection(Projections.property(codePk))
+                .add(Restrictions.eqProperty(propertyName + ".pk", codePk))
+                .add(codeMatch));
+
+        predicates.add(matchUnknown
+                ? Restrictions.or(exists, Restrictions.isNull(propertyName))
+                : exists);
         
     }
 
-        private static void addModalitiesInStudyMatch(String string,
-            boolean matchUnknown, Conjunction predicates) {
-        // TODO Auto-generated method stub
-        
+    private static void addCodesMatch(String propertyName, String alias, Attributes item,
+            AttributeFilter filter, boolean matchUnknown, Conjunction predicates) {
+        Criterion codeMatch = codeMatch(alias, item, filter);
+        if (codeMatch == null)
+            return;
+
+        //TODO
     }
 
-        private static void addIssuerMatch(String string, Attributes nestedDataset,
+    private static Criterion codeMatch(String alias, Attributes item, AttributeFilter filter) {
+        if (item == null)
+            return null;
+
+        Conjunction codeMatch = Restrictions.conjunction();
+        boolean match =  addWildCardMatch(Code_.codeValue(alias),
+                filter.getString(item, Tag.CodeValue), false, codeMatch);
+        match = addWildCardMatch(Code_.codingSchemeDesignator(alias),
+                filter.getString(item, Tag.CodingSchemeDesignator), false, codeMatch)
+            || match;
+        match = addWildCardMatch(Code_.codingSchemeVersion(alias),
+                filter.getString(item, Tag.CodingSchemeVersion), false, codeMatch)
+            || match;
+        return match ? codeMatch : null;
+    }
+
+    private static void addModalitiesInStudyMatch(String value, boolean matchUnknown,
+            Conjunction predicates) {
+        if (value.equals("*"))
+            return;
+
+        predicates.add(Subqueries.exists(DetachedCriteria.forClass(Series.class, "series2")
+            .setProjection(Projections.property("series2.pk"))
+            .add(Restrictions.eqProperty("series2.study", "study"))
+            .add(eq("series2.modality", value, matchUnknown))));
+    }
+
+    private static Criterion like(String propertyName, String value, boolean matchUnknown) {
+        Criterion criterion = Restrictions.like(propertyName, value);
+        if (matchUnknown)
+            criterion = Restrictions.or(criterion, Restrictions.eq(propertyName, "*"));
+        return criterion ;
+    }
+
+    private static Criterion eq(String propertyName, String value, boolean matchUnknown) {
+        Criterion criterion = Restrictions.eq(propertyName, value);
+        if (matchUnknown)
+            criterion = Restrictions.or(criterion, Restrictions.eq(propertyName, "*"));
+        return criterion ;
+    }
+
+    private static void addIssuerMatch(String string, Attributes nestedDataset,
             AttributeFilter filter, boolean matchUnknown, Conjunction predicates) {
         // TODO Auto-generated method stub
         

@@ -80,17 +80,17 @@ public class SeriesQueryBean extends AbstractQueryBean implements SeriesQuery {
 
     private Projection projection() {
         ProjectionList list = Projections.projectionList();
-        list.add(Study_.numberOfStudyRelatedSeries);
-        list.add(Study_.numberOfStudyRelatedInstances);
-        list.add(Series_.numberOfSeriesRelatedInstances);
-        list.add(Study_.modalitiesInStudy);
-        list.add(Study_.sopClassesInStudy);
-        list.add(Series_.retrieveAETs);
-        list.add(Series_.externalRetrieveAET);
-        list.add(Series_.availability);
-        list.add(Series_.encodedAttributes);
-        list.add(Study_.encodedAttributes);
-        list.add(Patient_.encodedAttributes);
+        list.add(Projections.property(Study_.numberOfStudyRelatedSeries));
+        list.add(Projections.property(Study_.numberOfStudyRelatedInstances));
+        list.add(Projections.property(Series_.numberOfSeriesRelatedInstances));
+        list.add(Projections.property(Study_.modalitiesInStudy));
+        list.add(Projections.property(Study_.sopClassesInStudy));
+        list.add(Projections.property(Series_.retrieveAETs));
+        list.add(Projections.property(Series_.externalRetrieveAET));
+        list.add(Projections.property(Series_.availability));
+        list.add(Projections.property(Series_.encodedAttributes));
+        list.add(Projections.property(Study_.encodedAttributes));
+        list.add(Projections.property(Patient_.encodedAttributes));
         return list;
     }
 

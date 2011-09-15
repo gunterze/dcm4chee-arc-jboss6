@@ -68,15 +68,16 @@ public class PatientQueryBean extends AbstractQueryBean implements PatientQuery 
     @Override
     protected Criteria createCriteria(String[] pids, Attributes keys,AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, String[] roles) {
-        return session().createCriteria(Patient.class, "patient")
-            .setProjection(projection())
-            .add(Criterions.matchPatient(pids, keys, filter, queryOpts));
+        Criteria criteria = session().createCriteria(Patient.class, "patient")
+                    .setProjection(projection())
+                    .add(Criterions.matchPatient(pids, keys, filter, queryOpts));
+        return criteria;
     }
 
     private Projection projection() {
         ProjectionList list = Projections.projectionList();
-        list.add(Patient_.pk);
-        list.add(Patient_.encodedAttributes);
+        list.add(Projections.property(Patient_.pk));
+        list.add(Projections.property(Patient_.encodedAttributes));
         // just criteria.setProjection(Patient_.encodedAttributes) does not work
         // because Hibernate tries to cast byte[] to Object[]
         return list;

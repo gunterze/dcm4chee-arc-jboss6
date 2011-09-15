@@ -78,15 +78,15 @@ public class StudyQueryBean extends AbstractQueryBean implements StudyQuery {
 
     private Projection projection() {
         ProjectionList list = Projections.projectionList();
-        list.add(Study_.numberOfStudyRelatedSeries);
-        list.add(Study_.numberOfStudyRelatedInstances);
-        list.add(Study_.modalitiesInStudy);
-        list.add(Study_.sopClassesInStudy);
-        list.add(Study_.retrieveAETs);
-        list.add(Study_.externalRetrieveAET);
-        list.add(Study_.availability);
-        list.add(Study_.encodedAttributes);
-        list.add(Patient_.encodedAttributes);
+        list.add(Projections.property(Study_.numberOfStudyRelatedSeries));
+        list.add(Projections.property(Study_.numberOfStudyRelatedInstances));
+        list.add(Projections.property(Study_.modalitiesInStudy));
+        list.add(Projections.property(Study_.sopClassesInStudy));
+        list.add(Projections.property(Study_.retrieveAETs));
+        list.add(Projections.property(Study_.externalRetrieveAET));
+        list.add(Projections.property(Study_.availability));
+        list.add(Projections.property(Study_.encodedAttributes));
+        list.add(Projections.property(Patient_.encodedAttributes));
         return list;
     }
 

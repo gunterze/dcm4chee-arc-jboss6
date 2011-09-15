@@ -57,6 +57,7 @@ import org.dcm4chee.archive.persistence.Utils;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.Projections;
@@ -93,16 +94,16 @@ public class InstanceQueryBean extends AbstractQueryBean implements InstanceQuer
             .createAlias("study.patient", "patient")
             .setProjection(projection())
             .add(Criterions.matchInstance(pids, keys, filter, queryOpts, roles))
-            .addOrder(Series_.pk.asc());
+            .addOrder(Order.asc(Series_.pk));
     }
 
     private Projection projection() {
         ProjectionList select = Projections.projectionList();
-        select.add(Series_.pk);
-        select.add(Instance_.retrieveAETs);
-        select.add(Instance_.externalRetrieveAET);
-        select.add(Instance_.availability);
-        select.add(Instance_.encodedAttributes);
+        select.add(Projections.property(Series_.pk));
+        select.add(Projections.property(Instance_.retrieveAETs));
+        select.add(Projections.property(Instance_.externalRetrieveAET));
+        select.add(Projections.property(Instance_.availability));
+        select.add(Projections.property(Instance_.encodedAttributes));
         return select;
     }
 
