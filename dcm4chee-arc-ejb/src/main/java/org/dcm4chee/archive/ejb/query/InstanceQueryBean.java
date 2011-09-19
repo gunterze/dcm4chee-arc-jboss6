@@ -48,19 +48,19 @@ import javax.ejb.TransactionAttributeType;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.pdu.QueryOption;
-import org.dcm4chee.archive.ejb.query.metadata.Instance_;
-import org.dcm4chee.archive.ejb.query.metadata.Series_;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
-import org.dcm4chee.archive.persistence.Instance;
+import org.dcm4chee.archive.persistence.QInstance;
+import org.dcm4chee.archive.persistence.QPatient;
+import org.dcm4chee.archive.persistence.QSeries;
+import org.dcm4chee.archive.persistence.QStudy;
 import org.dcm4chee.archive.persistence.Utils;
-import org.hibernate.Criteria;
 import org.hibernate.Query;
+import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projection;
-import org.hibernate.criterion.ProjectionList;
-import org.hibernate.criterion.Projections;
+
+import com.mysema.query.BooleanBuilder;
+import com.mysema.query.jpa.hibernate.HibernateQuery;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -85,30 +85,26 @@ public class InstanceQueryBean extends AbstractQueryBean implements InstanceQuer
     private Query seriesQuery;
 
     @Override
-    protected Criteria createCriteria(String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, String[] roles) {
+    protected ScrollableResults query(String[] pids, Attributes keys,
+            AttributeFilter filter, EnumSet<QueryOption> queryOpts, String[] roles) {
         seriesQuery = session().createQuery(QUERY_SERIES_ATTRS);
-        Criteria criteria = session().createCriteria(Instance.class, "instance")
-            .createAlias("instance.series", "series")
-            .createAlias("series.study", "study")
-            .createAlias("study.patient", "patient")
-            .setProjection(projection())
-            .addOrder(Order.asc(Series_.pk));
-        Criterions.addPatientLevelCriteriaTo(criteria, pids, keys, filter, queryOpts);
-        Criterions.addStudyLevelCriteriaTo(criteria, keys, filter, queryOpts, roles);
-        Criterions.addSeriesLevelCriteriaTo(criteria, keys, filter, queryOpts);
-        Criterions.addInstanceLevelCriteriaTo(criteria, keys, filter, queryOpts);
-        return criteria;
-    }
-
-    private Projection projection() {
-        ProjectionList select = Projections.projectionList();
-        select.add(Projections.property(Series_.pk));
-        select.add(Projections.property(Instance_.retrieveAETs));
-        select.add(Projections.property(Instance_.externalRetrieveAET));
-        select.add(Projections.property(Instance_.availability));
-        select.add(Projections.property(Instance_.encodedAttributes));
-        return select;
+        BooleanBuilder builder = new BooleanBuilder();
+        Builder.addPatientLevelPredicates(builder, pids, keys, filter, queryOpts);
+        Builder.addStudyLevelPredicates(builder, keys, filter, queryOpts, roles);
+        Builder.addSeriesLevelPredicates(builder, keys, filter, queryOpts);
+        Builder.addInstanceLevelPredicates(builder, keys, filter, queryOpts);
+        return new HibernateQuery(session())
+            .from(QInstance.instance)
+            .innerJoin(QInstance.instance.series, QSeries.series)
+            .innerJoin(QSeries.series.study, QStudy.study)
+            .innerJoin(QStudy.study.patient, QPatient.patient)
+            .where(builder)
+            .scroll(ScrollMode.FORWARD_ONLY,
+                QSeries.series.pk,
+                QInstance.instance.retrieveAETs,
+                QInstance.instance.externalRetrieveAET,
+                QInstance.instance.availability,
+                QInstance.instance.encodedAttributes);
     }
 
     @Override
@@ -117,7 +113,7 @@ public class InstanceQueryBean extends AbstractQueryBean implements InstanceQuer
         String retrieveAETs = results.getString(1);
         String externalRetrieveAET = results.getString(2);
         Availability availability = (Availability) results.get(3);
-        byte[] instAttributes = (byte[]) results.get(4);
+        byte[] instAttributes = results.getBinary(4);
         if (this.seriesPk != seriesPk) {
             this.seriesAttrs = querySeriesAttrs(seriesPk);
             this.seriesPk = seriesPk;

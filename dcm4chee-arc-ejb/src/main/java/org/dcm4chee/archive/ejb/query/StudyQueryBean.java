@@ -48,17 +48,16 @@ import javax.ejb.TransactionAttributeType;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.pdu.QueryOption;
-import org.dcm4chee.archive.ejb.query.metadata.Patient_;
-import org.dcm4chee.archive.ejb.query.metadata.Study_;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
-import org.dcm4chee.archive.persistence.Study;
+import org.dcm4chee.archive.persistence.QPatient;
+import org.dcm4chee.archive.persistence.QStudy;
 import org.dcm4chee.archive.persistence.Utils;
-import org.hibernate.Criteria;
+import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Projection;
-import org.hibernate.criterion.ProjectionList;
-import org.hibernate.criterion.Projections;
+
+import com.mysema.query.BooleanBuilder;
+import com.mysema.query.jpa.hibernate.HibernateQuery;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -68,28 +67,25 @@ import org.hibernate.criterion.Projections;
 public class StudyQueryBean extends AbstractQueryBean implements StudyQuery {
 
     @Override
-    protected Criteria createCriteria(String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, String[] roles) {
-        Criteria criteria = session().createCriteria(Study.class, "study")
-                    .createAlias("study.patient", "patient")
-                    .setProjection(projection());
-        Criterions.addPatientLevelCriteriaTo(criteria, pids, keys, filter, queryOpts);
-        Criterions.addStudyLevelCriteriaTo(criteria, keys, filter, queryOpts, roles);
-        return criteria;
-    }
-
-    private Projection projection() {
-        ProjectionList list = Projections.projectionList();
-        list.add(Projections.property(Study_.numberOfStudyRelatedSeries));
-        list.add(Projections.property(Study_.numberOfStudyRelatedInstances));
-        list.add(Projections.property(Study_.modalitiesInStudy));
-        list.add(Projections.property(Study_.sopClassesInStudy));
-        list.add(Projections.property(Study_.retrieveAETs));
-        list.add(Projections.property(Study_.externalRetrieveAET));
-        list.add(Projections.property(Study_.availability));
-        list.add(Projections.property(Study_.encodedAttributes));
-        list.add(Projections.property(Patient_.encodedAttributes));
-        return list;
+    protected ScrollableResults query(String[] pids, Attributes keys,
+            AttributeFilter filter, EnumSet<QueryOption> queryOpts, String[] roles) {
+        BooleanBuilder builder = new BooleanBuilder();
+        Builder.addPatientLevelPredicates(builder, pids, keys, filter, queryOpts);
+        Builder.addStudyLevelPredicates(builder, keys, filter, queryOpts, roles);
+        return new HibernateQuery(session())
+            .from(QStudy.study)
+            .innerJoin(QStudy.study.patient, QPatient.patient)
+            .where(builder)
+            .scroll(ScrollMode.FORWARD_ONLY,
+                QStudy.study.numberOfStudyRelatedSeries,
+                QStudy.study.numberOfStudyRelatedInstances,
+                QStudy.study.modalitiesInStudy,
+                QStudy.study.sopClassesInStudy,
+                QStudy.study.retrieveAETs,
+                QStudy.study.externalRetrieveAET,
+                QStudy.study.availability,
+                QStudy.study.encodedAttributes,
+                QPatient.patient.encodedAttributes);
     }
 
     @Override
@@ -101,8 +97,8 @@ public class StudyQueryBean extends AbstractQueryBean implements StudyQuery {
         String retrieveAETs = results.getString(4);
         String externalRetrieveAET = results.getString(5);
         Availability availability = (Availability) results.get(6);
-        byte[] studyAttributes = (byte[]) results.get(7);
-        byte[] patientAttributes = (byte[]) results.get(8);
+        byte[] studyAttributes = results.getBinary(7);
+        byte[] patientAttributes = results.getBinary(8);
         Attributes attrs = new Attributes();
         try {
             Utils.decodeAttributes(attrs, patientAttributes);

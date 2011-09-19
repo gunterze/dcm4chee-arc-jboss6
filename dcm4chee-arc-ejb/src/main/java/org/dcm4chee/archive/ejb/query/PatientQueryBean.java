@@ -48,15 +48,14 @@ import javax.ejb.TransactionAttributeType;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.pdu.QueryOption;
-import org.dcm4chee.archive.ejb.query.metadata.Patient_;
 import org.dcm4chee.archive.persistence.AttributeFilter;
-import org.dcm4chee.archive.persistence.Patient;
+import org.dcm4chee.archive.persistence.QPatient;
 import org.dcm4chee.archive.persistence.Utils;
-import org.hibernate.Criteria;
+import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.criterion.Projection;
-import org.hibernate.criterion.ProjectionList;
-import org.hibernate.criterion.Projections;
+
+import com.mysema.query.BooleanBuilder;
+import com.mysema.query.jpa.hibernate.HibernateQuery;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -66,29 +65,23 @@ import org.hibernate.criterion.Projections;
 public class PatientQueryBean extends AbstractQueryBean implements PatientQuery {
 
     @Override
-    protected Criteria createCriteria(String[] pids, Attributes keys,AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, String[] roles) {
-        Criteria criteria = session().createCriteria(Patient.class, "patient")
-                    .setProjection(projection());
-        Criterions.addPatientLevelCriteriaTo(criteria, pids, keys, filter, queryOpts);
-        return criteria;
-    }
-
-    private Projection projection() {
-        ProjectionList list = Projections.projectionList();
-        list.add(Projections.property(Patient_.pk));
-        list.add(Projections.property(Patient_.encodedAttributes));
-        // just criteria.setProjection(Patient_.encodedAttributes) does not work
-        // because Hibernate tries to cast byte[] to Object[]
-        return list;
+    protected ScrollableResults query(String[] pids, Attributes keys,
+            AttributeFilter filter, EnumSet<QueryOption> queryOpts, String[] roles) {
+        BooleanBuilder builder = new BooleanBuilder();
+        Builder.addPatientLevelPredicates(builder, pids, keys, filter, queryOpts);
+        return new HibernateQuery(session())
+            .from(QPatient.patient)
+            .where(builder)
+            .scroll(ScrollMode.FORWARD_ONLY,
+                QPatient.patient.pk,
+                QPatient.patient.encodedAttributes);
     }
 
     @Override
     protected Attributes toAttributes(ScrollableResults results) {
-        byte[] result = (byte[]) results.get(1);
         Attributes attrs = new Attributes();
         try {
-            Utils.decodeAttributes(attrs, result);
+            Utils.decodeAttributes(attrs, results.getBinary(1));
         } catch (IOException e) {
             throw new EJBException(e);
         }

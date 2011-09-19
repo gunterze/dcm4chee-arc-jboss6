@@ -41,6 +41,7 @@ package org.dcm4chee.archive.ejb.query;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.EnumSet;
+import java.util.NoSuchElementException;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -53,8 +54,6 @@ import javax.sql.DataSource;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4chee.archive.persistence.AttributeFilter;
-import org.hibernate.Criteria;
-import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
@@ -75,9 +74,11 @@ abstract class AbstractQueryBean implements CompositeQuery {
 
     private StatelessSession session;
 
-    private ScrollableResults results;
-
     private boolean optionalKeyNotSupported;
+
+    private boolean hasNext;
+
+    private ScrollableResults results;
 
     @PostConstruct
     protected void init() {
@@ -106,21 +107,30 @@ abstract class AbstractQueryBean implements CompositeQuery {
     @Override
     public void find(String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, String[] roles) {
-        results = createCriteria(pids, keys, filter, queryOpts, roles)
-                .scroll(ScrollMode.FORWARD_ONLY);
-    }
-
-    @Override
-    public Attributes nextMatch() {
-        checkResults();
-        return toAttributes(results);
+        results = query(pids, keys, filter, queryOpts, roles);
+        hasNext = results.next();
     }
 
     @Override
     public boolean hasMoreMatches() {
         checkResults();
-        return results.next();
+        return hasNext;
     }
+
+    @Override
+    public Attributes nextMatch() {
+        checkResults();
+        if (!hasNext)
+            throw new NoSuchElementException();
+        Attributes attrs = toAttributes(results);
+        hasNext = results.next();
+        return attrs;
+    }
+
+    protected abstract ScrollableResults query(String[] pids, Attributes keys,
+            AttributeFilter filter, EnumSet<QueryOption> queryOpts, String[] roles);
+
+    protected abstract  Attributes toAttributes(ScrollableResults results);
 
     private void checkResults() {
         if (results == null)
@@ -142,9 +152,4 @@ abstract class AbstractQueryBean implements CompositeQuery {
             throw new EJBException(e);
         }
     }
-
-    protected abstract Criteria createCriteria(String[] pids, Attributes keys,
-            AttributeFilter filter, EnumSet<QueryOption> queryOpts, String[] roles);
-
-    protected abstract Attributes toAttributes(ScrollableResults results);
 }

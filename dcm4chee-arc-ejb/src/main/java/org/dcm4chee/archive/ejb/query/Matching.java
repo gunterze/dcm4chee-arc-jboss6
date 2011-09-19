@@ -288,7 +288,7 @@ class Matching {
                 queryOpts, params);
         if (observerPredicates.isEmpty())
             return;
-        
+
         observerPredicates.add(cb.isMember(root, collection));
         sq.select(root);
         sq.where(observerPredicates.toArray(new Predicate[observerPredicates.size()]));

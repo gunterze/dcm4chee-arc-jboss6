@@ -54,23 +54,20 @@ import javax.persistence.PersistenceUnit;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.net.service.InstanceLocator;
-import org.dcm4chee.archive.ejb.query.metadata.FileRef_;
-import org.dcm4chee.archive.ejb.query.metadata.FileSystem_;
-import org.dcm4chee.archive.ejb.query.metadata.Instance_;
-import org.dcm4chee.archive.ejb.query.metadata.Series_;
-import org.dcm4chee.archive.ejb.query.metadata.Study_;
-import org.dcm4chee.archive.persistence.Instance;
+import org.dcm4chee.archive.persistence.QFileRef;
+import org.dcm4chee.archive.persistence.QFileSystem;
+import org.dcm4chee.archive.persistence.QInstance;
+import org.dcm4chee.archive.persistence.QPatient;
+import org.dcm4chee.archive.persistence.QSeries;
+import org.dcm4chee.archive.persistence.QStudy;
 import org.dcm4chee.archive.persistence.Utils;
-import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
-import org.hibernate.criterion.CriteriaSpecification;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projection;
-import org.hibernate.criterion.ProjectionList;
-import org.hibernate.criterion.Projections;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
+
+import com.mysema.query.BooleanBuilder;
+import com.mysema.query.jpa.hibernate.HibernateQuery;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -109,12 +106,37 @@ public class LocateInstancesBean implements LocateInstances {
         return find(pids(keys), keys);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public List<InstanceLocator> find(String[] pids, Attributes keys) {
-        Criteria criteria = createCriteria(session, pids, keys);
-        return locate(criteria.list());
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(Builder.pids(pids, false));
+        builder.and(Builder.uids(QStudy.study.studyInstanceUID,
+                keys.getStrings(Tag.StudyInstanceUID)));
+        builder.and(Builder.uids(QSeries.series.seriesInstanceUID,
+                keys.getStrings(Tag.StudyInstanceUID)));
+        builder.and(Builder.uids(QInstance.instance.sopInstanceUID,
+                keys.getStrings(Tag.StudyInstanceUID)));
+        return locate(new HibernateQuery(session)
+            .from(QInstance.instance)
+            .leftJoin(QInstance.instance.fileRefs, QFileRef.fileRef)
+            .leftJoin(QFileRef.fileRef.fileSystem, QFileSystem.fileSystem)
+            .innerJoin(QInstance.instance.series, QSeries.series)
+            .innerJoin(QSeries.series.study, QStudy.study)
+            .innerJoin(QStudy.study.patient, QPatient.patient)
+            .where(builder)
+            .list(
+                QFileRef.fileRef.transferSyntaxUID,
+                QFileRef.fileRef.filePath,
+                QFileSystem.fileSystem.uri,
+                QSeries.series.pk,
+                QInstance.instance.pk,
+                QInstance.instance.sopClassUID,
+                QInstance.instance.sopInstanceUID,
+                QInstance.instance.retrieveAETs,
+                QInstance.instance.externalRetrieveAET,
+                QInstance.instance.encodedAttributes));
     }
+
 
     private String[] pids(Attributes keys) {
         String pid = keys.getString(Tag.PatientID, "*");
@@ -123,41 +145,6 @@ public class LocateInstancesBean implements LocateInstances {
                 : new String[] { 
                         pid,
                         keys.getString(Tag.IssuerOfPatientID, "*")};
-    }
-
-    private Criteria createCriteria(StatelessSession session, String[] pids, Attributes keys) {
-        Criteria criteria = session.createCriteria(Instance.class, "instance")
-                .createAlias("instance.fileRefs", "fileRef", CriteriaSpecification.LEFT_JOIN)
-                .createAlias("fileRef.fileSystem", "fileSystem", CriteriaSpecification.LEFT_JOIN)
-                .createAlias("instance.series", "series")
-                .createAlias("series.study", "study")
-                .createAlias("study.patient", "patient")
-                .setProjection(projection())
-                .addOrder(Order.asc(Series_.pk))
-                .addOrder(Order.asc(Instance_.pk));
-        Criterions.addTo(criteria, Criterions.pid(pids, false));
-        Criterions.addTo(criteria, Criterions.uids(
-                Study_.studyInstanceUID, keys.getStrings(Tag.StudyInstanceUID)));
-        Criterions.addTo(criteria, Criterions.uids(
-                Series_.seriesInstanceUID, keys.getStrings(Tag.SeriesInstanceUID)));
-        Criterions.addTo(criteria, Criterions.uids(
-                Instance_.sopInstanceUID, keys.getStrings(Tag.SOPInstanceUID)));
-       return criteria;
-    }
-
-    private Projection projection() {
-        ProjectionList list = Projections.projectionList();
-        list.add(Projections.property(FileRef_.transferSyntaxUID));
-        list.add(Projections.property(FileRef_.filePath));
-        list.add(Projections.property(FileSystem_.uri));
-        list.add(Projections.property(Series_.pk));
-        list.add(Projections.property(Instance_.pk));
-        list.add(Projections.property(Instance_.sopClassUID));
-        list.add(Projections.property(Instance_.sopInstanceUID));
-        list.add(Projections.property(Instance_.retrieveAETs));
-        list.add(Projections.property(Instance_.externalRetrieveAET));
-        list.add(Projections.property(Instance_.encodedAttributes));
-        return list;
     }
 
     private List<InstanceLocator> locate(List<Object[]> tuples) {
