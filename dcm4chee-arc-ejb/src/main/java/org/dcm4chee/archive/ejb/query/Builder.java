@@ -208,12 +208,18 @@ abstract class Builder {
                 filter.selectInstanceCustomAttribute3(keys), matchUnknown));
     }
 
-    static Predicate or(Predicate left, Predicate right) {
-        return left == null ? right : right == null ? left : ExpressionUtils.or(left, right);
+    static Predicate or(Predicate... preds) {
+        Predicate left = null;
+        for (Predicate right : preds)
+            left = left == null ? right : right == null ? left : ExpressionUtils.or(left, right);
+        return left;
     }
 
-    static Predicate and(Predicate left, Predicate right) {
-        return left == null ? right : right == null ? left : ExpressionUtils.and(left, right);
+    static Predicate and(Predicate... preds) {
+        Predicate left = null;
+        for (Predicate right : preds)
+            left = left == null ? right : right == null ? left : ExpressionUtils.and(left, right);
+        return left;
     }
 
     static Predicate pids(String[] pids, boolean matchUnknown) {
@@ -228,9 +234,9 @@ abstract class Builder {
     }
 
     static Predicate pid(String id, String issuer, boolean matchUnknown) {
-        Predicate p1 = wc(QPatient.patient.patientID, id, matchUnknown);
-        Predicate p2 = wc(QPatient.patient.issuerOfPatientID, issuer, matchUnknown);
-        return and(p1, p2);
+        return and(
+                wc(QPatient.patient.patientID, id, matchUnknown),
+                wc(QPatient.patient.issuerOfPatientID, issuer, matchUnknown));
     }
 
     static Predicate wc(StringPath path, String value,  boolean matchUnknown) {
@@ -338,10 +344,10 @@ abstract class Builder {
 
     static Predicate code(Attributes item, AttributeFilter filter) {
         return and(wc(QCode.code.codeValue, filter.getString(item, Tag.CodeValue), false),
-                and(wc(QCode.code.codingSchemeDesignator,
+                   wc(QCode.code.codingSchemeDesignator,
                         filter.getString(item, Tag.CodingSchemeDesignator), false),
-                    wc(QCode.code.codingSchemeVersion,
-                                filter.getString(item, Tag.CodingSchemeVersion), false)));
+                   wc(QCode.code.codingSchemeVersion,
+                        filter.getString(item, Tag.CodingSchemeVersion), false));
     }
 
     static Predicate code(QCode code, Attributes item, AttributeFilter filter,
@@ -383,12 +389,13 @@ abstract class Builder {
         if (item == null || item.isEmpty())
             return null;
 
-        Predicate predicate = and(wc(QIssuer.issuer.entityID,
-                filter.getString(item, Tag.LocalNamespaceEntityID), false),
-           and(wc(QIssuer.issuer.entityUID,
-                filter.getString(item, Tag.UniversalEntityID), false),
+        Predicate predicate = and(
+               wc(QIssuer.issuer.entityID,
+                       filter.getString(item, Tag.LocalNamespaceEntityID), false),
+               wc(QIssuer.issuer.entityUID,
+                       filter.getString(item, Tag.UniversalEntityID), false),
                wc(QIssuer.issuer.entityUIDType,
-                filter.getString(item, Tag.UniversalEntityIDType), false)));
+                       filter.getString(item, Tag.UniversalEntityIDType), false));
 
         if (predicate == null)
             return null;
@@ -409,39 +416,41 @@ abstract class Builder {
         if (item == null || item.isEmpty())
             return null;
 
-        BooleanBuilder bb = new BooleanBuilder();
-        bb.and(wc(QRequestAttributes.requestAttributes.requestedProcedureID,
+        String accNo = filter.getString(item, Tag.AccessionNumber);
+        Predicate predicate = and(
+            wc(QRequestAttributes.requestAttributes.requestedProcedureID,
                 filter.getString(item, Tag.RequestedProcedureID),
-                matchUnknown));
-        bb.and(wc(QRequestAttributes.requestAttributes.scheduledProcedureStepID,
+                matchUnknown),
+            wc(QRequestAttributes.requestAttributes.scheduledProcedureStepID,
                 filter.getString(item, Tag.ScheduledProcedureStepID),
-                matchUnknown));
-        bb.and(wc(QRequestAttributes.requestAttributes.requestingService,
+                matchUnknown),
+            wc(QRequestAttributes.requestAttributes.requestingService,
                 filter.getString(item, Tag.RequestingService),
-                matchUnknown));
-        bb.and(pn(
+                matchUnknown),
+            pn(
                 QRequestAttributes.requestAttributes.requestingPhysician,
                 QRequestAttributes.requestAttributes.requestingPhysicianIdeographicName,
                 QRequestAttributes.requestAttributes.requestingPhysicianPhoneticName,
                 QRequestAttributes.requestAttributes.requestingPhysicianFamilyNameSoundex,
                 QRequestAttributes.requestAttributes.requestingPhysicianGivenNameSoundex,
-                filter.getString(item, Tag.ReferringPhysicianName), filter, fuzzy, matchUnknown));
-        bb.and(uids(QRequestAttributes.requestAttributes.studyInstanceUID,
-                item.getStrings(Tag.StudyInstanceUID)));
-        String accNo = filter.getString(item, Tag.AccessionNumber);
-        bb.and(wc(QRequestAttributes.requestAttributes.accessionNumber, accNo, matchUnknown));
-        if (!accNo.equals("*"))
-            bb.and(issuer(QRequestAttributes.requestAttributes.issuerOfAccessionNumber,
-                    item.getNestedDataset(Tag.IssuerOfAccessionNumberSequence),
-                    filter, matchUnknown));
+                filter.getString(item, Tag.ReferringPhysicianName), filter, fuzzy, matchUnknown),
+            uids(QRequestAttributes.requestAttributes.studyInstanceUID,
+                    item.getStrings(Tag.StudyInstanceUID)),
+            wc(QRequestAttributes.requestAttributes.accessionNumber, accNo, matchUnknown));
 
-        if (!bb.hasValue())
+        if (!accNo.equals("*"))
+            predicate = and(predicate,
+                    issuer(QRequestAttributes.requestAttributes.issuerOfAccessionNumber,
+                        item.getNestedDataset(Tag.IssuerOfAccessionNumberSequence),
+                        filter, matchUnknown));
+
+        if (predicate == null)
             return null;
 
-        Predicate predicate = new HibernateSubQuery()
+        predicate = new HibernateSubQuery()
             .from(QRequestAttributes.requestAttributes)
             .where(QSeries.series.requestAttributes.contains(QRequestAttributes.requestAttributes),
-                    bb)
+                    predicate)
             .exists();
 
         if (matchUnknown)
