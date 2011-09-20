@@ -51,8 +51,10 @@ import org.dcm4chee.archive.persistence.QCode;
 import org.dcm4chee.archive.persistence.QInstance;
 import org.dcm4chee.archive.persistence.QIssuer;
 import org.dcm4chee.archive.persistence.QPatient;
+import org.dcm4chee.archive.persistence.QRequestAttributes;
 import org.dcm4chee.archive.persistence.QSeries;
 import org.dcm4chee.archive.persistence.QStudy;
+import org.dcm4chee.archive.persistence.QVerifyingObserver;
 
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.hibernate.HibernateSubQuery;
@@ -160,7 +162,7 @@ abstract class Builder {
         builder.and(wc(QSeries.series.seriesDescription,
                 filter.getString(keys, Tag.SeriesDescription), matchUnknown));
         builder.and(requestAttributes(keys.getNestedDataset(Tag.RequestAttributesSequence),
-                filter, queryOpts, matchUnknown));
+                filter, queryOpts.contains(QueryOption.FUZZY), matchUnknown));
         builder.and(code(QSeries.series.institutionCode,
                 keys.getNestedDataset(Tag.InstitutionCodeSequence), filter, matchUnknown));
         builder.and(wc(QSeries.series.seriesCustomAttribute1,
@@ -193,7 +195,7 @@ abstract class Builder {
         builder.and(code(QInstance.instance.conceptNameCode,
                 keys.getNestedDataset(Tag.ConceptNameCodeSequence), filter, matchUnknown));
         builder.and(verifyingObserver(keys.getNestedDataset(Tag.VerifyingObserverSequence),
-                filter, queryOpts, matchUnknown));
+                filter, queryOpts.contains(QueryOption.FUZZY), matchUnknown));
         Sequence contentSeq = keys.getSequence(Tag.ContentSequence);
         if (contentSeq != null)
             for (Attributes item : contentSeq)
@@ -318,7 +320,7 @@ abstract class Builder {
 
     static Predicate pn(StringPath alphabethic, StringPath ideographic, StringPath phonetic,
             StringPath familyNameSoundex, StringPath givenNameSoundex, String value,
-            AttributeFilter filter, boolean contains, boolean matchUnknown) {
+            AttributeFilter filter, boolean fuzzy, boolean matchUnknown) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -334,7 +336,7 @@ abstract class Builder {
             .exists();
     }
 
-    static Predicate code(Attributes item, AttributeFilter filter, boolean matchUnknown) {
+    static Predicate code(Attributes item, AttributeFilter filter) {
         return and(wc(QCode.code.codeValue, filter.getString(item, Tag.CodeValue), false),
                 and(wc(QCode.code.codingSchemeDesignator,
                         filter.getString(item, Tag.CodingSchemeDesignator), false),
@@ -344,7 +346,7 @@ abstract class Builder {
 
     static Predicate code(QCode code, Attributes item, AttributeFilter filter,
             boolean matchUnknown) {
-        Predicate predicate = code(item, filter, matchUnknown);
+        Predicate predicate = code(item, filter);
         if (predicate == null)
             return null;
 
@@ -356,12 +358,12 @@ abstract class Builder {
         if (matchUnknown)
             predicate = or(predicate, code.isNull());
 
-            return predicate ;
+        return predicate ;
     }
 
     static Predicate code(CollectionPath<Code, QCode> codes, Attributes item,
             AttributeFilter filter, boolean matchUnknown) {
-        Predicate predicate = code(item, filter, matchUnknown);
+        Predicate predicate = code(item, filter);
         if (predicate == null)
             return null;
 
@@ -378,20 +380,106 @@ abstract class Builder {
 
     static Predicate issuer(QIssuer path, Attributes item, AttributeFilter filter,
             boolean matchUnknown) {
-        // TODO Auto-generated method stub
-        return null;
+        if (item == null || item.isEmpty())
+            return null;
+
+        Predicate predicate = and(wc(QIssuer.issuer.entityID,
+                filter.getString(item, Tag.LocalNamespaceEntityID), false),
+           and(wc(QIssuer.issuer.entityUID,
+                filter.getString(item, Tag.UniversalEntityID), false),
+               wc(QIssuer.issuer.entityUIDType,
+                filter.getString(item, Tag.UniversalEntityIDType), false)));
+
+        if (predicate == null)
+            return null;
+
+        predicate = new HibernateSubQuery()
+            .from(QIssuer.issuer)
+            .where(QIssuer.issuer.eq(path), predicate)
+            .exists();
+
+        if (matchUnknown)
+            predicate = or(predicate, path.isNull());
+
+        return predicate ;
     }
 
-    static Predicate requestAttributes(Attributes item, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, boolean matchUnknown) {
-        // TODO Auto-generated method stub
-        return null;
+    static Predicate requestAttributes(Attributes item, AttributeFilter filter, boolean fuzzy,
+            boolean matchUnknown) {
+        if (item == null || item.isEmpty())
+            return null;
+
+        BooleanBuilder bb = new BooleanBuilder();
+        bb.and(wc(QRequestAttributes.requestAttributes.requestedProcedureID,
+                filter.getString(item, Tag.RequestedProcedureID),
+                matchUnknown));
+        bb.and(wc(QRequestAttributes.requestAttributes.scheduledProcedureStepID,
+                filter.getString(item, Tag.ScheduledProcedureStepID),
+                matchUnknown));
+        bb.and(wc(QRequestAttributes.requestAttributes.requestingService,
+                filter.getString(item, Tag.RequestingService),
+                matchUnknown));
+        bb.and(pn(
+                QRequestAttributes.requestAttributes.requestingPhysician,
+                QRequestAttributes.requestAttributes.requestingPhysicianIdeographicName,
+                QRequestAttributes.requestAttributes.requestingPhysicianPhoneticName,
+                QRequestAttributes.requestAttributes.requestingPhysicianFamilyNameSoundex,
+                QRequestAttributes.requestAttributes.requestingPhysicianGivenNameSoundex,
+                filter.getString(item, Tag.ReferringPhysicianName), filter, fuzzy, matchUnknown));
+        bb.and(uids(QRequestAttributes.requestAttributes.studyInstanceUID,
+                item.getStrings(Tag.StudyInstanceUID)));
+        String accNo = filter.getString(item, Tag.AccessionNumber);
+        bb.and(wc(QRequestAttributes.requestAttributes.accessionNumber, accNo, matchUnknown));
+        if (!accNo.equals("*"))
+            bb.and(issuer(QRequestAttributes.requestAttributes.issuerOfAccessionNumber,
+                    item.getNestedDataset(Tag.IssuerOfAccessionNumberSequence),
+                    filter, matchUnknown));
+
+        if (!bb.hasValue())
+            return null;
+
+        Predicate predicate = new HibernateSubQuery()
+            .from(QRequestAttributes.requestAttributes)
+            .where(QSeries.series.requestAttributes.contains(QRequestAttributes.requestAttributes),
+                    bb)
+            .exists();
+
+        if (matchUnknown)
+            predicate = or(predicate, QSeries.series.requestAttributes.isEmpty());
+
+        return predicate ;
     }
 
     static Predicate verifyingObserver(Attributes item, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, boolean matchUnknown) {
-        // TODO Auto-generated method stub
-        return null;
+            boolean fuzzy, boolean matchUnknown) {
+        if (item == null || item.isEmpty())
+            return null;
+
+        Predicate predicate = and(
+                dt(QVerifyingObserver.verifyingObserver.verificationDateTime,
+                        item, Tag.VerificationDateTime, matchUnknown),
+                pn(QVerifyingObserver.verifyingObserver.verifyingObserverName,
+                   QVerifyingObserver.verifyingObserver.verifyingObserverIdeographicName,
+                   QVerifyingObserver.verifyingObserver.verifyingObserverPhoneticName,
+                   QVerifyingObserver.verifyingObserver.verifyingObserverFamilyNameSoundex,
+                   QVerifyingObserver.verifyingObserver.verifyingObserverGivenNameSoundex,
+                   filter.getString(item, Tag.VerifyingObserverName),
+                   filter, fuzzy, matchUnknown));
+
+        if (predicate == null)
+            return null;
+
+        predicate = new HibernateSubQuery()
+            .from(QVerifyingObserver.verifyingObserver)
+            .where(QInstance.instance.verifyingObservers
+                        .contains(QVerifyingObserver.verifyingObserver),
+                    predicate)
+            .exists();
+
+        if (matchUnknown)
+            predicate = or(predicate, QSeries.series.requestAttributes.isEmpty());
+
+        return predicate ;
     }
 
     static Predicate contentItem(Attributes item, AttributeFilter filter) {
