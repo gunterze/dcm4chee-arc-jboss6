@@ -78,22 +78,22 @@ abstract class Builder {
         if (keys == null)
             return;
 
-        builder.and(pn(QPatient.patient.patientName,
+        builder.and(MatchPersonName.personName(QPatient.patient.patientName,
                 QPatient.patient.patientIdeographicName,
                 QPatient.patient.patientPhoneticName,
                 QPatient.patient.patientFamilyNameSoundex,
                 QPatient.patient.patientGivenNameSoundex,
                 filter.getString(keys, Tag.PatientName), filter,
                 queryOpts.contains(QueryOption.FUZZY), matchUnknown));
-        builder.and( wc(QPatient.patient.patientSex,
+        builder.and( wildCard(QPatient.patient.patientSex,
                 filter.getString(keys, Tag.PatientSex), matchUnknown));
         builder.and(
                 da(QPatient.patient.patientBirthDate, keys, Tag.PatientBirthDate, matchUnknown));
-        builder.and(wc(QPatient.patient.patientCustomAttribute1,
+        builder.and(wildCard(QPatient.patient.patientCustomAttribute1,
                 filter.selectPatientCustomAttribute1(keys), matchUnknown));
-        builder.and(wc(QPatient.patient.patientCustomAttribute2,
+        builder.and(wildCard(QPatient.patient.patientCustomAttribute2,
                 filter.selectPatientCustomAttribute2(keys), matchUnknown));
-        builder.and(wc(QPatient.patient.patientCustomAttribute3,
+        builder.and(wildCard(QPatient.patient.patientCustomAttribute3,
                 filter.selectPatientCustomAttribute3(keys), matchUnknown));
     }
 
@@ -104,7 +104,7 @@ abstract class Builder {
 
         boolean matchUnknown = filter.isMatchUnknown();
         builder.and(uids(QStudy.study.studyInstanceUID, keys.getStrings(Tag.StudyInstanceUID)));
-        builder.and(wc(QStudy.study.studyID, filter.getString(keys, Tag.StudyID), matchUnknown));
+        builder.and(wildCard(QStudy.study.studyID, filter.getString(keys, Tag.StudyID), matchUnknown));
         builder.and(datm(
                 QStudy.study.studyDate, 
                 QStudy.study.studyTime,
@@ -112,7 +112,7 @@ abstract class Builder {
                 Tag.StudyTime,
                 Tag.StudyDateAndTime,
                 keys, queryOpts.contains(QueryOption.DATETIME), matchUnknown));
-        builder.and(pn(
+        builder.and(personName(
                 QStudy.study.referringPhysicianName,
                 QStudy.study.referringPhysicianIdeographicName,
                 QStudy.study.referringPhysicianPhoneticName,
@@ -120,10 +120,10 @@ abstract class Builder {
                 QStudy.study.referringPhysicianGivenNameSoundex,
                 filter.getString(keys, Tag.ReferringPhysicianName),
                 filter, queryOpts.contains(QueryOption.FUZZY), matchUnknown));
-        builder.and(wc(QStudy.study.studyDescription,
+        builder.and(wildCard(QStudy.study.studyDescription,
                 filter.getString(keys, Tag.StudyDescription), matchUnknown));
         String accNo = filter.getString(keys, Tag.AccessionNumber);
-        builder.and(wc(QStudy.study.accessionNumber, accNo, matchUnknown));
+        builder.and(wildCard(QStudy.study.accessionNumber, accNo, matchUnknown));
         if(!accNo.equals("*"))
             builder.and(issuer(QStudy.study.issuerOfAccessionNumber,
                     keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence),
@@ -131,11 +131,11 @@ abstract class Builder {
         builder.and(modalitiesInStudy(filter.getString(keys, Tag.ModalitiesInStudy), matchUnknown));
         builder.and(code(QStudy.study.procedureCodes,
                 keys.getNestedDataset(Tag.ProcedureCodeSequence), filter, matchUnknown));
-        builder.and(wc(QStudy.study.studyCustomAttribute1,
+        builder.and(wildCard(QStudy.study.studyCustomAttribute1,
                 filter.selectStudyCustomAttribute1(keys), matchUnknown));
-        builder.and(wc(QStudy.study.studyCustomAttribute2,
+        builder.and(wildCard(QStudy.study.studyCustomAttribute2,
                 filter.selectStudyCustomAttribute2(keys), matchUnknown));
-        builder.and(wc(QStudy.study.studyCustomAttribute3,
+        builder.and(wildCard(QStudy.study.studyCustomAttribute3,
                 filter.selectStudyCustomAttribute3(keys), matchUnknown));
         builder.and(permission(roles, Action.QUERY));
     }
@@ -148,9 +148,9 @@ abstract class Builder {
         boolean matchUnknown = filter.isMatchUnknown();
         builder.and(uids(QSeries.series.seriesInstanceUID,
                 keys.getStrings(Tag.SeriesInstanceUID)));
-        builder.and(wc(QSeries.series.seriesNumber,
+        builder.and(wildCard(QSeries.series.seriesNumber,
                 filter.getString(keys, Tag.SeriesNumber), matchUnknown));
-        builder.and(wc(QSeries.series.modality,
+        builder.and(wildCard(QSeries.series.modality,
                 filter.getString(keys, Tag.Modality), matchUnknown));
         builder.and(datm(
                 QSeries.series.performedProcedureStepStartDate,
@@ -159,17 +159,17 @@ abstract class Builder {
                 Tag.PerformedProcedureStepStartTime,
                 Tag.PerformedProcedureStepStartDateAndTime,
                 keys, queryOpts.contains(QueryOption.DATETIME), matchUnknown));
-        builder.and(wc(QSeries.series.seriesDescription,
+        builder.and(wildCard(QSeries.series.seriesDescription,
                 filter.getString(keys, Tag.SeriesDescription), matchUnknown));
         builder.and(requestAttributes(keys.getNestedDataset(Tag.RequestAttributesSequence),
                 filter, queryOpts.contains(QueryOption.FUZZY), matchUnknown));
         builder.and(code(QSeries.series.institutionCode,
                 keys.getNestedDataset(Tag.InstitutionCodeSequence), filter, matchUnknown));
-        builder.and(wc(QSeries.series.seriesCustomAttribute1,
+        builder.and(wildCard(QSeries.series.seriesCustomAttribute1,
                 filter.selectSeriesCustomAttribute1(keys), matchUnknown));
-        builder.and(wc(QSeries.series.seriesCustomAttribute2,
+        builder.and(wildCard(QSeries.series.seriesCustomAttribute2,
                 filter.selectSeriesCustomAttribute2(keys), matchUnknown));
-        builder.and(wc(QSeries.series.seriesCustomAttribute3,
+        builder.and(wildCard(QSeries.series.seriesCustomAttribute3,
                 filter.selectSeriesCustomAttribute3(keys), matchUnknown));
     }
 
@@ -181,15 +181,15 @@ abstract class Builder {
         boolean matchUnknown = filter.isMatchUnknown();
         builder.and(uids(QInstance.instance.sopInstanceUID, keys.getStrings(Tag.SOPInstanceUID)));
         builder.and(uids(QInstance.instance.sopClassUID, keys.getStrings(Tag.SOPClassUID)));
-        builder.and(wc(QInstance.instance.instanceNumber,
+        builder.and(wildCard(QInstance.instance.instanceNumber,
                 filter.getString(keys, Tag.InstanceNumber), matchUnknown));
-        builder.and(wc(QInstance.instance.verificationFlag,
+        builder.and(wildCard(QInstance.instance.verificationFlag,
                 filter.getString(keys, Tag.VerificationFlag), matchUnknown));
         builder.and(datm(
                 QInstance.instance.contentDate,
                 QInstance.instance.contentTime,
                 Tag.ContentDate,
-                Tag.ContentTime, 
+                Tag.ContentTime,
                 Tag.ContentDateAndTime,
                 keys, queryOpts.contains(QueryOption.DATETIME), matchUnknown));
         builder.and(code(QInstance.instance.conceptNameCode,
@@ -200,11 +200,11 @@ abstract class Builder {
         if (contentSeq != null)
             for (Attributes item : contentSeq)
                 builder.and(contentItem(item, filter));
-        builder.and(wc(QInstance.instance.instanceCustomAttribute1,
+        builder.and(wildCard(QInstance.instance.instanceCustomAttribute1,
                 filter.selectInstanceCustomAttribute1(keys), matchUnknown));
-        builder.and(wc(QInstance.instance.instanceCustomAttribute2,
+        builder.and(wildCard(QInstance.instance.instanceCustomAttribute2,
                 filter.selectInstanceCustomAttribute2(keys), matchUnknown));
-        builder.and(wc(QInstance.instance.instanceCustomAttribute3,
+        builder.and(wildCard(QInstance.instance.instanceCustomAttribute3,
                 filter.selectInstanceCustomAttribute3(keys), matchUnknown));
     }
 
@@ -235,11 +235,11 @@ abstract class Builder {
 
     static Predicate pid(String id, String issuer, boolean matchUnknown) {
         return and(
-                wc(QPatient.patient.patientID, id, matchUnknown),
-                wc(QPatient.patient.issuerOfPatientID, issuer, matchUnknown));
+                wildCard(QPatient.patient.patientID, id, matchUnknown),
+                wildCard(QPatient.patient.issuerOfPatientID, issuer, matchUnknown));
     }
 
-    static Predicate wc(StringPath path, String value,  boolean matchUnknown) {
+    static Predicate wildCard(StringPath path, String value,  boolean matchUnknown) {
         if (value.equals("*"))
             return null;
 
@@ -324,7 +324,7 @@ abstract class Builder {
         return null;
     }
 
-    static Predicate pn(StringPath alphabethic, StringPath ideographic, StringPath phonetic,
+    static Predicate personName(StringPath alphabethic, StringPath ideographic, StringPath phonetic,
             StringPath familyNameSoundex, StringPath givenNameSoundex, String value,
             AttributeFilter filter, boolean fuzzy, boolean matchUnknown) {
         // TODO Auto-generated method stub
@@ -338,16 +338,15 @@ abstract class Builder {
         return new HibernateSubQuery()
             .from(QSeries.series)
             .where(QSeries.series.study.eq(QStudy.study),
-                    wc(QSeries.series.modality, modality, matchUnknown))
+                    wildCard(QSeries.series.modality, modality, matchUnknown))
             .exists();
     }
 
     static Predicate code(Attributes item, AttributeFilter filter) {
-        return and(wc(QCode.code.codeValue, filter.getString(item, Tag.CodeValue), false),
-                   wc(QCode.code.codingSchemeDesignator,
-                        filter.getString(item, Tag.CodingSchemeDesignator), false),
-                   wc(QCode.code.codingSchemeVersion,
-                        filter.getString(item, Tag.CodingSchemeVersion), false));
+        return and(
+                wildCard(QCode.code.codeValue, filter.getString(item, Tag.CodeValue), false),
+                wildCard(QCode.code.codingSchemeDesignator, filter.getString(item, Tag.CodingSchemeDesignator), false),
+                wildCard(QCode.code.codingSchemeVersion, filter.getString(item, Tag.CodingSchemeVersion), false));
     }
 
     static Predicate code(QCode code, Attributes item, AttributeFilter filter,
@@ -390,11 +389,11 @@ abstract class Builder {
             return null;
 
         Predicate predicate = and(
-               wc(QIssuer.issuer.entityID,
+               wildCard(QIssuer.issuer.entityID,
                        filter.getString(item, Tag.LocalNamespaceEntityID), false),
-               wc(QIssuer.issuer.entityUID,
+               wildCard(QIssuer.issuer.entityUID,
                        filter.getString(item, Tag.UniversalEntityID), false),
-               wc(QIssuer.issuer.entityUIDType,
+               wildCard(QIssuer.issuer.entityUIDType,
                        filter.getString(item, Tag.UniversalEntityIDType), false));
 
         if (predicate == null)
@@ -418,16 +417,16 @@ abstract class Builder {
 
         String accNo = filter.getString(item, Tag.AccessionNumber);
         Predicate predicate = and(
-            wc(QRequestAttributes.requestAttributes.requestedProcedureID,
+            wildCard(QRequestAttributes.requestAttributes.requestedProcedureID,
                 filter.getString(item, Tag.RequestedProcedureID),
                 matchUnknown),
-            wc(QRequestAttributes.requestAttributes.scheduledProcedureStepID,
+            wildCard(QRequestAttributes.requestAttributes.scheduledProcedureStepID,
                 filter.getString(item, Tag.ScheduledProcedureStepID),
                 matchUnknown),
-            wc(QRequestAttributes.requestAttributes.requestingService,
+            wildCard(QRequestAttributes.requestAttributes.requestingService,
                 filter.getString(item, Tag.RequestingService),
                 matchUnknown),
-            pn(
+            MatchPersonName.personName(
                 QRequestAttributes.requestAttributes.requestingPhysician,
                 QRequestAttributes.requestAttributes.requestingPhysicianIdeographicName,
                 QRequestAttributes.requestAttributes.requestingPhysicianPhoneticName,
@@ -436,7 +435,7 @@ abstract class Builder {
                 filter.getString(item, Tag.ReferringPhysicianName), filter, fuzzy, matchUnknown),
             uids(QRequestAttributes.requestAttributes.studyInstanceUID,
                     item.getStrings(Tag.StudyInstanceUID)),
-            wc(QRequestAttributes.requestAttributes.accessionNumber, accNo, matchUnknown));
+            wildCard(QRequestAttributes.requestAttributes.accessionNumber, accNo, matchUnknown));
 
         if (!accNo.equals("*"))
             predicate = and(predicate,
@@ -467,7 +466,7 @@ abstract class Builder {
         Predicate predicate = and(
                 dt(QVerifyingObserver.verifyingObserver.verificationDateTime,
                         item, Tag.VerificationDateTime, matchUnknown),
-                pn(QVerifyingObserver.verifyingObserver.verifyingObserverName,
+                MatchPersonName.personName(QVerifyingObserver.verifyingObserver.verifyingObserverName,
                    QVerifyingObserver.verifyingObserver.verifyingObserverIdeographicName,
                    QVerifyingObserver.verifyingObserver.verifyingObserverPhoneticName,
                    QVerifyingObserver.verifyingObserver.verifyingObserverFamilyNameSoundex,
