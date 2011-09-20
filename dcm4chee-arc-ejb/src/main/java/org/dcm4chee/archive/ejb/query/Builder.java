@@ -353,6 +353,9 @@ abstract class Builder {
     }
 
     static Predicate code(Attributes item, AttributeFilter filter) {
+        if (item == null || item.isEmpty())
+            return null;
+
         return and(
                 wildCard(QCode.code.codeValue, filter.getString(item, Tag.CodeValue), false),
                 wildCard(QCode.code.codingSchemeDesignator, filter.getString(item, Tag.CodingSchemeDesignator), false),
