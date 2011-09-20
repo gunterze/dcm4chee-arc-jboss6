@@ -50,7 +50,6 @@ import org.dcm4che.data.VR;
 import org.dcm4che.io.SAXReader;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.soundex.ESoundex;
-import org.dcm4chee.archive.ejb.query.Matching;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -80,11 +79,12 @@ public class SeriesQueryTest {
         return ShrinkWrap.create(JavaArchive.class, "test.jar")
                 .addClasses(
                         CompositeQuery.class,
+                        AbstractQueryBean.class,
                         SeriesQuery.class,
                         SeriesQueryBean.class,
-                        Matching.class,
+                        Builder.class,
                         RangeMatching.class,
-                        PersonNameMatching.class);
+                        MatchPersonName.class);
     }
 
     @EJB

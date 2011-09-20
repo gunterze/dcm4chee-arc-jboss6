@@ -96,11 +96,12 @@ public class StudyQueryTest {
         return ShrinkWrap.create(JavaArchive.class, "test.jar")
                 .addClasses(
                         CompositeQuery.class,
+                        AbstractQueryBean.class,
                         StudyQuery.class,
                         StudyQueryBean.class,
-                        Matching.class,
+                        Builder.class,
                         RangeMatching.class,
-                        PersonNameMatching.class,
+                        MatchPersonName.class,
                         StudyPermissionManager.class,
                         StudyPermissionManagerBean.class);
     }

@@ -86,12 +86,12 @@ public class InstanceQueryTest {
         return ShrinkWrap.create(JavaArchive.class, "test.jar")
                 .addClasses(
                         CompositeQuery.class,
+                        AbstractQueryBean.class,
                         InstanceQuery.class,
                         InstanceQueryBean.class,
-                        Matching.class,
+                        Builder.class,
                         RangeMatching.class,
-                        ContentItemMatching.class,
-                        PersonNameMatching.class);
+                        MatchPersonName.class);
     }
 
     @EJB

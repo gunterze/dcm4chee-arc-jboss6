@@ -38,7 +38,9 @@
 
 package org.dcm4chee.archive.ejb.query;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
@@ -48,18 +50,24 @@ import org.dcm4chee.archive.persistence.Action;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Code;
 import org.dcm4chee.archive.persistence.QCode;
+import org.dcm4chee.archive.persistence.QContentItem;
 import org.dcm4chee.archive.persistence.QInstance;
 import org.dcm4chee.archive.persistence.QIssuer;
 import org.dcm4chee.archive.persistence.QPatient;
 import org.dcm4chee.archive.persistence.QRequestAttributes;
 import org.dcm4chee.archive.persistence.QSeries;
 import org.dcm4chee.archive.persistence.QStudy;
+import org.dcm4chee.archive.persistence.QStudyPermission;
 import org.dcm4chee.archive.persistence.QVerifyingObserver;
 
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.hibernate.HibernateSubQuery;
+import com.mysema.query.types.Expression;
 import com.mysema.query.types.ExpressionUtils;
+import com.mysema.query.types.Operator;
+import com.mysema.query.types.Ops;
 import com.mysema.query.types.Predicate;
+import com.mysema.query.types.PredicateOperation;
 import com.mysema.query.types.path.CollectionPath;
 import com.mysema.query.types.path.StringPath;
 
@@ -209,17 +217,19 @@ abstract class Builder {
     }
 
     static Predicate or(Predicate... preds) {
-        Predicate left = null;
-        for (Predicate right : preds)
-            left = left == null ? right : right == null ? left : ExpressionUtils.or(left, right);
-        return left;
+        return predicate(Ops.OR, preds);
     }
 
     static Predicate and(Predicate... preds) {
-        Predicate left = null;
-        for (Predicate right : preds)
-            left = left == null ? right : right == null ? left : ExpressionUtils.and(left, right);
-        return left;
+        return predicate(Ops.AND, preds);
+    }
+
+    static Predicate predicate(Operator<Boolean> operator, Predicate[] preds) {
+        List<Expression<?>> list = new ArrayList<Expression<?>>(preds.length);
+        for (Predicate pred : preds)
+            if (pred != null)
+                list.add(pred);
+        return list.isEmpty() ? null : new PredicateOperation(operator, list);
     }
 
     static Predicate pids(String[] pids, boolean matchUnknown) {
@@ -491,13 +501,39 @@ abstract class Builder {
     }
 
     static Predicate contentItem(Attributes item, AttributeFilter filter) {
-        // TODO Auto-generated method stub
-        return null;
+        String valueType = item.getString(Tag.ValueType);
+        if (!("CODE".equals(valueType) || "TEXT".equals(valueType)))
+            return null;
+
+        Predicate predicate = and(
+                code(QContentItem.contentItem.conceptName,
+                        item.getNestedDataset(Tag.ConceptNameCodeSequence), filter, false),
+                wildCard(QContentItem.contentItem.relationshipType,
+                        filter.getString(item, Tag.RelationshipType), false),
+                code(QContentItem.contentItem.conceptCode,
+                        item.getNestedDataset(Tag.ConceptCodeSequence), filter, false),
+                wildCard(QContentItem.contentItem.textValue,
+                        filter.getString(item, Tag.TextValue), false));
+        if (predicate == null)
+            return null;
+
+        return new HibernateSubQuery()
+            .from(QContentItem.contentItem)
+            .where(QInstance.instance.contentItems.contains(QContentItem.contentItem), predicate)
+            .exists();
+        
     }
 
     static Predicate permission(String[] roles, Action query) {
-        // TODO Auto-generated method stub
-        return null;
+        if (roles == null || roles.length == 0)
+            return null;
+        
+        return new HibernateSubQuery()
+            .from(QStudyPermission.studyPermission)
+            .where(QStudyPermission.studyPermission.studyInstanceUID.eq(QStudy.study.studyInstanceUID),
+                   QStudyPermission.studyPermission.action.eq(Action.QUERY),
+                   QStudyPermission.studyPermission.role.in(roles))
+            .exists();
     }
 
 }
