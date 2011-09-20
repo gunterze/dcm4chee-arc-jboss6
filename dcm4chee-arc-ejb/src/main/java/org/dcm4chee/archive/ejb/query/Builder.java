@@ -524,14 +524,14 @@ abstract class Builder {
         
     }
 
-    static Predicate permission(String[] roles, Action query) {
+    static Predicate permission(String[] roles, Action action) {
         if (roles == null || roles.length == 0)
             return null;
         
         return new HibernateSubQuery()
             .from(QStudyPermission.studyPermission)
             .where(QStudyPermission.studyPermission.studyInstanceUID.eq(QStudy.study.studyInstanceUID),
-                   QStudyPermission.studyPermission.action.eq(query),
+                   QStudyPermission.studyPermission.action.eq(action),
                    QStudyPermission.studyPermission.role.in(roles))
             .exists();
     }
