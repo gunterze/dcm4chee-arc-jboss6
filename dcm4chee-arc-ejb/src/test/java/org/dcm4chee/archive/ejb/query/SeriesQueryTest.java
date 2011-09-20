@@ -83,7 +83,7 @@ public class SeriesQueryTest {
                         SeriesQuery.class,
                         SeriesQueryBean.class,
                         Builder.class,
-                        RangeMatching.class,
+                        MatchDateTimeRange.class,
                         MatchPersonName.class);
     }
 

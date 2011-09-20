@@ -100,7 +100,7 @@ public class StudyQueryTest {
                         StudyQuery.class,
                         StudyQueryBean.class,
                         Builder.class,
-                        RangeMatching.class,
+                        MatchDateTimeRange.class,
                         MatchPersonName.class,
                         StudyPermissionManager.class,
                         StudyPermissionManagerBean.class);

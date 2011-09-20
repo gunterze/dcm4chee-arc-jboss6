@@ -50,7 +50,7 @@ import com.mysema.query.types.path.StringPath;
 /**
  * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
-public class MatchPersonName {
+class MatchPersonName {
 
     static Predicate personName(StringPath alphabethicName,
             StringPath ideographicName, 

@@ -90,7 +90,7 @@ public class InstanceQueryTest {
                         InstanceQuery.class,
                         InstanceQueryBean.class,
                         Builder.class,
-                        RangeMatching.class,
+                        MatchDateTimeRange.class,
                         MatchPersonName.class);
     }
 

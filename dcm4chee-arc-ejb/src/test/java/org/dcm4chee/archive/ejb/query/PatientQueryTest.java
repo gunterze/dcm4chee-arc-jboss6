@@ -88,7 +88,7 @@ public class PatientQueryTest {
                         PatientQuery.class,
                         PatientQueryBean.class,
                         Builder.class,
-                        RangeMatching.class,
+                        MatchDateTimeRange.class,
                         MatchPersonName.class);
     }
 

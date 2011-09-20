@@ -95,8 +95,8 @@ abstract class Builder {
                 queryOpts.contains(QueryOption.FUZZY), matchUnknown));
         builder.and( wildCard(QPatient.patient.patientSex,
                 filter.getString(keys, Tag.PatientSex), matchUnknown));
-        builder.and(
-                da(QPatient.patient.patientBirthDate, keys, Tag.PatientBirthDate, matchUnknown));
+        builder.and(MatchDateTimeRange.rangeMatch(QPatient.patient.patientBirthDate, 
+                keys, Tag.PatientBirthDate, MatchDateTimeRange.FormatDate.DA, matchUnknown));
         builder.and(wildCard(QPatient.patient.patientCustomAttribute1,
                 filter.selectPatientCustomAttribute1(keys), matchUnknown));
         builder.and(wildCard(QPatient.patient.patientCustomAttribute2,
