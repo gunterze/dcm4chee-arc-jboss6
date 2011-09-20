@@ -531,7 +531,7 @@ abstract class Builder {
         return new HibernateSubQuery()
             .from(QStudyPermission.studyPermission)
             .where(QStudyPermission.studyPermission.studyInstanceUID.eq(QStudy.study.studyInstanceUID),
-                   QStudyPermission.studyPermission.action.eq(Action.QUERY),
+                   QStudyPermission.studyPermission.action.eq(query),
                    QStudyPermission.studyPermission.role.in(roles))
             .exists();
     }
