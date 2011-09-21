@@ -64,10 +64,10 @@ public class StudyQueryImpl extends CompositeQueryImpl {
 
     public StudyQueryImpl(StatelessSession session, String[] pids, Attributes keys,
             AttributeFilter filter, EnumSet<QueryOption> queryOpts, String[] roles) {
-        setResults(query(session, pids, keys, filter, queryOpts, roles));
+        super(query(session, pids, keys, filter, queryOpts, roles), false);
     }
 
-    private ScrollableResults query(StatelessSession session, String[] pids,
+    private static ScrollableResults query(StatelessSession session, String[] pids,
             Attributes keys, AttributeFilter filter, EnumSet<QueryOption> queryOpts,
             String[] roles) {
         BooleanBuilder builder = new BooleanBuilder();

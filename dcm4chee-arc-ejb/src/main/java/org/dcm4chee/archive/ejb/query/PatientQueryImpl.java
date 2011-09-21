@@ -62,10 +62,10 @@ class PatientQueryImpl extends CompositeQueryImpl {
 
     public PatientQueryImpl(StatelessSession session, String[] pids, Attributes keys, 
             AttributeFilter filter, EnumSet<QueryOption> queryOpts) {
-        setResults(query(session, pids, keys, filter, queryOpts));
+        super(query(session, pids, keys, filter, queryOpts), false);
     }
 
-    private ScrollableResults query(StatelessSession session, String[] pids,
+    private static ScrollableResults query(StatelessSession session, String[] pids,
             Attributes keys, AttributeFilter filter, EnumSet<QueryOption> queryOpts) {
         BooleanBuilder builder = new BooleanBuilder();
         Builder.addPatientLevelPredicates(builder, pids, keys, filter, queryOpts);

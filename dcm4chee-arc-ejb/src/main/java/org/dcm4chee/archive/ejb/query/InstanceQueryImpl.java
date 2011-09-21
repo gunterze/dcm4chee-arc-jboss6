@@ -82,8 +82,8 @@ class InstanceQueryImpl extends CompositeQueryImpl {
 
     public InstanceQueryImpl(StatelessSession session, String[] pids, Attributes keys,
             AttributeFilter filter, EnumSet<QueryOption> queryOpts, String[] roles) {
+        super(query(session, pids, keys, filter, queryOpts, roles), false);
         seriesQuery = session.createQuery(QUERY_SERIES_ATTRS);
-        setResults(query(session, pids, keys, filter, queryOpts, roles));
     }
 
     private static ScrollableResults query(StatelessSession session, String[] pids,

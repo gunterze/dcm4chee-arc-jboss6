@@ -48,23 +48,20 @@ import org.hibernate.ScrollableResults;
  */
 abstract class CompositeQueryImpl {
 
-    private ScrollableResults results;
+    private final ScrollableResults results;
 
-    private boolean optionalKeyNotSupported;
+    private final boolean optionalKeyNotSupported;
 
     private boolean hasNext;
 
-    protected final void setOptionalKeyNotSupported(boolean optionalKeyNotSupported) {
+    protected CompositeQueryImpl(ScrollableResults results, boolean optionalKeyNotSupported) {
+        this.results = results;
         this.optionalKeyNotSupported = optionalKeyNotSupported;
+        hasNext = results.next();
     }
 
     public final boolean optionalKeyNotSupported() {
         return optionalKeyNotSupported;
-    }
-
-    protected final void setResults(ScrollableResults results) {
-        this.results = results;
-        hasNext = results.next();
     }
 
     public boolean hasMoreMatches() {
