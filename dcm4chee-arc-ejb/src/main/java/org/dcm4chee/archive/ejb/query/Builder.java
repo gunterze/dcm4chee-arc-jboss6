@@ -69,6 +69,7 @@ import com.mysema.query.types.path.StringPath;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@gmail.com>
  */
 abstract class Builder {
 
@@ -421,18 +422,20 @@ abstract class Builder {
         if (item == null || item.isEmpty())
             return null;
 
-        Predicate predicate = nullIfNoValue(new BooleanBuilder())
-                .and(MatchDateTimeRange.rangeMatch(QVerifyingObserver.verifyingObserver.verificationDateTime, 
-                item, Tag.VerificationDateTime, MatchDateTimeRange.FormatDate.DT, matchUnknown))
-                .and(MatchPersonName.personName(
+        Predicate predicate = nullIfNoValue(
+                new BooleanBuilder()
+                    .and(MatchDateTimeRange.rangeMatch(
+                        QVerifyingObserver.verifyingObserver.verificationDateTime, item, 
+                        Tag.VerificationDateTime, MatchDateTimeRange.FormatDate.DT, matchUnknown))
+                    .and(MatchPersonName.personName(
                         QVerifyingObserver.verifyingObserver.verifyingObserverName,
                         QVerifyingObserver.verifyingObserver.verifyingObserverIdeographicName,
                         QVerifyingObserver.verifyingObserver.verifyingObserverPhoneticName,
                         QVerifyingObserver.verifyingObserver.verifyingObserverFamilyNameSoundex,
                         QVerifyingObserver.verifyingObserver.verifyingObserverGivenNameSoundex,
                         filter.getString(item, Tag.VerifyingObserverName),
-                        filter, fuzzy, matchUnknown));
-
+                        filter, fuzzy, matchUnknown)));
+        
         if (predicate == null)
             return null;
 
@@ -440,7 +443,7 @@ abstract class Builder {
                 new HibernateSubQuery()
                     .from(QVerifyingObserver.verifyingObserver)
                     .where(QInstance.instance.verifyingObservers
-                                .contains(QVerifyingObserver.verifyingObserver),
+                            .contains(QVerifyingObserver.verifyingObserver),
                             predicate)
                     .exists(),
                 QSeries.series.requestAttributes,
@@ -452,15 +455,16 @@ abstract class Builder {
         if (!("CODE".equals(valueType) || "TEXT".equals(valueType)))
             return null;
 
-        Predicate predicate = nullIfNoValue(new BooleanBuilder())
-                .and(code(QContentItem.contentItem.conceptName,
+        Predicate predicate = nullIfNoValue(
+                new BooleanBuilder()
+                    .and(code(QContentItem.contentItem.conceptName,
                         item.getNestedDataset(Tag.ConceptNameCodeSequence), filter, false))
-                .and(wildCard(QContentItem.contentItem.relationshipType,
+                    .and(wildCard(QContentItem.contentItem.relationshipType,
                         filter.getString(item, Tag.RelationshipType), false))
-                .and(code(QContentItem.contentItem.conceptCode,
+                    .and(code(QContentItem.contentItem.conceptCode,
                         item.getNestedDataset(Tag.ConceptCodeSequence), filter, false))
-                .and(wildCard(QContentItem.contentItem.textValue,
-                        filter.getString(item, Tag.TextValue), false));
+                    .and(wildCard(QContentItem.contentItem.textValue,
+                        filter.getString(item, Tag.TextValue), false)));
         if (predicate == null)
             return null;
 
