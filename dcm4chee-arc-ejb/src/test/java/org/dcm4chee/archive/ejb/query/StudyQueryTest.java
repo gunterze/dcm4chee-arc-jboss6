@@ -161,8 +161,7 @@ public class StudyQueryTest {
         query.find(RangeMatchingPIDs, studyDateTimeRange("20110620", "103000.000"),
                 filter(false), NO_QUERY_OPTION, null);
         assertTrue(query.hasMoreMatches());
-        String studyUID =
-                query.nextMatch().getString(Tag.StudyInstanceUID);
+        String studyUID = query.nextMatch().getString(Tag.StudyInstanceUID);
         assertFalse(query.hasMoreMatches());
         assertTrue(studyUID.equals("1.2.40.0.13.1.1.99.3"));
         query.close();

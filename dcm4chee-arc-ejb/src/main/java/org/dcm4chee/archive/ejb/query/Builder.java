@@ -109,8 +109,9 @@ abstract class Builder {
         boolean matchUnknown = filter.isMatchUnknown();
         builder.and(uids(QStudy.study.studyInstanceUID, keys.getStrings(Tag.StudyInstanceUID)));
         builder.and(wildCard(QStudy.study.studyID, filter.getString(keys, Tag.StudyID), matchUnknown));
-        builder.and(MatchDateTimeRange.rangeMatch(QStudy.study.studyDate, QStudy.study.studyTime, Tag.StudyDate, Tag.StudyTime, Tag.StudyDateAndTime,
-        keys, queryOpts.contains(QueryOption.DATETIME), matchUnknown));
+        builder.and(MatchDateTimeRange.rangeMatch(QStudy.study.studyDate, QStudy.study.studyTime, 
+                Tag.StudyDate, Tag.StudyTime, Tag.StudyDateAndTime, 
+                keys, queryOpts.contains(QueryOption.DATETIME), matchUnknown));
         builder.and(MatchPersonName.personName(QStudy.study.referringPhysicianName,
         QStudy.study.referringPhysicianIdeographicName,
         QStudy.study.referringPhysicianPhoneticName,

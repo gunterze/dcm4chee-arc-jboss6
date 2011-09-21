@@ -44,6 +44,7 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.DateRange;
 import org.dcm4che.util.DateUtils;
 
+import com.mysema.query.BooleanBuilder;
 import com.mysema.query.types.ExpressionUtils;
 import com.mysema.query.types.Predicate;
 import com.mysema.query.types.path.StringPath;
@@ -85,13 +86,29 @@ class MatchDateTimeRange {
         return matchUnknown(path, matchUnknown, range(path, keys.getDateRange(tag, null), dt));
     }
 
-    static Predicate rangeMatch(StringPath datePath, StringPath timePath,
-            int daTag, int dtTag, long datmTag,
+    static Predicate rangeMatch(StringPath dateField, StringPath timeField, 
+            int dateTag, int timeTag, long dateAndTimeTag, 
             Attributes keys, boolean combined, boolean matchUnknown) {
-        // TODO Auto-generated method stub
-        return null;
+        final boolean containsDateTag = keys.containsValue(dateTag);
+        final boolean containsTimeTag = keys.containsValue(timeTag);
+        if (!containsDateTag && !containsTimeTag)
+            return null;
+        
+        BooleanBuilder predicates = new BooleanBuilder();
+        if (containsDateTag && containsTimeTag && combined)
+                predicates.and(matchUnknown(dateField, matchUnknown,
+                        combinedRange(dateField, timeField, keys.getDateRange(dateAndTimeTag, null))));
+        else { 
+            if (containsDateTag)
+                predicates.and(matchUnknown(dateField, matchUnknown, 
+                        range(dateField, keys.getDateRange(dateTag, null), FormatDate.DA)));
+            if (containsTimeTag)
+                predicates.and(matchUnknown(timeField, matchUnknown, 
+                        range(timeField, keys.getDateRange(timeTag, null), FormatDate.TM)));
+        }
+        return Builder.nullIfNoValue(predicates);
     }
-    
+
     private static Predicate matchUnknown(StringPath field, boolean matchUnknown, 
             Predicate predicate) {
         return matchUnknown ? 
@@ -127,4 +144,52 @@ class MatchDateTimeRange {
         return field.goe(value);
     }
 
+    private static Predicate combinedRange(StringPath dateField, StringPath timeField, DateRange dateRange) {
+        if (dateRange.getStartDate() == null)
+            return combinedRangeEnd(dateField, timeField, 
+                    DateUtils.formatDA(null, dateRange.getEndDate()), 
+                    DateUtils.formatTM(null, dateRange.getEndDate()));
+        if (dateRange.getEndDate() == null)
+            return combinedRangeStart(dateField, timeField, 
+                    DateUtils.formatDA(null, dateRange.getStartDate()), 
+                    DateUtils.formatTM(null, dateRange.getStartDate()));
+        return combinedRangeInterval(dateField, timeField, 
+                    dateRange.getStartDate(), dateRange.getEndDate());
+    }
+
+    private static Predicate combinedRangeInterval(StringPath dateField,
+            StringPath timeField, Date startDateRange, Date endDateRange) {
+        String startTime = DateUtils.formatTM(null, startDateRange);
+        String endTime = DateUtils.formatTM(null, endDateRange);
+        String startDate = DateUtils.formatDA(null, startDateRange);
+        String endDate = DateUtils.formatDA(null, endDateRange);
+        if (endDate.equals(startDate))
+            return ExpressionUtils.allOf(
+                    dateField.eq(startDate), 
+                    rangeStart(timeField, startTime), 
+                    rangeEnd(timeField, endTime));
+        return ExpressionUtils.and(
+                combinedRangeStart(dateField, timeField, startDate, startTime), 
+                combinedRangeEnd(dateField, timeField, endDate, endTime));
+    }
+
+    private static Predicate combinedRangeEnd(StringPath dateField,
+            StringPath timeField, String endDate, String endTime) {
+        Predicate endDayTime =
+            ExpressionUtils.and(dateField.eq(endDate), timeField.loe(endTime));
+        Predicate endDayTimeUnknown =
+            ExpressionUtils.and(dateField.eq(endDate), timeField.eq("*"));
+        Predicate endDayPrevious = dateField.lt(endDate);
+        return ExpressionUtils.anyOf(endDayTime, endDayTimeUnknown, endDayPrevious);
+    }
+
+    private static Predicate combinedRangeStart(StringPath dateField,
+            StringPath timeField, String startDate, String startTime) {
+        Predicate startDayTime = 
+            ExpressionUtils.and(dateField.eq(startDate), timeField.goe(startTime));
+        Predicate startDayTimeUnknown = 
+            ExpressionUtils.and(dateField.eq(startDate), timeField.eq("*"));
+        Predicate startDayFollowing = dateField.gt(startDate);
+        return ExpressionUtils.anyOf(startDayTime, startDayTimeUnknown, startDayFollowing);
+    }
 }
