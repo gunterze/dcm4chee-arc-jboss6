@@ -86,16 +86,19 @@ public class InstanceQueryTest {
         return ShrinkWrap.create(JavaArchive.class, "test.jar")
                 .addClasses(
                         CompositeQuery.class,
-                        AbstractQueryBean.class,
-                        InstanceQuery.class,
-                        InstanceQueryBean.class,
+                        CompositeQueryBean.class,
+                        CompositeQueryImpl.class,
+                        PatientQueryImpl.class,
+                        StudyQueryImpl.class,
+                        SeriesQueryImpl.class,
+                        InstanceQueryImpl.class,
                         Builder.class,
                         MatchDateTimeRange.class,
                         MatchPersonName.class);
     }
 
     @EJB
-    private InstanceQuery query;
+    private CompositeQuery query;
 
     private AttributeFilter filter(boolean matchUnknown) throws Exception {
         AttributeFilter filter = new AttributeFilter(
@@ -111,7 +114,7 @@ public class InstanceQueryTest {
 
     @Test
     public void testByVerificationFlag() throws Exception {
-        query.find(VerifyingObserverPIDs, verificationFlag("VERIFIED", "SR"), filter(false),
+        query.findInstances(VerifyingObserverPIDs, verificationFlag("VERIFIED", "SR"), filter(false),
                 NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3" };
@@ -123,7 +126,7 @@ public class InstanceQueryTest {
 
     @Test
     public void testByConceptCodeSequence() throws Exception {
-        query.find(ConceptCodeSeqPIDs,
+        query.findInstances(ConceptCodeSeqPIDs,
                 conceptCodeSeq("CONCEPT_NAME_1", "99DCM4CHEE_TEST", null), filter(false),
                 NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
@@ -135,7 +138,7 @@ public class InstanceQueryTest {
 
     @Test
     public void testByConceptCodeSequenceMatchUnknown() throws Exception {
-        query.find(ConceptCodeSeqPIDs,
+        query.findInstances(ConceptCodeSeqPIDs,
                 conceptCodeSeq("CONCEPT_NAME_2", "99DCM4CHEE_TEST", null), filter(true),
                 NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
@@ -148,7 +151,7 @@ public class InstanceQueryTest {
 
     @Test
     public void testByVerifyingObserver() throws Exception {
-        query.find(VerifyingObserverPIDs,
+        query.findInstances(VerifyingObserverPIDs,
                 verifyingObserver("201106300830", "VerifyingObserver1"), filter(false),
                 NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
@@ -161,7 +164,7 @@ public class InstanceQueryTest {
 
     @Test
     public void testByVerifyingObserverMatchUnknown() throws Exception {
-        query.find(VerifyingObserverPIDs,
+        query.findInstances(VerifyingObserverPIDs,
                 verifyingObserver("201106300830", "VerifyingObserver1"), filter(true),
                 NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
@@ -175,7 +178,7 @@ public class InstanceQueryTest {
 
     @Test
     public void testByVerifyingObserverRange() throws Exception {
-        query.find(VerifyingObserverPIDs,
+        query.findInstances(VerifyingObserverPIDs,
                 verifyingObserver("201106300000-20110701235900", null), filter(false),
                 NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
@@ -194,7 +197,7 @@ public class InstanceQueryTest {
                 "CONTAINS", "Max"));
         contentSeq.add(contentSequenceItem("TCE104", "IHERADTF", null,
                 "CONTAINS", "Max's Abstract"));
-        query.find(TeachingFilePIDs, attrs, filter(false), NO_QUERY_OPTION, null);
+        query.findInstances(TeachingFilePIDs, attrs, filter(false), NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.27.1.1" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
@@ -210,7 +213,7 @@ public class InstanceQueryTest {
                 "CONTAINS", "Moritz's Abstract"));
         contentSeq.add(contentSequenceCodeItem("TCE105", "IHERADTF", null,
                 "466.0", "I9C", null, "CONTAINS"));
-        query.find(TeachingFilePIDs, attrs, filter(false), NO_QUERY_OPTION, null);
+        query.findInstances(TeachingFilePIDs, attrs, filter(false), NO_QUERY_OPTION, null);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.27.1.2" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
@@ -285,7 +288,7 @@ public class InstanceQueryTest {
         return attrs;
     }
 
-    private ArrayList<String> sopInstanceUIDResultList(InstanceQuery query)
+    private ArrayList<String> sopInstanceUIDResultList(CompositeQuery query)
             throws Exception {
         ArrayList<String> result = new ArrayList<String>();
         while (query.hasMoreMatches()) {

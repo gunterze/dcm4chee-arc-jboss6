@@ -79,16 +79,19 @@ public class SeriesQueryTest {
         return ShrinkWrap.create(JavaArchive.class, "test.jar")
                 .addClasses(
                         CompositeQuery.class,
-                        AbstractQueryBean.class,
-                        SeriesQuery.class,
-                        SeriesQueryBean.class,
+                        CompositeQueryBean.class,
+                        CompositeQueryImpl.class,
+                        PatientQueryImpl.class,
+                        StudyQueryImpl.class,
+                        SeriesQueryImpl.class,
+                        InstanceQueryImpl.class,
                         Builder.class,
                         MatchDateTimeRange.class,
                         MatchPersonName.class);
     }
 
     @EJB
-    private SeriesQuery query;
+    private CompositeQuery query;
 
     private AttributeFilter filter(boolean matchUnknown) throws Exception {
         AttributeFilter filter = new AttributeFilter(
@@ -104,7 +107,7 @@ public class SeriesQueryTest {
 
     @Test
     public void testByModality() throws Exception {
-        query.find(ModalitiesInStudyPIDs, modality("PR"), filter(false),
+        query.findSeries(ModalitiesInStudyPIDs, modality("PR"), filter(false),
                 NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 2));
         query.close();
@@ -112,7 +115,7 @@ public class SeriesQueryTest {
 
     @Test
     public void testByModalitiesInStudyPR() throws Exception {
-        query.find(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(false),
+        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(false),
                 NO_QUERY_OPTION, null);
         assertTrue(countMatches(query,4));
         query.close();
@@ -120,7 +123,7 @@ public class SeriesQueryTest {
 
     @Test
     public void testByModalitiesInStudyMatchUnknownPR() throws Exception {
-        query.find(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(true),
+        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(true),
                 NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 5));
         query.close();
@@ -128,7 +131,7 @@ public class SeriesQueryTest {
     
     @Test
     public void testByModalitiesInStudyCT() throws Exception {
-        query.find(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(false),
+        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(false),
                 NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 2));
         query.close();
@@ -136,7 +139,7 @@ public class SeriesQueryTest {
 
     @Test
     public void testByModalitiesInStudyMatchUnknownCT() throws Exception {
-        query.find(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(true),
+        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(true),
                 NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 3));
         query.close();
@@ -159,7 +162,7 @@ public class SeriesQueryTest {
         issuer.setNull(Tag.UniversalEntityID, VR.UT);
         issuer.setNull(Tag.UniversalEntityIDType, VR.CS);
         
-        query.find(RequestedAttributesSeqPIDs, keys, filter(false), NO_QUERY_OPTION, null);
+        query.findSeries(RequestedAttributesSeqPIDs, keys, filter(false), NO_QUERY_OPTION, null);
         assertTrue(countMatches(query, 1));
         query.close();
     }
@@ -176,7 +179,7 @@ public class SeriesQueryTest {
         return attrs;
     }
 
-    private boolean countMatches(SeriesQuery query, int count) throws Exception {
+    private boolean countMatches(CompositeQuery query, int count) throws Exception {
         int i = 0;
         while(query.hasMoreMatches()){
             query.nextMatch();

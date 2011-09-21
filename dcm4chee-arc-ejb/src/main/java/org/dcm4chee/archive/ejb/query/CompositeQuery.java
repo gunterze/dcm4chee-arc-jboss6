@@ -49,7 +49,18 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
  */
 public interface CompositeQuery {
 
-    void find(String[] pids, Attributes keys, AttributeFilter filter,
+    public static final String JNDI_NAME = "CompositeQueryBean/local";
+
+    void findPatients(String[] pids, Attributes keys, AttributeFilter filter,
+            EnumSet<QueryOption> queryOpts);
+
+    void findStudies(String[] pids, Attributes keys, AttributeFilter filter,
+            EnumSet<QueryOption> queryOpts, String[] roles);
+
+    void findSeries(String[] pids, Attributes keys, AttributeFilter filter,
+            EnumSet<QueryOption> queryOpts, String[] roles);
+
+    void findInstances(String[] pids, Attributes keys, AttributeFilter filter,
             EnumSet<QueryOption> queryOpts, String[] roles);
 
     boolean optionalKeyNotSupported();

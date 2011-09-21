@@ -38,13 +38,46 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import javax.ejb.Local;
+import java.util.NoSuchElementException;
+
+import org.dcm4che.data.Attributes;
+import org.hibernate.ScrollableResults;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Local
-public interface SeriesQuery extends CompositeQuery {
+abstract class CompositeQueryImpl {
 
-    public static final String JNDI_NAME = "SeriesQueryBean/local";
+    private ScrollableResults results;
+
+    private boolean optionalKeyNotSupported;
+
+    private boolean hasNext;
+
+    protected final void setOptionalKeyNotSupported(boolean optionalKeyNotSupported) {
+        this.optionalKeyNotSupported = optionalKeyNotSupported;
+    }
+
+    public final boolean optionalKeyNotSupported() {
+        return optionalKeyNotSupported;
+    }
+
+    protected final void setResults(ScrollableResults results) {
+        this.results = results;
+        hasNext = results.next();
+    }
+
+    public boolean hasMoreMatches() {
+        return hasNext;
+    }
+
+    public Attributes nextMatch() {
+        if (!hasNext)
+            throw new NoSuchElementException();
+        Attributes attrs = toAttributes(results);
+        hasNext = results.next();
+        return attrs;
+    }
+
+    protected abstract  Attributes toAttributes(ScrollableResults results);
 }

@@ -41,12 +41,13 @@ package org.dcm4chee.archive.ejb.query;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.EnumSet;
-import java.util.NoSuchElementException;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.ejb.EJBException;
 import javax.ejb.Remove;
+import javax.ejb.Stateful;
+import javax.ejb.TransactionAttribute;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 import javax.sql.DataSource;
@@ -54,7 +55,6 @@ import javax.sql.DataSource;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4chee.archive.persistence.AttributeFilter;
-import org.hibernate.ScrollableResults;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
@@ -62,7 +62,9 @@ import org.hibernate.ejb.HibernateEntityManagerFactory;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-abstract class AbstractQueryBean implements CompositeQuery {
+@Stateful
+@TransactionAttribute
+public class CompositeQueryBean implements CompositeQuery {
 
     @Resource(mappedName="java:/DefaultDS")
     private DataSource dataSource;
@@ -74,11 +76,7 @@ abstract class AbstractQueryBean implements CompositeQuery {
 
     private StatelessSession session;
 
-    private boolean optionalKeyNotSupported;
-
-    private boolean hasNext;
-
-    private ScrollableResults results;
+    private CompositeQueryImpl query;
 
     @PostConstruct
     protected void init() {
@@ -91,49 +89,51 @@ abstract class AbstractQueryBean implements CompositeQuery {
         session = sessionFactory.openStatelessSession(connection);
     }
 
-    protected StatelessSession session() {
-        return session;
+
+    @Override
+    public void findPatients(String[] pids, Attributes keys, AttributeFilter filter,
+            EnumSet<QueryOption> queryOpts) {
+        query = new PatientQueryImpl(session, pids, keys, filter, queryOpts);
     }
 
-    protected void setOptionalKeyNotSupported(boolean optionalKeyNotSupported) {
-        this.optionalKeyNotSupported = optionalKeyNotSupported;
+    @Override
+    public void findStudies(String[] pids, Attributes keys, AttributeFilter filter,
+            EnumSet<QueryOption> queryOpts, String[] roles) {
+        query = new StudyQueryImpl(session, pids, keys, filter, queryOpts, roles);
+    }
+
+    @Override
+    public void findSeries(String[] pids, Attributes keys, AttributeFilter filter,
+            EnumSet<QueryOption> queryOpts, String[] roles) {
+        query = new SeriesQueryImpl(session, pids, keys, filter, queryOpts, roles);
+    }
+
+    @Override
+    public void findInstances(String[] pids, Attributes keys, AttributeFilter filter,
+            EnumSet<QueryOption> queryOpts, String[] roles) {
+        query = new InstanceQueryImpl(session, pids, keys, filter, queryOpts, roles);
     }
 
     @Override
     public boolean optionalKeyNotSupported() {
-        return optionalKeyNotSupported;
-    }
-
-    @Override
-    public void find(String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, String[] roles) {
-        results = query(pids, keys, filter, queryOpts, roles);
-        hasNext = results.next();
+        checkResults();
+        return query.optionalKeyNotSupported();
     }
 
     @Override
     public boolean hasMoreMatches() {
         checkResults();
-        return hasNext;
+        return query.hasMoreMatches();
     }
 
     @Override
     public Attributes nextMatch() {
         checkResults();
-        if (!hasNext)
-            throw new NoSuchElementException();
-        Attributes attrs = toAttributes(results);
-        hasNext = results.next();
-        return attrs;
+        return query.nextMatch();
     }
 
-    protected abstract ScrollableResults query(String[] pids, Attributes keys,
-            AttributeFilter filter, EnumSet<QueryOption> queryOpts, String[] roles);
-
-    protected abstract  Attributes toAttributes(ScrollableResults results);
-
     private void checkResults() {
-        if (results == null)
+        if (query == null)
             throw new IllegalStateException("results not initalized");
     }
 
@@ -144,7 +144,7 @@ abstract class AbstractQueryBean implements CompositeQuery {
         Connection c = connection;
         connection = null;
         session = null;
-        results = null;
+        query = null;
         s.close();
         try {
             c.close();

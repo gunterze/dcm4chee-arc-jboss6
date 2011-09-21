@@ -41,15 +41,11 @@ package org.dcm4chee.archive.beans.qrscp;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Status;
-import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.pdu.PresentationContext;
-import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4che.net.service.BasicQueryTask;
 import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4chee.archive.beans.util.Configuration;
 import org.dcm4chee.archive.ejb.query.CompositeQuery;
 
 /**
@@ -62,15 +58,6 @@ public class QueryTaskImpl extends BasicQueryTask {
     public QueryTaskImpl(Association as, PresentationContext pc, Attributes rq,
             Attributes keys, CompositeQuery query) throws DicomServiceException {
         super(as, pc, rq, keys);
-        String cuid = rq.getString(Tag.AffectedSOPClassUID, null);
-        ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        ApplicationEntity ae = as.getApplicationEntity();
-        try {
-            query.find(pids(keys), keys, Configuration.attributeFilterFor(ae),
-                    QueryOption.toOptions(extNeg), roles());
-        } catch (Exception e) {
-            throw wrapException(Status.UnableToProcess, e);
-        }
         this.query = query;
     }
 
@@ -111,19 +98,5 @@ public class QueryTaskImpl extends BasicQueryTask {
     @Override
     protected boolean optionalKeyNotSupported(Attributes match, Attributes keys) {
         return query.optionalKeyNotSupported();
-    }
-
-    private String[] roles() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    private String[] pids(Attributes keys) {
-        String pid = keys.getString(Tag.PatientID, "*");
-        return pid.equals("*")
-                ? null 
-                : new String[] { 
-                    pid,
-                    keys.getString(Tag.IssuerOfPatientID, "*")};
     }
 }

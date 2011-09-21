@@ -42,22 +42,17 @@ import java.io.IOException;
 import java.util.EnumSet;
 
 import javax.ejb.EJBException;
-import javax.ejb.Stateful;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
-import org.dcm4chee.archive.persistence.QInstance;
 import org.dcm4chee.archive.persistence.QPatient;
-import org.dcm4chee.archive.persistence.QSeries;
 import org.dcm4chee.archive.persistence.QStudy;
 import org.dcm4chee.archive.persistence.Utils;
-import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.StatelessSession;
 
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.hibernate.HibernateQuery;
@@ -65,85 +60,50 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateful
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public class InstanceQueryBean extends AbstractQueryBean implements InstanceQuery {
+public class StudyQueryImpl extends CompositeQueryImpl {
 
-    private static final String QUERY_SERIES_ATTRS = "select " +
-            "s.study.numberOfStudyRelatedSeries, " +
-            "s.study.numberOfStudyRelatedInstances, " +
-            "s.numberOfSeriesRelatedInstances, " +
-            "s.study.modalitiesInStudy, " +
-            "s.study.sopClassesInStudy, " +
-            "s.encodedAttributes, " +
-            "s.study.encodedAttributes, " +
-            "s.study.patient.encodedAttributes " +
-            "from Series s " +
-            "where s.pk = ?";
-    private long seriesPk = -1L;
-    private Attributes seriesAttrs;
-    private Query seriesQuery;
-
-    @Override
-    protected ScrollableResults query(String[] pids, Attributes keys,
+    public StudyQueryImpl(StatelessSession session, String[] pids, Attributes keys,
             AttributeFilter filter, EnumSet<QueryOption> queryOpts, String[] roles) {
-        seriesQuery = session().createQuery(QUERY_SERIES_ATTRS);
+        setResults(query(session, pids, keys, filter, queryOpts, roles));
+    }
+
+    private ScrollableResults query(StatelessSession session, String[] pids,
+            Attributes keys, AttributeFilter filter, EnumSet<QueryOption> queryOpts,
+            String[] roles) {
         BooleanBuilder builder = new BooleanBuilder();
         Builder.addPatientLevelPredicates(builder, pids, keys, filter, queryOpts);
         Builder.addStudyLevelPredicates(builder, keys, filter, queryOpts, roles);
-        Builder.addSeriesLevelPredicates(builder, keys, filter, queryOpts);
-        Builder.addInstanceLevelPredicates(builder, keys, filter, queryOpts);
-        return new HibernateQuery(session())
-            .from(QInstance.instance)
-            .innerJoin(QInstance.instance.series, QSeries.series)
-            .innerJoin(QSeries.series.study, QStudy.study)
+        return new HibernateQuery(session)
+            .from(QStudy.study)
             .innerJoin(QStudy.study.patient, QPatient.patient)
             .where(builder)
             .scroll(ScrollMode.FORWARD_ONLY,
-                QSeries.series.pk,
-                QInstance.instance.retrieveAETs,
-                QInstance.instance.externalRetrieveAET,
-                QInstance.instance.availability,
-                QInstance.instance.encodedAttributes);
+                QStudy.study.numberOfStudyRelatedSeries,
+                QStudy.study.numberOfStudyRelatedInstances,
+                QStudy.study.modalitiesInStudy,
+                QStudy.study.sopClassesInStudy,
+                QStudy.study.retrieveAETs,
+                QStudy.study.externalRetrieveAET,
+                QStudy.study.availability,
+                QStudy.study.encodedAttributes,
+                QPatient.patient.encodedAttributes);
     }
 
     @Override
     protected Attributes toAttributes(ScrollableResults results) {
-        long seriesPk = results.getLong(0);
-        String retrieveAETs = results.getString(1);
-        String externalRetrieveAET = results.getString(2);
-        Availability availability = (Availability) results.get(3);
-        byte[] instAttributes = results.getBinary(4);
-        if (this.seriesPk != seriesPk) {
-            this.seriesAttrs = querySeriesAttrs(seriesPk);
-            this.seriesPk = seriesPk;
-        }
-        Attributes attrs = new Attributes(seriesAttrs);
-        try {
-            Utils.decodeAttributes(attrs, instAttributes);
-        } catch (IOException e) {
-            throw new EJBException(e);
-        }
-        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
-        Utils.setAvailability(attrs, availability);
-        return attrs;
-    }
-
-    private Attributes querySeriesAttrs(long seriesPk) {
-        Object[] tuple = (Object[]) seriesQuery.setParameter(0, seriesPk).uniqueResult();
-        int numberOfStudyRelatedSeries = (Integer) tuple[0];
-        int numberOfStudyRelatedInstances = (Integer) tuple[1];
-        int numberOfSeriesRelatedInstances = (Integer) tuple[2];
-        String modalitiesInStudy = (String) tuple[3];
-        String sopClassesInStudy = (String) tuple[4];
-        byte[] seriesAttributes = (byte[]) tuple[5];
-        byte[] studyAttributes = (byte[]) tuple[6];
-        byte[] patientAttributes = (byte[]) tuple[7];
+        int numberOfStudyRelatedSeries = results.getInteger(0);
+        int numberOfStudyRelatedInstances = results.getInteger(1);
+        String modalitiesInStudy = results.getString(2);
+        String sopClassesInStudy = results.getString(3);
+        String retrieveAETs = results.getString(4);
+        String externalRetrieveAET = results.getString(5);
+        Availability availability = (Availability) results.get(6);
+        byte[] studyAttributes = results.getBinary(7);
+        byte[] patientAttributes = results.getBinary(8);
         Attributes attrs = new Attributes();
         try {
             Utils.decodeAttributes(attrs, patientAttributes);
             Utils.decodeAttributes(attrs, studyAttributes);
-            Utils.decodeAttributes(attrs, seriesAttributes);
         } catch (IOException e) {
             throw new EJBException(e);
         }
@@ -152,7 +112,9 @@ public class InstanceQueryBean extends AbstractQueryBean implements InstanceQuer
                 numberOfStudyRelatedInstances,
                 modalitiesInStudy,
                 sopClassesInStudy);
-        Utils.setSeriesQueryAttributes(attrs, numberOfSeriesRelatedInstances);
+        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
+        Utils.setAvailability(attrs, availability);
         return attrs;
     }
+
 }

@@ -42,17 +42,18 @@ import java.io.IOException;
 import java.util.EnumSet;
 
 import javax.ejb.EJBException;
-import javax.ejb.Stateful;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.pdu.QueryOption;
 import org.dcm4chee.archive.persistence.AttributeFilter;
+import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.QPatient;
+import org.dcm4chee.archive.persistence.QSeries;
+import org.dcm4chee.archive.persistence.QStudy;
 import org.dcm4chee.archive.persistence.Utils;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.StatelessSession;
 
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.hibernate.HibernateQuery;
@@ -60,31 +61,68 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateful
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public class PatientQueryBean extends AbstractQueryBean implements PatientQuery {
+public class SeriesQueryImpl extends CompositeQueryImpl {
 
-    @Override
-    protected ScrollableResults query(String[] pids, Attributes keys,
+    public SeriesQueryImpl(StatelessSession session, String[] pids, Attributes keys,
             AttributeFilter filter, EnumSet<QueryOption> queryOpts, String[] roles) {
+        setResults(query(session, pids, keys, filter, queryOpts, roles));
+    }
+
+    private static ScrollableResults query(StatelessSession session, String[] pids,
+            Attributes keys, AttributeFilter filter, EnumSet<QueryOption> queryOpts,
+            String[] roles) {
         BooleanBuilder builder = new BooleanBuilder();
         Builder.addPatientLevelPredicates(builder, pids, keys, filter, queryOpts);
-        return new HibernateQuery(session())
-            .from(QPatient.patient)
+        Builder.addStudyLevelPredicates(builder, keys, filter, queryOpts, roles);
+        Builder.addSeriesLevelPredicates(builder, keys, filter, queryOpts);
+        return new HibernateQuery(session)
+            .from(QSeries.series)
+            .innerJoin(QSeries.series.study, QStudy.study)
+            .innerJoin(QStudy.study.patient, QPatient.patient)
             .where(builder)
             .scroll(ScrollMode.FORWARD_ONLY,
-                QPatient.patient.pk,
+                QStudy.study.numberOfStudyRelatedSeries,
+                QStudy.study.numberOfStudyRelatedInstances,
+                QSeries.series.numberOfSeriesRelatedInstances,
+                QStudy.study.modalitiesInStudy,
+                QStudy.study.sopClassesInStudy,
+                QSeries.series.retrieveAETs,
+                QSeries.series.externalRetrieveAET,
+                QSeries.series.availability,
+                QSeries.series.encodedAttributes,
+                QStudy.study.encodedAttributes,
                 QPatient.patient.encodedAttributes);
     }
 
     @Override
     protected Attributes toAttributes(ScrollableResults results) {
+        int numberOfStudyRelatedSeries = results.getInteger(0);
+        int numberOfStudyRelatedInstances = results.getInteger(1);
+        int numberOfSeriesRelatedInstances = results.getInteger(2);
+        String modalitiesInStudy = results.getString(3);
+        String sopClassesInStudy = results.getString(4);
+        String retrieveAETs = results.getString(5);
+        String externalRetrieveAET = results.getString(6);
+        Availability availability = (Availability) results.get(7);
+        byte[] seriesAttributes = results.getBinary(8);
+        byte[] studyAttributes = results.getBinary(9);
+        byte[] patientAttributes = results.getBinary(10);
         Attributes attrs = new Attributes();
         try {
-            Utils.decodeAttributes(attrs, results.getBinary(1));
+            Utils.decodeAttributes(attrs, patientAttributes);
+            Utils.decodeAttributes(attrs, studyAttributes);
+            Utils.decodeAttributes(attrs, seriesAttributes);
         } catch (IOException e) {
             throw new EJBException(e);
         }
+        Utils.setStudyQueryAttributes(attrs,
+                numberOfStudyRelatedSeries,
+                numberOfStudyRelatedInstances,
+                modalitiesInStudy,
+                sopClassesInStudy);
+        Utils.setSeriesQueryAttributes(attrs, numberOfSeriesRelatedInstances);
+        Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
+        Utils.setAvailability(attrs, availability);
         return attrs;
     }
 

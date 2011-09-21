@@ -38,13 +38,54 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import javax.ejb.Local;
+import java.io.IOException;
+import java.util.EnumSet;
+
+import javax.ejb.EJBException;
+
+import org.dcm4che.data.Attributes;
+import org.dcm4che.net.pdu.QueryOption;
+import org.dcm4chee.archive.persistence.AttributeFilter;
+import org.dcm4chee.archive.persistence.QPatient;
+import org.dcm4chee.archive.persistence.Utils;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
+import org.hibernate.StatelessSession;
+
+import com.mysema.query.BooleanBuilder;
+import com.mysema.query.jpa.hibernate.HibernateQuery;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Local
-public interface StudyQuery extends CompositeQuery {
+class PatientQueryImpl extends CompositeQueryImpl {
 
-    public static final String JNDI_NAME = "StudyQueryBean/local";
+    public PatientQueryImpl(StatelessSession session, String[] pids, Attributes keys, 
+            AttributeFilter filter, EnumSet<QueryOption> queryOpts) {
+        setResults(query(session, pids, keys, filter, queryOpts));
+    }
+
+    private ScrollableResults query(StatelessSession session, String[] pids,
+            Attributes keys, AttributeFilter filter, EnumSet<QueryOption> queryOpts) {
+        BooleanBuilder builder = new BooleanBuilder();
+        Builder.addPatientLevelPredicates(builder, pids, keys, filter, queryOpts);
+        return new HibernateQuery(session)
+            .from(QPatient.patient)
+            .where(builder)
+            .scroll(ScrollMode.FORWARD_ONLY,
+                QPatient.patient.pk,
+                QPatient.patient.encodedAttributes);
+    }
+
+    @Override
+    protected Attributes toAttributes(ScrollableResults results) {
+        Attributes attrs = new Attributes();
+        try {
+            Utils.decodeAttributes(attrs, results.getBinary(1));
+        } catch (IOException e) {
+            throw new EJBException(e);
+        }
+        return attrs;
+    }
+
 }

@@ -39,9 +39,12 @@
 package org.dcm4chee.archive.beans.qrscp;
 
 
+import java.util.EnumSet;
+
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.AttributesValidator;
 import org.dcm4che.data.Tag;
+import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.Status;
@@ -52,12 +55,10 @@ import org.dcm4che.net.service.BasicCFindSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.QueryTask;
+import org.dcm4chee.archive.beans.util.Configuration;
 import org.dcm4chee.archive.beans.util.JNDIUtils;
 import org.dcm4chee.archive.ejb.query.CompositeQuery;
-import org.dcm4chee.archive.ejb.query.InstanceQuery;
-import org.dcm4chee.archive.ejb.query.PatientQuery;
-import org.dcm4chee.archive.ejb.query.SeriesQuery;
-import org.dcm4chee.archive.ejb.query.StudyQuery;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -83,25 +84,44 @@ public class CFindSCPImpl extends BasicCFindSCP {
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
         level.validateQueryKeys(rq, validator, studyRoot, relational);
+        String[] pids = pids(keys);
+        String[] roles = roles();
+        ApplicationEntity ae = as.getApplicationEntity();
+        AttributeFilter filter = Configuration.attributeFilterFor(ae);
+        EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
         try {
-            return new QueryTaskImpl(as, pc, rq, keys,
-                    (CompositeQuery) JNDIUtils.lookup(jndiNameOf(level)));
+            CompositeQuery query = (CompositeQuery) JNDIUtils.lookup(CompositeQuery.JNDI_NAME);
+            switch (level) {
+            case PATIENT:
+                query.findPatients(pids, keys, filter, queryOpts);
+                break;
+            case STUDY:
+                query.findStudies(pids, keys, filter, queryOpts, roles);
+                break;
+            case SERIES:
+                query.findSeries(pids, keys, filter, queryOpts, roles);
+                break;
+            default: // case IMAGE:
+                query.findInstances(pids, keys, filter, queryOpts, roles);
+                break;
+            }
+            return new QueryTaskImpl(as, pc, rq, keys, query);
         } catch (Exception e) {
             throw new DicomServiceException(rq, Status.UnableToProcess, e);
         }
     }
 
-    private String jndiNameOf(QueryRetrieveLevel level) {
-        switch (level) {
-        case PATIENT:
-            return PatientQuery.JNDI_NAME;
-        case STUDY:
-            return StudyQuery.JNDI_NAME;
-        case SERIES:
-            return SeriesQuery.JNDI_NAME;
-        case IMAGE:
-            return InstanceQuery.JNDI_NAME;
-        }
-        throw new IllegalArgumentException(level.name());
+    private String[] roles() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    private String[] pids(Attributes keys) {
+        String pid = keys.getString(Tag.PatientID, "*");
+        return pid.equals("*")
+                ? null 
+                : new String[] { 
+                    pid,
+                    keys.getString(Tag.IssuerOfPatientID, "*")};
     }
 }
