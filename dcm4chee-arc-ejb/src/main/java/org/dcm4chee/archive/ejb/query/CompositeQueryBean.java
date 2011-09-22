@@ -43,7 +43,6 @@ import java.sql.SQLException;
 import java.util.EnumSet;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import javax.ejb.EJBException;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
@@ -66,7 +65,7 @@ import org.hibernate.ejb.HibernateEntityManagerFactory;
 @TransactionAttribute
 public class CompositeQueryBean implements CompositeQuery {
 
-    @Resource(mappedName="java:/DefaultDS")
+    // injection specified in META-INF/ejb-jar.xml
     private DataSource dataSource;
 
     @PersistenceUnit(unitName = "dcm4chee-arc")

@@ -54,6 +54,7 @@
   <description>Session Beans for DICOM Archive J2EE application</description>
   <properties>
     <db>hsql</db>
+    <ds>java:/pacsDS</ds>
     <arquillian.version>1.0.0.Alpha5</arquillian.version>
     <shrinkwrap.version>1.0.0-alpha-12</shrinkwrap.version>
     <jboss.version>6.0.0.Final</jboss.version>
@@ -194,5 +195,11 @@
         </configuration>
       </plugin>
     </plugins>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
   </build>
 </project>

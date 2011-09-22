@@ -58,7 +58,7 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -82,8 +82,8 @@ public class InstanceQueryTest {
             EnumSet.noneOf(QueryOption.class);
 
     @Deployment
-    public static JavaArchive createDeployment() {
-        return ShrinkWrap.create(JavaArchive.class, "test.jar")
+    public static WebArchive createDeployment() {
+        return ShrinkWrap.create(WebArchive.class, "test.war")
                 .addClasses(
                         CompositeQuery.class,
                         CompositeQueryBean.class,
@@ -94,7 +94,8 @@ public class InstanceQueryTest {
                         InstanceQueryImpl.class,
                         Builder.class,
                         MatchDateTimeRange.class,
-                        MatchPersonName.class);
+                        MatchPersonName.class)
+                .addAsWebInfResource("META-INF/ejb-jar.xml", "ejb-jar.xml");
     }
 
     @EJB
