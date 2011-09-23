@@ -111,18 +111,18 @@ class MatchDateTimeRange {
 
     private static Predicate matchUnknown(StringPath field, boolean matchUnknown, 
             Predicate predicate) {
-        return matchUnknown ? 
-                ExpressionUtils.or(predicate, field.eq("*")): 
-                ExpressionUtils.and(predicate, field.ne("*"));
+        return matchUnknown 
+            ? ExpressionUtils.or(predicate, field.eq("*"))
+            : ExpressionUtils.and(predicate, field.ne("*"));
     }
 
     private static Predicate range(StringPath field, DateRange range, FormatDate dt) {
         Date startDate = range.getStartDate();
         Date endDate = range.getEndDate();
         if (startDate == null)
-            return rangeEnd(field, dt.format(endDate));
+            return field.loe(dt.format(endDate));
         if (endDate == null)
-            return rangeStart(field, dt.format(startDate));
+            return field.goe(dt.format(startDate));
         return rangeInterval(field, startDate, endDate, dt);
     }
 
@@ -130,18 +130,9 @@ class MatchDateTimeRange {
             Date endDate, FormatDate dt) {
         String start = dt.format(startDate);
         String end = dt.format(endDate);
-        if (end.equals(start))
-            return field.eq(start);
-        else
-            return field.between(start, end);
-    }
-
-    private static Predicate rangeEnd(StringPath field, String value) {
-        return field.loe(value);
-    }
-
-    private static Predicate rangeStart(StringPath field, String value) {
-        return field.goe(value);
+        return end.equals(start)
+            ? field.eq(start)
+            : field.between(start, end);
     }
 
     private static Predicate combinedRange(StringPath dateField, StringPath timeField, DateRange dateRange) {
@@ -163,14 +154,12 @@ class MatchDateTimeRange {
         String endTime = DateUtils.formatTM(null, endDateRange);
         String startDate = DateUtils.formatDA(null, startDateRange);
         String endDate = DateUtils.formatDA(null, endDateRange);
-        if (endDate.equals(startDate))
-            return ExpressionUtils.allOf(
-                    dateField.eq(startDate), 
-                    rangeStart(timeField, startTime), 
-                    rangeEnd(timeField, endTime));
-        return ExpressionUtils.and(
-                combinedRangeStart(dateField, timeField, startDate, startTime), 
-                combinedRangeEnd(dateField, timeField, endDate, endTime));
+        return endDate.equals(startDate)
+            ? ExpressionUtils.allOf(dateField.eq(startDate), 
+                    timeField.goe(startTime), timeField.loe(endTime))
+            : ExpressionUtils.and(
+                    combinedRangeStart(dateField, timeField, startDate, startTime), 
+                    combinedRangeEnd(dateField, timeField, endDate, endTime));
     }
 
     private static Predicate combinedRangeEnd(StringPath dateField,
