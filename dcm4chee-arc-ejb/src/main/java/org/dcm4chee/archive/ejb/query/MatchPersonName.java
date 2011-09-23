@@ -165,15 +165,12 @@ class MatchPersonName {
                         noGivenNameSoundex))
                 .or(ExpressionUtils.and(noFamilyNameSoundex, noGivenNameSoundex));
         }
-
         return builder;
     }
 
     private static Predicate fuzzyWildCard(StringPath field, String name, String fuzzy) {
-        if (name.endsWith("*")) {
-            String pattern = fuzzy.concat("%");
-            return field.like(pattern);
-        }
-        return field.eq(fuzzy);
+        return name.endsWith("*")
+            ? field.like(fuzzy.concat("%"))
+            : field.eq(fuzzy);
     }
 }
