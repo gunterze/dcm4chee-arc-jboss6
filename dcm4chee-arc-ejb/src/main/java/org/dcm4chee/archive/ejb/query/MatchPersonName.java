@@ -115,8 +115,8 @@ class MatchPersonName {
             String value,
             AttributeFilter filter, boolean matchUnknown) {
         PersonName pn = new PersonName(value);
-        boolean containsFamilyName = pn.containst(PersonName.Component.FamilyName);
-        boolean containsGivenName = pn.containst(PersonName.Component.GivenName);
+        boolean containsFamilyName = pn.contains(PersonName.Component.FamilyName);
+        boolean containsGivenName = pn.contains(PersonName.Component.GivenName);
         if (containsFamilyName && containsGivenName)
             return fuzzyNames(name, familyNameSoundex, givenNameSoundex, 
                     pn.get(PersonName.Component.FamilyName),
