@@ -74,7 +74,8 @@ class MatchPersonName {
             String value, AttributeFilter filter, boolean matchUnknown) {
         PersonName pn = new PersonName(value);
         BooleanBuilder builder = new BooleanBuilder();
-        if (value.indexOf('=') == -1) {
+        if (!pn.contains(PersonName.Group.Ideographic)
+                && !pn.contains(PersonName.Group.Phonetic)) {
             String queryString = toQueryString(pn, PersonName.Group.Alphabetic);
             builder.or(Builder.wildCard(alphabethicName, queryString, false));
             builder.or(Builder.wildCard(ideographicName, queryString, false));
@@ -110,20 +111,18 @@ class MatchPersonName {
             StringPath givenNameSoundex,
             String value, AttributeFilter filter, boolean matchUnknown) {
         PersonName pn = new PersonName(value);
-        boolean containsFamilyName = pn.contains(PersonName.Component.FamilyName);
-        boolean containsGivenName = pn.contains(PersonName.Component.GivenName);
-        if (containsFamilyName && containsGivenName)
-            return fuzzyNames(familyNameSoundex, givenNameSoundex,
-                    pn.get(PersonName.Component.FamilyName),
-                    pn.get(PersonName.Component.GivenName),
-                    filter, matchUnknown);
-        if (containsGivenName)
-            return fuzzyName(familyNameSoundex, givenNameSoundex,
-                    pn.get(PersonName.Component.GivenName), filter, matchUnknown);
-        if (containsFamilyName)
-            return fuzzyName(familyNameSoundex, givenNameSoundex, 
-                    pn.get(PersonName.Component.FamilyName), filter, matchUnknown);
-        return null;
+        String familyName = pn.get(PersonName.Component.FamilyName);
+        String givenName = pn.get(PersonName.Component.GivenName);
+        return familyName != null
+            ? givenName != null
+                    ? fuzzyNames(familyNameSoundex, givenNameSoundex,
+                            familyName, givenName, filter, matchUnknown)
+                    : fuzzyName(familyNameSoundex, givenNameSoundex,
+                            familyName, filter, matchUnknown)
+            : givenName != null
+                    ? fuzzyName(familyNameSoundex, givenNameSoundex,
+                            givenName, filter, matchUnknown)
+                    : null;
     }
 
     private static Predicate fuzzyName(StringPath familyNameSoundex, StringPath givenNameSoundex,
