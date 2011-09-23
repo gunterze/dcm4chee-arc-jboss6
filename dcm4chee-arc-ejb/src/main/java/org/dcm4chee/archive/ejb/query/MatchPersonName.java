@@ -53,7 +53,7 @@ import com.mysema.query.types.path.StringPath;
  */
 class MatchPersonName {
 
-    static Predicate personName(StringPath alphabethicName,
+    static Predicate match(StringPath alphabethicName,
             StringPath ideographicName, 
             StringPath phoneticName,
             StringPath familyNameSoundex,
@@ -63,16 +63,15 @@ class MatchPersonName {
         if (value.equals("*"))
             return null;
 
+        PersonName pn = new PersonName(value);
         return isFuzzy
-            ? fuzzyPersonName(familyNameSoundex, givenNameSoundex, value, filter, matchUnknown)
-            : literalPersonName(alphabethicName, ideographicName, phoneticName,
-                    value, filter, matchUnknown);
+            ? fuzzyMatch(familyNameSoundex, givenNameSoundex, pn, filter, matchUnknown)
+            : literalMatch(alphabethicName, ideographicName, phoneticName, pn, filter, matchUnknown);
     }
 
-    private static Predicate literalPersonName(StringPath alphabethicName,
+    private static Predicate literalMatch(StringPath alphabethicName,
             StringPath ideographicName, StringPath phoneticName,
-            String value, AttributeFilter filter, boolean matchUnknown) {
-        PersonName pn = new PersonName(value);
+            PersonName pn, AttributeFilter filter, boolean matchUnknown) {
         BooleanBuilder builder = new BooleanBuilder();
         if (!pn.contains(PersonName.Group.Ideographic)
                 && !pn.contains(PersonName.Group.Phonetic)) {
@@ -106,31 +105,30 @@ class MatchPersonName {
         return (s.endsWith("*") || pn.contains(g, PersonName.Component.NameSuffix)) ? s : s + "^*";
     }
 
-    private static Predicate fuzzyPersonName(
+    private static Predicate fuzzyMatch(
             StringPath familyNameSoundex,
             StringPath givenNameSoundex,
-            String value, AttributeFilter filter, boolean matchUnknown) {
-        PersonName pn = new PersonName(value);
+            PersonName pn, AttributeFilter filter, boolean matchUnknown) {
         String familyName = pn.get(PersonName.Component.FamilyName);
         String givenName = pn.get(PersonName.Component.GivenName);
         return familyName != null
             ? givenName != null
-                    ? fuzzyNames(familyNameSoundex, givenNameSoundex,
+                    ? fuzzyMatch(familyNameSoundex, givenNameSoundex,
                             familyName, givenName, filter, matchUnknown)
-                    : fuzzyName(familyNameSoundex, givenNameSoundex,
+                    : fuzzyMatch(familyNameSoundex, givenNameSoundex,
                             familyName, filter, matchUnknown)
             : givenName != null
-                    ? fuzzyName(familyNameSoundex, givenNameSoundex,
+                    ? fuzzyMatch(familyNameSoundex, givenNameSoundex,
                             givenName, filter, matchUnknown)
                     : null;
     }
 
-    private static Predicate fuzzyName(StringPath familyNameSoundex, StringPath givenNameSoundex,
+    private static Predicate fuzzyMatch(StringPath familyNameSoundex, StringPath givenNameSoundex,
             String value,  AttributeFilter filter, boolean matchUnknown) {
         String fuzzyName = filter.toFuzzy(value);
         BooleanBuilder builder = new BooleanBuilder()
-            .or(fuzzyNameWildCard(familyNameSoundex, value, fuzzyName))
-            .or(fuzzyNameWildCard(givenNameSoundex, value, fuzzyName));
+            .or(fuzzyWildCard(familyNameSoundex, value, fuzzyName))
+            .or(fuzzyWildCard(givenNameSoundex, value, fuzzyName));
         if (matchUnknown)
             builder.or(ExpressionUtils.and(
                     givenNameSoundex.eq("*"),
@@ -138,32 +136,32 @@ class MatchPersonName {
         return builder;
     }
 
-    private static Predicate fuzzyNames(StringPath familyNameSoundex, StringPath givenNameSoundex,
+    private static Predicate fuzzyMatch(StringPath familyNameSoundex, StringPath givenNameSoundex,
             String familyName, String givenName, AttributeFilter filter, boolean matchUnknown) {
         String fuzzyFamilyName = filter.toFuzzy(familyName);
         String fuzzyGivenName = filter.toFuzzy(givenName);
         Predicate names = ExpressionUtils.and(
-                fuzzyNameWildCard(givenNameSoundex, givenName, fuzzyGivenName),
-                fuzzyNameWildCard(familyNameSoundex, familyName, fuzzyFamilyName));
+                fuzzyWildCard(givenNameSoundex, givenName, fuzzyGivenName),
+                fuzzyWildCard(familyNameSoundex, familyName, fuzzyFamilyName));
         Predicate namesSwap = ExpressionUtils.and(
-                fuzzyNameWildCard(givenNameSoundex, familyName, fuzzyFamilyName),
-                fuzzyNameWildCard(familyNameSoundex, givenName, fuzzyGivenName));
+                fuzzyWildCard(givenNameSoundex, familyName, fuzzyFamilyName),
+                fuzzyWildCard(familyNameSoundex, givenName, fuzzyGivenName));
         BooleanBuilder builder = new BooleanBuilder().or(names).or(namesSwap);
         if (matchUnknown) {
             BooleanExpression noFamilyNameSoundex = familyNameSoundex.eq("*");
             BooleanExpression noGivenNameSoundex = givenNameSoundex.eq("*");
             builder
                 .or(ExpressionUtils.and(
-                        fuzzyNameWildCard(givenNameSoundex, givenName, fuzzyGivenName),
+                        fuzzyWildCard(givenNameSoundex, givenName, fuzzyGivenName),
                         noFamilyNameSoundex))
                 .or(ExpressionUtils.and(
-                        fuzzyNameWildCard(familyNameSoundex, familyName, fuzzyFamilyName),
+                        fuzzyWildCard(familyNameSoundex, familyName, fuzzyFamilyName),
                         noGivenNameSoundex))
                 .or(ExpressionUtils.and(
-                        fuzzyNameWildCard(givenNameSoundex, familyName, fuzzyFamilyName),
+                        fuzzyWildCard(givenNameSoundex, familyName, fuzzyFamilyName),
                         noFamilyNameSoundex))
                 .or(ExpressionUtils.and(
-                        fuzzyNameWildCard(familyNameSoundex, givenName, fuzzyGivenName),
+                        fuzzyWildCard(familyNameSoundex, givenName, fuzzyGivenName),
                         noGivenNameSoundex))
                 .or(ExpressionUtils.and(noFamilyNameSoundex, noGivenNameSoundex));
         }
@@ -171,7 +169,7 @@ class MatchPersonName {
         return builder;
     }
 
-    private static Predicate fuzzyNameWildCard(StringPath field, String name, String fuzzy) {
+    private static Predicate fuzzyWildCard(StringPath field, String name, String fuzzy) {
         if (name.endsWith("*")) {
             String pattern = fuzzy.concat("%");
             return field.like(pattern);

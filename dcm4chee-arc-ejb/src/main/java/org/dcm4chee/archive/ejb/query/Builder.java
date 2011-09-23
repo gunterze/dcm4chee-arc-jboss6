@@ -83,7 +83,7 @@ abstract class Builder {
         if (keys == null)
             return;
 
-        builder.and(MatchPersonName.personName(QPatient.patient.patientName,
+        builder.and(MatchPersonName.match(QPatient.patient.patientName,
                 QPatient.patient.patientIdeographicName,
                 QPatient.patient.patientPhoneticName,
                 QPatient.patient.patientFamilyNameSoundex,
@@ -113,7 +113,7 @@ abstract class Builder {
         builder.and(MatchDateTimeRange.rangeMatch(QStudy.study.studyDate, QStudy.study.studyTime, 
                 Tag.StudyDate, Tag.StudyTime, Tag.StudyDateAndTime, 
                 keys, queryOpts.contains(QueryOption.DATETIME), matchUnknown));
-        builder.and(MatchPersonName.personName(QStudy.study.referringPhysicianName,
+        builder.and(MatchPersonName.match(QStudy.study.referringPhysicianName,
         QStudy.study.referringPhysicianIdeographicName,
         QStudy.study.referringPhysicianPhoneticName,
         QStudy.study.referringPhysicianFamilyNameSoundex,
@@ -387,7 +387,7 @@ abstract class Builder {
             .and(wildCard(QRequestAttributes.requestAttributes.requestingService,
                 filter.getString(item, Tag.RequestingService),
                 matchUnknown))
-            .and(MatchPersonName.personName(
+            .and(MatchPersonName.match(
                 QRequestAttributes.requestAttributes.requestingPhysician,
                 QRequestAttributes.requestAttributes.requestingPhysicianIdeographicName,
                 QRequestAttributes.requestAttributes.requestingPhysicianPhoneticName,
@@ -427,7 +427,7 @@ abstract class Builder {
                     .and(MatchDateTimeRange.rangeMatch(
                         QVerifyingObserver.verifyingObserver.verificationDateTime, item, 
                         Tag.VerificationDateTime, MatchDateTimeRange.FormatDate.DT, matchUnknown))
-                    .and(MatchPersonName.personName(
+                    .and(MatchPersonName.match(
                         QVerifyingObserver.verifyingObserver.verifyingObserverName,
                         QVerifyingObserver.verifyingObserver.verifyingObserverIdeographicName,
                         QVerifyingObserver.verifyingObserver.verifyingObserverPhoneticName,
