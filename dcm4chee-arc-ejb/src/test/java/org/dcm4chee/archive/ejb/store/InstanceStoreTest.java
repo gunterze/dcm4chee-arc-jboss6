@@ -38,17 +38,19 @@
 
 package org.dcm4chee.archive.ejb.store;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
+import java.util.Arrays;
 
 import javax.ejb.EJB;
 
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
+import org.dcm4che.data.VR;
 import org.dcm4che.io.SAXReader;
 import org.dcm4che.soundex.ESoundex;
-import org.dcm4che.util.StringUtils;
-import org.dcm4chee.archive.ejb.store.CodeFactory;
-import org.dcm4chee.archive.ejb.store.InstanceStoreBean;
-import org.dcm4chee.archive.ejb.store.IssuerFactory;
-import org.dcm4chee.archive.ejb.store.PatientFactory;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Instance;
@@ -104,15 +106,12 @@ public class InstanceStoreTest {
                 SAXReader.parse("resource:dcm4chee-arc/instance-attribute-filter.xml", null),
                 SAXReader.parse("resource:dcm4chee-arc/case-insensitive-attributes.xml", null),
                 new ESoundex());
-        Instance ct1 = 
-            instanceStore.store(SAXReader.parse("resource:ct-1.xml", null), filter,
-                SOURCE_AET, "AET_1\\AET_2", "AET_3", Availability.ONLINE);
-        Instance ct2 =
-            instanceStore.store(SAXReader.parse("resource:ct-2.xml", null), filter,
-                SOURCE_AET, "AET_2", "AET_3", Availability.NEARLINE);
-        Instance pr1 =
-            instanceStore.store(SAXReader.parse("resource:pr-1.xml", null), filter,
-                SOURCE_AET, "AET_1\\AET_2", "AET_4", Availability.ONLINE);
+        Instance ct1 = instanceStore.store(parse("resource:ct-1.xml", SOURCE_AET,
+                new String[]{"AET_1","AET_2"}, "AET_3", Availability.ONLINE), filter);
+        Instance ct2 = instanceStore.store(parse("resource:ct-2.xml", SOURCE_AET,
+                    new String[]{"AET_2"}, "AET_3", Availability.NEARLINE), filter);
+        Instance pr1 = instanceStore.store(parse("resource:pr-1.xml", SOURCE_AET,
+                    new String[]{"AET_1", "AET_2"}, "AET_4", Availability.ONLINE), filter);
         instanceStore.close();
         Series ctSeries = ct1.getSeries();
         Series prSeries = pr1.getSeries();
@@ -123,12 +122,13 @@ public class InstanceStoreTest {
         assertEquals(3, study.getNumberOfStudyRelatedInstances());
         assertEquals(2, ctSeries.getNumberOfSeriesRelatedInstances());
         assertEquals(1, prSeries.getNumberOfSeriesRelatedInstances());
-        assertTrue(equals(study.getModalitiesInStudy(), "CT", "PR"));
-        assertTrue(equals(study.getSOPClassesInStudy(),
-                "1.2.840.10008.5.1.4.1.1.2", "1.2.840.10008.5.1.4.1.1.11.1"));
-        assertEquals("AET_2", ctSeries.getRetrieveAETs());
-        assertEquals("AET_1\\AET_2", prSeries.getRetrieveAETs());
-        assertEquals("AET_2", study.getRetrieveAETs());
+        assertArrayEquals(new String[]{"CT", "PR"}, sort(study.getModalitiesInStudy()));
+        assertArrayEquals(
+                new String[]{"1.2.840.10008.5.1.4.1.1.11.1","1.2.840.10008.5.1.4.1.1.2" },
+                sort(study.getSOPClassesInStudy()));
+        assertArrayEquals(new String[]{"AET_2"}, ctSeries.getRetrieveAETs());
+        assertArrayEquals(new String[]{"AET_1", "AET_2"}, sort(prSeries.getRetrieveAETs()));
+        assertArrayEquals(new String[]{"AET_2"}, study.getRetrieveAETs());
         assertEquals("AET_3", ctSeries.getExternalRetrieveAET());
         assertEquals("AET_4", prSeries.getExternalRetrieveAET());
         assertNull(study.getExternalRetrieveAET());
@@ -137,22 +137,18 @@ public class InstanceStoreTest {
         assertEquals(Availability.NEARLINE, study.getAvailability());
   }
 
-    private boolean equals(String s, String... vals) {
-        String[] ss = StringUtils.split(s, '\\');
-        if (ss.length != vals.length)
-            return false;
-        for (String val : vals) {
-            if (!contains(ss, val))
-                return false;
-        }
-        return true;
+    private Object[] sort(Object[] a) {
+        Arrays.sort(a);
+        return a;
     }
 
-    private boolean contains(String[] ss, String val) {
-        for (String s : ss) {
-            if (val.equals(s))
-                return true;
-        }
-        return false;
+    private Attributes parse(String uri, String sourceAET, String[] retrieveAETs,
+            String externalRetrieveAET, Availability availability) throws Exception {
+        Attributes data = SAXReader.parse(uri);
+        data.setString(InstanceStore.SOURCE_AET, InstanceStore.DCM4CHEE_ARC, VR.AE, sourceAET);
+        data.setString(Tag.RetrieveAETitle, VR.AE, retrieveAETs);
+        data.setString(InstanceStore.EXT_RETRIEVE_AET, InstanceStore.DCM4CHEE_ARC, VR.AE, externalRetrieveAET);
+        data.setString(Tag.InstanceAvailability, VR.CS, availability.toString());
+        return data;
     }
 }

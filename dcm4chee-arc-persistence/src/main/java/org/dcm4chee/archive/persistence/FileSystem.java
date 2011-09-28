@@ -98,10 +98,6 @@ public class FileSystem implements Serializable {
     private String uri;
 
     @Basic(optional = false)
-    @Column(name = "retrieve_aet")
-    private String retrieveAET;
-
-    @Basic(optional = false)
     @Column(name = "availability")
     private Availability availability;
 
@@ -131,14 +127,6 @@ public class FileSystem implements Serializable {
 
     public void setGroupID(String groupID) {
         this.groupID = groupID;
-    }
-
-    public String getRetrieveAET() {
-        return retrieveAET;
-    }
-
-    public void setRetrieveAET(String retrieveAET) {
-        this.retrieveAET = retrieveAET;
     }
 
     public Availability getAvailability() {
@@ -180,7 +168,6 @@ public class FileSystem implements Serializable {
                 + ", uri=" + uri
                 + ", avail=" + availability
                 + ", status=" + status
-                + ", aet=" + retrieveAET
                 + "]";
     }
 }

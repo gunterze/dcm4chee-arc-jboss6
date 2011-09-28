@@ -80,7 +80,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
                     as.getRemoteAET());
             InstanceStore store = initInstanceStore(as);
             if (initFileSystem) {
-                store.initFileSystem(fsGroupID, as.getLocalAET());
+                store.initFileSystem(fsGroupID);
                 initFileSystem = false;
             }
             return store.selectFileSystem(fsGroupID);
@@ -136,8 +136,9 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         String filePath = dst.toURI().toString().substring(fs.getURI().length());
         InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
         try {
-            if (store.store(ds,
-                    Configuration.attributeFilterFor(ae), as.getRemoteAET(),
+            ds.setString(InstanceStore.SOURCE_AET, InstanceStore.DCM4CHEE_ARC, VR.AE, as.getRemoteAET());
+            ds.setString(Tag.RetrieveAETitle, VR.AE, as.getLocalAET());
+            if (store.store(ds, Configuration.attributeFilterFor(ae),
                     new FileRef(fs, filePath, tsuid, dst.length(), digest(digest))))
                 return null;
             LOG.info("{}: ignore received object", as);

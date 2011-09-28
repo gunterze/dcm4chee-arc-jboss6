@@ -63,6 +63,7 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
 import org.dcm4che.util.DateUtils;
+import org.dcm4che.util.StringUtils;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
@@ -74,13 +75,13 @@ import org.dcm4che.util.DateUtils;
     name="Series.findBySeriesInstanceUID",
     query="SELECT s FROM Series s WHERE s.seriesInstanceUID = ?1"),
 @NamedQuery(
-    name="Series.findAttributesBySeriesPk",
+    name="Series.encodedAttributes",
     query="SELECT s.encodedAttributes, " +
                  "s.study.encodedAttributes, " +
                  "s.study.patient.encodedAttributes " +
           "FROM Series s WHERE s.pk = ?1"),
 @NamedQuery(
-    name="Series.findQueryAttributesBySeriesPk",
+    name="Series.encodedAttributes2",
     query="SELECT s.study.numberOfStudyRelatedSeries, " +
                  "s.study.numberOfStudyRelatedInstances, " +
                  "s.numberOfSeriesRelatedInstances, " +
@@ -91,8 +92,20 @@ import org.dcm4che.util.DateUtils;
                  "s.study.patient.encodedAttributes " +
           "FROM Series s WHERE s.pk = ?1"),
 @NamedQuery(
-    name="Series.incNumberOfSeriesRelatedInstances",
-    query="UPDATE Series s SET numberOfSeriesRelatedInstances = numberOfSeriesRelatedInstances + 1 WHERE s = ?1")
+    name="Series.countRelatedInstances",
+    query="SELECT COUNT(i) FROM Instance i WHERE i.series = ?1"),
+@NamedQuery(
+    name="Series.retrieveAETs",
+    query="SELECT DISTINCT(i.retrieveAETs) FROM Instance i WHERE i.series = ?1"),
+@NamedQuery(
+    name="Series.externalRetrieveAET",
+    query="SELECT DISTINCT(i.externalRetrieveAET) FROM Instance i WHERE i.series = ?1"),
+@NamedQuery(
+    name="Series.availability",
+    query="SELECT MAX(i.availability) FROM Instance i WHERE i.series = ?1"),
+@NamedQuery(
+    name="Series.setDirty",
+    query="UPDATE Series s SET dirty = true WHERE s = ?1")
 })
 @Entity
 @Table(name = "series")
@@ -100,14 +113,14 @@ public class Series implements Serializable {
 
     private static final long serialVersionUID = -8317105475421750944L;
 
-    public static final String FIND_BY_SERIES_INSTANCE_UID =
-            "Series.findBySeriesInstanceUID";
-    public static final String FIND_ATTRIBUTES_BY_SERIES_PK =
-        "Series.findAttributesBySeriesPk";
-    public static final String FIND_QUERY_ATTRIBUTES_BY_SERIES_PK =
-            "Series.findQueryAttributesBySeriesPk";
-    public static final String INC_NUMBER_OF_SERIES_RELATED_INSTANCES =
-            "Series.incNumberOfSeriesRelatedInstances";
+    public static final String FIND_BY_SERIES_INSTANCE_UID = "Series.findBySeriesInstanceUID";
+    public static final String ENCODED_ATTRIBUTES = "Series.encodedAttributes";
+    public static final String ENCODED_ATTRIBUTES2 = "Series.encodedAttributes2";
+    public static final String COUNT_RELATED_INSTANCES = "Series.countRelatedInstances";
+    public static final String RETRIEVE_AETS = "Series.retrieveAETs";
+    public static final String EXTERNAL_RETRIEVE_AET = "Series.externalRetrieveAET";
+    public static final String AVAILABILITY = "Series.availability";
+    public static final String SET_DIRTY = "Series.setDirty";
 
     @Id
     @GeneratedValue
@@ -203,7 +216,7 @@ public class Series implements Serializable {
     private String seriesCustomAttribute3;
 
     @Basic(optional = false)
-    @Column(name = "num_instances", updatable = false)
+    @Column(name = "num_instances")
     private int numberOfSeriesRelatedInstances;
 
     @Column(name = "src_aet")
@@ -218,6 +231,10 @@ public class Series implements Serializable {
     @Basic(optional = false)
     @Column(name = "availability")
     private Availability availability;
+
+    @Basic(optional = false)
+    @Column(name = "dirty")
+    private boolean dirty;
 
     @Basic(optional = false)
     @Column(name = "series_attrs")
@@ -376,12 +393,12 @@ public class Series implements Serializable {
         this.sourceAET = sourceAET;
     }
 
-    public String getRetrieveAETs() {
-        return retrieveAETs;
+    public String[] getRetrieveAETs() {
+        return StringUtils.split(retrieveAETs, '\\');
     }
 
-    public void setRetrieveAETs(String retrieveAETs) {
-        this.retrieveAETs = retrieveAETs;
+    public void setRetrieveAETs(String... retrieveAETs) {
+        this.retrieveAETs = StringUtils.join(retrieveAETs, '\\');
     }
 
     public String getExternalRetrieveAET() {
@@ -398,6 +415,14 @@ public class Series implements Serializable {
 
     public void setAvailability(Availability availability) {
         this.availability = availability;
+    }
+
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
     }
 
     public byte[] getEncodedAttributes() {

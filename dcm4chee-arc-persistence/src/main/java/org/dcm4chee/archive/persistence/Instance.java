@@ -62,6 +62,7 @@ import javax.persistence.Table;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.util.DateUtils;
+import org.dcm4che.util.StringUtils;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
@@ -254,12 +255,12 @@ public class Instance implements Serializable {
         return instanceCustomAttribute3;
     }
 
-    public String getRetrieveAETs() {
-        return retrieveAETs;
+    public String[] getRetrieveAETs() {
+        return StringUtils.split(retrieveAETs, '\\');
     }
 
-    public void setRetrieveAETs(String retrieveAETs) {
-        this.retrieveAETs = retrieveAETs;
+    public void setRetrieveAETs(String... retrieveAETs) {
+        this.retrieveAETs = StringUtils.join(retrieveAETs, '\\');
     }
 
     public String getExternalRetrieveAET() {

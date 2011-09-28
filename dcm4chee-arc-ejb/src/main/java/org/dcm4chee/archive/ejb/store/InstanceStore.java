@@ -42,7 +42,6 @@ import javax.ejb.Local;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4chee.archive.persistence.AttributeFilter;
-import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.FileRef;
 import org.dcm4chee.archive.persistence.FileSystem;
 import org.dcm4chee.archive.persistence.Instance;
@@ -54,17 +53,17 @@ import org.dcm4chee.archive.persistence.Instance;
 public interface InstanceStore {
 
     public static final String JNDI_NAME = "InstanceStoreBean/local";
+    public static final String DCM4CHEE_ARC = "DCM4CHEE_ARC";
+    public static final int SOURCE_AET = 0x00090053;
+    public static final int EXT_RETRIEVE_AET = 0x00090055;
 
-    Instance store(Attributes attrs, AttributeFilter filter, String sourceAET,
-            String retrieveAETs, String externalRetrieveAET,
-            Availability availability);
+    Instance store(Attributes data, AttributeFilter filter);
 
-    boolean store(Attributes ds, AttributeFilter attributeFilterFor, String sourceAET,
-            FileRef fileRef);
+    boolean store(Attributes data, AttributeFilter filter, FileRef fileRef);
 
     void close();
 
-    boolean initFileSystem(String groupID, String retrieveAET);
+    boolean initFileSystem(String groupID);
 
     FileSystem selectFileSystem(String groupID);
 

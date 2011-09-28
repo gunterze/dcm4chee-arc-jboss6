@@ -42,7 +42,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import javax.ejb.Remove;
@@ -55,6 +55,7 @@ import javax.persistence.PersistenceContextType;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
+import org.dcm4che.data.VR;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
@@ -76,69 +77,38 @@ public class InstanceStoreBean implements InstanceStore {
 
     @PersistenceContext(unitName = "dcm4chee-arc", type = PersistenceContextType.EXTENDED)
     private EntityManager em;
-    private final HashMap<String,Series> cachedSeries = new HashMap<String,Series>();
+    private Series cachedSeries;
 
     @Override
-    public boolean store(Attributes attrs, AttributeFilter filter, String sourceAET,
-            FileRef fileRef) {
+    public boolean store(Attributes data, AttributeFilter filter, FileRef fileRef) {
         FileSystem fs = fileRef.getFileSystem();
-        Instance inst = store(attrs, filter, sourceAET, fs.getRetrieveAET(), null,
-                fs.getAvailability());
+        data.setString(Tag.InstanceAvailability, VR.CS, fs.getAvailability().toString());
+        Instance inst = store(data, filter);
         fileRef.setInstance(inst);
         em.persist(fileRef);
         return true;
     }
 
     @Override
-    public Instance store(Attributes attrs, AttributeFilter filter, String sourceAET,
-             String retrieveAETs, String externalRetrieveAET, Availability availability) {
+    public Instance store(Attributes data, AttributeFilter filter) {
         try {
-            return findInstance(attrs.getString(Tag.SOPInstanceUID, null));
+            return findInstance(data.getString(Tag.SOPInstanceUID, null));
         } catch (NoResultException e) {
             Instance inst = new Instance();
-            Series series = getSeries(attrs, filter, sourceAET, retrieveAETs,
-                    externalRetrieveAET, availability);
+            Series series = getSeries(data, filter);
             inst.setSeries(series);
             inst.setConceptNameCode(
-                    CodeFactory.getCode(em, attrs.getNestedDataset(Tag.ConceptNameCodeSequence)));
+                    CodeFactory.getCode(em, data.getNestedDataset(Tag.ConceptNameCodeSequence)));
             inst.setVerifyingObservers(createVerifyingObservers(
-                    attrs.getSequence(Tag.VerifyingObserverSequence), filter));
+                    data.getSequence(Tag.VerifyingObserverSequence), filter));
             inst.setContentItems(createContentItems(
-                    attrs.getSequence(Tag.ContentSequence), filter));
-            inst.setRetrieveAETs(retrieveAETs);
-            inst.setExternalRetrieveAET(externalRetrieveAET);
-            inst.setAvailability(availability);
-            inst.setAttributes(attrs, filter);
+                    data.getSequence(Tag.ContentSequence), filter));
+            inst.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
+            inst.setExternalRetrieveAET(data.getString(EXT_RETRIEVE_AET, DCM4CHEE_ARC, null, null));
+            inst.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
+            inst.setAttributes(data, filter);
             em.persist(inst);
-            Study study = series.getStudy();
-            incNumberOfSeriesRelatedInstances(series);
-            incNumberOfStudyRelatedInstances(study);
-            if (!contains(study.getSOPClassesInStudy(), inst.getSopClassUID()))
-                study.setSOPClassesInStudy(join(
-                        em.createNamedQuery(Study.SOP_CLASSES_IN_STUDY, String.class)
-                        .setParameter(1, study)
-                        .getResultList()));
-            if (!contains(study.getModalitiesInStudy(), series.getModality()))
-                study.setModalitiesInStudy(join(
-                        em.createNamedQuery(Study.MODALITIES_IN_STUDY, String.class)
-                          .setParameter(1, study)
-                          .getResultList()));
-            if (!isNullOrEquals(series.getRetrieveAETs(), retrieveAETs))
-                series.setRetrieveAETs(
-                        common(series.getRetrieveAETs(), retrieveAETs));
-            if (!isNullOrEquals(series.getExternalRetrieveAET(),
-                    externalRetrieveAET))
-                series.setExternalRetrieveAET(null);
-            if (series.getAvailability().compareTo(availability) < 0)
-                series.setAvailability(availability);
-            if (!isNullOrEquals(study.getRetrieveAETs(), retrieveAETs))
-                study.setRetrieveAETs(
-                        common(study.getRetrieveAETs(), retrieveAETs));
-            if (!isNullOrEquals(study.getExternalRetrieveAET(),
-                    externalRetrieveAET))
-                study.setExternalRetrieveAET(null);
-            if (study.getAvailability().compareTo(availability) < 0)
-                study.setAvailability(availability);
+            setDirty(series);
             em.flush();
             return inst;
         }
@@ -153,7 +123,7 @@ public class InstanceStoreBean implements InstanceStore {
     }
 
     @Override
-    public boolean initFileSystem(String groupID, String retrieveAET) {
+    public boolean initFileSystem(String groupID) {
         if (em.createNamedQuery(FileSystem.COUNT_WITH_GROUP_ID, Long.class)
                 .setParameter(1, groupID)
                 .getSingleResult() > 0)
@@ -162,52 +132,10 @@ public class InstanceStoreBean implements InstanceStore {
         FileSystem fs = new FileSystem();
         fs.setGroupID(groupID);
         fs.setURI(new File(System.getProperty("jboss.server.data.dir")).toURI().toString());
-        fs.setRetrieveAET(retrieveAET);
         fs.setAvailability(Availability.ONLINE);
         fs.setStatus(FileSystemStatus.RW);
         em.persist(fs);
         return true;
-    }
-
-    private static String common(String aets1, String aets2) {
-        if (aets1 == null || aets2 == null)
-            return null;
-        String[] ss1 = StringUtils.split(aets1, '\\');
-        String[] ss2 = StringUtils.split(aets2, '\\');
-        int len = 0;
-        for (int i = 0; i < ss1.length; i++) {
-            if (contains(ss2, ss1[i]))
-                ss1[len++] = ss1[i];
-        }
-        return len == 0 ? null : StringUtils.join(Arrays.copyOf(ss1, len), '\\');
-    }
-
-    private static boolean isNullOrEquals(String aet1, String aet2) {
-        return aet1 == null || aet1.equals(aet2);
-    }
-
-    private static String join(List<String> list) {
-        return StringUtils.join(list.toArray(new String[list.size()]), '\\');
-    }
-
-    private static boolean contains(String vals, String val) {
-        if (val == null)
-            return true;
-
-        if (vals == null)
-            return false;
-
-        if (vals.equals(val))
-            return true;
-
-        return contains(StringUtils.split(vals, '\\'), val);
-    }
-
-    private static boolean contains(String[] vals, String val) {
-        for (String s : vals)
-            if (s.equals(val))
-                return true;
-        return false;
     }
 
     private Instance findInstance(String sopIUID) {
@@ -230,25 +158,110 @@ public class InstanceStoreBean implements InstanceStore {
                  .getSingleResult();
     }
 
-    private void incNumberOfStudyRelatedInstances(Study study) {
-        em.createNamedQuery(Study.INC_NUMBER_OF_STUDY_RELATED_INSTANCES)
-          .setParameter(1, study)
-          .executeUpdate();
-        study.incNumberOfStudyRelatedInstances();
-    }
-
-    private void incNumberOfStudyRelatedSeries(Study study) {
-        em.createNamedQuery(Study.INC_NUMBER_OF_STUDY_RELATED_SERIES)
-          .setParameter(1, study)
-          .executeUpdate();
-        study.incNumberOfStudyRelatedSeries();
-    }
-
-    private void incNumberOfSeriesRelatedInstances(Series series) {
-        em.createNamedQuery(Series.INC_NUMBER_OF_SERIES_RELATED_INSTANCES)
+    private void setDirty(Series series) {
+        em.createNamedQuery(Series.SET_DIRTY)
           .setParameter(1, series)
           .executeUpdate();
-        series.incNumberOfSeriesRelatedInstances();
+    }
+
+    private String[] sopClassesOf(Study study) {
+        return em.createNamedQuery(Study.SOP_CLASSES_IN_STUDY, String.class)
+            .setParameter(1, study)
+            .getResultList().toArray(StringUtils.EMPTY_STRING);
+    }
+
+    private String[] modalitiesOf(Study study) {
+        List<String> resultList = em.createNamedQuery(Study.MODALITIES_IN_STUDY, String.class)
+            .setParameter(1, study)
+            .getResultList();
+        resultList.remove(null);
+        return resultList.toArray(StringUtils.EMPTY_STRING);
+    }
+
+    private int countRelatedSeriesOf(Study study) {
+        return em.createNamedQuery(Study.COUNT_RELATED_SERIES, Long.class)
+          .setParameter(1, study)
+          .getSingleResult().intValue();
+    }
+
+    private int countRelatedInstancesOf(Study study) {
+        return em.createNamedQuery(Study.COUNT_RELATED_INSTANCES, Long.class)
+          .setParameter(1, study)
+          .getSingleResult().intValue();
+    }
+
+    private int countRelatedInstancesOf(Series series) {
+        return em.createNamedQuery(Series.COUNT_RELATED_INSTANCES, Long.class)
+          .setParameter(1, series)
+          .getSingleResult().intValue();
+    }
+
+    private Availability availabilityOf(Study study) {
+        return em.createNamedQuery(Study.AVAILABILITY, Availability.class)
+          .setParameter(1, study)
+          .getSingleResult();
+    }
+
+    private Availability availabilityOf(Series series) {
+        return em.createNamedQuery(Series.AVAILABILITY, Availability.class)
+          .setParameter(1, series)
+          .getSingleResult();
+    }
+
+    private String[] retrieveAETsOf(Study study) {
+        return commonAETs(em.createNamedQuery(Study.RETRIEVE_AETS, String.class)
+                .setParameter(1, study)
+                .getResultList());
+    }
+
+    private String[] retrieveAETsOf(Series series) {
+        return commonAETs(em.createNamedQuery(Series.RETRIEVE_AETS, String.class)
+                .setParameter(1, series)
+                .getResultList());
+    }
+
+    private String[] commonAETs(List<String> resultList) {
+        LinkedHashSet<String> set = null;
+        for (String aets : resultList) {
+            if (aets == null)
+                return StringUtils.EMPTY_STRING;
+            List<String> aetList = Arrays.asList(StringUtils.split(aets, '\\'));
+            if (set == null) {
+                set = new LinkedHashSet<String>(aetList);
+            } else {
+                set.retainAll(aetList);
+            }
+            if (set.isEmpty())
+                return StringUtils.EMPTY_STRING;
+        }
+        return set.toArray(StringUtils.EMPTY_STRING);
+    }
+
+    private String externalRetrieveAETOf(Study study) {
+        return commonAET(em.createNamedQuery(Study.EXTERNAL_RETRIEVE_AET, String.class)
+                .setParameter(1, study)
+                .getResultList());
+    }
+
+    private String externalRetrieveAETOf(Series series) {
+        return commonAET(em.createNamedQuery(Series.EXTERNAL_RETRIEVE_AET, String.class)
+                .setParameter(1, series)
+                .getResultList());
+    }
+
+    private String commonAET(List<String> resultList) {
+        String common = null;
+        for (String aet : resultList) {
+            if (aet == null)
+                return null;
+            if (common == null) {
+                common = aet;
+            } else {
+                if (!common.equals(aet));
+                    return null;
+            }
+        }
+        return common;
     }
 
     private List<VerifyingObserver> createVerifyingObservers(Sequence seq, AttributeFilter filter) {
@@ -290,38 +303,61 @@ public class InstanceStoreBean implements InstanceStore {
     }
 
 
-    private Series getSeries(Attributes attrs, AttributeFilter filter, String sourceAET,
-            String retrieveAETs, String externalRetrieveAET, Availability availability) {
-        String seriesIUID = attrs.getString(Tag.SeriesInstanceUID, null);
-        Series series = cachedSeries.get(seriesIUID);
-        if (series != null)
+    private Series getSeries(Attributes data, AttributeFilter filter) {
+        String seriesIUID = data.getString(Tag.SeriesInstanceUID, null);
+        Series series = cachedSeries;
+        if (series != null && series.getSeriesInstanceUID().equals(seriesIUID))
             return series;
+
+        updateCachedSeries();
         try {
-            series = findSeries(seriesIUID);
+            cachedSeries = series = findSeries(seriesIUID);
         } catch (NoResultException e) {
-            series = new Series();
-            Study study = getStudy(attrs, filter, retrieveAETs, externalRetrieveAET, availability);
+            cachedSeries = series = new Series();
+            Study study = getStudy(data, filter);
             series.setStudy(study);
             series.setInstitutionCode(
-                    CodeFactory.getCode(em, attrs.getNestedDataset(Tag.InstitutionCodeSequence)));
+                    CodeFactory.getCode(em, data.getNestedDataset(Tag.InstitutionCodeSequence)));
             series.setRequestAttributes(createRequestAttributes(
-                    attrs.getSequence(Tag.RequestAttributesSequence), filter));
-            series.setSourceAET(sourceAET);
-            series.setRetrieveAETs(retrieveAETs);
-            series.setExternalRetrieveAET(externalRetrieveAET);
-            series.setAvailability(availability);
-            series.setAttributes(attrs, filter);
+                    data.getSequence(Tag.RequestAttributesSequence), filter));
+            series.setSourceAET(data.getString(SOURCE_AET, DCM4CHEE_ARC, null, null));
+            series.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
+            series.setExternalRetrieveAET(data.getString(EXT_RETRIEVE_AET, DCM4CHEE_ARC, null, null));
+            series.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
+            series.setAttributes(data, filter);
             em.persist(series);
-            incNumberOfStudyRelatedSeries(study);
         }
-        cachedSeries.put(seriesIUID, series);
         return series;
     }
 
     @Override
     @Remove
     public void close() {
-        cachedSeries.clear();
+        updateCachedSeries();
+        cachedSeries = null;
+    }
+
+    private void updateCachedSeries() {
+        Series series = cachedSeries;
+        if (series == null)
+            return;
+
+        series.setNumberOfSeriesRelatedInstances(countRelatedInstancesOf(series));
+        series.setRetrieveAETs(retrieveAETsOf(series));
+        series.setExternalRetrieveAET(externalRetrieveAETOf(series));
+        series.setAvailability(availabilityOf(series));
+        series.setDirty(false);
+
+        Study study = series.getStudy();
+        study.setModalitiesInStudy(modalitiesOf(study));
+        study.setSOPClassesInStudy(sopClassesOf(study));
+        study.setNumberOfStudyRelatedSeries(countRelatedSeriesOf(study));
+        study.setNumberOfStudyRelatedInstances(countRelatedInstancesOf(study));
+        study.setRetrieveAETs(retrieveAETsOf(study));
+        study.setExternalRetrieveAET(externalRetrieveAETOf(study));
+        study.setAvailability(availabilityOf(study));
+
+        em.flush();
     }
 
     private List<RequestAttributes> createRequestAttributes(Sequence seq, AttributeFilter filter) {
@@ -340,25 +376,24 @@ public class InstanceStoreBean implements InstanceStore {
         return list;
     }
 
-    private Study getStudy(Attributes attrs, AttributeFilter filter, String retrieveAETs,
-            String externalRetrieveAET, Availability availability) {
+    private Study getStudy(Attributes data, AttributeFilter filter) {
         try {
-            return findStudy(attrs.getString(Tag.StudyInstanceUID, null));
+            return findStudy(data.getString(Tag.StudyInstanceUID, null));
         } catch (NoResultException e) {
             Study study = new Study();
             study.setPatient(
-                    PatientFactory.followMergedWith(PatientFactory.getPatient(em, attrs, filter)));
+                    PatientFactory.followMergedWith(PatientFactory.getPatient(em, data, filter)));
             study.setProcedureCodes(CodeFactory.createCodes(em,
-                    attrs.getSequence(Tag.ProcedureCodeSequence)));
+                    data.getSequence(Tag.ProcedureCodeSequence)));
             study.setIssuerOfAccessionNumber(
-                    IssuerFactory.getIssuer(em, attrs.getNestedDataset(
+                    IssuerFactory.getIssuer(em, data.getNestedDataset(
                             Tag.IssuerOfAccessionNumberSequence)));
-            study.setModalitiesInStudy(attrs.getString(Tag.Modality, null));
-            study.setSOPClassesInStudy(attrs.getString(Tag.SOPClassUID, null));
-            study.setRetrieveAETs(retrieveAETs);
-            study.setExternalRetrieveAET(externalRetrieveAET);
-            study.setAvailability(availability);
-            study.setAttributes(attrs, filter);
+            study.setModalitiesInStudy(data.getString(Tag.Modality, null));
+            study.setSOPClassesInStudy(data.getString(Tag.SOPClassUID, null));
+            study.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
+            study.setExternalRetrieveAET(data.getString(EXT_RETRIEVE_AET, DCM4CHEE_ARC, null, null));
+            study.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
+            study.setAttributes(data, filter);
             em.persist(study);
             return study;
         }

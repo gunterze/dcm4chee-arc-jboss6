@@ -64,6 +64,7 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
 import org.dcm4che.util.DateUtils;
+import org.dcm4che.util.StringUtils;
 
 
 /**
@@ -82,11 +83,20 @@ import org.dcm4che.util.DateUtils;
     name="Study.sopClassesInStudy",
     query="SELECT DISTINCT(i.sopClassUID) FROM Instance i WHERE i.series.study = ?1"),
 @NamedQuery(
-    name="Study.incNumberOfStudyRelatedSeries",
-    query="UPDATE Study s SET numberOfStudyRelatedSeries = numberOfStudyRelatedSeries + 1 WHERE s = ?1"),
+    name="Study.countRelatedSeries",
+    query="SELECT COUNT(s) FROM Series s WHERE s.study = ?1"),
 @NamedQuery(
-    name="Study.incNumberOfStudyRelatedInstances",
-    query="UPDATE Study s SET numberOfStudyRelatedInstances = numberOfStudyRelatedInstances + 1 WHERE s = ?1")
+    name="Study.countRelatedInstances",
+    query="SELECT COUNT(i) FROM Instance i WHERE i.series.study = ?1"),
+@NamedQuery(
+    name="Study.retrieveAETs",
+    query="SELECT DISTINCT(s.retrieveAETs) FROM Series s WHERE s.study = ?1"),
+@NamedQuery(
+    name="Study.externalRetrieveAET",
+    query="SELECT DISTINCT(s.externalRetrieveAET) FROM Series s WHERE s.study = ?1"),
+@NamedQuery(
+    name="Study.availability",
+    query="SELECT MAX(s.availability) FROM Series s WHERE s.study = ?1")
 })
 @Entity
 @Table(name = "study")
@@ -94,16 +104,14 @@ public class Study implements Serializable {
 
     private static final long serialVersionUID = -6358525535057418771L;
 
-    public static final String FIND_BY_STUDY_INSTANCE_UID =
-        "Study.findByStudyInstanceUID";
-    public static final String MODALITIES_IN_STUDY =
-        "Study.modalitiesInStudy";
-    public static final String SOP_CLASSES_IN_STUDY =
-        "Study.sopClassesInStudy";
-    public static final String INC_NUMBER_OF_STUDY_RELATED_SERIES =
-        "Study.incNumberOfStudyRelatedSeries";
-    public static final String INC_NUMBER_OF_STUDY_RELATED_INSTANCES =
-        "Study.incNumberOfStudyRelatedInstances";
+    public static final String FIND_BY_STUDY_INSTANCE_UID = "Study.findByStudyInstanceUID";
+    public static final String MODALITIES_IN_STUDY = "Study.modalitiesInStudy";
+    public static final String SOP_CLASSES_IN_STUDY = "Study.sopClassesInStudy";
+    public static final String COUNT_RELATED_SERIES = "Study.countRelatedSeries";
+    public static final String COUNT_RELATED_INSTANCES = "Study.countRelatedInstances";
+    public static final String RETRIEVE_AETS = "Study.retrieveAETs";
+    public static final String EXTERNAL_RETRIEVE_AET = "Study.externalRetrieveAET";
+    public static final String AVAILABILITY = "Study.availability";
 
     @Id
     @GeneratedValue
@@ -179,11 +187,11 @@ public class Study implements Serializable {
     private String studyCustomAttribute3;
 
     @Basic(optional = false)
-    @Column(name = "num_series", updatable = false)
+    @Column(name = "num_series")
     private int numberOfStudyRelatedSeries;
 
     @Basic(optional = false)
-    @Column(name = "num_instances", updatable = false)
+    @Column(name = "num_instances")
     private int numberOfStudyRelatedInstances;
 
     @Column(name = "mods_in_study")
@@ -330,10 +338,6 @@ public class Study implements Serializable {
         this.numberOfStudyRelatedSeries = numberOfStudyRelatedSeries;
     }
 
-    public void incNumberOfStudyRelatedSeries() {
-        numberOfStudyRelatedSeries++;
-    }
-
     public int getNumberOfStudyRelatedInstances() {
         return numberOfStudyRelatedInstances;
     }
@@ -342,32 +346,28 @@ public class Study implements Serializable {
         this.numberOfStudyRelatedInstances = numberOfStudyRelatedInstances;
     }
 
-    public void incNumberOfStudyRelatedInstances() {
-        numberOfStudyRelatedInstances++;
+    public String[] getModalitiesInStudy() {
+        return StringUtils.split(modalitiesInStudy, '\\');
     }
 
-    public String getModalitiesInStudy() {
-        return modalitiesInStudy;
+    public void setModalitiesInStudy(String... modalitiesInStudy) {
+        this.modalitiesInStudy = StringUtils.join(modalitiesInStudy, '\\');
     }
 
-    public void setModalitiesInStudy(String modalitiesInStudy) {
-        this.modalitiesInStudy = modalitiesInStudy;
+    public String[] getSOPClassesInStudy() {
+        return StringUtils.split(sopClassesInStudy, '\\');
     }
 
-    public String getSOPClassesInStudy() {
-        return sopClassesInStudy;
+    public void setSOPClassesInStudy(String... sopClassesInStudy) {
+        this.sopClassesInStudy = StringUtils.join(sopClassesInStudy, '\\');
     }
 
-    public void setSOPClassesInStudy(String sopClassesInStudy) {
-        this.sopClassesInStudy = sopClassesInStudy;
+    public String[] getRetrieveAETs() {
+        return StringUtils.split(retrieveAETs, '\\');
     }
 
-    public String getRetrieveAETs() {
-        return retrieveAETs;
-    }
-
-    public void setRetrieveAETs(String retrieveAETs) {
-        this.retrieveAETs = retrieveAETs;
+    public void setRetrieveAETs(String... retrieveAETs) {
+        this.retrieveAETs = StringUtils.join(retrieveAETs, '\\');
     }
 
     public String getExternalRetrieveAET() {
