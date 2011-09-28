@@ -104,7 +104,7 @@ public class InstanceStoreBean implements InstanceStore {
             inst.setContentItems(createContentItems(
                     data.getSequence(Tag.ContentSequence), filter));
             inst.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
-            inst.setExternalRetrieveAET(data.getString(EXT_RETRIEVE_AET, DCM4CHEE_ARC, null, null));
+            inst.setExternalRetrieveAET(data.getString(DCM4CHEE_ARC, EXT_RETRIEVE_AET));
             inst.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
             inst.setAttributes(data, filter);
             em.persist(inst);
@@ -320,9 +320,9 @@ public class InstanceStoreBean implements InstanceStore {
                     CodeFactory.getCode(em, data.getNestedDataset(Tag.InstitutionCodeSequence)));
             series.setRequestAttributes(createRequestAttributes(
                     data.getSequence(Tag.RequestAttributesSequence), filter));
-            series.setSourceAET(data.getString(SOURCE_AET, DCM4CHEE_ARC, null, null));
+            series.setSourceAET(data.getString(DCM4CHEE_ARC, SOURCE_AET));
             series.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
-            series.setExternalRetrieveAET(data.getString(EXT_RETRIEVE_AET, DCM4CHEE_ARC, null, null));
+            series.setExternalRetrieveAET(data.getString(DCM4CHEE_ARC, EXT_RETRIEVE_AET));
             series.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
             series.setAttributes(data, filter);
             em.persist(series);
@@ -391,7 +391,7 @@ public class InstanceStoreBean implements InstanceStore {
             study.setModalitiesInStudy(data.getString(Tag.Modality, null));
             study.setSOPClassesInStudy(data.getString(Tag.SOPClassUID, null));
             study.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
-            study.setExternalRetrieveAET(data.getString(EXT_RETRIEVE_AET, DCM4CHEE_ARC, null, null));
+            study.setExternalRetrieveAET(data.getString(DCM4CHEE_ARC, EXT_RETRIEVE_AET));
             study.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
             study.setAttributes(data, filter);
             em.persist(study);

@@ -211,7 +211,7 @@ public class AttributeFilter {
         if (selector != null) {
             String val = selector.selectStringValue(attrs, null);
             if (val != null)
-                return caseInsensitive.contains(selector.tag(), selector.privateCreator())
+                return caseInsensitive.contains(selector.privateCreator(), selector.tag())
                         ? val.toUpperCase()
                         : val;
         }

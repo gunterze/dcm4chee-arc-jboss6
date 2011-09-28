@@ -145,9 +145,9 @@ public class InstanceStoreTest {
     private Attributes parse(String uri, String sourceAET, String[] retrieveAETs,
             String externalRetrieveAET, Availability availability) throws Exception {
         Attributes data = SAXReader.parse(uri);
-        data.setString(InstanceStore.SOURCE_AET, InstanceStore.DCM4CHEE_ARC, VR.AE, sourceAET);
+        data.setString(InstanceStore.DCM4CHEE_ARC, InstanceStore.SOURCE_AET, VR.AE, sourceAET);
         data.setString(Tag.RetrieveAETitle, VR.AE, retrieveAETs);
-        data.setString(InstanceStore.EXT_RETRIEVE_AET, InstanceStore.DCM4CHEE_ARC, VR.AE, externalRetrieveAET);
+        data.setString(InstanceStore.DCM4CHEE_ARC, InstanceStore.EXT_RETRIEVE_AET, VR.AE, externalRetrieveAET);
         data.setString(Tag.InstanceAvailability, VR.CS, availability.toString());
         return data;
     }

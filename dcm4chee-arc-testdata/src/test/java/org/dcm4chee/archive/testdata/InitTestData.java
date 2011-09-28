@@ -40,6 +40,9 @@ package org.dcm4chee.archive.testdata;
 
 import javax.ejb.EJB;
 
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
+import org.dcm4che.data.VR;
 import org.dcm4che.io.SAXReader;
 import org.dcm4che.soundex.ESoundex;
 import org.dcm4chee.archive.ejb.store.CodeFactory;
@@ -134,9 +137,13 @@ public class InitTestData {
                 SAXReader.parse("resource:dcm4chee-arc/instance-attribute-filter.xml", null),
                 SAXReader.parse("resource:dcm4chee-arc/case-insensitive-attributes.xml", null),
                 new ESoundex());
-        for (String res : RESOURCES)
-            instanceStore.store(SAXReader.parse("resource:" + res, null), filter,
-                    SOURCE_AET, RETRIEVE_AETS, null, Availability.ONLINE);
+        for (String res : RESOURCES) {
+            Attributes ds = SAXReader.parse("resource:" + res, null);
+            ds.setString(InstanceStore.DCM4CHEE_ARC, InstanceStore.SOURCE_AET, VR.AE, SOURCE_AET);
+            ds.setString(Tag.RetrieveAETitle, VR.AE, RETRIEVE_AETS);
+            ds.setString(Tag.InstanceAvailability, VR.CS, Availability.ONLINE.toString());
+            instanceStore.store(ds, filter);
+        }
         instanceStore.close();
     }
 
