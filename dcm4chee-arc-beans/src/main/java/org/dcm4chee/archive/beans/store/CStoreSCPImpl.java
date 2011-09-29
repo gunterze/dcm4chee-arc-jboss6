@@ -138,7 +138,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         try {
             ds.setString(InstanceStore.DCM4CHEE_ARC, InstanceStore.SOURCE_AET, VR.AE, as.getRemoteAET());
             ds.setString(Tag.RetrieveAETitle, VR.AE, as.getLocalAET());
-            if (store.store(ds, Configuration.attributeFilterFor(ae),
+            if (store.store(ds, Configuration.storeParamFor(ae),
                     new FileRef(fs, filePath, tsuid, dst.length(), digest(digest))))
                 return null;
             LOG.info("{}: ignore received object", as);

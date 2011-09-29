@@ -44,6 +44,7 @@ import javax.ejb.EJBException;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4chee.archive.persistence.QPatient;
+import org.dcm4chee.archive.persistence.StoreParam;
 import org.dcm4chee.archive.persistence.Utils;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -58,14 +59,14 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
 class PatientQueryImpl extends CompositeQueryImpl {
 
     public PatientQueryImpl(StatelessSession session, String[] pids, Attributes keys,
-            QueryParam param) {
-        super(query(session, pids, keys, param), false);
+            QueryParam queryParam, StoreParam storeParam) {
+        super(query(session, pids, keys, queryParam, storeParam), false);
     }
 
     private static ScrollableResults query(StatelessSession session, String[] pids,
-            Attributes keys, QueryParam param) {
+            Attributes keys, QueryParam queryParam, StoreParam storeParam) {
         BooleanBuilder builder = new BooleanBuilder();
-        Builder.addPatientLevelPredicates(builder, pids, keys, param);
+        Builder.addPatientLevelPredicates(builder, pids, keys, queryParam, storeParam);
         return new HibernateQuery(session)
             .from(QPatient.patient)
             .where(builder)

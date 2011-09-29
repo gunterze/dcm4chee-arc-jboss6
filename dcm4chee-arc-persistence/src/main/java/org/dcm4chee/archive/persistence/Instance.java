@@ -328,11 +328,11 @@ public class Instance implements Serializable {
         this.series = series;
     }
 
-    public void setAttributes(Attributes attrs, AttributeFilter filter) {
-        sopInstanceUID = attrs.getString(Tag.SOPInstanceUID, null);
-        sopClassUID = attrs.getString(Tag.SOPClassUID, null);
-        instanceNumber = filter.getString(attrs, Tag.InstanceNumber);
-        Date dt = attrs.getDate(Tag.ContentDateAndTime, null);
+    public void setAttributes(Attributes attrs, StoreParam storeParam) {
+        sopInstanceUID = attrs.getString(Tag.SOPInstanceUID);
+        sopClassUID = attrs.getString(Tag.SOPClassUID);
+        instanceNumber = attrs.getString(Tag.InstanceNumber, "*");
+        Date dt = attrs.getDate(Tag.ContentDateAndTime);
         if (dt != null) {
             contentDate = DateUtils.formatDA(null, dt);
             contentTime = 
@@ -343,14 +343,17 @@ public class Instance implements Serializable {
             contentDate = "*";
             contentTime = "*";
         }
-        completionFlag = filter.getString(attrs, Tag.CompletionFlag);
-        verificationFlag = filter.getString(attrs, Tag.VerificationFlag);
+        completionFlag = attrs.getString(Tag.CompletionFlag, "*").toUpperCase();
+        verificationFlag = attrs.getString(Tag.VerificationFlag, "*").toUpperCase();
 
-        instanceCustomAttribute1 = filter.selectInstanceCustomAttribute1(attrs);
-        instanceCustomAttribute2 = filter.selectInstanceCustomAttribute2(attrs);
-        instanceCustomAttribute3 = filter.selectInstanceCustomAttribute3(attrs);
+        instanceCustomAttribute1 = StoreParam.selectStringValue(attrs,
+                storeParam.getInstanceCustomAttribute1(), "*");
+        instanceCustomAttribute2 = StoreParam.selectStringValue(attrs,
+                storeParam.getInstanceCustomAttribute2(), "*");
+        instanceCustomAttribute3 = StoreParam.selectStringValue(attrs,
+                storeParam.getInstanceCustomAttribute3(), "*");
 
-        encodedAttributes = Utils.encodeAttributes(attrs, filter.instanceFilter);
+        encodedAttributes = Utils.encodeAttributes(attrs, storeParam.getInstanceAttributes());
         
     }
 }

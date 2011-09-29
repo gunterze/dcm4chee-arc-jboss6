@@ -80,10 +80,10 @@ public class CodeFactory {
     public static Code getCode(EntityManager em, Attributes codeItem) {
         return codeItem != null
                 ? getCode(em,
-                    codeItem.getString(Tag.CodeValue, null),
-                    codeItem.getString(Tag.CodingSchemeDesignator, null),
-                    codeItem.getString(Tag.CodingSchemeVersion, null),
-                    codeItem.getString(Tag.CodeMeaning, null))
+                    codeItem.getString(Tag.CodeValue),
+                    codeItem.getString(Tag.CodingSchemeDesignator),
+                    codeItem.getString(Tag.CodingSchemeVersion),
+                    codeItem.getString(Tag.CodeMeaning))
                 : null;
     }
 

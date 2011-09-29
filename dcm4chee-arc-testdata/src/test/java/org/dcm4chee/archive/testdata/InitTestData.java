@@ -50,8 +50,8 @@ import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.ejb.store.InstanceStoreBean;
 import org.dcm4chee.archive.ejb.store.IssuerFactory;
 import org.dcm4chee.archive.ejb.store.PatientFactory;
-import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
+import org.dcm4chee.archive.persistence.StoreParam;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -115,6 +115,83 @@ public class InitTestData {
         "person-name-1.xml",
    };
 
+    private static final StoreParam STORE_PARAM = new StoreParam();
+    static { 
+        STORE_PARAM.setPatientAttributes(
+                Tag.SpecificCharacterSet,
+                Tag.PatientName,
+                Tag.PatientID,
+                Tag.IssuerOfPatientID,
+                Tag.OtherPatientIDsSequence,
+                Tag.PatientBirthDate,
+                Tag.PatientSex,
+                Tag.PatientComments);
+        STORE_PARAM.setStudyAttributes(
+                Tag.SpecificCharacterSet,
+                Tag.StudyDate,
+                Tag.StudyTime,
+                Tag.AccessionNumber,
+                Tag.IssuerOfAccessionNumberSequence,
+                Tag.ReferringPhysicianName,
+                Tag.StudyDescription,
+                Tag.ProcedureCodeSequence,
+                Tag.StudyInstanceUID,
+                Tag.StudyID);
+        STORE_PARAM.setSeriesAttributes(
+                Tag.SpecificCharacterSet,
+                Tag.Modality,
+                Tag.Manufacturer,
+                Tag.InstitutionName,
+                Tag.InstitutionCodeSequence,
+                Tag.StationName,
+                Tag.SeriesDescription,
+                Tag.InstitutionalDepartmentName,
+                Tag.PerformingPhysicianName,
+                Tag.ManufacturerModelName,
+                Tag.ReferencedPerformedProcedureStepSequence,
+                Tag.SeriesInstanceUID,
+                Tag.SeriesNumber,
+                Tag.Laterality,
+                Tag.PerformedProcedureStepID,
+                Tag.PerformedProcedureStepStartTime,
+                Tag.RequestAttributesSequence);
+        STORE_PARAM.setInstanceAttributes(
+                Tag.SpecificCharacterSet,
+                Tag.ImageType,
+                Tag.SOPClassUID,
+                Tag.SOPInstanceUID,
+                Tag.AcquisitionDate,
+                Tag.ContentDate,
+                Tag.AcquisitionDateTime,
+                Tag.AcquisitionTime,
+                Tag.ContentTime,
+                Tag.ReferencedSeriesSequence,
+                Tag.InstanceNumber,
+                Tag.PhotometricInterpretation,
+                Tag.NumberOfFrames,
+                Tag.Rows,
+                Tag.Columns,
+                Tag.BitsAllocated,
+                Tag.ObservationDateTime,
+                Tag.ConceptNameCodeSequence,
+                Tag.VerifyingObserverSequence,
+                Tag.ReferencedRequestSequence,
+                Tag.CurrentRequestedProcedureEvidenceSequence,
+                Tag.PertinentOtherEvidenceSequence,
+                Tag.CompletionFlag,
+                Tag.VerificationFlag,
+                Tag.IdenticalDocumentsSequence,
+                Tag.DocumentTitle,
+                Tag.MIMETypeOfEncapsulatedDocument,
+                Tag.ContentLabel,
+                Tag.ContentDescription,
+                Tag.PresentationCreationDate,
+                Tag.PresentationCreationTime,
+                Tag.ContentCreatorName,
+                Tag.OriginalAttributesSequence);
+        STORE_PARAM.setFuzzyStr(new ESoundex());
+    }
+
     @Deployment
     public static JavaArchive createDeployment() {
        JavaArchive archive = ShrinkWrap.create(JavaArchive.class, "test.jar");
@@ -130,19 +207,12 @@ public class InitTestData {
 
     @Test
     public void storeTestData() throws Exception {
-        AttributeFilter filter = new AttributeFilter(
-                SAXReader.parse("resource:dcm4chee-arc/patient-attribute-filter.xml", null),
-                SAXReader.parse("resource:dcm4chee-arc/study-attribute-filter.xml", null),
-                SAXReader.parse("resource:dcm4chee-arc/series-attribute-filter.xml", null),
-                SAXReader.parse("resource:dcm4chee-arc/instance-attribute-filter.xml", null),
-                SAXReader.parse("resource:dcm4chee-arc/case-insensitive-attributes.xml", null),
-                new ESoundex());
         for (String res : RESOURCES) {
             Attributes ds = SAXReader.parse("resource:" + res, null);
             ds.setString(InstanceStore.DCM4CHEE_ARC, InstanceStore.SOURCE_AET, VR.AE, SOURCE_AET);
             ds.setString(Tag.RetrieveAETitle, VR.AE, RETRIEVE_AETS);
             ds.setString(Tag.InstanceAvailability, VR.CS, Availability.ONLINE.toString());
-            instanceStore.store(ds, filter);
+            instanceStore.store(ds, STORE_PARAM);
         }
         instanceStore.close();
     }

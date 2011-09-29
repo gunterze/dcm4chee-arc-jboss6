@@ -41,10 +41,10 @@ package org.dcm4chee.archive.ejb.store;
 import javax.ejb.Local;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.FileRef;
 import org.dcm4chee.archive.persistence.FileSystem;
 import org.dcm4chee.archive.persistence.Instance;
+import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -57,9 +57,9 @@ public interface InstanceStore {
     public static final int SOURCE_AET = 0x00090053;
     public static final int EXT_RETRIEVE_AET = 0x00090055;
 
-    Instance store(Attributes data, AttributeFilter filter);
+    Instance store(Attributes data, StoreParam storeParam);
 
-    boolean store(Attributes data, AttributeFilter filter, FileRef fileRef);
+    boolean store(Attributes data, StoreParam storeParam, FileRef fileRef);
 
     void close();
 

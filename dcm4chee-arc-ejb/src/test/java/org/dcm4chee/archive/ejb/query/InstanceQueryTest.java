@@ -50,6 +50,8 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.dcm4che.soundex.ESoundex;
+import org.dcm4chee.archive.persistence.StoreParam;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -75,6 +77,8 @@ public class InstanceQueryTest {
 
     private static final QueryParam QUERY_PARAM = new QueryParam();
     private static final QueryParam MATCH_UNKNOWN = new QueryParam().setMatchUnknown(true);
+    private static final StoreParam STORE_PARAM = new StoreParam();
+    static { STORE_PARAM.setFuzzyStr(new ESoundex()); }
 
     @Deployment
     public static WebArchive createDeployment() {
@@ -99,7 +103,8 @@ public class InstanceQueryTest {
 
     @Test
     public void testByVerificationFlag() throws Exception {
-        query.findInstances(VerifyingObserverPIDs, verificationFlag("VERIFIED", "SR"), QUERY_PARAM);
+        query.findInstances(VerifyingObserverPIDs, verificationFlag("VERIFIED", "SR"),
+                QUERY_PARAM, STORE_PARAM);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
@@ -111,7 +116,8 @@ public class InstanceQueryTest {
     @Test
     public void testByConceptCodeSequence() throws Exception {
         query.findInstances(ConceptCodeSeqPIDs,
-                conceptCodeSeq("CONCEPT_NAME_1", "99DCM4CHEE_TEST", null), QUERY_PARAM);
+                conceptCodeSeq("CONCEPT_NAME_1", "99DCM4CHEE_TEST", null),
+                QUERY_PARAM, STORE_PARAM);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.22.1.1" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
@@ -123,7 +129,7 @@ public class InstanceQueryTest {
     public void testByConceptCodeSequenceMatchUnknown() throws Exception {
         query.findInstances(ConceptCodeSeqPIDs,
                 conceptCodeSeq("CONCEPT_NAME_2", "99DCM4CHEE_TEST", null), 
-                MATCH_UNKNOWN);
+                MATCH_UNKNOWN, STORE_PARAM);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] =
                 { "1.2.40.0.13.1.1.99.22.1.2", "1.2.40.0.13.1.1.99.22.1.3" };
@@ -135,7 +141,7 @@ public class InstanceQueryTest {
     @Test
     public void testByVerifyingObserver() throws Exception {
         query.findInstances(VerifyingObserverPIDs,
-                verifyingObserver("201106300830", "VerifyingObserver1"), QUERY_PARAM);
+                verifyingObserver("201106300830", "VerifyingObserver1"), QUERY_PARAM, STORE_PARAM);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] =
                 { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3" };
@@ -148,7 +154,7 @@ public class InstanceQueryTest {
     public void testByVerifyingObserverMatchUnknown() throws Exception {
         query.findInstances(VerifyingObserverPIDs,
                 verifyingObserver("201106300830", "VerifyingObserver1"),
-                MATCH_UNKNOWN);
+                MATCH_UNKNOWN, STORE_PARAM);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] =
                 { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3",
@@ -161,7 +167,7 @@ public class InstanceQueryTest {
     @Test
     public void testByVerifyingObserverRange() throws Exception {
         query.findInstances(VerifyingObserverPIDs,
-                verifyingObserver("201106300000-20110701235900", null), QUERY_PARAM);
+                verifyingObserver("201106300000-20110701235900", null), QUERY_PARAM, STORE_PARAM);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] =
                 { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3" };
@@ -178,7 +184,7 @@ public class InstanceQueryTest {
                 "CONTAINS", "Max"));
         contentSeq.add(contentSequenceItem("TCE104", "IHERADTF", null,
                 "CONTAINS", "Max's Abstract"));
-        query.findInstances(TeachingFilePIDs, attrs, QUERY_PARAM);
+        query.findInstances(TeachingFilePIDs, attrs, QUERY_PARAM, STORE_PARAM);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.27.1.1" };
         Collection<String> col = Arrays.asList(SOPIUIDs);
@@ -194,7 +200,7 @@ public class InstanceQueryTest {
                 "CONTAINS", "Moritz's Abstract"));
         contentSeq.add(contentSequenceCodeItem("TCE105", "IHERADTF", null,
                 "466.0", "I9C", null, "CONTAINS"));
-        query.findInstances(TeachingFilePIDs, attrs, QUERY_PARAM);
+        query.findInstances(TeachingFilePIDs, attrs, QUERY_PARAM, STORE_PARAM);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] = { "1.2.40.0.13.1.1.99.27.1.2" };
         Collection<String> col = Arrays.asList(SOPIUIDs);

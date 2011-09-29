@@ -41,8 +41,6 @@ package org.dcm4chee.archive.ejb.query;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
-import org.dcm4che.data.ValueSelector;
-import org.dcm4chee.archive.ejb.query.QueryParam.Level;
 import org.dcm4chee.archive.persistence.Action;
 import org.dcm4chee.archive.persistence.Code;
 import org.dcm4chee.archive.persistence.QCode;
@@ -55,6 +53,7 @@ import org.dcm4chee.archive.persistence.QSeries;
 import org.dcm4chee.archive.persistence.QStudy;
 import org.dcm4chee.archive.persistence.QStudyPermission;
 import org.dcm4chee.archive.persistence.QVerifyingObserver;
+import org.dcm4chee.archive.persistence.StoreParam;
 
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.hibernate.HibernateSubQuery;
@@ -72,9 +71,9 @@ import com.mysema.query.types.path.StringPath;
 abstract class Builder {
 
     static void addPatientLevelPredicates(BooleanBuilder builder, String[] pids,
-            Attributes keys, QueryParam param) {
+            Attributes keys, QueryParam queryParam, StoreParam storeParam) {
 
-        boolean matchUnknown = param.isMatchUnknown();
+        boolean matchUnknown = queryParam.isMatchUnknown();
 
         builder.and(pids(pids, matchUnknown));
 
@@ -86,43 +85,41 @@ abstract class Builder {
                 QPatient.patient.patientPhoneticName,
                 QPatient.patient.patientFamilyNameSoundex,
                 QPatient.patient.patientGivenNameSoundex,
-                keys.getString(Tag.PatientName, "*"), param));
+                keys.getString(Tag.PatientName, "*"),
+                queryParam, storeParam.getFuzzyStr()));
         builder.and( wildCard(QPatient.patient.patientSex,
                 keys.getString(Tag.PatientSex, "*"), matchUnknown));
         builder.and(MatchDateTimeRange.rangeMatch(QPatient.patient.patientBirthDate, 
                 keys, Tag.PatientBirthDate, MatchDateTimeRange.FormatDate.DA, matchUnknown));
         builder.and(wildCard(QPatient.patient.patientCustomAttribute1,
-                selectValue(keys, param.getCustomAttributeValueSelector(Level.PATIENT, 0)),
+                StoreParam.selectStringValue(keys, storeParam.getPatientCustomAttribute1(), "*"),
                 matchUnknown));
         builder.and(wildCard(QPatient.patient.patientCustomAttribute2,
-                selectValue(keys, param.getCustomAttributeValueSelector(Level.PATIENT, 1)),
+                StoreParam.selectStringValue(keys, storeParam.getPatientCustomAttribute2(), "*"),
                 matchUnknown));
         builder.and(wildCard(QPatient.patient.patientCustomAttribute3,
-                selectValue(keys, param.getCustomAttributeValueSelector(Level.PATIENT, 2)),
+                StoreParam.selectStringValue(keys, storeParam.getPatientCustomAttribute2(), "*"),
                 matchUnknown));
-    }
-
-    private static String selectValue(Attributes keys, ValueSelector selector) {
-        return selector != null ? selector.selectStringValue(keys, "*") : "*";
     }
 
     static void addStudyLevelPredicates(BooleanBuilder builder, Attributes keys,
-            QueryParam param) {
+            QueryParam queryParam, StoreParam storeParam) {
         if (keys == null)
             return;
 
-        boolean matchUnknown = param.isMatchUnknown();
+        boolean matchUnknown = queryParam.isMatchUnknown();
         builder.and(uids(QStudy.study.studyInstanceUID, keys.getStrings(Tag.StudyInstanceUID)));
         builder.and(wildCard(QStudy.study.studyID, keys.getString(Tag.StudyID, "*"), matchUnknown));
         builder.and(MatchDateTimeRange.rangeMatch(QStudy.study.studyDate, QStudy.study.studyTime, 
                 Tag.StudyDate, Tag.StudyTime, Tag.StudyDateAndTime, 
-                keys, param.isCombinedDatetimeMatching(), matchUnknown));
+                keys, queryParam.isCombinedDatetimeMatching(), matchUnknown));
         builder.and(MatchPersonName.match(QStudy.study.referringPhysicianName,
                 QStudy.study.referringPhysicianIdeographicName,
                 QStudy.study.referringPhysicianPhoneticName,
                 QStudy.study.referringPhysicianFamilyNameSoundex,
                 QStudy.study.referringPhysicianGivenNameSoundex,
-                keys.getString(Tag.ReferringPhysicianName, "*"), param));
+                keys.getString(Tag.ReferringPhysicianName, "*"),
+                queryParam, storeParam.getFuzzyStr()));
         builder.and(wildCard(QStudy.study.studyDescription,
                 keys.getString(Tag.StudyDescription, "*"), matchUnknown));
         String accNo = keys.getString(Tag.AccessionNumber, "*");
@@ -135,23 +132,23 @@ abstract class Builder {
         builder.and(code(QStudy.study.procedureCodes,
                 keys.getNestedDataset(Tag.ProcedureCodeSequence), matchUnknown));
         builder.and(wildCard(QStudy.study.studyCustomAttribute1,
-                selectValue(keys, param.getCustomAttributeValueSelector(Level.STUDY, 0)),
+                StoreParam.selectStringValue(keys, storeParam.getStudyCustomAttribute1(), "*"),
                 matchUnknown));
         builder.and(wildCard(QStudy.study.studyCustomAttribute2,
-                selectValue(keys, param.getCustomAttributeValueSelector(Level.STUDY, 1)),
+                StoreParam.selectStringValue(keys, storeParam.getStudyCustomAttribute2(), "*"),
                 matchUnknown));
         builder.and(wildCard(QStudy.study.studyCustomAttribute3,
-                selectValue(keys, param.getCustomAttributeValueSelector(Level.STUDY, 2)),
+                StoreParam.selectStringValue(keys, storeParam.getStudyCustomAttribute3(), "*"),
                 matchUnknown));
-        builder.and(permission(param.getRoles(), Action.QUERY));
+        builder.and(permission(queryParam.getRoles(), Action.QUERY));
     }
 
     static void addSeriesLevelPredicates(BooleanBuilder builder, Attributes keys,
-            QueryParam param) {
+            QueryParam queryParam, StoreParam storeParam) {
         if (keys == null)
             return;
 
-        boolean matchUnknown = param.isMatchUnknown();
+        boolean matchUnknown = queryParam.isMatchUnknown();
         builder.and(uids(QSeries.series.seriesInstanceUID,
                 keys.getStrings(Tag.SeriesInstanceUID)));
         builder.and(wildCard(QSeries.series.seriesNumber,
@@ -164,29 +161,30 @@ abstract class Builder {
                 Tag.PerformedProcedureStepStartDate,
                 Tag.PerformedProcedureStepStartTime,
                 Tag.PerformedProcedureStepStartDateAndTime,
-                keys, param.isCombinedDatetimeMatching(), matchUnknown));
+                keys, queryParam.isCombinedDatetimeMatching(), matchUnknown));
         builder.and(wildCard(QSeries.series.seriesDescription,
                 keys.getString(Tag.SeriesDescription, "*"), matchUnknown));
-        builder.and(requestAttributes(keys.getNestedDataset(Tag.RequestAttributesSequence), param));
+        builder.and(requestAttributes(keys.getNestedDataset(Tag.RequestAttributesSequence),
+                queryParam, storeParam));
         builder.and(code(QSeries.series.institutionCode,
                 keys.getNestedDataset(Tag.InstitutionCodeSequence), matchUnknown));
         builder.and(wildCard(QSeries.series.seriesCustomAttribute1,
-                selectValue(keys, param.getCustomAttributeValueSelector(Level.SERIES, 0)),
+                StoreParam.selectStringValue(keys, storeParam.getSeriesCustomAttribute1(), "*"),
                 matchUnknown));
         builder.and(wildCard(QSeries.series.seriesCustomAttribute2,
-                selectValue(keys, param.getCustomAttributeValueSelector(Level.SERIES, 1)),
+                StoreParam.selectStringValue(keys, storeParam.getSeriesCustomAttribute2(), "*"),
                 matchUnknown));
         builder.and(wildCard(QSeries.series.seriesCustomAttribute3,
-                selectValue(keys, param.getCustomAttributeValueSelector(Level.SERIES, 2)),
+                StoreParam.selectStringValue(keys, storeParam.getSeriesCustomAttribute3(), "*"),
                 matchUnknown));
     }
 
     static void addInstanceLevelPredicates(BooleanBuilder builder, Attributes keys,
-            QueryParam param) {
+            QueryParam queryParam, StoreParam storeParam) {
         if (keys == null)
             return;
 
-        boolean matchUnknown = param.isMatchUnknown();
+        boolean matchUnknown = queryParam.isMatchUnknown();
         builder.and(uids(QInstance.instance.sopInstanceUID, keys.getStrings(Tag.SOPInstanceUID)));
         builder.and(uids(QInstance.instance.sopClassUID, keys.getStrings(Tag.SOPClassUID)));
         builder.and(wildCard(QInstance.instance.instanceNumber,
@@ -197,22 +195,23 @@ abstract class Builder {
                 QInstance.instance.contentDate,
                 QInstance.instance.contentTime,
                 Tag.ContentDate, Tag.ContentTime, Tag.ContentDateAndTime,
-                keys, param.isCombinedDatetimeMatching(), matchUnknown));
+                keys, queryParam.isCombinedDatetimeMatching(), matchUnknown));
         builder.and(code(QInstance.instance.conceptNameCode,
                 keys.getNestedDataset(Tag.ConceptNameCodeSequence), matchUnknown));
-        builder.and(verifyingObserver(keys.getNestedDataset(Tag.VerifyingObserverSequence), param));
+        builder.and(verifyingObserver(keys.getNestedDataset(Tag.VerifyingObserverSequence),
+                queryParam, storeParam));
         Sequence contentSeq = keys.getSequence(Tag.ContentSequence);
         if (contentSeq != null)
             for (Attributes item : contentSeq)
                 builder.and(contentItem(item));
         builder.and(wildCard(QInstance.instance.instanceCustomAttribute1,
-                selectValue(keys, param.getCustomAttributeValueSelector(Level.IMAGE, 0)),
+                StoreParam.selectStringValue(keys, storeParam.getInstanceCustomAttribute1(), "*"),
                 matchUnknown));
         builder.and(wildCard(QInstance.instance.instanceCustomAttribute2,
-                selectValue(keys, param.getCustomAttributeValueSelector(Level.IMAGE, 1)),
+                StoreParam.selectStringValue(keys, storeParam.getInstanceCustomAttribute2(), "*"),
                 matchUnknown));
         builder.and(wildCard(QInstance.instance.instanceCustomAttribute3,
-                selectValue(keys, param.getCustomAttributeValueSelector(Level.IMAGE, 2)),
+                StoreParam.selectStringValue(keys, storeParam.getInstanceCustomAttribute3(), "*"),
                 matchUnknown));
     }
 
@@ -387,11 +386,12 @@ abstract class Builder {
                 matchUnknown);
     }
 
-    static Predicate requestAttributes(Attributes item, QueryParam param) {
+    static Predicate requestAttributes(Attributes item, QueryParam queryParam,
+            StoreParam storeParam) {
         if (item == null || item.isEmpty())
             return null;
 
-        boolean matchUnknown = param.isMatchUnknown();
+        boolean matchUnknown = queryParam.isMatchUnknown();
         String accNo = item.getString(Tag.AccessionNumber, "*");
         BooleanBuilder builder = new BooleanBuilder()
             .and(wildCard(QRequestAttributes.requestAttributes.requestedProcedureID,
@@ -409,7 +409,8 @@ abstract class Builder {
                 QRequestAttributes.requestAttributes.requestingPhysicianPhoneticName,
                 QRequestAttributes.requestAttributes.requestingPhysicianFamilyNameSoundex,
                 QRequestAttributes.requestAttributes.requestingPhysicianGivenNameSoundex,
-                item.getString(Tag.ReferringPhysicianName, "*"), param))
+                item.getString(Tag.ReferringPhysicianName, "*"),
+                queryParam, storeParam.getFuzzyStr()))
             .and(uids(QRequestAttributes.requestAttributes.studyInstanceUID,
                     item.getStrings(Tag.StudyInstanceUID)))
             .and(wildCard(QRequestAttributes.requestAttributes.accessionNumber, accNo, matchUnknown));
@@ -433,11 +434,12 @@ abstract class Builder {
                 matchUnknown);
     }
 
-    static Predicate verifyingObserver(Attributes item, QueryParam param) {
+    static Predicate verifyingObserver(Attributes item, QueryParam queryParam,
+            StoreParam storeParam) {
         if (item == null || item.isEmpty())
             return null;
 
-        boolean matchUnknown = param.isMatchUnknown();
+        boolean matchUnknown = queryParam.isMatchUnknown();
         Predicate predicate = nullIfNoValue(
                 new BooleanBuilder()
                     .and(MatchDateTimeRange.rangeMatch(
@@ -450,7 +452,7 @@ abstract class Builder {
                         QVerifyingObserver.verifyingObserver.verifyingObserverFamilyNameSoundex,
                         QVerifyingObserver.verifyingObserver.verifyingObserverGivenNameSoundex,
                         item.getString(Tag.VerifyingObserverName, "*"),
-                        param)));
+                        queryParam, storeParam.getFuzzyStr())));
         
         if (predicate == null)
             return null;

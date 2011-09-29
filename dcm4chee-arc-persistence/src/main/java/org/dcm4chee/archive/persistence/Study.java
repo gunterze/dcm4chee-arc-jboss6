@@ -410,11 +410,11 @@ public class Study implements Serializable {
         return series;
     }
 
-    public void setAttributes(Attributes attrs, AttributeFilter filter) {
-        studyInstanceUID = attrs.getString(Tag.StudyInstanceUID, null);
-        studyID = filter.getString(attrs, Tag.StudyID);
-        studyDescription = filter.getString(attrs, Tag.StudyDescription);
-        Date dt = attrs.getDate(Tag.StudyDateAndTime, null);
+    public void setAttributes(Attributes attrs, StoreParam storeParam) {
+        studyInstanceUID = attrs.getString(Tag.StudyInstanceUID);
+        studyID = attrs.getString(Tag.StudyID, "*");
+        studyDescription = attrs.getString(Tag.StudyDescription, "*");
+        Date dt = attrs.getDate(Tag.StudyDateAndTime);
         if (dt != null) {
             studyDate = DateUtils.formatDA(null, dt);
             studyTime = attrs.containsValue(Tag.StudyTime)
@@ -424,16 +424,15 @@ public class Study implements Serializable {
             studyDate = "*";
             studyTime = "*";
         }
-        accessionNumber = filter.getString(attrs, Tag.AccessionNumber);
-        String s = filter.getString(attrs, Tag.ReferringPhysicianName);
-        if (s.equals("*")) {
+        accessionNumber = attrs.getString(Tag.AccessionNumber, "*");
+        PersonName pn = new PersonName(attrs.getString(Tag.ReferringPhysicianName), true);
+        if (pn.isEmpty()) {
             referringPhysicianName = "*";
             referringPhysicianIdeographicName = "*";
             referringPhysicianPhoneticName = "*";
             referringPhysicianFamilyNameSoundex = "*";
             referringPhysicianGivenNameSoundex = "*";
         } else {
-            PersonName pn = new PersonName(s, true);
             referringPhysicianName = pn.contains(PersonName.Group.Alphabetic) 
                     ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
             referringPhysicianIdeographicName = pn.contains(PersonName.Group.Ideographic)
@@ -441,15 +440,18 @@ public class Study implements Serializable {
             referringPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
                     ? pn.toString(PersonName.Group.Phonetic, false) : "*";
             referringPhysicianFamilyNameSoundex =
-                    filter.toFuzzy(pn.get(PersonName.Component.FamilyName));
+                    storeParam.toFuzzy(pn.get(PersonName.Component.FamilyName), "*");
             referringPhysicianGivenNameSoundex =
-                    filter.toFuzzy(pn.get(PersonName.Component.GivenName));
+                    storeParam.toFuzzy(pn.get(PersonName.Component.GivenName), "*");
         }
-        studyCustomAttribute1 = filter.selectStudyCustomAttribute1(attrs);
-        studyCustomAttribute2 = filter.selectStudyCustomAttribute2(attrs);
-        studyCustomAttribute3 = filter.selectStudyCustomAttribute3(attrs);
+        studyCustomAttribute1 = StoreParam.selectStringValue(attrs,
+                storeParam.getStudyCustomAttribute1(), "*");
+        studyCustomAttribute2 = StoreParam.selectStringValue(attrs,
+                storeParam.getStudyCustomAttribute2(), "*");
+        studyCustomAttribute3 = StoreParam.selectStringValue(attrs,
+                storeParam.getStudyCustomAttribute3(), "*");
 
-        encodedAttributes = Utils.encodeAttributes(attrs, filter.studyFilter);
+        encodedAttributes = Utils.encodeAttributes(attrs, storeParam.getStudyAttributes());
         
     }
 }

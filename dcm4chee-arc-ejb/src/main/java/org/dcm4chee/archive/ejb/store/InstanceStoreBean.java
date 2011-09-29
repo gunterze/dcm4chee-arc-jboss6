@@ -57,7 +57,6 @@ import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.util.StringUtils;
-import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.ContentItem;
 import org.dcm4chee.archive.persistence.FileRef;
@@ -66,6 +65,7 @@ import org.dcm4chee.archive.persistence.FileSystemStatus;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.RequestAttributes;
 import org.dcm4chee.archive.persistence.Series;
+import org.dcm4chee.archive.persistence.StoreParam;
 import org.dcm4chee.archive.persistence.Study;
 import org.dcm4chee.archive.persistence.VerifyingObserver;
 
@@ -80,33 +80,33 @@ public class InstanceStoreBean implements InstanceStore {
     private Series cachedSeries;
 
     @Override
-    public boolean store(Attributes data, AttributeFilter filter, FileRef fileRef) {
+    public boolean store(Attributes data, StoreParam storeParam, FileRef fileRef) {
         FileSystem fs = fileRef.getFileSystem();
         data.setString(Tag.InstanceAvailability, VR.CS, fs.getAvailability().toString());
-        Instance inst = store(data, filter);
+        Instance inst = store(data, storeParam);
         fileRef.setInstance(inst);
         em.persist(fileRef);
         return true;
     }
 
     @Override
-    public Instance store(Attributes data, AttributeFilter filter) {
+    public Instance store(Attributes data, StoreParam storeParam) {
         try {
             return findInstance(data.getString(Tag.SOPInstanceUID, null));
         } catch (NoResultException e) {
             Instance inst = new Instance();
-            Series series = getSeries(data, filter);
+            Series series = getSeries(data, storeParam);
             inst.setSeries(series);
             inst.setConceptNameCode(
                     CodeFactory.getCode(em, data.getNestedDataset(Tag.ConceptNameCodeSequence)));
             inst.setVerifyingObservers(createVerifyingObservers(
-                    data.getSequence(Tag.VerifyingObserverSequence), filter));
+                    data.getSequence(Tag.VerifyingObserverSequence), storeParam));
             inst.setContentItems(createContentItems(
-                    data.getSequence(Tag.ContentSequence), filter));
+                    data.getSequence(Tag.ContentSequence), storeParam));
             inst.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
             inst.setExternalRetrieveAET(data.getString(DCM4CHEE_ARC, EXT_RETRIEVE_AET));
             inst.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
-            inst.setAttributes(data, filter);
+            inst.setAttributes(data, storeParam);
             em.persist(inst);
             setDirty(series);
             em.flush();
@@ -264,18 +264,18 @@ public class InstanceStoreBean implements InstanceStore {
         return common;
     }
 
-    private List<VerifyingObserver> createVerifyingObservers(Sequence seq, AttributeFilter filter) {
+    private List<VerifyingObserver> createVerifyingObservers(Sequence seq, StoreParam storeParam) {
         if (seq == null || seq.isEmpty())
             return null;
 
         ArrayList<VerifyingObserver> list =
                 new ArrayList<VerifyingObserver>(seq.size());
         for (Attributes item : seq)
-            list.add(new VerifyingObserver(item, filter));
+            list.add(new VerifyingObserver(item, storeParam));
         return list;
     }
 
-    private Collection<ContentItem> createContentItems(Sequence seq, AttributeFilter filter) {
+    private Collection<ContentItem> createContentItems(Sequence seq, StoreParam storeParam) {
         if (seq == null || seq.isEmpty())
             return null;
 
@@ -295,7 +295,7 @@ public class InstanceStoreBean implements InstanceStore {
                         item.getString(Tag.RelationshipType, null),
                         CodeFactory.getCode(em, item.getNestedDataset(
                                 Tag.ConceptNameCodeSequence)),
-                                filter.getString(item, Tag.TextValue)
+                                item.getString(Tag.TextValue, "*")
                         ));
             }
         }
@@ -303,7 +303,7 @@ public class InstanceStoreBean implements InstanceStore {
     }
 
 
-    private Series getSeries(Attributes data, AttributeFilter filter) {
+    private Series getSeries(Attributes data, StoreParam storeParam) {
         String seriesIUID = data.getString(Tag.SeriesInstanceUID, null);
         Series series = cachedSeries;
         if (series != null && series.getSeriesInstanceUID().equals(seriesIUID))
@@ -314,17 +314,17 @@ public class InstanceStoreBean implements InstanceStore {
             cachedSeries = series = findSeries(seriesIUID);
         } catch (NoResultException e) {
             cachedSeries = series = new Series();
-            Study study = getStudy(data, filter);
+            Study study = getStudy(data, storeParam);
             series.setStudy(study);
             series.setInstitutionCode(
                     CodeFactory.getCode(em, data.getNestedDataset(Tag.InstitutionCodeSequence)));
             series.setRequestAttributes(createRequestAttributes(
-                    data.getSequence(Tag.RequestAttributesSequence), filter));
+                    data.getSequence(Tag.RequestAttributesSequence), storeParam));
             series.setSourceAET(data.getString(DCM4CHEE_ARC, SOURCE_AET));
             series.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
             series.setExternalRetrieveAET(data.getString(DCM4CHEE_ARC, EXT_RETRIEVE_AET));
             series.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
-            series.setAttributes(data, filter);
+            series.setAttributes(data, storeParam);
             em.persist(series);
         }
         return series;
@@ -360,14 +360,14 @@ public class InstanceStoreBean implements InstanceStore {
         em.flush();
     }
 
-    private List<RequestAttributes> createRequestAttributes(Sequence seq, AttributeFilter filter) {
+    private List<RequestAttributes> createRequestAttributes(Sequence seq, StoreParam storeParam) {
         if (seq == null || seq.isEmpty())
             return null;
 
         ArrayList<RequestAttributes> list =
                 new ArrayList<RequestAttributes>(seq.size());
         for (Attributes item : seq) {
-            RequestAttributes rqAttrs = new RequestAttributes(item, filter);
+            RequestAttributes rqAttrs = new RequestAttributes(item, storeParam);
             rqAttrs.setIssuerOfAccessionNumber(
                     IssuerFactory.getIssuer(em, item.getNestedDataset(
                             Tag.IssuerOfAccessionNumberSequence)));
@@ -376,13 +376,13 @@ public class InstanceStoreBean implements InstanceStore {
         return list;
     }
 
-    private Study getStudy(Attributes data, AttributeFilter filter) {
+    private Study getStudy(Attributes data, StoreParam storeParam) {
         try {
             return findStudy(data.getString(Tag.StudyInstanceUID, null));
         } catch (NoResultException e) {
             Study study = new Study();
             study.setPatient(
-                    PatientFactory.followMergedWith(PatientFactory.getPatient(em, data, filter)));
+                    PatientFactory.followMergedWith(PatientFactory.getPatient(em, data, storeParam)));
             study.setProcedureCodes(CodeFactory.createCodes(em,
                     data.getSequence(Tag.ProcedureCodeSequence)));
             study.setIssuerOfAccessionNumber(
@@ -393,7 +393,7 @@ public class InstanceStoreBean implements InstanceStore {
             study.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
             study.setExternalRetrieveAET(data.getString(DCM4CHEE_ARC, EXT_RETRIEVE_AET));
             study.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
-            study.setAttributes(data, filter);
+            study.setAttributes(data, storeParam);
             em.persist(study);
             return study;
         }

@@ -67,21 +67,20 @@ public class RequestAttributes implements Serializable {
 
     public RequestAttributes() {}
 
-    public RequestAttributes(Attributes item, AttributeFilter filter) {
-        accessionNumber = filter.getString(item, Tag.AccessionNumber);
-        studyInstanceUID = filter.getString(item, Tag.StudyInstanceUID);
-        requestedProcedureID = filter.getString(item, Tag.RequestedProcedureID);
-        scheduledProcedureStepID = filter.getString(item, Tag.ScheduledProcedureStepID);
-        requestingService = filter.getString(item, Tag.RequestingService);
-        String s = filter.getString(item, Tag.RequestingPhysician);
-        if (s.equals("*")) {
+    public RequestAttributes(Attributes item, StoreParam storeParam) {
+        accessionNumber = item.getString(Tag.AccessionNumber, "*");
+        studyInstanceUID = item.getString(Tag.StudyInstanceUID, "*");
+        requestedProcedureID = item.getString(Tag.RequestedProcedureID, "*");
+        scheduledProcedureStepID = item.getString(Tag.ScheduledProcedureStepID, "*");
+        requestingService = item.getString(Tag.RequestingService, "*");
+        PersonName pn = new PersonName(item.getString(Tag.RequestingPhysician), true);
+        if (pn.isEmpty()) {
             requestingPhysician = "*";
             requestingPhysicianIdeographicName = "*";
             requestingPhysicianPhoneticName = "*";
             requestingPhysicianFamilyNameSoundex = "*";
             requestingPhysicianGivenNameSoundex = "*";
         } else {
-            PersonName pn = new PersonName(s);
             requestingPhysician = pn.contains(PersonName.Group.Alphabetic) 
                     ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
             requestingPhysicianIdeographicName = pn.contains(PersonName.Group.Ideographic)
@@ -89,9 +88,9 @@ public class RequestAttributes implements Serializable {
             requestingPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
                     ? pn.toString(PersonName.Group.Phonetic, false) : "*";
             requestingPhysicianFamilyNameSoundex =
-                    filter.toFuzzy(pn.get(PersonName.Component.FamilyName));
+                    storeParam.toFuzzy(pn.get(PersonName.Component.FamilyName), "*");
             requestingPhysicianGivenNameSoundex =
-                    filter.toFuzzy(pn.get(PersonName.Component.GivenName));
+                    storeParam.toFuzzy(pn.get(PersonName.Component.GivenName), "*");
         }
     }
 

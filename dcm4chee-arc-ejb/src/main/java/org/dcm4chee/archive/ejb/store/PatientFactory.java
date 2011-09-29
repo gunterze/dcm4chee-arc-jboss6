@@ -47,34 +47,34 @@ import javax.persistence.NonUniqueResultException;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
-import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Patient;
+import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 public class PatientFactory {
 
-    public static Patient getPatient(EntityManager em, Attributes attrs, AttributeFilter filter) {
+    public static Patient getPatient(EntityManager em, Attributes attrs, StoreParam storeParam) {
         try {
-            return findPatient(em, attrs, filter);
+            return findPatient(em, attrs, storeParam);
         } catch (NoResultException e) {
-            return createNewPatient(em, attrs, filter);
+            return createNewPatient(em, attrs, storeParam);
         } catch (NonUniqueResultException e) {
-            return createNewPatient(em, attrs, filter);
+            return createNewPatient(em, attrs, storeParam);
         }
     }
 
-    private static Patient findPatient(EntityManager em, Attributes attrs, AttributeFilter filter) {
-        String pid = filter.getString(attrs, Tag.PatientID);
-        if (pid.equals("*"))
+    private static Patient findPatient(EntityManager em, Attributes attrs, StoreParam storeParam) {
+        String pid = attrs.getString(Tag.PatientID);
+        if (pid == null)
             throw new NonUniqueResultException();
         List<Patient> list =
             em.createNamedQuery(Patient.FIND_BY_PATIENT_ID, Patient.class)
                 .setParameter(1, pid)
                 .getResultList();
-        String issuer1 = filter.getString(attrs, Tag.IssuerOfPatientID);
-        if (!issuer1.equals("*"))
+        String issuer1 = attrs.getString(Tag.IssuerOfPatientID);
+        if (issuer1 != null)
             for (Iterator<Patient> it = list.iterator(); it.hasNext();) {
                 Patient pat = it.next();
                 String issuer2 = pat.getIssuerOfPatientID();
@@ -95,9 +95,9 @@ public class PatientFactory {
     }
 
     private static Patient createNewPatient(EntityManager em, Attributes attrs,
-            AttributeFilter filter) {
+            StoreParam storeParam) {
         Patient patient = new Patient();
-        patient.setAttributes(attrs, filter);
+        patient.setAttributes(attrs, storeParam);
         em.persist(patient);
         return patient;
     }

@@ -51,10 +51,10 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.io.SAXReader;
 import org.dcm4che.soundex.ESoundex;
-import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.Series;
+import org.dcm4chee.archive.persistence.StoreParam;
 import org.dcm4chee.archive.persistence.Study;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -97,21 +97,91 @@ public class InstanceStoreTest {
         removePatient.removePatient("TEST-20110607", "DCM4CHEE_TESTDATA");
     }
 
+    private static final StoreParam STORE_PARAM = new StoreParam();
+    static { 
+        STORE_PARAM.setPatientAttributes(
+                Tag.SpecificCharacterSet,
+                Tag.PatientName,
+                Tag.PatientID,
+                Tag.IssuerOfPatientID,
+                Tag.OtherPatientIDsSequence,
+                Tag.PatientBirthDate,
+                Tag.PatientSex,
+                Tag.PatientComments);
+        STORE_PARAM.setStudyAttributes(
+                Tag.SpecificCharacterSet,
+                Tag.StudyDate,
+                Tag.StudyTime,
+                Tag.AccessionNumber,
+                Tag.IssuerOfAccessionNumberSequence,
+                Tag.ReferringPhysicianName,
+                Tag.StudyDescription,
+                Tag.ProcedureCodeSequence,
+                Tag.StudyInstanceUID,
+                Tag.StudyID);
+        STORE_PARAM.setSeriesAttributes(
+                Tag.SpecificCharacterSet,
+                Tag.Modality,
+                Tag.Manufacturer,
+                Tag.InstitutionName,
+                Tag.InstitutionCodeSequence,
+                Tag.StationName,
+                Tag.SeriesDescription,
+                Tag.InstitutionalDepartmentName,
+                Tag.PerformingPhysicianName,
+                Tag.ManufacturerModelName,
+                Tag.ReferencedPerformedProcedureStepSequence,
+                Tag.SeriesInstanceUID,
+                Tag.SeriesNumber,
+                Tag.Laterality,
+                Tag.PerformedProcedureStepID,
+                Tag.PerformedProcedureStepStartTime,
+                Tag.RequestAttributesSequence);
+        STORE_PARAM.setInstanceAttributes(
+                Tag.SpecificCharacterSet,
+                Tag.ImageType,
+                Tag.SOPClassUID,
+                Tag.SOPInstanceUID,
+                Tag.AcquisitionDate,
+                Tag.ContentDate,
+                Tag.AcquisitionDateTime,
+                Tag.AcquisitionTime,
+                Tag.ContentTime,
+                Tag.ReferencedSeriesSequence,
+                Tag.InstanceNumber,
+                Tag.PhotometricInterpretation,
+                Tag.NumberOfFrames,
+                Tag.Rows,
+                Tag.Columns,
+                Tag.BitsAllocated,
+                Tag.ObservationDateTime,
+                Tag.ConceptNameCodeSequence,
+                Tag.VerifyingObserverSequence,
+                Tag.ReferencedRequestSequence,
+                Tag.CurrentRequestedProcedureEvidenceSequence,
+                Tag.PertinentOtherEvidenceSequence,
+                Tag.CompletionFlag,
+                Tag.VerificationFlag,
+                Tag.IdenticalDocumentsSequence,
+                Tag.DocumentTitle,
+                Tag.MIMETypeOfEncapsulatedDocument,
+                Tag.ContentLabel,
+                Tag.ContentDescription,
+                Tag.PresentationCreationDate,
+                Tag.PresentationCreationTime,
+                Tag.ContentCreatorName,
+                Tag.OriginalAttributesSequence);
+        STORE_PARAM.setFuzzyStr(new ESoundex());
+    }
+
     @Test
     public void storeTest() throws Exception {
-        AttributeFilter filter = new AttributeFilter(
-                SAXReader.parse("resource:dcm4chee-arc/patient-attribute-filter.xml", null),
-                SAXReader.parse("resource:dcm4chee-arc/study-attribute-filter.xml", null),
-                SAXReader.parse("resource:dcm4chee-arc/series-attribute-filter.xml", null),
-                SAXReader.parse("resource:dcm4chee-arc/instance-attribute-filter.xml", null),
-                SAXReader.parse("resource:dcm4chee-arc/case-insensitive-attributes.xml", null),
-                new ESoundex());
         Instance ct1 = instanceStore.store(parse("resource:ct-1.xml", SOURCE_AET,
-                new String[]{"AET_1","AET_2"}, "AET_3", Availability.ONLINE), filter);
+                new String[]{"AET_1","AET_2"}, "AET_3", Availability.ONLINE), STORE_PARAM);
         Instance ct2 = instanceStore.store(parse("resource:ct-2.xml", SOURCE_AET,
-                    new String[]{"AET_2"}, "AET_3", Availability.NEARLINE), filter);
+                    new String[]{"AET_2"}, "AET_3", Availability.NEARLINE), STORE_PARAM);
         Instance pr1 = instanceStore.store(parse("resource:pr-1.xml", SOURCE_AET,
-                    new String[]{"AET_1", "AET_2"}, "AET_4", Availability.ONLINE), filter);
+                    new String[]{"AET_1", "AET_2"}, "AET_4", Availability.ONLINE), STORE_PARAM);
         instanceStore.close();
         Series ctSeries = ct1.getSeries();
         Series prSeries = pr1.getSeries();

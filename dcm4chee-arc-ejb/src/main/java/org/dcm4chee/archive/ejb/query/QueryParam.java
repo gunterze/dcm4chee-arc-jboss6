@@ -38,9 +38,6 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import org.dcm4che.data.ValueSelector;
-import org.dcm4che.soundex.FuzzyStr;
-
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
@@ -49,9 +46,8 @@ public class QueryParam {
     public enum Level { PATIENT, STUDY, SERIES, IMAGE };
 
     private boolean combinedDatetimeMatching;
-    private FuzzyStr fuzzyStr;
+    private boolean fuzzySemanticMatching;
     private boolean matchUnknown;
-    private final ValueSelector[] customAttributes = new ValueSelector[12];
     private String[] roles;
 
     public final boolean isCombinedDatetimeMatching() {
@@ -63,17 +59,13 @@ public class QueryParam {
         return this;
     }
 
-    public final FuzzyStr getFuzzyStr() {
-        return fuzzyStr;
+    public final boolean isFuzzySemanticMatching() {
+        return fuzzySemanticMatching;
     }
 
-    public final QueryParam setFuzzyStr(FuzzyStr fuzzyStr) {
-        this.fuzzyStr = fuzzyStr;
+    public final QueryParam setFuzzySemanticMatching(boolean fuzzySemanticMatching) {
+        this.fuzzySemanticMatching = fuzzySemanticMatching;
         return this;
-    }
-
-    public boolean isFuzzySemanticMatching() {
-        return fuzzyStr != null;
     }
 
     public final boolean isMatchUnknown() {
@@ -83,22 +75,6 @@ public class QueryParam {
     public final QueryParam setMatchUnknown(boolean matchUnknown) {
         this.matchUnknown = matchUnknown;
         return this;
-    }
-
-    public ValueSelector getCustomAttributeValueSelector(Level level, int index) {
-        checkIndex(index);
-        return customAttributes[level.ordinal() * 3 + index];
-    }
-
-    public QueryParam setCustomAttributeValueSelector(Level level, int index, ValueSelector selector) {
-        checkIndex(index);
-        customAttributes[level.ordinal() * 3 + index] = selector;
-        return this;
-    }
-
-    private void checkIndex(int index) {
-        if (index < 0 || index > 2)
-            throw new IndexOutOfBoundsException("index: " + index);
     }
 
     public final String[] getRoles() {

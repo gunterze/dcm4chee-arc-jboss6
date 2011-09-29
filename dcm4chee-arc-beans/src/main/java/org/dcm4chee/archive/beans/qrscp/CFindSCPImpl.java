@@ -59,7 +59,7 @@ import org.dcm4chee.archive.beans.util.Configuration;
 import org.dcm4chee.archive.beans.util.JNDIUtils;
 import org.dcm4chee.archive.ejb.query.CompositeQuery;
 import org.dcm4chee.archive.ejb.query.QueryParam;
-import org.dcm4chee.archive.persistence.AttributeFilter;
+import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -86,30 +86,28 @@ public class CFindSCPImpl extends BasicCFindSCP {
         boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
         level.validateQueryKeys(rq, validator, studyRoot, relational);
         String[] pids = pids(keys);
-        String[] roles = roles();
         ApplicationEntity ae = as.getApplicationEntity();
-        AttributeFilter filter = Configuration.attributeFilterFor(ae);
+        StoreParam storeParam = Configuration.storeParamFor(ae);
         EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
         QueryParam queryParam = new QueryParam();
         queryParam.setCombinedDatetimeMatching(queryOpts.contains(QueryOption.DATETIME));
-        if (queryOpts.contains(QueryOption.FUZZY))
-            queryParam.setFuzzyStr(filter.getFuzzyStr());
-        queryParam.setMatchUnknown(filter.isMatchUnknown());
+        queryParam.setFuzzySemanticMatching(queryOpts.contains(QueryOption.FUZZY));
+        queryParam.setMatchUnknown(Configuration.isMatchUnknown(ae));
         queryParam.setRoles(roles());
         try {
             CompositeQuery query = (CompositeQuery) JNDIUtils.lookup(CompositeQuery.JNDI_NAME);
             switch (level) {
             case PATIENT:
-                query.findPatients(pids, keys, queryParam);
+                query.findPatients(pids, keys, queryParam, storeParam);
                 break;
             case STUDY:
-                query.findStudies(pids, keys, queryParam);
+                query.findStudies(pids, keys, queryParam, storeParam);
                 break;
             case SERIES:
-                query.findSeries(pids, keys, queryParam);
+                query.findSeries(pids, keys, queryParam, storeParam);
                 break;
             default: // case IMAGE:
-                query.findInstances(pids, keys, queryParam);
+                query.findInstances(pids, keys, queryParam, storeParam);
                 break;
             }
             return new QueryTaskImpl(as, pc, rq, keys, query);

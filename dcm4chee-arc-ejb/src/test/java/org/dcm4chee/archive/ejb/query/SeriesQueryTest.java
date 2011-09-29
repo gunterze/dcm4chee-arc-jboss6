@@ -45,6 +45,8 @@ import javax.ejb.EJB;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.dcm4che.soundex.ESoundex;
+import org.dcm4chee.archive.persistence.StoreParam;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -67,6 +69,8 @@ public class SeriesQueryTest {
 
     private static final QueryParam QUERY_PARAM = new QueryParam();
     private static final QueryParam MATCH_UNKNOWN = new QueryParam().setMatchUnknown(true);
+    private static final StoreParam STORE_PARAM = new StoreParam();
+    static { STORE_PARAM.setFuzzyStr(new ESoundex()); }
 
     @Deployment
     public static WebArchive createDeployment() {
@@ -91,35 +95,35 @@ public class SeriesQueryTest {
 
     @Test
     public void testByModality() throws Exception {
-        query.findSeries(ModalitiesInStudyPIDs, modality("PR"), QUERY_PARAM);
+        query.findSeries(ModalitiesInStudyPIDs, modality("PR"), QUERY_PARAM, STORE_PARAM);
         assertTrue(countMatches(query, 2));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyPR() throws Exception {
-        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), QUERY_PARAM);
+        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), QUERY_PARAM, STORE_PARAM);
         assertTrue(countMatches(query,4));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyMatchUnknownPR() throws Exception {
-        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), MATCH_UNKNOWN);
+        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), MATCH_UNKNOWN, STORE_PARAM);
         assertTrue(countMatches(query, 5));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyCT() throws Exception {
-        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), QUERY_PARAM);
+        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), QUERY_PARAM, STORE_PARAM);
         assertTrue(countMatches(query, 2));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyMatchUnknownCT() throws Exception {
-        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), MATCH_UNKNOWN);
+        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), MATCH_UNKNOWN, STORE_PARAM);
         assertTrue(countMatches(query, 3));
         query.close();
     }
@@ -141,7 +145,7 @@ public class SeriesQueryTest {
         issuer.setNull(Tag.UniversalEntityID, VR.UT);
         issuer.setNull(Tag.UniversalEntityIDType, VR.CS);
         
-        query.findSeries(RequestedAttributesSeqPIDs, keys, QUERY_PARAM);
+        query.findSeries(RequestedAttributesSeqPIDs, keys, QUERY_PARAM, STORE_PARAM);
         assertTrue(countMatches(query, 1));
         query.close();
     }

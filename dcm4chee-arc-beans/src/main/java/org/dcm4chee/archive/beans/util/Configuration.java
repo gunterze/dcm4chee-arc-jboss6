@@ -43,15 +43,19 @@ import java.util.Map;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Connection;
 import org.dcm4che.util.FilePathFormat;
-import org.dcm4chee.archive.persistence.AttributeFilter;
+import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 public class Configuration {
 
-    public static AttributeFilter attributeFilterFor(ApplicationEntity ae) {
-        return (AttributeFilter) ae.getProperty("Storage.AttributeFilter");
+    public static StoreParam storeParamFor(ApplicationEntity ae) {
+        return (StoreParam) ae.getProperty("Storage.StoreParam");
+    }
+
+    public static boolean isMatchUnknown(ApplicationEntity ae) {
+        return Boolean.parseBoolean((String) ae.getProperty("Query.matchUnknown"));
     }
 
     public static String fileSystemGroupIDFor(ApplicationEntity ae, String aet) {

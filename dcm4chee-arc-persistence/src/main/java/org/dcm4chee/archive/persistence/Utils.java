@@ -54,9 +54,9 @@ import org.dcm4che.io.DicomOutputStream;
  */
 public class Utils {
 
-    public static byte[] encodeAttributes(Attributes attrs, Attributes sel) {
-        Attributes tmp = new Attributes(sel.size());
-        tmp.addSelected(attrs, sel);
+    public static byte[] encodeAttributes(Attributes attrs, int[] include) {
+        Attributes tmp = new Attributes(include.length);
+        tmp.addSelected(attrs, include);
         ByteArrayOutputStream out = new ByteArrayOutputStream(512);
         try {
             DicomOutputStream dos = new DicomOutputStream(out,

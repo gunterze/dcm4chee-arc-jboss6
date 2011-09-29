@@ -457,19 +457,19 @@ public class Series implements Serializable {
         return instances;
     }
 
-    public void setAttributes(Attributes attrs, AttributeFilter filter) {
-        seriesInstanceUID = attrs.getString(Tag.SeriesInstanceUID, null);
-        seriesNumber = filter.getString(attrs, Tag.SeriesNumber);
-        seriesDescription = filter.getString(attrs, Tag.SeriesDescription);
-        institutionName = filter.getString(attrs, Tag.InstitutionName);
-        institutionalDepartmentName = filter.getString(attrs, Tag.InstitutionalDepartmentName);
-        modality = filter.getString(attrs, Tag.Modality);
-        stationName = filter.getString(attrs, Tag.StationName);
-        bodyPartExamined = filter.getString(attrs, Tag.BodyPartExamined);
-        laterality = filter.getString(attrs, Tag.Laterality);
+    public void setAttributes(Attributes attrs, StoreParam storeParam) {
+        seriesInstanceUID = attrs.getString(Tag.SeriesInstanceUID);
+        seriesNumber = attrs.getString(Tag.SeriesNumber, "*");
+        seriesDescription = attrs.getString(Tag.SeriesDescription, "*");
+        institutionName = attrs.getString(Tag.InstitutionName, "*");
+        institutionalDepartmentName = attrs.getString(Tag.InstitutionalDepartmentName, "*");
+        modality = attrs.getString(Tag.Modality, "*").toUpperCase();
+        stationName = attrs.getString(Tag.StationName, "*");
+        bodyPartExamined = attrs.getString(Tag.BodyPartExamined, "*").toUpperCase();
+        laterality = attrs.getString(Tag.Laterality, "*").toUpperCase();
         Attributes refPPS = attrs.getNestedDataset(Tag.ReferencedPerformedProcedureStepSequence);
         performedProcedureStepInstanceUID = refPPS != null
-                ? attrs.getString(Tag.ReferencedSOPInstanceUID, "*")
+                ? refPPS.getString(Tag.ReferencedSOPInstanceUID, "*")
                 : "*";
         Date dt = attrs.getDate(Tag.PerformedProcedureStepStartDateAndTime, null);
         if (dt != null) {
@@ -482,15 +482,14 @@ public class Series implements Serializable {
             performedProcedureStepStartDate = "*";
             performedProcedureStepStartTime = "*";
         }
-        String s = filter.getString(attrs, Tag.PerformingPhysicianName);
-        if (s.equals("*")) {
+        PersonName pn = new PersonName(attrs.getString(Tag.PerformingPhysicianName), true);
+        if (pn.isEmpty()) {
             performingPhysicianName = "*";
             performingPhysicianIdeographicName = "*";
             performingPhysicianPhoneticName = "*";
             performingPhysicianFamilyNameSoundex = "*";
             performingPhysicianGivenNameSoundex = "*";
         } else {
-            PersonName pn = new PersonName(s, true);
             performingPhysicianName = pn.contains(PersonName.Group.Alphabetic) 
                     ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
             performingPhysicianIdeographicName = pn.contains(PersonName.Group.Ideographic)
@@ -498,15 +497,18 @@ public class Series implements Serializable {
             performingPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
                     ? pn.toString(PersonName.Group.Phonetic, false) : "*";
             performingPhysicianFamilyNameSoundex =
-                    filter.toFuzzy(pn.get(PersonName.Component.FamilyName));
+                    storeParam.toFuzzy(pn.get(PersonName.Component.FamilyName), "*");
             performingPhysicianGivenNameSoundex =
-                    filter.toFuzzy(pn.get(PersonName.Component.GivenName));
+                    storeParam.toFuzzy(pn.get(PersonName.Component.GivenName), "*");
         }
-        seriesCustomAttribute1 = filter.selectSeriesCustomAttribute1(attrs);
-        seriesCustomAttribute2 = filter.selectSeriesCustomAttribute2(attrs);
-        seriesCustomAttribute3 = filter.selectSeriesCustomAttribute3(attrs);
+        seriesCustomAttribute1 = StoreParam.selectStringValue(attrs,
+                storeParam.getSeriesCustomAttribute1(), "*");
+        seriesCustomAttribute2 = StoreParam.selectStringValue(attrs,
+                storeParam.getSeriesCustomAttribute2(), "*");
+        seriesCustomAttribute3 = StoreParam.selectStringValue(attrs,
+                storeParam.getSeriesCustomAttribute3(), "*");
 
-        encodedAttributes = Utils.encodeAttributes(attrs, filter.seriesFilter);
+        encodedAttributes = Utils.encodeAttributes(attrs, storeParam.getSeriesAttributes());
         
     }
 }

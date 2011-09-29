@@ -51,49 +51,96 @@
       factoryMethod="newSingleThreadScheduledExecutor" />
   </bean>
 
-  <!-- Attribute Filter -->
-  <bean name="AttributeFilter" class="org.dcm4chee.archive.persistence.AttributeFilter">
-    <constructor>
-      <parameter>
-        <bean name="PatientAttributeFilter" class="org.dcm4che.data.Attributes">
-            <constructor factoryClass="org.dcm4che.io.SAXReader" factoryMethod="parse">
-                <parameter>resource:dcm4chee-arc/patient-attribute-filter.xml</parameter>
-            </constructor>
-        </bean>
-      </parameter>
-      <parameter>
-        <bean name="StudyAttributeFilter" class="org.dcm4che.data.Attributes">
-            <constructor factoryClass="org.dcm4che.io.SAXReader" factoryMethod="parse">
-                <parameter>resource:dcm4chee-arc/study-attribute-filter.xml</parameter>
-            </constructor>
-        </bean>
-      </parameter>
-      <parameter>
-        <bean name="SeriesAttributeFilter" class="org.dcm4che.data.Attributes">
-            <constructor factoryClass="org.dcm4che.io.SAXReader" factoryMethod="parse">
-                <parameter>resource:dcm4chee-arc/series-attribute-filter.xml</parameter>
-            </constructor>
-        </bean>
-      </parameter>
-      <parameter>
-        <bean name="InstanceAttributeFilter" class="org.dcm4che.data.Attributes">
-            <constructor factoryClass="org.dcm4che.io.SAXReader" factoryMethod="parse">
-                <parameter>resource:dcm4chee-arc/instance-attribute-filter.xml</parameter>
-            </constructor>
-        </bean>
-      </parameter>
-      <parameter>
-        <bean name="CaseInsensitveAttributes" class="org.dcm4che.data.Attributes">
-            <constructor factoryClass="org.dcm4che.io.SAXReader" factoryMethod="parse">
-                <parameter>resource:dcm4chee-arc/case-insensitive-attributes.xml</parameter>
-            </constructor>
-        </bean>
-      </parameter>
-      <parameter>
-        <bean name="FuzzyStr" class="org.dcm4che.soundex.ESoundex" />
-      </parameter>
-    </constructor>
-    <property name="matchUnknown">true</property>
+  <!-- Store Param -->
+  <bean name="StoreParam" class="org.dcm4chee.archive.persistence.StoreParam">
+    <property name="patientAttributes">
+      <array>
+         <value>524293</value> <!-- SpecificCharacterSet (0008,0005) -->
+         <value>1048592</value> <!-- PatientName (0010,0010) -->
+         <value>1048608</value> <!-- PatientID (0010,0020) -->
+         <value>1048609</value> <!-- IssuerOfPatientID (0010,0021) -->
+         <value>1052674</value> <!-- OtherPatientIDSequence (0010,1002) -->
+         <value>1048624</value> <!-- PatientBirthDate (0010,0030) -->
+         <value>1048640</value> <!-- PatientSex (0010,0040) -->
+         <value>1064960</value> <!-- PatientComments (0010,4000) -->
+      </array>
+    </property>
+    <property name="studyAttributes">
+      <array>
+         <value>524293</value> <!-- SpecificCharacterSet (0008,0005) -->
+         <value>524320</value> <!-- StudyDate (0008,0020) -->
+         <value>524336</value> <!-- StudyTime (0008,0030) -->
+         <value>524368</value> <!-- AccessionNumber (0008,0050) -->
+         <value>524369</value> <!-- IssuerOfAccessionNumberSequence (0008,0051) -->
+         <value>524432</value> <!-- ReferringPhysicianName (0008,0090) -->
+         <value>528432</value> <!-- StudyDescription (0008,1030) -->
+         <value>528434</value> <!-- ProcedureCodeSequence (0008,1032) -->
+         <value>1048589</value> <!-- StudyInstanceUID (0020,000D) -->
+         <value>1048592</value> <!-- StudyID (0020,0010) -->
+      </array>
+    </property>
+    <property name="seriesAttributes">
+      <array>
+         <value>524293</value> <!-- SpecificCharacterSet (0008,0005) -->
+         <value>524384</value> <!-- Modality (0008,0060) -->
+         <value>524400</value> <!-- Manufacturer (0008,0070) -->
+         <value>524416</value> <!-- InstitutionName (0008,0080) -->
+         <value>524418</value> <!-- InstitutionCodeSequence (0008,0082) -->
+         <value>528400</value> <!-- StationName (0008,1010) -->
+         <value>528446</value> <!-- SeriesDescription (0008,103E) -->
+         <value>528448</value> <!-- InstitutionalDepartmentName (0008,1040) -->
+         <value>528464</value> <!-- PerformingPhysicianName (0008,1050) -->
+         <value>528528</value> <!-- ManufacturerModelName (0008,1090) -->
+         <value>528657</value> <!-- ReferencedPerformedProcedureStepSequence (0008,1111) -->
+         <value>1572885</value> <!-- BodyPartExamined (0018,0015) -->
+         <value>2097166</value> <!-- SeriesInstanceUID (0020,000E) -->
+         <value>2097169</value> <!-- SeriesNumber (0020,0011) -->
+         <value>2097248</value> <!-- Laterality (0020,0060) -->
+         <value>4194884</value> <!-- PerformedProcedureStep StartDate (0040,0244) -->
+         <value>4194885</value> <!-- PerformedProcedureStepStartTime (0040,0245) -->
+         <value>4194933</value> <!-- RequestAttributesSequence (0040,0275) -->
+      </array>
+    </property>
+    <property name="instanceAttributes">
+      <array>
+         <value>524293</value> <!-- SpecificCharacterSet (0008,0005) -->
+         <value>524296</value> <!-- Image Type (0008,0008) -->
+         <value>524310</value> <!-- SOPClassUID (0008,0016) -->
+         <value>524312</value> <!-- SOPInstanceUID (0008,0018) -->
+         <value>524322</value> <!-- AcquisitionDate (0008,0022) -->
+         <value>524323</value> <!-- ContentDate (0008,0023) -->
+         <value>524330</value> <!-- AcquisitionDateTime (0008,002A) -->
+         <value>524338</value> <!-- AcquisitionTime (0008,0032) -->
+         <value>524339</value> <!-- ContentTime (0008,0033) -->
+         <value>528661</value> <!-- ReferencedSeriesSequence (0008,1115) -->
+         <value>2097171</value> <!-- InstanceNumber (0020,0013) -->
+         <value>2621444</value> <!-- PhotometricInterpretation (0028,0004) -->
+         <value>2621448</value> <!-- NumberOfFrames (0028,0008) -->
+         <value>2621456</value> <!-- Rows (0028,0010) -->
+         <value>2621457</value> <!-- Columns (0028,0011) -->
+         <value>2621696</value> <!-- BitsAllocated (0028,0100) -->
+         <value>4235314</value> <!-- ObservationDateTime (0040,A032) -->
+         <value>4235331</value> <!-- ConceptNameCodeSequence (0040,A043) -->
+         <value>4235379</value> <!-- VerifyingObserverSequence (0040,A073) -->
+         <value>4236144</value> <!-- ReferencedRequestSequence (0040,A370) -->
+         <value>4236149</value> <!-- CurrentRequestedProcedureEvidenceSequence (0040,A375) -->
+         <value>4236165</value> <!-- PertinentOtherEvidenceSequence (0040,A385) -->
+         <value>4236433</value> <!-- CompletionFlag (0040,A491) -->
+         <value>4236435</value> <!-- VerificationFlag (0040,A493) -->
+         <value>4236581</value> <!-- IdenticalDocumentsSequence (0040,A525) -->
+         <value>4325392</value> <!-- DocumentTitle (0042,0010) -->
+         <value>4325394</value> <!-- MIMETypeOfEncapsulatedDocument (0042,0012) -->
+         <value>7340160</value> <!-- ContentLabel (0070,0080) -->
+         <value>7340161</value> <!-- ContentDescription (0070,0081) -->
+         <value>7340162</value> <!-- PresentationCreationDate (0070,0082) -->
+         <value>7340163</value> <!-- PresentationCreationTime (0070,0083) -->
+         <value>7340164</value> <!-- ContentCreatorName (0070,0084) -->
+         <value>67110241</value> <!-- OriginalAttributesSequence (0400,0561) -->
+      </array>
+    </property>
+    <property name="fuzzyStr">
+      <bean name="FuzzyStr" class="org.dcm4che.soundex.ESoundex" />
+    </property>
   </bean>
 
   <!-- The File Path Format -->
@@ -118,8 +165,8 @@
     <incallback method="addApplicationEntity" />
     <uncallback method="removeApplicationEntity" />
     <install method="setProperty">
-      <parameter>Storage.AttributeFilter</parameter>
-      <parameter><inject bean="AttributeFilter" /></parameter>
+      <parameter>Storage.StoreParam</parameter>
+      <parameter><inject bean="StoreParam" /></parameter>
     </install>
     <install method="setProperty">
       <parameter>Storage.fsGroupID</parameter>
@@ -132,6 +179,10 @@
     <install method="setProperty">
       <parameter>Storage.digestAlgorithm</parameter>
       <parameter>MD5</parameter>
+    </install>
+    <install method="setProperty">
+      <parameter>Query.matchUnknown</parameter>
+      <parameter>true</parameter>
     </install>
     <install method="setProperty">
       <parameter>Retrieve.sendPendingCGet</parameter>
