@@ -39,13 +39,10 @@
 package org.dcm4chee.archive.ejb.query;
 
 import java.io.IOException;
-import java.util.EnumSet;
 
 import javax.ejb.EJBException;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.net.pdu.QueryOption;
-import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.QInstance;
 import org.dcm4chee.archive.persistence.QPatient;
@@ -81,19 +78,18 @@ class InstanceQueryImpl extends CompositeQueryImpl {
     private Query seriesQuery;
 
     public InstanceQueryImpl(StatelessSession session, String[] pids, Attributes keys,
-            AttributeFilter filter, EnumSet<QueryOption> queryOpts, String[] roles) {
-        super(query(session, pids, keys, filter, queryOpts, roles), false);
+            QueryParam param) {
+        super(query(session, pids, keys, param), false);
         seriesQuery = session.createQuery(QUERY_SERIES_ATTRS);
     }
 
     private static ScrollableResults query(StatelessSession session, String[] pids,
-            Attributes keys, AttributeFilter filter, EnumSet<QueryOption> queryOpts,
-            String[] roles) {
+            Attributes keys, QueryParam param) {
         BooleanBuilder builder = new BooleanBuilder();
-        Builder.addPatientLevelPredicates(builder, pids, keys, filter, queryOpts);
-        Builder.addStudyLevelPredicates(builder, keys, filter, queryOpts, roles);
-        Builder.addSeriesLevelPredicates(builder, keys, filter, queryOpts);
-        Builder.addInstanceLevelPredicates(builder, keys, filter, queryOpts);
+        Builder.addPatientLevelPredicates(builder, pids, keys, param);
+        Builder.addStudyLevelPredicates(builder, keys, param);
+        Builder.addSeriesLevelPredicates(builder, keys, param);
+        Builder.addInstanceLevelPredicates(builder, keys, param);
         return new HibernateQuery(session)
             .from(QInstance.instance)
             .innerJoin(QInstance.instance.series, QSeries.series)

@@ -40,7 +40,6 @@ package org.dcm4chee.archive.ejb.query;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.EnumSet;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJBException;
@@ -52,8 +51,6 @@ import javax.persistence.PersistenceUnit;
 import javax.sql.DataSource;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.net.pdu.QueryOption;
-import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
@@ -90,27 +87,23 @@ public class CompositeQueryBean implements CompositeQuery {
 
 
     @Override
-    public void findPatients(String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts) {
-        query = new PatientQueryImpl(session, pids, keys, filter, queryOpts);
+    public void findPatients(String[] pids, Attributes keys, QueryParam param) {
+        query = new PatientQueryImpl(session, pids, keys, param);
     }
 
     @Override
-    public void findStudies(String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, String[] roles) {
-        query = new StudyQueryImpl(session, pids, keys, filter, queryOpts, roles);
+    public void findStudies(String[] pids, Attributes keys, QueryParam param) {
+        query = new StudyQueryImpl(session, pids, keys, param);
     }
 
     @Override
-    public void findSeries(String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, String[] roles) {
-        query = new SeriesQueryImpl(session, pids, keys, filter, queryOpts, roles);
+    public void findSeries(String[] pids, Attributes keys, QueryParam param) {
+        query = new SeriesQueryImpl(session, pids, keys, param);
     }
 
     @Override
-    public void findInstances(String[] pids, Attributes keys, AttributeFilter filter,
-            EnumSet<QueryOption> queryOpts, String[] roles) {
-        query = new InstanceQueryImpl(session, pids, keys, filter, queryOpts, roles);
+    public void findInstances(String[] pids, Attributes keys, QueryParam param) {
+        query = new InstanceQueryImpl(session, pids, keys, param);
     }
 
     @Override

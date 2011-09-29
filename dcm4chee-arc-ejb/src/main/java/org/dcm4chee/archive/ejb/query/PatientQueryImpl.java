@@ -39,13 +39,10 @@
 package org.dcm4chee.archive.ejb.query;
 
 import java.io.IOException;
-import java.util.EnumSet;
 
 import javax.ejb.EJBException;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.net.pdu.QueryOption;
-import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.QPatient;
 import org.dcm4chee.archive.persistence.Utils;
 import org.hibernate.ScrollMode;
@@ -60,15 +57,15 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
  */
 class PatientQueryImpl extends CompositeQueryImpl {
 
-    public PatientQueryImpl(StatelessSession session, String[] pids, Attributes keys, 
-            AttributeFilter filter, EnumSet<QueryOption> queryOpts) {
-        super(query(session, pids, keys, filter, queryOpts), false);
+    public PatientQueryImpl(StatelessSession session, String[] pids, Attributes keys,
+            QueryParam param) {
+        super(query(session, pids, keys, param), false);
     }
 
     private static ScrollableResults query(StatelessSession session, String[] pids,
-            Attributes keys, AttributeFilter filter, EnumSet<QueryOption> queryOpts) {
+            Attributes keys, QueryParam param) {
         BooleanBuilder builder = new BooleanBuilder();
-        Builder.addPatientLevelPredicates(builder, pids, keys, filter, queryOpts);
+        Builder.addPatientLevelPredicates(builder, pids, keys, param);
         return new HibernateQuery(session)
             .from(QPatient.patient)
             .where(builder)

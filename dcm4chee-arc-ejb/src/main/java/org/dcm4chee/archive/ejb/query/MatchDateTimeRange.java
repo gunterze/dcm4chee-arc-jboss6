@@ -88,17 +88,17 @@ class MatchDateTimeRange {
 
     static Predicate rangeMatch(StringPath dateField, StringPath timeField, 
             int dateTag, int timeTag, long dateAndTimeTag, 
-            Attributes keys, boolean combined, boolean matchUnknown) {
+            Attributes keys, boolean combinedDatetimeMatching, boolean matchUnknown) {
         final boolean containsDateTag = keys.containsValue(dateTag);
         final boolean containsTimeTag = keys.containsValue(timeTag);
         if (!containsDateTag && !containsTimeTag)
             return null;
         
         BooleanBuilder predicates = new BooleanBuilder();
-        if (containsDateTag && containsTimeTag && combined)
-                predicates.and(matchUnknown(dateField, matchUnknown,
-                        combinedRange(dateField, timeField, keys.getDateRange(dateAndTimeTag, null))));
-        else { 
+        if (containsDateTag && containsTimeTag && combinedDatetimeMatching) {
+            predicates.and(matchUnknown(dateField, matchUnknown,
+                    combinedRange(dateField, timeField, keys.getDateRange(dateAndTimeTag, null))));
+        } else { 
             if (containsDateTag)
                 predicates.and(matchUnknown(dateField, matchUnknown, 
                         range(dateField, keys.getDateRange(dateTag, null), FormatDate.DA)));

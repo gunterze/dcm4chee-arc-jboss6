@@ -98,6 +98,10 @@ public class AttributeFilter {
         this.matchUnknown = matchUnknown;
     }
 
+    public final FuzzyStr getFuzzyStr() {
+        return fuzzyStr;
+    }
+
     public final void setPatientCustomAttribute1(ValueSelector selector) {
         this.patientCustomAttribute1 = selector;
     }

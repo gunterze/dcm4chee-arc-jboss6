@@ -40,7 +40,6 @@ package org.dcm4chee.archive.ejb.query;
 
 import org.dcm4che.data.PersonName;
 import org.dcm4che.data.PersonName.Group;
-import org.dcm4chee.archive.persistence.AttributeFilter;
 
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.types.ExpressionUtils;
@@ -59,20 +58,21 @@ class MatchPersonName {
             StringPath familyNameSoundex,
             StringPath givenNameSoundex, 
             String value,
-            AttributeFilter filter, boolean isFuzzy, boolean matchUnknown) {
+            QueryParam param) {
         if (value.equals("*"))
             return null;
 
         PersonName pn = new PersonName(value);
-        return isFuzzy
-            ? fuzzyMatch(familyNameSoundex, givenNameSoundex, pn, filter, matchUnknown)
-            : literalMatch(alphabethicName, ideographicName, phoneticName, pn, filter, matchUnknown);
+        return  param.isFuzzySemanticMatching()
+            ? fuzzyMatch(familyNameSoundex, givenNameSoundex, pn, param)
+            : literalMatch(alphabethicName, ideographicName, phoneticName, pn, param);
     }
 
     private static Predicate literalMatch(StringPath alphabethicName,
             StringPath ideographicName, StringPath phoneticName,
-            PersonName pn, AttributeFilter filter, boolean matchUnknown) {
+            PersonName pn, QueryParam param) {
         BooleanBuilder builder = new BooleanBuilder();
+        boolean matchUnknown = param.isMatchUnknown();
         if (!pn.contains(PersonName.Group.Ideographic)
                 && !pn.contains(PersonName.Group.Phonetic)) {
             String queryString = toQueryString(pn, PersonName.Group.Alphabetic);
@@ -105,31 +105,26 @@ class MatchPersonName {
         return (s.endsWith("*") || pn.contains(g, PersonName.Component.NameSuffix)) ? s : s + "^*";
     }
 
-    private static Predicate fuzzyMatch(
-            StringPath familyNameSoundex,
-            StringPath givenNameSoundex,
-            PersonName pn, AttributeFilter filter, boolean matchUnknown) {
+    private static Predicate fuzzyMatch(StringPath familyNameSoundex, StringPath givenNameSoundex,
+            PersonName pn, QueryParam param) {
         String familyName = pn.get(PersonName.Component.FamilyName);
         String givenName = pn.get(PersonName.Component.GivenName);
         return familyName != null
             ? givenName != null
-                    ? fuzzyMatch(familyNameSoundex, givenNameSoundex,
-                            familyName, givenName, filter, matchUnknown)
-                    : fuzzyMatch(familyNameSoundex, givenNameSoundex,
-                            familyName, filter, matchUnknown)
+                    ? fuzzyMatch(familyNameSoundex, givenNameSoundex, familyName, givenName, param)
+                    : fuzzyMatch(familyNameSoundex, givenNameSoundex, familyName, param)
             : givenName != null
-                    ? fuzzyMatch(familyNameSoundex, givenNameSoundex,
-                            givenName, filter, matchUnknown)
+                    ? fuzzyMatch(familyNameSoundex, givenNameSoundex, givenName, param)
                     : null;
     }
 
     private static Predicate fuzzyMatch(StringPath familyNameSoundex, StringPath givenNameSoundex,
-            String value,  AttributeFilter filter, boolean matchUnknown) {
-        String fuzzyName = filter.toFuzzy(value);
+            String value, QueryParam param) {
+        String fuzzyName = param.getFuzzyStr().toFuzzy(value);
         BooleanBuilder builder = new BooleanBuilder()
             .or(fuzzyWildCard(familyNameSoundex, value, fuzzyName))
             .or(fuzzyWildCard(givenNameSoundex, value, fuzzyName));
-        if (matchUnknown)
+        if (param.isMatchUnknown())
             builder.or(ExpressionUtils.and(
                     givenNameSoundex.eq("*"),
                     familyNameSoundex.eq("*")));
@@ -137,9 +132,9 @@ class MatchPersonName {
     }
 
     private static Predicate fuzzyMatch(StringPath familyNameSoundex, StringPath givenNameSoundex,
-            String familyName, String givenName, AttributeFilter filter, boolean matchUnknown) {
-        String fuzzyFamilyName = filter.toFuzzy(familyName);
-        String fuzzyGivenName = filter.toFuzzy(givenName);
+            String familyName, String givenName, QueryParam param) {
+        String fuzzyFamilyName = param.getFuzzyStr().toFuzzy(familyName);
+        String fuzzyGivenName = param.getFuzzyStr().toFuzzy(givenName);
         Predicate names = ExpressionUtils.and(
                 fuzzyWildCard(givenNameSoundex, givenName, fuzzyGivenName),
                 fuzzyWildCard(familyNameSoundex, familyName, fuzzyFamilyName));
@@ -147,7 +142,7 @@ class MatchPersonName {
                 fuzzyWildCard(givenNameSoundex, familyName, fuzzyFamilyName),
                 fuzzyWildCard(familyNameSoundex, givenName, fuzzyGivenName));
         BooleanBuilder builder = new BooleanBuilder().or(names).or(namesSwap);
-        if (matchUnknown) {
+        if (param.isMatchUnknown()) {
             BooleanExpression noFamilyNameSoundex = familyNameSoundex.eq("*");
             BooleanExpression noGivenNameSoundex = givenNameSoundex.eq("*");
             builder

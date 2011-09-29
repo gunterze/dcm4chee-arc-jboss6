@@ -58,6 +58,7 @@ import org.dcm4che.net.service.QueryTask;
 import org.dcm4chee.archive.beans.util.Configuration;
 import org.dcm4chee.archive.beans.util.JNDIUtils;
 import org.dcm4chee.archive.ejb.query.CompositeQuery;
+import org.dcm4chee.archive.ejb.query.QueryParam;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 
 /**
@@ -89,20 +90,26 @@ public class CFindSCPImpl extends BasicCFindSCP {
         ApplicationEntity ae = as.getApplicationEntity();
         AttributeFilter filter = Configuration.attributeFilterFor(ae);
         EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
+        QueryParam queryParam = new QueryParam();
+        queryParam.setCombinedDatetimeMatching(queryOpts.contains(QueryOption.DATETIME));
+        if (queryOpts.contains(QueryOption.FUZZY))
+            queryParam.setFuzzyStr(filter.getFuzzyStr());
+        queryParam.setMatchUnknown(filter.isMatchUnknown());
+        queryParam.setRoles(roles());
         try {
             CompositeQuery query = (CompositeQuery) JNDIUtils.lookup(CompositeQuery.JNDI_NAME);
             switch (level) {
             case PATIENT:
-                query.findPatients(pids, keys, filter, queryOpts);
+                query.findPatients(pids, keys, queryParam);
                 break;
             case STUDY:
-                query.findStudies(pids, keys, filter, queryOpts, roles);
+                query.findStudies(pids, keys, queryParam);
                 break;
             case SERIES:
-                query.findSeries(pids, keys, filter, queryOpts, roles);
+                query.findSeries(pids, keys, queryParam);
                 break;
             default: // case IMAGE:
-                query.findInstances(pids, keys, filter, queryOpts, roles);
+                query.findInstances(pids, keys, queryParam);
                 break;
             }
             return new QueryTaskImpl(as, pc, rq, keys, query);

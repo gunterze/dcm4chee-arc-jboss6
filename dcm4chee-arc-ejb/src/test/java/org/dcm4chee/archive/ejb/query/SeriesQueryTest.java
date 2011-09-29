@@ -38,19 +38,13 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import static org.junit.Assert.*;
-
-import java.util.EnumSet;
+import static org.junit.Assert.assertTrue;
 
 import javax.ejb.EJB;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.dcm4che.io.SAXReader;
-import org.dcm4che.net.pdu.QueryOption;
-import org.dcm4che.soundex.ESoundex;
-import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -71,13 +65,14 @@ public class SeriesQueryTest {
     private static final String[] ModalitiesInStudyPIDs =
             { "MODS_IN_STUDY", "DCM4CHEE_TESTDATA" };
 
-    private static final EnumSet<QueryOption> NO_QUERY_OPTION =
-            EnumSet.noneOf(QueryOption.class);
-    
+    private static final QueryParam QUERY_PARAM = new QueryParam();
+    private static final QueryParam MATCH_UNKNOWN = new QueryParam().setMatchUnknown(true);
+
     @Deployment
     public static WebArchive createDeployment() {
         return ShrinkWrap.create(WebArchive.class, "test.war")
                 .addClasses(
+                        QueryParam.class,
                         CompositeQuery.class,
                         CompositeQueryBean.class,
                         CompositeQueryImpl.class,
@@ -94,54 +89,37 @@ public class SeriesQueryTest {
     @EJB
     private CompositeQuery query;
 
-    private AttributeFilter filter(boolean matchUnknown) throws Exception {
-        AttributeFilter filter = new AttributeFilter(
-                SAXReader.parse("resource:dcm4chee-arc/patient-attribute-filter.xml"),
-                SAXReader.parse("resource:dcm4chee-arc/study-attribute-filter.xml"),
-                SAXReader.parse("resource:dcm4chee-arc/series-attribute-filter.xml"),
-                SAXReader.parse("resource:dcm4chee-arc/instance-attribute-filter.xml"),
-                SAXReader.parse("resource:dcm4chee-arc/case-insensitive-attributes.xml"),
-                new ESoundex());
-        filter.setMatchUnknown(matchUnknown);
-        return filter;
-    }
-
     @Test
     public void testByModality() throws Exception {
-        query.findSeries(ModalitiesInStudyPIDs, modality("PR"), filter(false),
-                NO_QUERY_OPTION, null);
+        query.findSeries(ModalitiesInStudyPIDs, modality("PR"), QUERY_PARAM);
         assertTrue(countMatches(query, 2));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyPR() throws Exception {
-        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(false),
-                NO_QUERY_OPTION, null);
+        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), QUERY_PARAM);
         assertTrue(countMatches(query,4));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyMatchUnknownPR() throws Exception {
-        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), filter(true),
-                NO_QUERY_OPTION, null);
+        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), MATCH_UNKNOWN);
         assertTrue(countMatches(query, 5));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyCT() throws Exception {
-        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(false),
-                NO_QUERY_OPTION, null);
+        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), QUERY_PARAM);
         assertTrue(countMatches(query, 2));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyMatchUnknownCT() throws Exception {
-        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), filter(true),
-                NO_QUERY_OPTION, null);
+        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), MATCH_UNKNOWN);
         assertTrue(countMatches(query, 3));
         query.close();
     }
@@ -163,7 +141,7 @@ public class SeriesQueryTest {
         issuer.setNull(Tag.UniversalEntityID, VR.UT);
         issuer.setNull(Tag.UniversalEntityIDType, VR.CS);
         
-        query.findSeries(RequestedAttributesSeqPIDs, keys, filter(false), NO_QUERY_OPTION, null);
+        query.findSeries(RequestedAttributesSeqPIDs, keys, QUERY_PARAM);
         assertTrue(countMatches(query, 1));
         query.close();
     }
