@@ -141,7 +141,7 @@ public class InstanceQueryTest {
     @Test
     public void testByVerifyingObserver() throws Exception {
         query.findInstances(VerifyingObserverPIDs,
-                verifyingObserver("201106300830", "VerifyingObserver1"), QUERY_PARAM, STORE_PARAM);
+                verifyingObserver("201106300830", "VERIFYINGOBSERVER1"), QUERY_PARAM, STORE_PARAM);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] =
                 { "1.2.40.0.13.1.1.99.23.1.2", "1.2.40.0.13.1.1.99.23.1.3" };
@@ -153,7 +153,7 @@ public class InstanceQueryTest {
     @Test
     public void testByVerifyingObserverMatchUnknown() throws Exception {
         query.findInstances(VerifyingObserverPIDs,
-                verifyingObserver("201106300830", "VerifyingObserver1"),
+                verifyingObserver("201106300830", "VERIFYINGOBSERVER1"),
                 MATCH_UNKNOWN, STORE_PARAM);
         ArrayList<String> result = sopInstanceUIDResultList(query);
         String SOPIUIDs[] =

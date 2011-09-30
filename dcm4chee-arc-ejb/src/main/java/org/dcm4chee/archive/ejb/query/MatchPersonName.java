@@ -78,9 +78,9 @@ class MatchPersonName {
         if (!pn.contains(PersonName.Group.Ideographic)
                 && !pn.contains(PersonName.Group.Phonetic)) {
             String queryString = toQueryString(pn, PersonName.Group.Alphabetic);
-            builder.or(Builder.wildCard(alphabethicName, queryString, false));
-            builder.or(Builder.wildCard(ideographicName, queryString, false));
-            builder.or(Builder.wildCard(phoneticName, queryString, false));
+            builder.or(Builder.wildCard(alphabethicName, queryString, false, true));
+            builder.or(Builder.wildCard(ideographicName, queryString, false, false));
+            builder.or(Builder.wildCard(phoneticName, queryString, false, false));
             if (matchUnknown) {
                 Predicate emptyName = ExpressionUtils.and(alphabethicName.eq("*"),
                                       ExpressionUtils.and(ideographicName.eq("*"),
@@ -88,17 +88,17 @@ class MatchPersonName {
                 builder.or(emptyName);
             }
         } else {
-            builder.and(wildCard(alphabethicName, pn, PersonName.Group.Alphabetic, matchUnknown));
-            builder.and(wildCard(ideographicName, pn, PersonName.Group.Ideographic, matchUnknown));
-            builder.and(wildCard(phoneticName, pn, PersonName.Group.Phonetic, matchUnknown));
+            builder.and(wildCard(alphabethicName, pn, PersonName.Group.Alphabetic, matchUnknown, true));
+            builder.and(wildCard(ideographicName, pn, PersonName.Group.Ideographic, matchUnknown, false));
+            builder.and(wildCard(phoneticName, pn, PersonName.Group.Phonetic, matchUnknown, false));
         }
         return builder;
     }
 
     private static Predicate wildCard(StringPath path,
-            PersonName pn, Group group, boolean matchUnknown) {
+            PersonName pn, Group group, boolean matchUnknown, boolean ignoreCase) {
         return pn.contains(group)
-            ? Builder.wildCard(path, toQueryString(pn, group), matchUnknown)
+            ? Builder.wildCard(path, toQueryString(pn, group), matchUnknown, ignoreCase)
             : null;
     }
 

@@ -115,14 +115,14 @@ public class PatientQueryTest {
         assertTrue(query.hasMoreMatches());
         query.nextMatch();
         assertFalse(query.hasMoreMatches());
-        query.findPatients(fuzzyPatientData, patientName("Lucas^George=", false),
+        query.findPatients(fuzzyPatientData, patientName("LUCAS^GEORGE=", false),
                 QUERY_PARAM, STORE_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_GEORGE" };
         Collection<String> col = Arrays.asList(patIDs);
         assertTrue(equals(result, col));
         query.findPatients(null, 
-                patientName("oomiya^shougo=大宮^省吾=オオミヤ^ショウゴ",  true),
+                patientName("OOMIYA^SHOUGO=大宮^省吾=オオミヤ^ショウゴ",  true),
                 QUERY_PARAM, STORE_PARAM);
         result = patientIDResultList(query);
         patIDs = new String[]{ "PERSON_NAME" };
