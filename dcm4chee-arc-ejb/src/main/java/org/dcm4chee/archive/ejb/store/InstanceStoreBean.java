@@ -281,10 +281,10 @@ public class InstanceStoreBean implements InstanceStore {
 
         Collection<ContentItem> list = new ArrayList<ContentItem>(seq.size());
         for (Attributes item : seq) {
-            String type = item.getString(Tag.ValueType, null);
+            String type = item.getString(Tag.ValueType);
             if ("CODE".equals(type)) {
                 list.add(new ContentItem(
-                        item.getString(Tag.RelationshipType, null),
+                        item.getString(Tag.RelationshipType).toUpperCase(),
                         CodeFactory.getCode(em, item.getNestedDataset(
                                 Tag.ConceptNameCodeSequence)),
                         CodeFactory.getCode(em, item.getNestedDataset(
@@ -292,7 +292,7 @@ public class InstanceStoreBean implements InstanceStore {
                         ));
             } else if ("TEXT".equals(type)) {
                 list.add(new ContentItem(
-                        item.getString(Tag.RelationshipType, null),
+                        item.getString(Tag.RelationshipType).toUpperCase(),
                         CodeFactory.getCode(em, item.getNestedDataset(
                                 Tag.ConceptNameCodeSequence)),
                                 item.getString(Tag.TextValue, "*")

@@ -157,6 +157,10 @@ abstract class Builder {
                 keys.getString(Tag.SeriesNumber, "*"), matchUnknown, false));
         builder.and(wildCard(QSeries.series.modality,
                 keys.getString(Tag.Modality, "*").toUpperCase(), matchUnknown, false));
+        builder.and(wildCard(QSeries.series.bodyPartExamined,
+                keys.getString(Tag.BodyPartExamined, "*").toUpperCase(), matchUnknown, false));
+        builder.and(wildCard(QSeries.series.laterality,
+                keys.getString(Tag.Laterality, "*").toUpperCase(), matchUnknown, false));
         builder.and(MatchDateTimeRange.rangeMatch(
                 QSeries.series.performedProcedureStepStartDate,
                 QSeries.series.performedProcedureStepStartTime,
@@ -164,8 +168,21 @@ abstract class Builder {
                 Tag.PerformedProcedureStepStartTime,
                 Tag.PerformedProcedureStepStartDateAndTime,
                 keys, queryParam.isCombinedDatetimeMatching(), matchUnknown));
+        builder.and(MatchPersonName.match(QSeries.series.performingPhysicianName,
+                QSeries.series.performingPhysicianIdeographicName,
+                QSeries.series.performingPhysicianPhoneticName,
+                QSeries.series.performingPhysicianFamilyNameSoundex,
+                QSeries.series.performingPhysicianGivenNameSoundex,
+                keys.getString(Tag.PerformingPhysicianName, "*"),
+                queryParam, storeParam.getFuzzyStr()));
         builder.and(wildCard(QSeries.series.seriesDescription,
                 keys.getString(Tag.SeriesDescription, "*"), matchUnknown, true));
+        builder.and(wildCard(QSeries.series.stationName,
+                keys.getString(Tag.StationName, "*"), matchUnknown, true));
+        builder.and(wildCard(QSeries.series.institutionName,
+                keys.getString(Tag.InstitutionalDepartmentName, "*"), matchUnknown, true));
+        builder.and(wildCard(QSeries.series.institutionalDepartmentName,
+                keys.getString(Tag.InstitutionName, "*"), matchUnknown, true));
         builder.and(requestAttributes(keys.getNestedDataset(Tag.RequestAttributesSequence),
                 queryParam, storeParam));
         builder.and(code(QSeries.series.institutionCode,
@@ -193,6 +210,8 @@ abstract class Builder {
                 keys.getString(Tag.InstanceNumber, "*"), matchUnknown, false));
         builder.and(wildCard(QInstance.instance.verificationFlag,
                 keys.getString(Tag.VerificationFlag, "*").toUpperCase(), matchUnknown, false));
+        builder.and(wildCard(QInstance.instance.completionFlag,
+                keys.getString(Tag.CompletionFlag, "*").toUpperCase(), matchUnknown, false));
         builder.and(MatchDateTimeRange.rangeMatch(
                 QInstance.instance.contentDate,
                 QInstance.instance.contentTime,
