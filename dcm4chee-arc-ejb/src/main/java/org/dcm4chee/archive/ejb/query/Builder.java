@@ -223,19 +223,15 @@ abstract class Builder {
         for (int i = 0; i < pids.length-1; i++, i++)
             result.or(pid(pids[i], pids[i+1], matchUnknown));
 
-        return nullIfNoValue(result);
+        return result;
     }
 
     static Predicate pid(String id, String issuer, boolean matchUnknown) {
-        return nullIfNoValue(new BooleanBuilder()
-                .and(wildCard(QPatient.patient.patientID, id, matchUnknown))
-                .and(wildCard(QPatient.patient.issuerOfPatientID, issuer, matchUnknown)));
+        return ExpressionUtils.allOf(
+                wildCard(QPatient.patient.patientID, id, matchUnknown),
+                wildCard(QPatient.patient.issuerOfPatientID, issuer, matchUnknown));
     }
 
-    static BooleanBuilder nullIfNoValue(BooleanBuilder builder) {
-        return builder.hasValue() ? builder : null;
-    }
-    
     static Predicate wildCard(StringPath path, String value,  boolean matchUnknown) {
         if (value.equals("*"))
             return null;
@@ -326,12 +322,13 @@ abstract class Builder {
         if (item == null || item.isEmpty())
             return null;
 
-        return nullIfNoValue(new BooleanBuilder()
-                .and(wildCard(QCode.code.codeValue, item.getString(Tag.CodeValue, "*"), false))
-                .and(wildCard(QCode.code.codingSchemeDesignator,
-                        item.getString(Tag.CodingSchemeDesignator, "*"), false))
-                .and(wildCard(QCode.code.codingSchemeVersion,
-                        item.getString(Tag.CodingSchemeVersion, "*"), false)));
+        return ExpressionUtils.allOf(
+                wildCard(QCode.code.codeValue, 
+                        item.getString(Tag.CodeValue, "*"), false),
+                wildCard(QCode.code.codingSchemeDesignator,
+                        item.getString(Tag.CodingSchemeDesignator, "*"), false),
+                wildCard(QCode.code.codingSchemeVersion,
+                        item.getString(Tag.CodingSchemeVersion, "*"), false));
     }
 
     static Predicate code(QCode code, Attributes item, boolean matchUnknown) {
@@ -366,13 +363,13 @@ abstract class Builder {
         if (item == null || item.isEmpty())
             return null;
 
-        Predicate predicate = nullIfNoValue(new BooleanBuilder()
-               .and(wildCard(QIssuer.issuer.entityID,
-                       item.getString(Tag.LocalNamespaceEntityID, "*"), false))
-               .and(wildCard(QIssuer.issuer.entityUID,
-                       item.getString(Tag.UniversalEntityID, "*"), false))
-               .and(wildCard(QIssuer.issuer.entityUIDType,
-                       item.getString(Tag.UniversalEntityIDType, "*"), false)));
+        Predicate predicate = ExpressionUtils.allOf(
+               wildCard(QIssuer.issuer.entityID,
+                       item.getString(Tag.LocalNamespaceEntityID, "*"), false),
+               wildCard(QIssuer.issuer.entityUID,
+                       item.getString(Tag.UniversalEntityID, "*"), false),
+               wildCard(QIssuer.issuer.entityUIDType,
+                       item.getString(Tag.UniversalEntityIDType, "*"), false));
 
         if (predicate == null)
             return null;
@@ -440,19 +437,18 @@ abstract class Builder {
             return null;
 
         boolean matchUnknown = queryParam.isMatchUnknown();
-        Predicate predicate = nullIfNoValue(
-                new BooleanBuilder()
-                    .and(MatchDateTimeRange.rangeMatch(
+        Predicate predicate = ExpressionUtils.allOf(
+                    MatchDateTimeRange.rangeMatch(
                         QVerifyingObserver.verifyingObserver.verificationDateTime, item, 
-                        Tag.VerificationDateTime, MatchDateTimeRange.FormatDate.DT, matchUnknown))
-                    .and(MatchPersonName.match(
+                        Tag.VerificationDateTime, MatchDateTimeRange.FormatDate.DT, matchUnknown),
+                    MatchPersonName.match(
                         QVerifyingObserver.verifyingObserver.verifyingObserverName,
                         QVerifyingObserver.verifyingObserver.verifyingObserverIdeographicName,
                         QVerifyingObserver.verifyingObserver.verifyingObserverPhoneticName,
                         QVerifyingObserver.verifyingObserver.verifyingObserverFamilyNameSoundex,
                         QVerifyingObserver.verifyingObserver.verifyingObserverGivenNameSoundex,
                         item.getString(Tag.VerifyingObserverName, "*"),
-                        queryParam, storeParam.getFuzzyStr())));
+                        queryParam, storeParam.getFuzzyStr()));
         
         if (predicate == null)
             return null;
@@ -473,16 +469,15 @@ abstract class Builder {
         if (!("CODE".equals(valueType) || "TEXT".equals(valueType)))
             return null;
 
-        Predicate predicate = nullIfNoValue(
-                new BooleanBuilder()
-                    .and(code(QContentItem.contentItem.conceptName,
-                        item.getNestedDataset(Tag.ConceptNameCodeSequence), false))
-                    .and(wildCard(QContentItem.contentItem.relationshipType,
-                            item.getString(Tag.RelationshipType, "*"), false))
-                    .and(code(QContentItem.contentItem.conceptCode,
-                        item.getNestedDataset(Tag.ConceptCodeSequence), false))
-                    .and(wildCard(QContentItem.contentItem.textValue,
-                            item.getString(Tag.TextValue, "*"), false)));
+        Predicate predicate = ExpressionUtils.allOf(
+                    code(QContentItem.contentItem.conceptName,
+                        item.getNestedDataset(Tag.ConceptNameCodeSequence), false),
+                    wildCard(QContentItem.contentItem.relationshipType,
+                            item.getString(Tag.RelationshipType, "*"), false),
+                    code(QContentItem.contentItem.conceptCode,
+                        item.getNestedDataset(Tag.ConceptCodeSequence), false),
+                    wildCard(QContentItem.contentItem.textValue,
+                            item.getString(Tag.TextValue, "*"), false));
         if (predicate == null)
             return null;
 
@@ -490,7 +485,6 @@ abstract class Builder {
             .from(QContentItem.contentItem)
             .where(QInstance.instance.contentItems.contains(QContentItem.contentItem), predicate)
             .exists();
-        
     }
 
     static Predicate permission(String[] roles, Action action) {

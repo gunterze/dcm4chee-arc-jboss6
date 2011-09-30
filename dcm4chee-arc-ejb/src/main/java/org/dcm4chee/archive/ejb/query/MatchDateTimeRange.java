@@ -106,7 +106,7 @@ class MatchDateTimeRange {
                 predicates.and(matchUnknown(timeField, matchUnknown, 
                         range(timeField, keys.getDateRange(timeTag, null), FormatDate.TM)));
         }
-        return Builder.nullIfNoValue(predicates);
+        return predicates;
     }
 
     private static Predicate matchUnknown(StringPath field, boolean matchUnknown, 
