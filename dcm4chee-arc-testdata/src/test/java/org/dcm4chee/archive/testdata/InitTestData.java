@@ -50,6 +50,7 @@ import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.ejb.store.InstanceStoreBean;
 import org.dcm4chee.archive.ejb.store.IssuerFactory;
 import org.dcm4chee.archive.ejb.store.PatientFactory;
+import org.dcm4chee.archive.ejb.store.StoreDuplicate;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.StoreParam;
 import org.jboss.arquillian.api.Deployment;
@@ -68,6 +69,7 @@ public class InitTestData {
     private static final String SOURCE_AET = "SOURCE_AET";
     private static final String RETRIEVE_AETS = "RETRIEVE_AET";
     private static final Class<?>[] CLASSES = {
+        StoreDuplicate.class,
         InstanceStore.class,
         InstanceStoreBean.class,
         CodeFactory.class,
@@ -212,7 +214,7 @@ public class InitTestData {
             ds.setString(InstanceStore.DCM4CHEE_ARC, InstanceStore.SOURCE_AET, VR.AE, SOURCE_AET);
             ds.setString(Tag.RetrieveAETitle, VR.AE, RETRIEVE_AETS);
             ds.setString(Tag.InstanceAvailability, VR.CS, Availability.ONLINE.toString());
-            instanceStore.store(ds, STORE_PARAM);
+            instanceStore.newInstance(ds, STORE_PARAM);
         }
         instanceStore.close();
     }

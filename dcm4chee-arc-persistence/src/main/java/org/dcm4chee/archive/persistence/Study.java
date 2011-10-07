@@ -38,7 +38,6 @@
 
 package org.dcm4chee.archive.persistence;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
@@ -59,6 +58,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.PersonName;
@@ -81,13 +81,13 @@ import org.dcm4che.util.StringUtils;
     query="SELECT DISTINCT(s.modality) FROM Series s WHERE s.study = ?1"),
 @NamedQuery(
     name="Study.sopClassesInStudy",
-    query="SELECT DISTINCT(i.sopClassUID) FROM Instance i WHERE i.series.study = ?1"),
+    query="SELECT DISTINCT(i.sopClassUID) FROM Instance i WHERE i.series.study = ?1 AND i.replaced = false"),
 @NamedQuery(
     name="Study.countRelatedSeries",
     query="SELECT COUNT(s) FROM Series s WHERE s.study = ?1"),
 @NamedQuery(
     name="Study.countRelatedInstances",
-    query="SELECT COUNT(i) FROM Instance i WHERE i.series.study = ?1"),
+    query="SELECT COUNT(i) FROM Instance i WHERE i.series.study = ?1 AND i.replaced = false"),
 @NamedQuery(
     name="Study.retrieveAETs",
     query="SELECT DISTINCT(s.retrieveAETs) FROM Series s WHERE s.study = ?1"),
@@ -214,6 +214,9 @@ public class Study implements Serializable {
     @Column(name = "study_attrs")
     private byte[] encodedAttributes;
 
+    @Transient
+    private Attributes cachedAttributes;
+
     @ManyToMany
     @JoinTable(name = "rel_study_pcode", 
         joinColumns = @JoinColumn(name = "study_fk", referencedColumnName = "pk"),
@@ -250,8 +253,10 @@ public class Study implements Serializable {
         updatedTime = new Date();
     }
 
-    public Attributes getAttributes() throws IOException {
-        return Utils.decodeAttributes(encodedAttributes);
+    public Attributes getAttributes() throws BlobCorruptedException {
+        if (cachedAttributes == null)
+            cachedAttributes = Utils.decodeAttributes(encodedAttributes);
+        return cachedAttributes;
     }
 
     public long getPk() {
@@ -451,7 +456,7 @@ public class Study implements Serializable {
         studyCustomAttribute3 = StoreParam.selectStringValue(attrs,
                 storeParam.getStudyCustomAttribute3(), "*");
 
-        encodedAttributes = Utils.encodeAttributes(attrs, storeParam.getStudyAttributes());
-        
+        encodedAttributes = Utils.encodeAttributes(
+                cachedAttributes = new Attributes(attrs, storeParam.getStudyAttributes()));
     }
 }

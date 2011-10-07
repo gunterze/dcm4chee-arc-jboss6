@@ -43,6 +43,7 @@ import java.util.Map;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Connection;
 import org.dcm4che.util.FilePathFormat;
+import org.dcm4chee.archive.ejb.store.StoreDuplicate;
 import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
@@ -58,11 +59,8 @@ public class Configuration {
         return Boolean.parseBoolean((String) ae.getProperty("Query.matchUnknown"));
     }
 
-    public static String fileSystemGroupIDFor(ApplicationEntity ae, String aet) {
-        String groupID = (String) ae.getProperty("Storage.fsGroupID." + aet);
-        if (groupID == null)
-            groupID = (String) ae.getProperty("Storage.fsGroupID");
-        return groupID;
+    public static String fileSystemGroupIDFor(ApplicationEntity ae) {
+        return (String) ae.getProperty("Storage.fsGroupID");
     }
 
     public static FilePathFormat filePathFormatFor(ApplicationEntity ae) {
@@ -86,6 +84,10 @@ public class Configuration {
         Map<String, Connection> map = (Map<String, Connection>)
                 ae.getProperty("Retrieve.connections");
         return map.get(aet);
+    }
+
+    public static StoreDuplicate storeDuplicateFor(ApplicationEntity ae) {
+        return (StoreDuplicate) ae.getProperty("Storage.storeDuplicate");
     }
 
 }

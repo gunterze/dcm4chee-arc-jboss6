@@ -56,6 +56,7 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.dcm4che.net.Status;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.ContentItem;
@@ -63,11 +64,14 @@ import org.dcm4chee.archive.persistence.FileRef;
 import org.dcm4chee.archive.persistence.FileSystem;
 import org.dcm4chee.archive.persistence.FileSystemStatus;
 import org.dcm4chee.archive.persistence.Instance;
+import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.RequestAttributes;
 import org.dcm4chee.archive.persistence.Series;
 import org.dcm4chee.archive.persistence.StoreParam;
 import org.dcm4chee.archive.persistence.Study;
 import org.dcm4chee.archive.persistence.VerifyingObserver;
+
+import com.mysema.query.NonUniqueResultException;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -80,38 +84,65 @@ public class InstanceStoreBean implements InstanceStore {
     private Series cachedSeries;
 
     @Override
-    public boolean store(Attributes data, StoreParam storeParam, FileRef fileRef) {
+    public boolean addFileRef(Attributes data, Attributes rsp, FileRef fileRef,
+            StoreParam storeParam, StoreDuplicate storeDuplicate) {
         FileSystem fs = fileRef.getFileSystem();
         data.setString(Tag.InstanceAvailability, VR.CS, fs.getAvailability().toString());
-        Instance inst = store(data, storeParam);
+        Instance inst;
+        try {
+            inst = findInstance(data.getString(Tag.SOPInstanceUID, null));
+            switch (storeDuplicate) {
+            case IGNORE:
+                return false;
+            case STORE:
+                if (!data.matches(inst.getAttributes(), false, false)) {
+                    rsp.setInt(Tag.Status, VR.US, Status.DuplicateSOPinstance);
+                    return false;
+                }
+                break;
+            case REPLACE:
+                inst.setReplaced(true);
+                inst = newInstance(data, storeParam);
+                break;
+            }
+        } catch (NoResultException e) {
+            inst = newInstance(data, storeParam);
+        }
+        Series series = inst.getSeries();
+        Study study = series.getStudy();
+        Patient patient = study.getPatient();
+        Attributes original = new Attributes();
+        data.addAll(patient.getAttributes(), original);
+        data.addAll(study.getAttributes(), original);
+        data.addAll(series.getAttributes(), original);
+        if (!original.isEmpty()) {
+            rsp.setInt(Tag.Status, VR.US, Status.CoercionOfDataElements);
+            rsp.setInt(Tag.OffendingElement, VR.AT, original.tags());
+        }
         fileRef.setInstance(inst);
         em.persist(fileRef);
         return true;
     }
 
     @Override
-    public Instance store(Attributes data, StoreParam storeParam) {
-        try {
-            return findInstance(data.getString(Tag.SOPInstanceUID, null));
-        } catch (NoResultException e) {
-            Instance inst = new Instance();
-            Series series = getSeries(data, storeParam);
-            inst.setSeries(series);
-            inst.setConceptNameCode(
-                    CodeFactory.getCode(em, data.getNestedDataset(Tag.ConceptNameCodeSequence)));
-            inst.setVerifyingObservers(createVerifyingObservers(
-                    data.getSequence(Tag.VerifyingObserverSequence), storeParam));
-            inst.setContentItems(createContentItems(
-                    data.getSequence(Tag.ContentSequence), storeParam));
-            inst.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
-            inst.setExternalRetrieveAET(data.getString(DCM4CHEE_ARC, EXT_RETRIEVE_AET));
-            inst.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
-            inst.setAttributes(data, storeParam);
-            em.persist(inst);
-            setDirty(series);
-            em.flush();
-            return inst;
-        }
+    public Instance newInstance(Attributes data, StoreParam storeParam) {
+        Instance inst = new Instance();
+        Series series = getSeries(data, storeParam);
+        inst.setSeries(series);
+        inst.setConceptNameCode(
+                CodeFactory.getCode(em, data.getNestedDataset(Tag.ConceptNameCodeSequence)));
+        inst.setVerifyingObservers(createVerifyingObservers(
+                data.getSequence(Tag.VerifyingObserverSequence), storeParam));
+        inst.setContentItems(createContentItems(
+                data.getSequence(Tag.ContentSequence), storeParam));
+        inst.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
+        inst.setExternalRetrieveAET(data.getString(DCM4CHEE_ARC, EXT_RETRIEVE_AET));
+        inst.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
+        inst.setAttributes(data, storeParam);
+        em.persist(inst);
+        setDirty(series);
+        em.flush();
+        return inst;
     }
 
     @Override
@@ -306,26 +337,30 @@ public class InstanceStoreBean implements InstanceStore {
     private Series getSeries(Attributes data, StoreParam storeParam) {
         String seriesIUID = data.getString(Tag.SeriesInstanceUID, null);
         Series series = cachedSeries;
-        if (series != null && series.getSeriesInstanceUID().equals(seriesIUID))
-            return series;
-
-        updateCachedSeries();
-        try {
-            cachedSeries = series = findSeries(seriesIUID);
-        } catch (NoResultException e) {
-            cachedSeries = series = new Series();
-            Study study = getStudy(data, storeParam);
-            series.setStudy(study);
-            series.setInstitutionCode(
-                    CodeFactory.getCode(em, data.getNestedDataset(Tag.InstitutionCodeSequence)));
-            series.setRequestAttributes(createRequestAttributes(
-                    data.getSequence(Tag.RequestAttributesSequence), storeParam));
-            series.setSourceAET(data.getString(DCM4CHEE_ARC, SOURCE_AET));
-            series.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
-            series.setExternalRetrieveAET(data.getString(DCM4CHEE_ARC, EXT_RETRIEVE_AET));
-            series.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
-            series.setAttributes(data, storeParam);
-            em.persist(series);
+        if (series == null || !series.getSeriesInstanceUID().equals(seriesIUID)) {
+            updateCachedSeries();
+            try {
+                cachedSeries = series = findSeries(seriesIUID);
+            } catch (NoResultException e) {
+                cachedSeries = series = new Series();
+                Study study = getStudy(data, storeParam);
+                series.setStudy(study);
+                series.setInstitutionCode(
+                        CodeFactory.getCode(em, data.getNestedDataset(Tag.InstitutionCodeSequence)));
+                series.setRequestAttributes(createRequestAttributes(
+                        data.getSequence(Tag.RequestAttributesSequence), storeParam));
+                series.setSourceAET(data.getString(DCM4CHEE_ARC, SOURCE_AET));
+                series.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
+                series.setExternalRetrieveAET(data.getString(DCM4CHEE_ARC, EXT_RETRIEVE_AET));
+                series.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
+                series.setAttributes(data, storeParam);
+                em.persist(series);
+                return series;
+            }
+        }
+        Attributes seriesAttrs = series.getAttributes();
+        if (seriesAttrs.mergeSelected(data, storeParam.getSeriesAttributes())) {
+            series.setAttributes(seriesAttrs, storeParam);
         }
         return series;
     }
@@ -377,12 +412,17 @@ public class InstanceStoreBean implements InstanceStore {
     }
 
     private Study getStudy(Attributes data, StoreParam storeParam) {
+        Study study;
         try {
-            return findStudy(data.getString(Tag.StudyInstanceUID, null));
+            study = findStudy(data.getString(Tag.StudyInstanceUID, null));
+            Attributes studyAttrs = study.getAttributes();
+            if (studyAttrs.mergeSelected(data, storeParam.getStudyAttributes())) {
+                study.setAttributes(studyAttrs, storeParam);
+            }
         } catch (NoResultException e) {
-            Study study = new Study();
-            study.setPatient(
-                    PatientFactory.followMergedWith(PatientFactory.getPatient(em, data, storeParam)));
+            study = new Study();
+            Patient patient = getPatient(data, storeParam);
+            study.setPatient(patient);
             study.setProcedureCodes(CodeFactory.createCodes(em,
                     data.getSequence(Tag.ProcedureCodeSequence)));
             study.setIssuerOfAccessionNumber(
@@ -395,8 +435,24 @@ public class InstanceStoreBean implements InstanceStore {
             study.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
             study.setAttributes(data, storeParam);
             em.persist(study);
-            return study;
         }
+        return study;
+    }
+
+    private Patient getPatient(Attributes data, StoreParam storeParam) {
+        Patient patient;
+        try {
+            patient = PatientFactory.followMergedWith(
+                    PatientFactory.findPatient(em, data, storeParam));
+            Attributes patientAttrs = patient.getAttributes();
+            if (patientAttrs.mergeSelected(data, storeParam.getPatientAttributes()))
+                patient.setAttributes(patientAttrs, storeParam);
+        } catch (NonUniqueResultException e) {
+            patient = PatientFactory.createNewPatient(em, data, storeParam);
+        } catch (NoResultException e) {
+            patient = PatientFactory.createNewPatient(em, data, storeParam);
+        }
+        return patient;
     }
 
 }

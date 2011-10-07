@@ -38,13 +38,11 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.ejb.EJBException;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -173,11 +171,7 @@ public class LocateInstancesBean implements LocateInstances {
                     uri = fsuri + filePath;
                     byte[] instAttrs = (byte[]) tuple[9];
                     attrs = new Attributes(seriesAttrs);
-                    try {
-                        Utils.decodeAttributes(attrs, instAttrs);
-                    } catch (IOException e) {
-                        throw new EJBException(e);
-                    }
+                    Utils.decodeAttributes(attrs, instAttrs);
                 } else {
                     StringBuilder sb = new StringBuilder();
                     sb.append("aet:");
@@ -205,13 +199,9 @@ public class LocateInstancesBean implements LocateInstances {
         byte[] studyAttributes = (byte[]) tuple[1];
         byte[] patientAttributes = (byte[]) tuple[2];
         Attributes attrs = new Attributes();
-        try {
-            Utils.decodeAttributes(attrs, patientAttributes);
-            Utils.decodeAttributes(attrs, studyAttributes);
-            Utils.decodeAttributes(attrs, seriesAttributes);
-        } catch (IOException e) {
-            throw new EJBException(e);
-        }
+        Utils.decodeAttributes(attrs, patientAttributes);
+        Utils.decodeAttributes(attrs, studyAttributes);
+        Utils.decodeAttributes(attrs, seriesAttributes);
         return attrs;
     }
 }

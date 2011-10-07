@@ -177,6 +177,10 @@
       <parameter><inject bean="ExtFilePathFormat" /></parameter>
     </install>
     <install method="setProperty">
+      <parameter>Storage.storeDuplicate</parameter>
+      <parameter>IGNORE</parameter>
+    </install>
+    <install method="setProperty">
       <parameter>Storage.digestAlgorithm</parameter>
       <parameter>MD5</parameter>
     </install>

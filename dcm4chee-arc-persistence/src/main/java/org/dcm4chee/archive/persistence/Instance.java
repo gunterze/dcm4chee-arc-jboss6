@@ -38,7 +38,6 @@
 
 package org.dcm4chee.archive.persistence;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
@@ -58,6 +57,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
@@ -72,7 +72,7 @@ import org.dcm4che.util.StringUtils;
 @NamedQueries({
 @NamedQuery(
     name="Instance.findBySOPInstanceUID",
-    query="SELECT i FROM Instance i WHERE i.sopInstanceUID = ?1")
+    query="SELECT i FROM Instance i WHERE i.sopInstanceUID = ?1 AND i.replaced = false")
 })
 @Entity
 @Table(name = "instance")
@@ -147,6 +147,10 @@ public class Instance implements Serializable {
     private Availability availability;
 
     @Basic(optional = false)
+    @Column(name = "replaced")
+    private boolean replaced;
+
+    @Basic(optional = false)
     @Column(name = "archived")
     private boolean archived;
 
@@ -178,6 +182,9 @@ public class Instance implements Serializable {
     @JoinColumn(name = "series_fk")
     private Series series;
 
+    @Transient
+    private Attributes cachedAttributes;
+
     @Override
     public String toString() {
         return "Instance[pk=" + pk
@@ -199,8 +206,10 @@ public class Instance implements Serializable {
         updatedTime = new Date();
     }
 
-    public Attributes getAttributes() throws IOException {
-        return Utils.decodeAttributes(encodedAttributes);
+    public Attributes getAttributes() throws BlobCorruptedException {
+        if (cachedAttributes == null)
+            cachedAttributes = Utils.decodeAttributes(encodedAttributes);
+        return cachedAttributes;
     }
 
     public long getPk() {
@@ -279,15 +288,31 @@ public class Instance implements Serializable {
         this.availability = availability;
     }
 
+    public boolean isReplaced() {
+        return replaced;
+    }
+
+    public void setReplaced(boolean replaced) {
+        this.replaced = replaced;
+    }
+
     public boolean isArchived() {
         return archived;
+    }
+
+    public void setArchived(boolean archived) {
+        this.archived = archived;
     }
 
     public boolean isStorageComitted() {
         return storageComitted;
     }
 
-    public byte[] getEncodedAttributes() {
+    public void setStorageComitted(boolean storageComitted) {
+        this.storageComitted = storageComitted;
+    }
+
+   public byte[] getEncodedAttributes() {
         return encodedAttributes;
     }
 
@@ -353,7 +378,7 @@ public class Instance implements Serializable {
         instanceCustomAttribute3 = StoreParam.selectStringValue(attrs,
                 storeParam.getInstanceCustomAttribute3(), "*");
 
-        encodedAttributes = Utils.encodeAttributes(attrs, storeParam.getInstanceAttributes());
-        
+        encodedAttributes = Utils.encodeAttributes(
+                cachedAttributes = new Attributes(attrs, storeParam.getInstanceAttributes()));
     }
 }

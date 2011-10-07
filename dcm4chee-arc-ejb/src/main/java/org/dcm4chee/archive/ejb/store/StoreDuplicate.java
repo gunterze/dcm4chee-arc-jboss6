@@ -38,34 +38,11 @@
 
 package org.dcm4chee.archive.ejb.store;
 
-import javax.ejb.Local;
-
-import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.persistence.FileRef;
-import org.dcm4chee.archive.persistence.FileSystem;
-import org.dcm4chee.archive.persistence.Instance;
-import org.dcm4chee.archive.persistence.StoreParam;
-
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Local
-public interface InstanceStore {
-
-    public static final String JNDI_NAME = "InstanceStoreBean/local";
-    public static final String DCM4CHEE_ARC = "DCM4CHEE_ARC";
-    public static final int SOURCE_AET = 0x00090053;
-    public static final int EXT_RETRIEVE_AET = 0x00090055;
-
-    Instance newInstance(Attributes data, StoreParam storeParam);
-
-    boolean addFileRef(Attributes data, Attributes rsp, FileRef fileRef, StoreParam storeParam,
-            StoreDuplicate storeDuplicate);
-
-    void close();
-
-    boolean initFileSystem(String groupID);
-
-    FileSystem selectFileSystem(String groupID);
-
+public enum StoreDuplicate {
+    IGNORE,
+    STORE,
+    REPLACE
 }

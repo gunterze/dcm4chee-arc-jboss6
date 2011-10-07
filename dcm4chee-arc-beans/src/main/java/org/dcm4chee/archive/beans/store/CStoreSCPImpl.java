@@ -76,8 +76,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
     @Override
     protected Object selectStorage(Association as, Attributes rq) throws DicomServiceException {
         try {
-            String fsGroupID = Configuration.fileSystemGroupIDFor(as.getApplicationEntity(),
-                    as.getRemoteAET());
+            String fsGroupID = Configuration.fileSystemGroupIDFor(as.getApplicationEntity());
             InstanceStore store = initInstanceStore(as);
             if (initFileSystem) {
                 store.initFileSystem(fsGroupID);
@@ -138,10 +137,11 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         try {
             ds.setString(InstanceStore.DCM4CHEE_ARC, InstanceStore.SOURCE_AET, VR.AE, as.getRemoteAET());
             ds.setString(Tag.RetrieveAETitle, VR.AE, as.getLocalAET());
-            if (store.store(ds, Configuration.storeParamFor(ae),
-                    new FileRef(fs, filePath, tsuid, dst.length(), digest(digest))))
+            if (store.addFileRef(ds, rsp,
+                    new FileRef(fs, filePath, tsuid, dst.length(), digest(digest)),
+                    Configuration.storeParamFor(ae),
+                    Configuration.storeDuplicateFor(ae)))
                 return null;
-            LOG.info("{}: ignore received object", as);
         } catch (Exception e) {
             LOG.warn(as + ": Failed to update DB:", e);
             String errorComment = causeOf(e).getMessage();

@@ -38,10 +38,6 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import java.io.IOException;
-
-import javax.ejb.EJBException;
-
 import org.dcm4che.data.Attributes;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.QPatient;
@@ -105,13 +101,9 @@ public class SeriesQueryImpl extends CompositeQueryImpl {
         byte[] studyAttributes = results.getBinary(9);
         byte[] patientAttributes = results.getBinary(10);
         Attributes attrs = new Attributes();
-        try {
-            Utils.decodeAttributes(attrs, patientAttributes);
-            Utils.decodeAttributes(attrs, studyAttributes);
-            Utils.decodeAttributes(attrs, seriesAttributes);
-        } catch (IOException e) {
-            throw new EJBException(e);
-        }
+        Utils.decodeAttributes(attrs, patientAttributes);
+        Utils.decodeAttributes(attrs, studyAttributes);
+        Utils.decodeAttributes(attrs, seriesAttributes);
         Utils.setStudyQueryAttributes(attrs,
                 numberOfStudyRelatedSeries,
                 numberOfStudyRelatedInstances,

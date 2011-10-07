@@ -36,21 +36,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.util;
+package org.dcm4chee.archive.persistence;
+
+import java.io.IOException;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class StringArrayHolder {
+public class BlobCorruptedException extends RuntimeException {
 
-    private final String[] value;
+    private static final long serialVersionUID = 6928826487883256011L;
 
-    public StringArrayHolder(String[] value) {
-        this.value = value;
-    }
-
-    public String[] getValue() {
-        return value;
+    public BlobCorruptedException(IOException e) {
+        super(e);
     }
 
 }

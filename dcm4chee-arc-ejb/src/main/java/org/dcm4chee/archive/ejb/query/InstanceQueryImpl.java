@@ -38,10 +38,6 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import java.io.IOException;
-
-import javax.ejb.EJBException;
-
 import org.dcm4che.data.Attributes;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.QInstance;
@@ -117,11 +113,7 @@ class InstanceQueryImpl extends CompositeQueryImpl {
             this.seriesPk = seriesPk;
         }
         Attributes attrs = new Attributes(seriesAttrs);
-        try {
-            Utils.decodeAttributes(attrs, instAttributes);
-        } catch (IOException e) {
-            throw new EJBException(e);
-        }
+        Utils.decodeAttributes(attrs, instAttributes);
         Utils.setRetrieveAET(attrs, retrieveAETs, externalRetrieveAET);
         Utils.setAvailability(attrs, availability);
         return attrs;
@@ -138,13 +130,9 @@ class InstanceQueryImpl extends CompositeQueryImpl {
         byte[] studyAttributes = (byte[]) tuple[6];
         byte[] patientAttributes = (byte[]) tuple[7];
         Attributes attrs = new Attributes();
-        try {
-            Utils.decodeAttributes(attrs, patientAttributes);
-            Utils.decodeAttributes(attrs, studyAttributes);
-            Utils.decodeAttributes(attrs, seriesAttributes);
-        } catch (IOException e) {
-            throw new EJBException(e);
-        }
+        Utils.decodeAttributes(attrs, patientAttributes);
+        Utils.decodeAttributes(attrs, studyAttributes);
+        Utils.decodeAttributes(attrs, seriesAttributes);
         Utils.setStudyQueryAttributes(attrs,
                 numberOfStudyRelatedSeries,
                 numberOfStudyRelatedInstances,

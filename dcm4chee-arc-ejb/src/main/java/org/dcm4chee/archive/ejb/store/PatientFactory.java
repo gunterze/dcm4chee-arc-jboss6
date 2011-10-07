@@ -55,17 +55,7 @@ import org.dcm4chee.archive.persistence.StoreParam;
  */
 public class PatientFactory {
 
-    public static Patient getPatient(EntityManager em, Attributes attrs, StoreParam storeParam) {
-        try {
-            return findPatient(em, attrs, storeParam);
-        } catch (NoResultException e) {
-            return createNewPatient(em, attrs, storeParam);
-        } catch (NonUniqueResultException e) {
-            return createNewPatient(em, attrs, storeParam);
-        }
-    }
-
-    private static Patient findPatient(EntityManager em, Attributes attrs, StoreParam storeParam) {
+    public static Patient findPatient(EntityManager em, Attributes attrs, StoreParam storeParam) {
         String pid = attrs.getString(Tag.PatientID);
         if (pid == null)
             throw new NonUniqueResultException();
@@ -94,7 +84,7 @@ public class PatientFactory {
         return patient;
     }
 
-    private static Patient createNewPatient(EntityManager em, Attributes attrs,
+    public static Patient createNewPatient(EntityManager em, Attributes attrs,
             StoreParam storeParam) {
         Patient patient = new Patient();
         patient.setAttributes(attrs, storeParam);

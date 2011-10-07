@@ -75,7 +75,8 @@ public class InstanceStoreTest {
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(InstanceStore.class,
+                .addClasses(StoreDuplicate.class,
+                        InstanceStore.class,
                         InstanceStoreBean.class,
                         CodeFactory.class,
                         IssuerFactory.class,
@@ -176,12 +177,12 @@ public class InstanceStoreTest {
 
     @Test
     public void storeTest() throws Exception {
-        Instance ct1 = instanceStore.store(parse("resource:ct-1.xml", SOURCE_AET,
+        Instance ct1 = instanceStore.newInstance(parse("resource:ct-1.xml", SOURCE_AET,
                 new String[]{"AET_1","AET_2"}, "AET_3", Availability.ONLINE), STORE_PARAM);
-        Instance ct2 = instanceStore.store(parse("resource:ct-2.xml", SOURCE_AET,
-                    new String[]{"AET_2"}, "AET_3", Availability.NEARLINE), STORE_PARAM);
-        Instance pr1 = instanceStore.store(parse("resource:pr-1.xml", SOURCE_AET,
-                    new String[]{"AET_1", "AET_2"}, "AET_4", Availability.ONLINE), STORE_PARAM);
+        Instance ct2 = instanceStore.newInstance(parse("resource:ct-2.xml", SOURCE_AET,
+                new String[]{"AET_2"}, "AET_3", Availability.NEARLINE), STORE_PARAM);
+        Instance pr1 = instanceStore.newInstance(parse("resource:pr-1.xml", SOURCE_AET,
+                new String[]{"AET_1", "AET_2"}, "AET_4", Availability.ONLINE), STORE_PARAM);
         instanceStore.close();
         Series ctSeries = ct1.getSeries();
         Series prSeries = pr1.getSeries();

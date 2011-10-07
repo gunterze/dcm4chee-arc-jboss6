@@ -54,32 +54,37 @@ import org.dcm4che.io.DicomOutputStream;
  */
 public class Utils {
 
-    public static byte[] encodeAttributes(Attributes attrs, int[] include) {
-        Attributes tmp = new Attributes(include.length);
-        tmp.addSelected(attrs, include);
+    public static byte[] encodeAttributes(Attributes attrs) {
         ByteArrayOutputStream out = new ByteArrayOutputStream(512);
         try {
             DicomOutputStream dos = new DicomOutputStream(out,
                     UID.ExplicitVRLittleEndian);
-            dos.writeDataset(null, tmp);
+            dos.writeDataset(null, attrs);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         return out.toByteArray();
     }
 
-    public static Attributes decodeAttributes(byte[] b) throws IOException {
+    public static Attributes decodeAttributes(byte[] b) {
         ByteArrayInputStream is = new ByteArrayInputStream(b);
-        DicomInputStream dis = new DicomInputStream(is);
-        return dis.readDataset(-1, -1);
+        try {
+            DicomInputStream dis = new DicomInputStream(is);
+            return dis.readDataset(-1, -1);
+        } catch (IOException e) {
+            throw new BlobCorruptedException(e);
+        }
     }
 
-    public static void decodeAttributes(Attributes attrs, byte[] b)
-            throws IOException {
+    public static void decodeAttributes(Attributes attrs, byte[] b) {
         ByteArrayInputStream is = new ByteArrayInputStream(b);
-        DicomInputStream dis = new DicomInputStream(is);
-        dis.readFileMetaInformation();
-        dis.readAttributes(attrs, -1, -1);
+        try {
+            DicomInputStream dis = new DicomInputStream(is);
+            dis.readFileMetaInformation();
+            dis.readAttributes(attrs, -1, -1);
+        } catch (IOException e) {
+            throw new BlobCorruptedException(e);
+        }
     }
 
     public static void setStudyQueryAttributes(Attributes attrs,

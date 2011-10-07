@@ -38,7 +38,6 @@
 
 package org.dcm4chee.archive.persistence;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
@@ -58,6 +57,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.PersonName;
@@ -93,16 +93,16 @@ import org.dcm4che.util.StringUtils;
           "FROM Series s WHERE s.pk = ?1"),
 @NamedQuery(
     name="Series.countRelatedInstances",
-    query="SELECT COUNT(i) FROM Instance i WHERE i.series = ?1"),
+    query="SELECT COUNT(i) FROM Instance i WHERE i.series = ?1 AND i.replaced = false"),
 @NamedQuery(
     name="Series.retrieveAETs",
-    query="SELECT DISTINCT(i.retrieveAETs) FROM Instance i WHERE i.series = ?1"),
+    query="SELECT DISTINCT(i.retrieveAETs) FROM Instance i WHERE i.series = ?1 AND i.replaced = false"),
 @NamedQuery(
     name="Series.externalRetrieveAET",
-    query="SELECT DISTINCT(i.externalRetrieveAET) FROM Instance i WHERE i.series = ?1"),
+    query="SELECT DISTINCT(i.externalRetrieveAET) FROM Instance i WHERE i.series = ?1 AND i.replaced = false"),
 @NamedQuery(
     name="Series.availability",
-    query="SELECT MAX(i.availability) FROM Instance i WHERE i.series = ?1"),
+    query="SELECT MAX(i.availability) FROM Instance i WHERE i.series = ?1 AND i.replaced = false"),
 @NamedQuery(
     name="Series.setDirty",
     query="UPDATE Series s SET dirty = true WHERE s = ?1")
@@ -240,6 +240,9 @@ public class Series implements Serializable {
     @Column(name = "series_attrs")
     private byte[] encodedAttributes;
 
+    @Transient
+    private Attributes cachedAttributes;
+
     @Override
     public String toString() {
         return "Series[pk=" + pk
@@ -277,8 +280,10 @@ public class Series implements Serializable {
         updatedTime = new Date();
     }
 
-    public Attributes getAttributes() throws IOException {
-        return Utils.decodeAttributes(encodedAttributes);
+    public Attributes getAttributes() throws BlobCorruptedException {
+        if (cachedAttributes == null)
+            cachedAttributes = Utils.decodeAttributes(encodedAttributes);
+        return cachedAttributes;
     }
 
     public long getPk() {
@@ -508,7 +513,8 @@ public class Series implements Serializable {
         seriesCustomAttribute3 = StoreParam.selectStringValue(attrs,
                 storeParam.getSeriesCustomAttribute3(), "*");
 
-        encodedAttributes = Utils.encodeAttributes(attrs, storeParam.getSeriesAttributes());
+        encodedAttributes = Utils.encodeAttributes(
+                cachedAttributes = new Attributes(attrs, storeParam.getSeriesAttributes()));
         
     }
 }

@@ -38,10 +38,6 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import java.io.IOException;
-
-import javax.ejb.EJBException;
-
 import org.dcm4che.data.Attributes;
 import org.dcm4chee.archive.persistence.QPatient;
 import org.dcm4chee.archive.persistence.StoreParam;
@@ -78,11 +74,7 @@ class PatientQueryImpl extends CompositeQueryImpl {
     @Override
     protected Attributes toAttributes(ScrollableResults results) {
         Attributes attrs = new Attributes();
-        try {
-            Utils.decodeAttributes(attrs, results.getBinary(1));
-        } catch (IOException e) {
-            throw new EJBException(e);
-        }
+        Utils.decodeAttributes(attrs, results.getBinary(1));
         return attrs;
     }
 

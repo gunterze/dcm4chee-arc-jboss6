@@ -38,7 +38,6 @@
 
 package org.dcm4chee.archive.persistence;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
@@ -57,6 +56,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.PersonName;
@@ -151,6 +151,9 @@ public class Patient implements Serializable {
     @Basic(optional = false)
     @Column(name = "pat_attrs")
     private byte[] encodedAttributes;
+
+    @Transient
+    private Attributes cachedAttributes;
 
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name = "merge_fk")
@@ -261,8 +264,10 @@ public class Patient implements Serializable {
         return encodedAttributes;
     }
 
-    public Attributes getAttributes() throws IOException {
-        return Utils.decodeAttributes(encodedAttributes);
+    public Attributes getAttributes() throws BlobCorruptedException {
+        if (cachedAttributes == null)
+            cachedAttributes = Utils.decodeAttributes(encodedAttributes);
+        return cachedAttributes;
     }
 
     public void setAttributes(Attributes attrs, StoreParam storeParam) {
@@ -297,6 +302,7 @@ public class Patient implements Serializable {
         patientCustomAttribute3 = StoreParam.selectStringValue(attrs,
                 storeParam.getPatientCustomAttribute3(), "*");
 
-        encodedAttributes = Utils.encodeAttributes(attrs, storeParam.getPatientAttributes());
+        encodedAttributes = Utils.encodeAttributes(
+                cachedAttributes = new Attributes(attrs, storeParam.getPatientAttributes()));
     }
 }
