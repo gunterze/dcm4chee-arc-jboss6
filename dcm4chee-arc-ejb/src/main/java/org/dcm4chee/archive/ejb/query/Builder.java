@@ -234,6 +234,7 @@ abstract class Builder {
         builder.and(wildCard(QInstance.instance.instanceCustomAttribute3,
                 StoreParam.selectStringValue(keys, storeParam.getInstanceCustomAttribute3(), "*"),
                 matchUnknown, true));
+        builder.and(QInstance.instance.replaced.isFalse());
     }
 
     static Predicate pids(String[] pids, boolean matchUnknown) {

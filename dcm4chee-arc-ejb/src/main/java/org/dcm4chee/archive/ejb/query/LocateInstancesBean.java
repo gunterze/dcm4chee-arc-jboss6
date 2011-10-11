@@ -111,9 +111,10 @@ public class LocateInstancesBean implements LocateInstances {
         builder.and(Builder.uids(QStudy.study.studyInstanceUID,
                 keys.getStrings(Tag.StudyInstanceUID)));
         builder.and(Builder.uids(QSeries.series.seriesInstanceUID,
-                keys.getStrings(Tag.StudyInstanceUID)));
+                keys.getStrings(Tag.SeriesInstanceUID)));
         builder.and(Builder.uids(QInstance.instance.sopInstanceUID,
-                keys.getStrings(Tag.StudyInstanceUID)));
+                keys.getStrings(Tag.SOPInstanceUID)));
+        builder.and(QInstance.instance.replaced.isFalse());
         return locate(new HibernateQuery(session)
             .from(QInstance.instance)
             .leftJoin(QInstance.instance.fileRefs, QFileRef.fileRef)

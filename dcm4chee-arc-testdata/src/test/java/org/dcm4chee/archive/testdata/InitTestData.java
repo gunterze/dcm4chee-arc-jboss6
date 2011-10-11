@@ -50,7 +50,6 @@ import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.ejb.store.InstanceStoreBean;
 import org.dcm4chee.archive.ejb.store.IssuerFactory;
 import org.dcm4chee.archive.ejb.store.PatientFactory;
-import org.dcm4chee.archive.ejb.store.StoreDuplicate;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.StoreParam;
 import org.jboss.arquillian.api.Deployment;
@@ -69,7 +68,6 @@ public class InitTestData {
     private static final String SOURCE_AET = "SOURCE_AET";
     private static final String RETRIEVE_AETS = "RETRIEVE_AET";
     private static final Class<?>[] CLASSES = {
-        StoreDuplicate.class,
         InstanceStore.class,
         InstanceStoreBean.class,
         CodeFactory.class,

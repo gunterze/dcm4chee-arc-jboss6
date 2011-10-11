@@ -43,7 +43,6 @@ import java.util.Map;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Connection;
 import org.dcm4che.util.FilePathFormat;
-import org.dcm4chee.archive.ejb.store.StoreDuplicate;
 import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
@@ -56,7 +55,7 @@ public class Configuration {
     }
 
     public static boolean isMatchUnknown(ApplicationEntity ae) {
-        return Boolean.parseBoolean((String) ae.getProperty("Query.matchUnknown"));
+        return (Boolean) ae.getProperty("Query.matchUnknown");
     }
 
     public static String fileSystemGroupIDFor(ApplicationEntity ae) {
@@ -72,7 +71,7 @@ public class Configuration {
     }
 
     public static boolean isSendPendingCGet(ApplicationEntity ae) {
-        return Boolean.parseBoolean((String) ae.getProperty("Retrieve.sendPendingCGet"));
+        return (Boolean) ae.getProperty("Retrieve.sendPendingCGet");
     }
 
     public static long getSendPendingCMoveInterval(ApplicationEntity ae) {
@@ -84,10 +83,6 @@ public class Configuration {
         Map<String, Connection> map = (Map<String, Connection>)
                 ae.getProperty("Retrieve.connections");
         return map.get(aet);
-    }
-
-    public static StoreDuplicate storeDuplicateFor(ApplicationEntity ae) {
-        return (StoreDuplicate) ae.getProperty("Storage.storeDuplicate");
     }
 
 }

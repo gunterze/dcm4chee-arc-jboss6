@@ -47,6 +47,8 @@ import org.dcm4che.soundex.FuzzyStr;
  */
 public class StoreParam {
 
+    public enum StoreDuplicate { IGNORE, STORE, REPLACE };
+
     private int[] patientAttributes;
     private int[] studyAttributes;
     private int[] seriesAttributes;
@@ -64,6 +66,10 @@ public class StoreParam {
     private ValueSelector instanceCustomAttribute2;
     private ValueSelector instanceCustomAttribute3;
     private FuzzyStr fuzzyStr;
+    private StoreDuplicate storeDuplicate = StoreDuplicate.IGNORE;
+    private boolean suppressWarningCoercionOfDataElements;
+    private boolean storeOriginalAttributes;
+    private String modifyingSystem;
 
     public final int[] getPatientAttributes() {
         return patientAttributes;
@@ -213,6 +219,39 @@ public class StoreParam {
 
     public String toFuzzy(String s, String defVal) {
         return s != null ? fuzzyStr.toFuzzy(s) : defVal;
+    }
+
+    public final boolean isSuppressWarningCoercionOfDataElements() {
+        return suppressWarningCoercionOfDataElements;
+    }
+
+    public final void setSuppressWarningCoercionOfDataElements(
+            boolean suppressWarningCoercionOfDataElements) {
+        this.suppressWarningCoercionOfDataElements = suppressWarningCoercionOfDataElements;
+    }
+
+    public final boolean isStoreOriginalAttributes() {
+        return storeOriginalAttributes;
+    }
+
+    public final void setStoreOriginalAttributes(boolean storeOriginalAttributes) {
+        this.storeOriginalAttributes = storeOriginalAttributes;
+    }
+
+    public final String getModifyingSystem() {
+        return modifyingSystem;
+    }
+
+    public final void setModifyingSystem(String modifyingSystem) {
+        this.modifyingSystem = modifyingSystem;
+    }
+
+    public final StoreDuplicate getStoreDuplicate() {
+        return storeDuplicate;
+    }
+
+    public final void setStoreDuplicate(StoreDuplicate storeDuplicate) {
+        this.storeDuplicate = storeDuplicate;
     }
 
 }

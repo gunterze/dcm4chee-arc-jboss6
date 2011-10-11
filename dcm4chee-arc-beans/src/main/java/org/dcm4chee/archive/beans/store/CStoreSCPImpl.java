@@ -139,8 +139,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             ds.setString(Tag.RetrieveAETitle, VR.AE, as.getLocalAET());
             if (store.addFileRef(ds, rsp,
                     new FileRef(fs, filePath, tsuid, dst.length(), digest(digest)),
-                    Configuration.storeParamFor(ae),
-                    Configuration.storeDuplicateFor(ae)))
+                    Configuration.storeParamFor(ae)))
                 return null;
         } catch (Exception e) {
             LOG.warn(as + ": Failed to update DB:", e);

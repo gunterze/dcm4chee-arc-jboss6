@@ -75,8 +75,7 @@ public class InstanceStoreTest {
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(StoreDuplicate.class,
-                        InstanceStore.class,
+                .addClasses(InstanceStore.class,
                         InstanceStoreBean.class,
                         CodeFactory.class,
                         IssuerFactory.class,

@@ -42,6 +42,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -85,43 +86,82 @@ public class InstanceStoreBean implements InstanceStore {
 
     @Override
     public boolean addFileRef(Attributes data, Attributes rsp, FileRef fileRef,
-            StoreParam storeParam, StoreDuplicate storeDuplicate) {
+            StoreParam storeParam) {
         FileSystem fs = fileRef.getFileSystem();
         data.setString(Tag.InstanceAvailability, VR.CS, fs.getAvailability().toString());
         Instance inst;
         try {
             inst = findInstance(data.getString(Tag.SOPInstanceUID, null));
-            switch (storeDuplicate) {
+            switch (storeParam.getStoreDuplicate()) {
             case IGNORE:
+                warningCoercionOfDataElements(coerceAttributes(data, inst), rsp, storeParam);
                 return false;
             case STORE:
                 if (!data.matches(inst.getAttributes(), false, false)) {
                     rsp.setInt(Tag.Status, VR.US, Status.DuplicateSOPinstance);
                     return false;
                 }
+                warningCoercionOfDataElements(coerceAttributes(data, inst), rsp, storeParam);
                 break;
             case REPLACE:
                 inst.setReplaced(true);
                 inst = newInstance(data, storeParam);
+                warningCoercionOfDataElements(
+                        storeOriginalAttributes(
+                                coerceAttributes(data, inst),
+                                data.getString(DCM4CHEE_ARC, SOURCE_AET),
+                                inst, storeParam),
+                        rsp, storeParam);
                 break;
             }
         } catch (NoResultException e) {
             inst = newInstance(data, storeParam);
-        }
-        Series series = inst.getSeries();
-        Study study = series.getStudy();
-        Patient patient = study.getPatient();
-        Attributes original = new Attributes();
-        data.addAll(patient.getAttributes(), original);
-        data.addAll(study.getAttributes(), original);
-        data.addAll(series.getAttributes(), original);
-        if (!original.isEmpty()) {
-            rsp.setInt(Tag.Status, VR.US, Status.CoercionOfDataElements);
-            rsp.setInt(Tag.OffendingElement, VR.AT, original.tags());
+            warningCoercionOfDataElements(
+                    storeOriginalAttributes(
+                            coerceAttributes(data, inst),
+                            data.getString(DCM4CHEE_ARC, SOURCE_AET),
+                            inst, storeParam),
+                    rsp, storeParam);
         }
         fileRef.setInstance(inst);
         em.persist(fileRef);
         return true;
+    }
+
+    private static Attributes coerceAttributes(Attributes data, Instance inst) {
+        Series series = inst.getSeries();
+        Study study = series.getStudy();
+        Patient patient = study.getPatient();
+        Attributes original = new Attributes();
+        data.coerceAttributes(patient.getAttributes(), original);
+        data.coerceAttributes(study.getAttributes(), original);
+        data.coerceAttributes(series.getAttributes(), original);
+        data.coerceAttributes(inst.getAttributes(), original);
+        return original;
+    }
+
+    private static Attributes warningCoercionOfDataElements(Attributes original, Attributes rsp,
+            StoreParam storeParam) {
+        if (!original.isEmpty() && !storeParam.isSuppressWarningCoercionOfDataElements()) {
+            rsp.setInt(Tag.Status, VR.US, Status.CoercionOfDataElements);
+            rsp.setInt(Tag.OffendingElement, VR.AT, original.tags());
+        }
+        return original;
+    }
+
+    private static Attributes storeOriginalAttributes(Attributes original, String sourceAET,
+            Instance inst, StoreParam storeParam) {
+        if (!original.isEmpty() && storeParam.isStoreOriginalAttributes()) {
+            Attributes item = new Attributes(4);
+            Attributes instAttrs = inst.getAttributes();
+            instAttrs.ensureSequence(Tag.OriginalAttributesSequence, 1).add(item);
+            item.setDate(Tag.AttributeModificationDateTime, new Date());
+            item.setString(Tag.ModifyingSystem, VR.LO, storeParam.getModifyingSystem());
+            item.setString(Tag.SourceOfPreviousValues, VR.LO, sourceAET);
+            item.newSequence(Tag.ModifiedAttributesSequence, 1).add(original);
+            inst.setAttributes(instAttrs, storeParam);
+        }
+        return original;
     }
 
     @Override

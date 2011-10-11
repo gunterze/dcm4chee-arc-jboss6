@@ -51,6 +51,18 @@
       factoryMethod="newSingleThreadScheduledExecutor" />
   </bean>
 
+  <bean name="True" class="java.lang.Boolean">
+    <constructor factoryClass="java.lang.Boolean" factoryMethod="valueOf">
+      <parameter>true</parameter>
+    </constructor>
+  </bean>
+
+  <bean name="False" class="java.lang.Boolean">
+    <constructor factoryClass="java.lang.Boolean" factoryMethod="valueOf">
+      <parameter>false</parameter>
+    </constructor>
+  </bean>
+
   <!-- Store Param -->
   <bean name="StoreParam" class="org.dcm4chee.archive.persistence.StoreParam">
     <property name="patientAttributes">
@@ -141,6 +153,10 @@
     <property name="fuzzyStr">
       <bean name="FuzzyStr" class="org.dcm4che.soundex.ESoundex" />
     </property>
+    <property name="storeDuplicate">IGNORE</property>
+    <property name="suppressWarningCoercionOfDataElements">false</property>
+    <property name="storeOriginalAttributes">true</property>
+    <property name="modifyingSystem">DCM4CHEE</property>
   </bean>
 
   <!-- The File Path Format -->
@@ -177,20 +193,16 @@
       <parameter><inject bean="ExtFilePathFormat" /></parameter>
     </install>
     <install method="setProperty">
-      <parameter>Storage.storeDuplicate</parameter>
-      <parameter>IGNORE</parameter>
-    </install>
-    <install method="setProperty">
       <parameter>Storage.digestAlgorithm</parameter>
       <parameter>MD5</parameter>
     </install>
     <install method="setProperty">
       <parameter>Query.matchUnknown</parameter>
-      <parameter>true</parameter>
+      <parameter><inject bean="True"/></parameter>
     </install>
     <install method="setProperty">
       <parameter>Retrieve.sendPendingCGet</parameter>
-      <parameter>true</parameter>
+      <parameter><inject bean="True"/></parameter>
     </install>
     <install method="setProperty">
       <parameter>Retrieve.sendPendingCMoveInterval</parameter>
@@ -236,7 +248,9 @@
     </install>
     <start method="activate" />
     <stop method="deactivate" />
-    <demand>jndi:LocateInstancesBean</demand>
+    <demand>Class:org.dcm4chee.archive.ejb.store.InstanceStore</demand>
+    <demand>Class:org.dcm4chee.archive.ejb.query.CompositeQuery</demand>
+    <demand>Class:org.dcm4chee.archive.ejb.query.LocateInstances</demand>
   </bean>
 
 
