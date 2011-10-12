@@ -42,7 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Random;
+import java.security.SecureRandom;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
@@ -89,16 +89,34 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         }
     }
 
+    private static class LazyInitialization {
+        static final SecureRandom random = new SecureRandom();
+
+        static int nextInt() {
+            int n = random.nextInt();
+            return n < 0 ? -(n+1) : n;
+        }
+    }
+
     @Override
     protected File createFile(Association as, Attributes rq, Object storage)
             throws DicomServiceException {
         try {
             FileSystem fs = (FileSystem) storage;
-            File tmpDir = new File(fs.getDirectory(), "incoming");
-            tmpDir.mkdirs();
-            return File.createTempFile("dcm", ".dcm", tmpDir);
+            String iuid = rq.getString(Tag.AffectedSOPInstanceUID);
+            ApplicationEntity ae = as.getApplicationEntity();
+            File file = new File(
+                    new File(fs.getDirectory(), Configuration.storageDirectoryPathFor(ae)), 
+                    Configuration.renameFilePathFormatFor(ae) == null
+                            ? iuid.replace('.', '/')
+                            : iuid);
+            File dir = file.getParentFile();
+            dir.mkdirs();
+            while (!file.createNewFile())
+                file = new File(dir, Integer.toString(LazyInitialization.random.nextInt()));
+            return file;
         } catch (Exception e) {
-            LOG.warn(as + ": Failed to create temp file:", e);
+            LOG.warn(as + ": Failed to create file:", e);
             throw new DicomServiceException(rq, Status.OutOfResources, e);
         }
     }
@@ -119,19 +137,10 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         FileSystem fs = (FileSystem) storage;
         Attributes ds = readDataset(as, rq, file);
         ApplicationEntity ae = as.getApplicationEntity();
-        FilePathFormat filePathFormatFor = Configuration.filePathFormatFor(ae);
-        File dst = new File(fs.getDirectory(), filePathFormatFor.format(ds));
-        File dir = dst.getParentFile();
-        dir.mkdirs();
-        while (dst.exists()) {
-            dst = new File(dir, TagUtils.toHexString(new Random().nextInt()));
-        }
-        if (file.renameTo(dst))
-            LOG.info(as + ": M-RENAME " + file + " to " + dst);
-        else {
-            LOG.warn(as + ": Failed to M-RENAME " + file + " to " + dst);
-            throw new DicomServiceException(rq, Status.OutOfResources, "Failed to rename file");
-        }
+        FilePathFormat filePathFormatFor = Configuration.renameFilePathFormatFor(ae);
+        File dst = filePathFormatFor != null
+                ? rename(as, rq, fs, file, filePathFormatFor.format(ds))
+                : file;
         String filePath = dst.toURI().toString().substring(fs.getURI().length());
         InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
         try {
@@ -148,6 +157,23 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
                 errorComment = errorComment.substring(0, 64);
             rsp.setInt(Tag.Status, VR.US, Status.OutOfResources);
             rsp.setString(Tag.ErrorComment, VR.LO, errorComment);
+        }
+        return dst;
+    }
+
+    private static File rename(Association as, Attributes rq, FileSystem fs, File file,
+            String fpath) throws DicomServiceException {
+        File dst = new File(fs.getDirectory(), fpath);
+        File dir = dst.getParentFile();
+        dir.mkdirs();
+        while (dst.exists()) {
+            dst = new File(dir, TagUtils.toHexString(LazyInitialization.nextInt()));
+        }
+        if (file.renameTo(dst))
+            LOG.info(as + ": M-RENAME " + file + " to " + dst);
+        else {
+            LOG.warn(as + ": Failed to M-RENAME " + file + " to " + dst);
+            throw new DicomServiceException(rq, Status.OutOfResources, "Failed to rename file");
         }
         return dst;
     }

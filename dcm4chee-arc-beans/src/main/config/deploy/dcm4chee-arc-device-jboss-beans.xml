@@ -159,13 +159,20 @@
     <property name="modifyingSystem">DCM4CHEE</property>
   </bean>
 
-  <!-- The File Path Format -->
-  <bean name="ExtFilePathFormat" class="org.dcm4chee.archive.beans.util.ExtFilePathFormat">
+  <!-- The Rename File Path Format -->
+  <!-- Uncomment to activate renaming of received objects after parsing -->
+  <!--
+  <bean name="RenameFilePathFormat" class="org.dcm4chee.archive.beans.util.ExtFilePathFormat">
     <constructor>
       <parameter>#{0020000D}/#{0020000E}/#{00080018}</parameter>
     </constructor>
     <property name="dateFormat">yyyy/MM/dd</property>
+    <install bean="Device" method="setProperty">
+      <parameter>Storage.renameFilePathFormat</parameter>
+      <parameter><this/></parameter>
+    </install>
   </bean>
+  -->
 
   <!-- The DICOM Device -->
   <bean name="Device" class="org.dcm4che.net.Device">
@@ -189,8 +196,8 @@
       <parameter>DEFAULT</parameter>
     </install>
     <install method="setProperty">
-      <parameter>Storage.filePathFormat</parameter>
-      <parameter><inject bean="ExtFilePathFormat" /></parameter>
+      <parameter>Storage.directoryPath</parameter>
+      <parameter>incoming</parameter>
     </install>
     <install method="setProperty">
       <parameter>Storage.digestAlgorithm</parameter>

@@ -62,8 +62,12 @@ public class Configuration {
         return (String) ae.getProperty("Storage.fsGroupID");
     }
 
-    public static FilePathFormat filePathFormatFor(ApplicationEntity ae) {
-        return (FilePathFormat) ae.getProperty("Storage.filePathFormat");
+    public static String storageDirectoryPathFor(ApplicationEntity ae) {
+        return (String) ae.getProperty("Storage.directoryPath");
+    }
+
+    public static FilePathFormat renameFilePathFormatFor(ApplicationEntity ae) {
+        return (FilePathFormat) ae.getProperty("Storage.renameFilePathFormat");
     }
 
     public static String messageDigestAlgorithmFor(ApplicationEntity ae) {
