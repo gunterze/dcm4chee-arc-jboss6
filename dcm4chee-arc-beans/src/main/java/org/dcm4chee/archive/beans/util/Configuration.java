@@ -42,7 +42,7 @@ import java.util.Map;
 
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Connection;
-import org.dcm4che.util.FilePathFormat;
+import org.dcm4che.util.AttributesFormat;
 import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
@@ -66,8 +66,8 @@ public class Configuration {
         return (String) ae.getProperty("Storage.directoryPath");
     }
 
-    public static FilePathFormat renameFilePathFormatFor(ApplicationEntity ae) {
-        return (FilePathFormat) ae.getProperty("Storage.renameFilePathFormat");
+    public static AttributesFormat renameFilePathFormatFor(ApplicationEntity ae) {
+        return (AttributesFormat) ae.getProperty("Storage.renameFilePathFormat");
     }
 
     public static String messageDigestAlgorithmFor(ApplicationEntity ae) {

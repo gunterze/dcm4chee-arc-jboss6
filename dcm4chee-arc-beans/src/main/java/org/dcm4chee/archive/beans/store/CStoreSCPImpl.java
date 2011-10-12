@@ -53,7 +53,7 @@ import org.dcm4che.net.Association;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.BasicCStoreSCP;
 import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4che.util.FilePathFormat;
+import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.beans.util.Configuration;
@@ -137,7 +137,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         FileSystem fs = (FileSystem) storage;
         Attributes ds = readDataset(as, rq, file);
         ApplicationEntity ae = as.getApplicationEntity();
-        FilePathFormat filePathFormatFor = Configuration.renameFilePathFormatFor(ae);
+        AttributesFormat filePathFormatFor = Configuration.renameFilePathFormatFor(ae);
         File dst = filePathFormatFor != null
                 ? rename(as, rq, fs, file, filePathFormatFor.format(ds))
                 : file;

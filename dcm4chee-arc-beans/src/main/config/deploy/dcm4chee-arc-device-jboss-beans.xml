@@ -162,11 +162,10 @@
   <!-- The Rename File Path Format -->
   <!-- Uncomment to activate renaming of received objects after parsing -->
   <!--
-  <bean name="RenameFilePathFormat" class="org.dcm4chee.archive.beans.util.ExtFilePathFormat">
+  <bean name="RenameFilePathFormat" class="org.dcm4che.util.AttributesFormat">
     <constructor>
-      <parameter>#{0020000D}/#{0020000E}/#{00080018}</parameter>
+      <parameter>date:yyyy/MM/dd(0008,0020)/date:HH(0008,0030)/#(0020,000D)/#(0020,000E)/#(0008,0018)</parameter>
     </constructor>
-    <property name="dateFormat">yyyy/MM/dd</property>
     <install bean="Device" method="setProperty">
       <parameter>Storage.renameFilePathFormat</parameter>
       <parameter><this/></parameter>
