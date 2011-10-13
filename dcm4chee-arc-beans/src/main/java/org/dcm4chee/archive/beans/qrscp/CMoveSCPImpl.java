@@ -44,7 +44,6 @@ import java.util.List;
 import javax.ejb.EJB;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.AttributesValidator;
 import org.dcm4che.data.Tag;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Connection;
@@ -59,6 +58,7 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.RetrieveTask;
+import org.dcm4che.util.AttributesValidator;
 import org.dcm4chee.archive.beans.util.Configuration;
 import org.dcm4chee.archive.ejb.query.LocateInstances;
 
