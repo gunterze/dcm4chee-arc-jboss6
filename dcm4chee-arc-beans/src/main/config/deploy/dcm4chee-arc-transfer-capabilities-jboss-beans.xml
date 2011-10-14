@@ -2052,7 +2052,22 @@
       </parameter>
     </constructor>
   </bean>
- 
+
+  <!-- Composite Instance Retrieve Without Bulk Data - GET -->
+  <bean name="WithoutBulkDataGetSCP" class="org.dcm4che.net.TransferCapability">
+    <constructor>
+      <parameter><null/></parameter>
+      <parameter>1.2.840.10008.5.1.4.1.2.5.3</parameter>
+      <parameter>SCP</parameter>
+      <parameter>
+        <array>
+          <!-- Implicit VR Little Endian, Transfer Syntax -->
+          <value>1.2.840.10008.1.2</value>
+        </array>
+      </parameter>
+    </constructor>
+  </bean>
+
   <!-- Query/Retrieve Extended Negotiator -->
   <bean name="QueryExtendedNegotiator" class="org.dcm4che.net.BasicExtendedNegotiator">
     <install bean="ApplicationEntity" method="addExtendedNegotiator">

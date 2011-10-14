@@ -379,4 +379,13 @@
     </constructor>
   </bean>
 
+  <!-- Composite Instance Retrieve Without Bulk Data C-GET SCP -->
+  <bean name="WithoutBulkDataCGetSCP" class="org.dcm4chee.archive.beans.qrscp.CGetSCPImpl" access-mode="ALL">
+    <constructor>
+      <parameter><inject bean="Device" /></parameter>
+      <parameter>1.2.840.10008.5.1.4.1.2.5.3</parameter>
+      <parameter><array/></parameter>
+    </constructor>
+  </bean>
+
 </deployment>

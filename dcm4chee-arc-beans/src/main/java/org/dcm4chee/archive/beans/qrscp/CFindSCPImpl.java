@@ -67,13 +67,13 @@ import org.dcm4chee.archive.persistence.StoreParam;
 public class CFindSCPImpl extends BasicCFindSCP {
 
     private final String[] qrLevels;
-    private final boolean studyRoot;
+    private final QueryRetrieveLevel rootLevel;
 
     public CFindSCPImpl(Device device, String sopClass,
             String... qrLevels) {
         super(device, sopClass);
         this.qrLevels = qrLevels;
-        this.studyRoot = "STUDY".equals(qrLevels[0]);
+        this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
     }
 
     @Override
@@ -84,7 +84,7 @@ public class CFindSCPImpl extends BasicCFindSCP {
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
-        level.validateQueryKeys(rq, validator, studyRoot, relational);
+        level.validateQueryKeys(rq, validator, rootLevel, relational);
         String[] pids = pids(keys);
         ApplicationEntity ae = as.getApplicationEntity();
         StoreParam storeParam = Configuration.storeParamFor(ae);

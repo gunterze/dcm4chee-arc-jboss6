@@ -65,7 +65,8 @@ import org.dcm4chee.archive.ejb.query.LocateInstances;
 public class CGetSCPImpl extends BasicCGetSCP {
 
     private final String[] qrLevels;
-    private final boolean studyRoot;
+    private final QueryRetrieveLevel rootLevel;
+    private final boolean withoutBulkData;
 
     @EJB
     private LocateInstances calculateMatches;
@@ -73,7 +74,10 @@ public class CGetSCPImpl extends BasicCGetSCP {
     public CGetSCPImpl(Device device, String[] sopClasses, String... qrLevels) {
         super(device, sopClasses);
         this.qrLevels = qrLevels;
-        this.studyRoot = "STUDY".equals(qrLevels[0]);
+        this.withoutBulkData = qrLevels.length == 0;
+        this.rootLevel = withoutBulkData
+                ? QueryRetrieveLevel.IMAGE
+                : QueryRetrieveLevel.valueOf(qrLevels[0]);
    }
 
     @Override
@@ -84,9 +88,9 @@ public class CGetSCPImpl extends BasicCGetSCP {
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
-        level.validateRetrieveKeys(rq, validator, studyRoot, relational);
+        level.validateRetrieveKeys(rq, validator, rootLevel, relational);
         List<InstanceLocator> matches  = calculateMatches(rq, keys);
-        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches);
+        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches, withoutBulkData);
         retrieveTask.setSendPendingRSP(Configuration.isSendPendingCGet(as.getApplicationEntity()));
         return retrieveTask;
     }

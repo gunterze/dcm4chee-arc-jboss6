@@ -68,7 +68,7 @@ import org.dcm4chee.archive.ejb.query.LocateInstances;
 public class CMoveSCPImpl extends BasicCMoveSCP {
 
     private final String[] qrLevels;
-    private final boolean studyRoot;
+    private QueryRetrieveLevel rootLevel;
 
     @EJB
     private LocateInstances calculateMatches;
@@ -76,7 +76,7 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
     public CMoveSCPImpl(Device device, String[] sopClasses, String... qrLevels) {
         super(device, sopClasses);
         this.qrLevels = qrLevels;
-        this.studyRoot = "STUDY".equals(qrLevels[0]);
+        this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
     }
 
     @Override
@@ -87,14 +87,14 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
-        level.validateRetrieveKeys(rq, validator, studyRoot, relational);
+        level.validateRetrieveKeys(rq, validator, rootLevel, relational);
         String dest = rq.getString(Tag.MoveDestination);
         final Connection remote = Configuration.getConnectionTo(as.getApplicationEntity(), dest);
         if (remote == null)
             throw new DicomServiceException(rq, Status.MoveDestinationUnknown,
                     "Move Destination: " + dest + " unknown");
         List<InstanceLocator> matches = calculateMatches(rq, keys);
-        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches ) {
+        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches, false) {
 
             @Override
             protected Association getStoreAssociation() throws DicomServiceException {

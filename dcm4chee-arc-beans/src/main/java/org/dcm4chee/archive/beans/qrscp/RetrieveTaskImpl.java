@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.DataWriter;
@@ -56,9 +57,12 @@ import org.dcm4che.util.SafeClose;
  */
 class RetrieveTaskImpl extends BasicRetrieveTask {
 
+    private boolean withoutBulkData;
+
     public RetrieveTaskImpl(Association as, PresentationContext pc, Attributes rq,
-            List<InstanceLocator> matches) {
+            List<InstanceLocator> matches, boolean withoutBulkData) {
         super(as, pc, rq, matches);
+        this.withoutBulkData = withoutBulkData;
     }
 
     @Override
@@ -67,8 +71,13 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
         Attributes attrs;
         DicomInputStream in = new DicomInputStream(inst.getFile());
         try {
-            in.setIncludeBulkDataLocator(true);
-            attrs = in.readDataset(-1, -1);
+            if (withoutBulkData) {
+                in.setIncludeBulkData(false);
+                attrs = in.readDataset(-1, Tag.PixelData);
+            } else {
+                in.setIncludeBulkDataLocator(true);
+                attrs = in.readDataset(-1, -1);
+            }
         } finally {
             SafeClose.close(in);
         }
