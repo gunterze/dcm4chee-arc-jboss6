@@ -173,6 +173,24 @@
   </bean>
   -->
 
+  <bean name="SAXTranformerFactory" class="javax.xml.transform.sax.SAXTransformerFactory">
+    <constructor factoryClass="javax.xml.transform.sax.SAXTransformerFactory"
+        factoryMethod="newInstance" />
+  </bean>
+
+  <bean name="NullifyPN" class="javax.xml.transform.Templates">
+    <constructor factoryMethod="newTemplates">
+      <factory bean="SAXTranformerFactory"/>
+      <parameter>
+        <bean class="javax.xml.transform.stream.StreamSource">
+          <constructor>
+            <parameter class="java.lang.String">resource:dcm4chee-arc-nullify-pn.xsl</parameter>
+          </constructor>
+        </bean>
+      </parameter>
+    </constructor>
+  </bean>
+
   <!-- The DICOM Device -->
   <bean name="Device" class="org.dcm4che.net.Device">
     <constructor>
@@ -252,6 +270,17 @@
         </map>
       </parameter>
     </install>
+    <install method="setProperty">
+      <parameter>Retrieve.coercions</parameter>
+      <parameter>
+        <map keyClass="java.lang.String" valueClass="javax.xml.transform.Templates">
+          <entry>
+            <key>WITHOUT_PN</key>
+            <value><inject bean="NullifyPN" /></value>
+          </entry>
+        </map>
+      </parameter>
+    </install>
     <start method="activate" />
     <stop method="deactivate" />
     <demand>Class:org.dcm4chee.archive.ejb.store.InstanceStore</demand>
@@ -288,7 +317,6 @@
     <property name="dimseRQHandler">
       <inject bean="DicomServiceRegistry" />
     </property>
-    <incallback method="addConnection" />
     <incallback method="addTransferCapability" />
   </bean>
 

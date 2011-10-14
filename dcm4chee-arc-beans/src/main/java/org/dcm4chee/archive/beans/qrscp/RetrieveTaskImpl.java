@@ -41,9 +41,13 @@ package org.dcm4chee.archive.beans.qrscp;
 import java.io.IOException;
 import java.util.List;
 
+import javax.xml.transform.Templates;
+
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.io.DicomInputStream;
+import org.dcm4che.io.SAXTransformer;
+import org.dcm4che.io.SAXWriter;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.DataWriter;
 import org.dcm4che.net.DataWriterAdapter;
@@ -57,12 +61,14 @@ import org.dcm4che.util.SafeClose;
  */
 class RetrieveTaskImpl extends BasicRetrieveTask {
 
-    private boolean withoutBulkData;
+    private final boolean withoutBulkData;
+    private final Templates templates;
 
     public RetrieveTaskImpl(Association as, PresentationContext pc, Attributes rq,
-            List<InstanceLocator> matches, boolean withoutBulkData) {
+            List<InstanceLocator> matches, boolean withoutBulkData, Templates templates) {
         super(as, pc, rq, matches);
         this.withoutBulkData = withoutBulkData;
+        this.templates = templates;
     }
 
     @Override
@@ -82,6 +88,17 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
             SafeClose.close(in);
         }
         attrs.addAll((Attributes) inst.getObject());
+        if (templates != null) {
+            Attributes modify = new Attributes();
+            try {
+                SAXWriter w = SAXTransformer.getSAXWriter(templates, modify);
+                w.setIncludeKeyword(false);
+                w.write(attrs);
+            } catch (Exception e) {
+                new IOException(e);
+            }
+            attrs.addAll(modify);
+        }
         return new DataWriterAdapter(attrs);
     }
 

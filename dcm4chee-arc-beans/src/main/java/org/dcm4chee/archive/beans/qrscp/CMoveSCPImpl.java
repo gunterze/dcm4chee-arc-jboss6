@@ -94,7 +94,8 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
             throw new DicomServiceException(rq, Status.MoveDestinationUnknown,
                     "Move Destination: " + dest + " unknown");
         List<InstanceLocator> matches = calculateMatches(rq, keys);
-        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches, false) {
+        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches, false,
+                Configuration.getRetrieveCoercionFor(as.getApplicationEntity(), dest)) {
 
             @Override
             protected Association getStoreAssociation() throws DicomServiceException {

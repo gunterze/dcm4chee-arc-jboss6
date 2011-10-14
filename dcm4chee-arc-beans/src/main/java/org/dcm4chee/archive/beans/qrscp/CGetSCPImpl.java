@@ -90,7 +90,8 @@ public class CGetSCPImpl extends BasicCGetSCP {
         boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
         level.validateRetrieveKeys(rq, validator, rootLevel, relational);
         List<InstanceLocator> matches  = calculateMatches(rq, keys);
-        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches, withoutBulkData);
+        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches, withoutBulkData,
+                Configuration.getRetrieveCoercionFor(as.getApplicationEntity(), as.getRemoteAET()));
         retrieveTask.setSendPendingRSP(Configuration.isSendPendingCGet(as.getApplicationEntity()));
         return retrieveTask;
     }

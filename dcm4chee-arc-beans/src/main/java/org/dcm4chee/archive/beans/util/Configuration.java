@@ -40,6 +40,8 @@ package org.dcm4chee.archive.beans.util;
 
 import java.util.Map;
 
+import javax.xml.transform.Templates;
+
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Connection;
 import org.dcm4che.util.AttributesFormat;
@@ -86,6 +88,13 @@ public class Configuration {
     public static Connection getConnectionTo(ApplicationEntity ae, String aet) {
         Map<String, Connection> map = (Map<String, Connection>)
                 ae.getProperty("Retrieve.connections");
+        return map.get(aet);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Templates getRetrieveCoercionFor(ApplicationEntity ae, String aet) {
+        Map<String, Templates> map = (Map<String, Templates>)
+                ae.getProperty("Retrieve.coercions");
         return map.get(aet);
     }
 
