@@ -3,14 +3,12 @@
   <xsl:output method="xml"/>
   <xsl:template match="/NativeDicomModel">
     <NativeDicomModel>
-      <xsl:apply-templates select="DicomAttribute[@vr=PN]"/>
+      <xsl:apply-templates select="DicomAttribute[descendant::PersonName]"/>
     </NativeDicomModel>
   </xsl:template>
-  <xsl:template match="DicomAttribute[@vr=PN]">
+  <xsl:template match="@*|node()">
     <xsl:copy>
-      <xsl:for-each select="@*">
-        <xsl:copy/>
-      </xsl:for-each>
+      <xsl:apply-templates select="@*|node()[not(self::PersonName)]" />
     </xsl:copy>
   </xsl:template>
 </xsl:stylesheet>
