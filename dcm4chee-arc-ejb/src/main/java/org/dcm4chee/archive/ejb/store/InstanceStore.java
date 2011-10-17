@@ -41,6 +41,7 @@ package org.dcm4chee.archive.ejb.store;
 import javax.ejb.Local;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.persistence.FileRef;
 import org.dcm4chee.archive.persistence.FileSystem;
 import org.dcm4chee.archive.persistence.Instance;
@@ -59,8 +60,8 @@ public interface InstanceStore {
 
     Instance newInstance(Attributes data, StoreParam storeParam);
 
-    boolean addFileRef(Attributes data, Attributes modified, Attributes rsp, FileRef fileRef,
-            StoreParam storeParam);
+    boolean addFileRef(Attributes data, Attributes modified, FileRef fileRef,
+            StoreParam storeParam) throws DicomServiceException;
 
     void close();
 

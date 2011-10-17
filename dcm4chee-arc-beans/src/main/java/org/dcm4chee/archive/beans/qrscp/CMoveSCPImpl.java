@@ -83,15 +83,15 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
     protected RetrieveTask calculateMatches(Association as, PresentationContext pc,
             final Attributes rq, Attributes keys) throws DicomServiceException {
         AttributesValidator validator = new AttributesValidator(keys);
-        QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(rq, validator, qrLevels);
+        QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(validator, qrLevels);
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
-        level.validateRetrieveKeys(rq, validator, rootLevel, relational);
+        level.validateRetrieveKeys(validator, rootLevel, relational);
         String dest = rq.getString(Tag.MoveDestination);
         final Connection remote = Configuration.getConnectionTo(as.getApplicationEntity(), dest);
         if (remote == null)
-            throw new DicomServiceException(rq, Status.MoveDestinationUnknown,
+            throw new DicomServiceException(Status.MoveDestinationUnknown,
                     "Move Destination: " + dest + " unknown");
         List<InstanceLocator> matches = calculateMatches(rq, keys);
         RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches, false,
@@ -103,11 +103,11 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
                     return as.getApplicationEntity()
                             .connect(as.getConnection(), remote, makeAAssociateRQ());
                 } catch (IOException e) {
-                    throw new DicomServiceException(rq, Status.UnableToPerformSubOperations, e);
+                    throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
                 } catch (InterruptedException e) {
-                    throw new DicomServiceException(rq, Status.UnableToPerformSubOperations, e);
+                    throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
                 } catch (IncompatibleConnectionException e) {
-                    throw new DicomServiceException(rq, Status.UnableToPerformSubOperations, e);
+                    throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
                 }
             }
 
@@ -123,7 +123,7 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         try {
             return calculateMatches.find(keys);
         }  catch (Exception e) {
-            throw new DicomServiceException(rq, Status.UnableToCalculateNumberOfMatches, e);
+            throw new DicomServiceException(Status.UnableToCalculateNumberOfMatches, e);
         }
     }
 }

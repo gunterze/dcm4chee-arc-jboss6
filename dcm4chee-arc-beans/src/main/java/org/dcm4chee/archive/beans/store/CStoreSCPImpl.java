@@ -65,6 +65,7 @@ import org.dcm4chee.archive.beans.util.JNDIUtils;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.persistence.FileRef;
 import org.dcm4chee.archive.persistence.FileSystem;
+import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -89,7 +90,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             return store.selectFileSystem(fsGroupID);
         } catch (Exception e) {
             LOG.warn(as + ": Failed to select filesystem:", e);
-            throw new DicomServiceException(rq, Status.OutOfResources, e);
+            throw new DicomServiceException(Status.OutOfResources, e);
         }
     }
 
@@ -121,7 +122,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             return file;
         } catch (Exception e) {
             LOG.warn(as + ": Failed to create file:", e);
-            throw new DicomServiceException(rq, Status.OutOfResources, e);
+            throw new DicomServiceException(Status.OutOfResources, e);
         }
     }
 
@@ -166,19 +167,26 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         try {
             ds.setString(InstanceStore.DCM4CHEE_ARC, InstanceStore.SOURCE_AET, VR.AE, sourceAET);
             ds.setString(Tag.RetrieveAETitle, VR.AE, as.getLocalAET());
-            if (store.addFileRef(ds, modified, rsp,
-                    new FileRef(fs, filePath, tsuid, dst.length(), digest(digest)),
-                    Configuration.storeParamFor(ae)))
-                return null;
+            StoreParam storeParam = Configuration.storeParamFor(ae);
+            if (store.addFileRef(ds, modified, new FileRef(fs, filePath, tsuid, dst.length(), digest(digest)),
+                    storeParam))
+                dst = null;
+            warningCoercionOfDataElements(modified, rsp, storeParam);
+        } catch (DicomServiceException e) {
+            throw e;
         } catch (Exception e) {
-            LOG.warn(as + ": Failed to update DB:", e);
-            String errorComment = causeOf(e).getMessage();
-            if (errorComment.length() > 64)
-                errorComment = errorComment.substring(0, 64);
-            rsp.setInt(Tag.Status, VR.US, Status.OutOfResources);
-            rsp.setString(Tag.ErrorComment, VR.LO, errorComment);
+            throw new DicomServiceException(Status.ProcessingFailure,
+                    DicomServiceException.initialCauseOf(e));
         }
         return dst;
+    }
+
+    private static void warningCoercionOfDataElements(Attributes modified, Attributes rsp,
+            StoreParam storeParam) {
+        if (!modified.isEmpty() && !storeParam.isSuppressWarningCoercionOfDataElements()) {
+            rsp.setInt(Tag.Status, VR.US, Status.CoercionOfDataElements);
+            rsp.setInt(Tag.OffendingElement, VR.AT, modified.tags());
+        }
     }
 
     private static File rename(Association as, Attributes rq, FileSystem fs, File file,
@@ -193,7 +201,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             LOG.info(as + ": M-RENAME " + file + " to " + dst);
         else {
             LOG.warn(as + ": Failed to M-RENAME " + file + " to " + dst);
-            throw new DicomServiceException(rq, Status.OutOfResources, "Failed to rename file");
+            throw new DicomServiceException(Status.OutOfResources, "Failed to rename file");
         }
         return dst;
     }
@@ -211,17 +219,10 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             return in.readDataset(-1, Tag.PixelData);
         } catch (IOException e) {
             LOG.warn(as + ": Failed to decode dataset:", e);
-            throw new DicomServiceException(rq, Status.CannotUnderstand);
+            throw new DicomServiceException(Status.CannotUnderstand);
         } finally {
             SafeClose.close(in);
         }
-    }
-
-    private static Throwable causeOf(Throwable e) {
-        Throwable cause;
-        while ((cause = e.getCause()) != null && e != cause)
-            e = cause;
-        return e;
     }
 
     private InstanceStore initInstanceStore(Association as) {

@@ -84,11 +84,11 @@ public class CGetSCPImpl extends BasicCGetSCP {
     protected RetrieveTask calculateMatches(Association as, PresentationContext pc,
             Attributes rq, Attributes keys) throws DicomServiceException {
         AttributesValidator validator = new AttributesValidator(keys);
-        QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(rq, validator, qrLevels);
+        QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(validator, qrLevels);
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
-        level.validateRetrieveKeys(rq, validator, rootLevel, relational);
+        level.validateRetrieveKeys(validator, rootLevel, relational);
         List<InstanceLocator> matches  = calculateMatches(rq, keys);
         RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches, withoutBulkData,
                 Configuration.getRetrieveCoercionFor(as.getApplicationEntity(), as.getRemoteAET()));
@@ -101,7 +101,7 @@ public class CGetSCPImpl extends BasicCGetSCP {
         try {
             return calculateMatches.find(keys);
         }  catch (Exception e) {
-            throw new DicomServiceException(rq, Status.UnableToCalculateNumberOfMatches, e);
+            throw new DicomServiceException(Status.UnableToCalculateNumberOfMatches, e);
         }
     }
 }

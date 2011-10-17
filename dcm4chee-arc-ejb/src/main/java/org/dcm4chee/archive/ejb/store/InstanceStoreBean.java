@@ -58,6 +58,7 @@ import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.net.Status;
+import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.ContentItem;
@@ -86,8 +87,8 @@ public class InstanceStoreBean implements InstanceStore {
     private Series cachedSeries;
 
     @Override
-    public boolean addFileRef(Attributes data, Attributes modified, Attributes rsp,
-            FileRef fileRef, StoreParam storeParam) {
+    public boolean addFileRef(Attributes data, Attributes modified, FileRef fileRef, 
+            StoreParam storeParam) throws DicomServiceException {
         FileSystem fs = fileRef.getFileSystem();
         data.setString(Tag.InstanceAvailability, VR.CS, fs.getAvailability().toString());
         Instance inst;
@@ -98,11 +99,9 @@ public class InstanceStoreBean implements InstanceStore {
             case IGNORE:
             case STORE:
                 if (data.coerceAttributes(inst.getAttributes(), null)) {
-                    rsp.setInt(Tag.Status, VR.US, Status.DuplicateSOPinstance);
-                    return false;
+                    throw new DicomServiceException(Status.DuplicateSOPinstance);
                 }
                 coerceAttributes(data, inst, modified);
-                warningCoercionOfDataElements(modified, rsp, storeParam);
                 if (storeDuplicate == StoreDuplicate.IGNORE)
                     return false;
                 break;
@@ -111,14 +110,12 @@ public class InstanceStoreBean implements InstanceStore {
                 inst = newInstance(data, storeParam);
                 coerceAttributes(data, inst, modified);
                 storeOriginalAttributes(data, modified, inst, storeParam);
-                warningCoercionOfDataElements(modified, rsp, storeParam);
                 break;
             }
         } catch (NoResultException e) {
             inst = newInstance(data, storeParam);
             coerceAttributes(data, inst, modified);
             storeOriginalAttributes(data, modified, inst, storeParam);
-            warningCoercionOfDataElements(modified, rsp, storeParam);
         }
         fileRef.setInstance(inst);
         em.persist(fileRef);
@@ -132,14 +129,6 @@ public class InstanceStoreBean implements InstanceStore {
         data.coerceAttributes(patient.getAttributes(), modified);
         data.coerceAttributes(study.getAttributes(), modified);
         data.coerceAttributes(series.getAttributes(), modified);
-    }
-
-    private static void warningCoercionOfDataElements(Attributes modified, Attributes rsp,
-            StoreParam storeParam) {
-        if (!modified.isEmpty() && !storeParam.isSuppressWarningCoercionOfDataElements()) {
-            rsp.setInt(Tag.Status, VR.US, Status.CoercionOfDataElements);
-            rsp.setInt(Tag.OffendingElement, VR.AT, modified.tags());
-        }
     }
 
     private static void storeOriginalAttributes(Attributes data, Attributes modified,

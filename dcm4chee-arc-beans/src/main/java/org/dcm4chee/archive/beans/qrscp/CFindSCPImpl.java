@@ -80,11 +80,11 @@ public class CFindSCPImpl extends BasicCFindSCP {
     protected QueryTask calculateMatches(Association as, PresentationContext pc,
             Attributes rq, Attributes keys) throws DicomServiceException {
         AttributesValidator validator = new AttributesValidator(keys);
-        QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(rq, validator, qrLevels);
+        QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(validator, qrLevels);
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
-        level.validateQueryKeys(rq, validator, rootLevel, relational);
+        level.validateQueryKeys(validator, rootLevel, relational);
         String[] pids = pids(keys);
         ApplicationEntity ae = as.getApplicationEntity();
         StoreParam storeParam = Configuration.storeParamFor(ae);
@@ -112,7 +112,7 @@ public class CFindSCPImpl extends BasicCFindSCP {
             }
             return new QueryTaskImpl(as, pc, rq, keys, query);
         } catch (Exception e) {
-            throw new DicomServiceException(rq, Status.UnableToProcess, e);
+            throw new DicomServiceException(Status.UnableToProcess, e);
         }
     }
 
