@@ -46,9 +46,7 @@ import java.util.Arrays;
 
 import javax.ejb.EJB;
 
-import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
-import org.dcm4che.data.VR;
 import org.dcm4che.io.SAXReader;
 import org.dcm4che.soundex.ESoundex;
 import org.dcm4chee.archive.persistence.Availability;
@@ -176,12 +174,18 @@ public class InstanceStoreTest {
 
     @Test
     public void storeTest() throws Exception {
-        Instance ct1 = instanceStore.newInstance(parse("resource:ct-1.xml", SOURCE_AET,
-                new String[]{"AET_1","AET_2"}, "AET_3", Availability.ONLINE), STORE_PARAM);
-        Instance ct2 = instanceStore.newInstance(parse("resource:ct-2.xml", SOURCE_AET,
-                new String[]{"AET_2"}, "AET_3", Availability.NEARLINE), STORE_PARAM);
-        Instance pr1 = instanceStore.newInstance(parse("resource:pr-1.xml", SOURCE_AET,
-                new String[]{"AET_1", "AET_2"}, "AET_4", Availability.ONLINE), STORE_PARAM);
+        STORE_PARAM.setRetrieveAETs("AET_1","AET_2");
+        STORE_PARAM.setExternalRetrieveAET("AET_3");
+        Instance ct1 = instanceStore.newInstance(SOURCE_AET,
+                SAXReader.parse("resource:ct-1.xml"), Availability.ONLINE, STORE_PARAM);
+        STORE_PARAM.setRetrieveAETs("AET_2");
+        STORE_PARAM.setExternalRetrieveAET("AET_3");
+        Instance ct2 = instanceStore.newInstance(SOURCE_AET,
+                SAXReader.parse("resource:ct-2.xml"), Availability.NEARLINE, STORE_PARAM);
+        STORE_PARAM.setRetrieveAETs("AET_1","AET_2");
+        STORE_PARAM.setExternalRetrieveAET("AET_4");
+        Instance pr1 = instanceStore.newInstance(SOURCE_AET,
+                SAXReader.parse("resource:pr-1.xml"), Availability.ONLINE, STORE_PARAM);
         instanceStore.close();
         Series ctSeries = ct1.getSeries();
         Series prSeries = pr1.getSeries();
@@ -210,15 +214,5 @@ public class InstanceStoreTest {
     private Object[] sort(Object[] a) {
         Arrays.sort(a);
         return a;
-    }
-
-    private Attributes parse(String uri, String sourceAET, String[] retrieveAETs,
-            String externalRetrieveAET, Availability availability) throws Exception {
-        Attributes data = SAXReader.parse(uri);
-        data.setString(InstanceStore.DCM4CHEE_ARC, InstanceStore.SOURCE_AET, VR.AE, sourceAET);
-        data.setString(Tag.RetrieveAETitle, VR.AE, retrieveAETs);
-        data.setString(InstanceStore.DCM4CHEE_ARC, InstanceStore.EXT_RETRIEVE_AET, VR.AE, externalRetrieveAET);
-        data.setString(Tag.InstanceAvailability, VR.CS, availability.toString());
-        return data;
     }
 }

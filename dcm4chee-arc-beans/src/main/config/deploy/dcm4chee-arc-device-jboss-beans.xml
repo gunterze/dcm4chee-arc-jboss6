@@ -63,6 +63,37 @@
     </constructor>
   </bean>
 
+  <bean name="SAXTranformerFactory" class="javax.xml.transform.sax.SAXTransformerFactory">
+    <constructor factoryClass="javax.xml.transform.sax.SAXTransformerFactory"
+        factoryMethod="newInstance" />
+  </bean>
+
+  <bean name="NullifyPN" class="javax.xml.transform.Templates">
+    <constructor factoryMethod="newTemplates">
+      <factory bean="SAXTranformerFactory"/>
+      <parameter>
+        <bean class="javax.xml.transform.stream.StreamSource">
+          <constructor>
+            <parameter class="java.lang.String">resource:dcm4chee-arc-nullify-pn.xsl</parameter>
+          </constructor>
+        </bean>
+      </parameter>
+    </constructor>
+  </bean>
+
+  <bean name="EnsurePID" class="javax.xml.transform.Templates">
+    <constructor factoryMethod="newTemplates">
+      <factory bean="SAXTranformerFactory"/>
+      <parameter>
+        <bean class="javax.xml.transform.stream.StreamSource">
+          <constructor>
+            <parameter class="java.lang.String">resource:dcm4chee-arc-ensure-pid.xsl</parameter>
+          </constructor>
+        </bean>
+      </parameter>
+    </constructor>
+  </bean>
+
   <!-- Store Param -->
   <bean name="StoreParam" class="org.dcm4chee.archive.persistence.StoreParam">
     <property name="patientAttributes">
@@ -157,51 +188,41 @@
     <property name="suppressWarningCoercionOfDataElements">false</property>
     <property name="storeOriginalAttributes">true</property>
     <property name="modifyingSystem">DCM4CHEE</property>
-  </bean>
-
-  <!-- The Rename File Path Format -->
-  <!-- Uncomment to activate renaming of received objects after parsing -->
-  <!--
-  <bean name="RenameFilePathFormat" class="org.dcm4che.util.AttributesFormat">
-    <constructor>
-      <parameter>date:yyyy/MM/dd(0008,0020)/date:HH(0008,0030)/#(0020,000D)/#(0020,000E)/#(0008,0018)</parameter>
-    </constructor>
-    <install bean="Device" method="setProperty">
-      <parameter>Storage.renameFilePathFormat</parameter>
-      <parameter><this/></parameter>
-    </install>
-  </bean>
-  -->
-
-  <bean name="SAXTranformerFactory" class="javax.xml.transform.sax.SAXTransformerFactory">
-    <constructor factoryClass="javax.xml.transform.sax.SAXTransformerFactory"
-        factoryMethod="newInstance" />
-  </bean>
-
-  <bean name="NullifyPN" class="javax.xml.transform.Templates">
-    <constructor factoryMethod="newTemplates">
-      <factory bean="SAXTranformerFactory"/>
-      <parameter>
-        <bean class="javax.xml.transform.stream.StreamSource">
-          <constructor>
-            <parameter class="java.lang.String">resource:dcm4chee-arc-nullify-pn.xsl</parameter>
-          </constructor>
-        </bean>
-      </parameter>
-    </constructor>
-  </bean>
-
-  <bean name="EnsurePID" class="javax.xml.transform.Templates">
-    <constructor factoryMethod="newTemplates">
-      <factory bean="SAXTranformerFactory"/>
-      <parameter>
-        <bean class="javax.xml.transform.stream.StreamSource">
-          <constructor>
-            <parameter class="java.lang.String">resource:dcm4chee-arc-ensure-pid.xsl</parameter>
-          </constructor>
-        </bean>
-      </parameter>
-    </constructor>
+    <property name="retrieveAETs">
+      <array>
+        <value>DCM4CHEE</value>
+      </array>
+    </property>
+    <property name="externalRetrieveAET"><null/></property>
+    <property name="fileSystemGroupID">DEFAULT</property>
+    <property name="digestAlgorithm">MD5</property>
+    <property name="directoryPath">incoming</property>
+    <!-- Uncomment to activate renaming of received objects after parsing -->
+    <!--
+    <property name="renameFilePathFormat">
+      <bean class="org.dcm4che.util.AttributesFormat">
+        <constructor>
+          <parameter>date:yyyy/MM/dd(0008,0020)/date:HH(0008,0030)/#(0020,000D)/#(0020,000E)/#(0008,0018)</parameter>
+        </constructor>
+      </bean>
+    </property>
+    -->
+    <property name="incomingAttributeCoercion">
+      <map keyClass="java.lang.String" valueClass="javax.xml.transform.Templates">
+        <entry>
+          <key>ENSURE_PID</key>
+          <value><inject bean="EnsurePID" /></value>
+        </entry>
+      </map>
+    </property>
+    <property name="outgoingAttributeCoercion">
+      <map keyClass="java.lang.String" valueClass="javax.xml.transform.Templates">
+        <entry>
+          <key>WITHOUT_PN</key>
+          <value><inject bean="NullifyPN" /></value>
+        </entry>
+      </map>
+    </property>
   </bean>
 
   <!-- The DICOM Device -->
@@ -220,18 +241,6 @@
     <install method="setProperty">
       <parameter>Storage.StoreParam</parameter>
       <parameter><inject bean="StoreParam" /></parameter>
-    </install>
-    <install method="setProperty">
-      <parameter>Storage.fsGroupID</parameter>
-      <parameter>DEFAULT</parameter>
-    </install>
-    <install method="setProperty">
-      <parameter>Storage.directoryPath</parameter>
-      <parameter>incoming</parameter>
-    </install>
-    <install method="setProperty">
-      <parameter>Storage.digestAlgorithm</parameter>
-      <parameter>MD5</parameter>
     </install>
     <install method="setProperty">
       <parameter>Query.matchUnknown</parameter>
@@ -279,28 +288,6 @@
                 </property>
               </bean>
             </value>
-          </entry>
-        </map>
-      </parameter>
-    </install>
-    <install method="setProperty">
-      <parameter>Storage.coercions</parameter>
-      <parameter>
-        <map keyClass="java.lang.String" valueClass="javax.xml.transform.Templates">
-          <entry>
-            <key>ENSURE_PID</key>
-            <value><inject bean="EnsurePID" /></value>
-          </entry>
-        </map>
-      </parameter>
-    </install>
-    <install method="setProperty">
-      <parameter>Retrieve.coercions</parameter>
-      <parameter>
-        <map keyClass="java.lang.String" valueClass="javax.xml.transform.Templates">
-          <entry>
-            <key>WITHOUT_PN</key>
-            <value><inject bean="NullifyPN" /></value>
           </entry>
         </map>
       </parameter>

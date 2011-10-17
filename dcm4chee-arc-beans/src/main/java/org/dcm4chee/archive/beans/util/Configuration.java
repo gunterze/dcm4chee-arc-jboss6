@@ -40,11 +40,8 @@ package org.dcm4chee.archive.beans.util;
 
 import java.util.Map;
 
-import javax.xml.transform.Templates;
-
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Connection;
-import org.dcm4che.util.AttributesFormat;
 import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
@@ -60,22 +57,6 @@ public class Configuration {
         return (Boolean) ae.getProperty("Query.matchUnknown");
     }
 
-    public static String fileSystemGroupIDFor(ApplicationEntity ae) {
-        return (String) ae.getProperty("Storage.fsGroupID");
-    }
-
-    public static String storageDirectoryPathFor(ApplicationEntity ae) {
-        return (String) ae.getProperty("Storage.directoryPath");
-    }
-
-    public static AttributesFormat renameFilePathFormatFor(ApplicationEntity ae) {
-        return (AttributesFormat) ae.getProperty("Storage.renameFilePathFormat");
-    }
-
-    public static String messageDigestAlgorithmFor(ApplicationEntity ae) {
-        return (String) ae.getProperty("Storage.digestAlgorithm");
-    }
-
     public static boolean isSendPendingCGet(ApplicationEntity ae) {
         return (Boolean) ae.getProperty("Retrieve.sendPendingCGet");
     }
@@ -89,22 +70,6 @@ public class Configuration {
         Map<String, Connection> map = (Map<String, Connection>)
                 ae.getProperty("Retrieve.connections");
         return map.get(aet);
-    }
-
-    public static Templates getRetrieveCoercionFor(ApplicationEntity ae, String aet) {
-        return getTemplatesFor(ae, "Retrieve.coercions", aet);
-    }
-
-    public static Templates getStorageCoercionFor(ApplicationEntity ae, String aet) {
-        return getTemplatesFor(ae, "Storage.coercions", aet);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Templates getTemplatesFor(ApplicationEntity ae, String key,
-            String aet) {
-        Map<String, Templates> map = (Map<String, Templates>) ae.getProperty(key);
-        Templates templates = map.get(aet);
-        return templates != null ? templates : map.get(null);
     }
 
 }

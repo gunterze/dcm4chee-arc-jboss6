@@ -42,7 +42,6 @@ import javax.ejb.EJB;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
-import org.dcm4che.data.VR;
 import org.dcm4che.io.SAXReader;
 import org.dcm4che.soundex.ESoundex;
 import org.dcm4chee.archive.ejb.store.CodeFactory;
@@ -190,6 +189,7 @@ public class InitTestData {
                 Tag.ContentCreatorName,
                 Tag.OriginalAttributesSequence);
         STORE_PARAM.setFuzzyStr(new ESoundex());
+        STORE_PARAM.setRetrieveAETs(RETRIEVE_AETS);
     }
 
     @Deployment
@@ -209,10 +209,7 @@ public class InitTestData {
     public void storeTestData() throws Exception {
         for (String res : RESOURCES) {
             Attributes ds = SAXReader.parse("resource:" + res, null);
-            ds.setString(InstanceStore.DCM4CHEE_ARC, InstanceStore.SOURCE_AET, VR.AE, SOURCE_AET);
-            ds.setString(Tag.RetrieveAETitle, VR.AE, RETRIEVE_AETS);
-            ds.setString(Tag.InstanceAvailability, VR.CS, Availability.ONLINE.toString());
-            instanceStore.newInstance(ds, STORE_PARAM);
+            instanceStore.newInstance(SOURCE_AET, ds, Availability.ONLINE, STORE_PARAM);
         }
         instanceStore.close();
     }

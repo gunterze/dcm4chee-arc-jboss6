@@ -81,7 +81,8 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
     @Override
     protected Object selectStorage(Association as, Attributes rq) throws DicomServiceException {
         try {
-            String fsGroupID = Configuration.fileSystemGroupIDFor(as.getApplicationEntity());
+            StoreParam storeParam = Configuration.storeParamFor(as.getApplicationEntity());
+            String fsGroupID = storeParam.getFileSystemGroupID();
             InstanceStore store = initInstanceStore(as);
             if (initFileSystem) {
                 store.initFileSystem(fsGroupID);
@@ -110,15 +111,16 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             FileSystem fs = (FileSystem) storage;
             String iuid = rq.getString(Tag.AffectedSOPInstanceUID);
             ApplicationEntity ae = as.getApplicationEntity();
+            StoreParam storeParam = Configuration.storeParamFor(ae);
             File file = new File(
-                    new File(fs.getDirectory(), Configuration.storageDirectoryPathFor(ae)), 
-                    Configuration.renameFilePathFormatFor(ae) == null
+                    new File(fs.getDirectory(), storeParam.getDirectoryPath()), 
+                    storeParam.getRenameFilePathFormat() == null
                             ? iuid.replace('.', '/')
                             : iuid);
             File dir = file.getParentFile();
             dir.mkdirs();
             while (!file.createNewFile())
-                file = new File(dir, Integer.toString(LazyInitialization.random.nextInt()));
+                file = new File(dir, Integer.toString(LazyInitialization.nextInt()));
             return file;
         } catch (Exception e) {
             LOG.warn(as + ": Failed to create file:", e);
@@ -128,7 +130,8 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
 
     @Override
     protected MessageDigest getMessageDigest(Association as) {
-        String algorithm = Configuration.messageDigestAlgorithmFor(as.getApplicationEntity());
+        StoreParam storeParam = Configuration.storeParamFor(as.getApplicationEntity());
+        String algorithm = storeParam.getDigestAlgorithm();
         try {
             return algorithm != null ? MessageDigest.getInstance(algorithm) : null;
         } catch (NoSuchAlgorithmException e) {
@@ -146,8 +149,8 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         String sourceAET = as.getRemoteAET();
         Attributes modified = new Attributes();
         ApplicationEntity ae = as.getApplicationEntity();
-        AttributesFormat filePathFormatFor = Configuration.renameFilePathFormatFor(ae);
-        Templates templates = Configuration.getStorageCoercionFor(ae, sourceAET);
+        StoreParam storeParam = Configuration.storeParamFor(ae);
+        Templates templates = storeParam.getIncomingAttributeCoercionFor(sourceAET);
         if (templates != null) {
             Attributes modify = new Attributes();
             try {
@@ -159,21 +162,18 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             }
             ds.coerceAttributes(modify, modified);
         }
+        AttributesFormat filePathFormatFor = storeParam.getRenameFilePathFormat();
         File dst = filePathFormatFor != null
                 ? rename(as, rq, fs, file, filePathFormatFor.format(ds))
                 : file;
         String filePath = dst.toURI().toString().substring(fs.getURI().length());
         InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
         try {
-            ds.setString(InstanceStore.DCM4CHEE_ARC, InstanceStore.SOURCE_AET, VR.AE, sourceAET);
-            ds.setString(Tag.RetrieveAETitle, VR.AE, as.getLocalAET());
-            StoreParam storeParam = Configuration.storeParamFor(ae);
-            if (store.addFileRef(ds, modified, new FileRef(fs, filePath, tsuid, dst.length(), digest(digest)),
+            if (store.addFileRef(sourceAET, ds, modified,
+                    new FileRef(fs, filePath, tsuid, dst.length(), digest(digest)),
                     storeParam))
                 dst = null;
             warningCoercionOfDataElements(modified, rsp, storeParam);
-        } catch (DicomServiceException e) {
-            throw e;
         } catch (Exception e) {
             throw new DicomServiceException(Status.ProcessingFailure,
                     DicomServiceException.initialCauseOf(e));

@@ -38,9 +38,14 @@
 
 package org.dcm4chee.archive.persistence;
 
+import java.util.Map;
+
+import javax.xml.transform.Templates;
+
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.ValueSelector;
 import org.dcm4che.soundex.FuzzyStr;
+import org.dcm4che.util.AttributesFormat;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -70,6 +75,14 @@ public class StoreParam {
     private boolean suppressWarningCoercionOfDataElements;
     private boolean storeOriginalAttributes;
     private String modifyingSystem;
+    private String[] retrieveAETs;
+    private String externalRetrieveAET;
+    private String fileSystemGroupID;
+    private String digestAlgorithm;
+    private String directoryPath;
+    private AttributesFormat renameFilePathFormat;
+    private Map<String, Templates> incomingAttributeCoercion;
+    private Map<String, Templates> outgoingAttributeCoercion;
 
     public final int[] getPatientAttributes() {
         return patientAttributes;
@@ -252,6 +265,77 @@ public class StoreParam {
 
     public final void setStoreDuplicate(StoreDuplicate storeDuplicate) {
         this.storeDuplicate = storeDuplicate;
+    }
+
+    public final String[] getRetrieveAETs() {
+        return retrieveAETs;
+    }
+
+    public final void setRetrieveAETs(String... retrieveAETs) {
+        this.retrieveAETs = retrieveAETs;
+    }
+
+    public final String getExternalRetrieveAET() {
+        return externalRetrieveAET;
+    }
+
+    public final void setExternalRetrieveAET(String externalRetrieveAET) {
+        this.externalRetrieveAET = externalRetrieveAET;
+    }
+
+    public final String getFileSystemGroupID() {
+        return fileSystemGroupID;
+    }
+
+    public final void setFileSystemGroupID(String fileSystemGroupID) {
+        this.fileSystemGroupID = fileSystemGroupID;
+    }
+
+    public final String getDigestAlgorithm() {
+        return digestAlgorithm;
+    }
+
+    public final void setDigestAlgorithm(String digestAlgorithm) {
+        this.digestAlgorithm = digestAlgorithm;
+    }
+
+    public final String getDirectoryPath() {
+        return directoryPath;
+    }
+
+    public final void setDirectoryPath(String directoryPath) {
+        this.directoryPath = directoryPath;
+    }
+
+    public final AttributesFormat getRenameFilePathFormat() {
+        return renameFilePathFormat;
+    }
+
+    public final void setRenameFilePathFormat(AttributesFormat renameFilePathFormat) {
+        this.renameFilePathFormat = renameFilePathFormat;
+    }
+
+    public final void setIncomingAttributeCoercion(
+            Map<String, Templates> incomingAttributeCoercion) {
+        this.incomingAttributeCoercion = incomingAttributeCoercion;
+    }
+
+    public final void setOutgoingAttributeCoercion(
+            Map<String, Templates> outgoingAttributeCoercion) {
+        this.outgoingAttributeCoercion = outgoingAttributeCoercion;
+    }
+
+    public Templates getOutgoingAttributeCoercionFor(String aet) {
+        return getFrom(outgoingAttributeCoercion, aet);
+    }
+
+    public Templates getIncomingAttributeCoercionFor(String aet) {
+        return getFrom(incomingAttributeCoercion, aet);
+    }
+
+    private static <T> T getFrom(Map<String, T> map, String key) {
+        T value = map.get(key);
+        return value != null ? value : map.get("*");
     }
 
 }

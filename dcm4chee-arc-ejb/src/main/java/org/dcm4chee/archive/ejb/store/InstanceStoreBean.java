@@ -57,8 +57,6 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.dcm4che.net.Status;
-import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.ContentItem;
@@ -87,10 +85,9 @@ public class InstanceStoreBean implements InstanceStore {
     private Series cachedSeries;
 
     @Override
-    public boolean addFileRef(Attributes data, Attributes modified, FileRef fileRef, 
-            StoreParam storeParam) throws DicomServiceException {
+    public boolean addFileRef(String sourceAET, Attributes data, Attributes modified,
+            FileRef fileRef, StoreParam storeParam) {
         FileSystem fs = fileRef.getFileSystem();
-        data.setString(Tag.InstanceAvailability, VR.CS, fs.getAvailability().toString());
         Instance inst;
         try {
             inst = findInstance(data.getString(Tag.SOPInstanceUID, null));
@@ -98,24 +95,23 @@ public class InstanceStoreBean implements InstanceStore {
             switch (storeDuplicate) {
             case IGNORE:
             case STORE:
-                if (data.coerceAttributes(inst.getAttributes(), null)) {
-                    throw new DicomServiceException(Status.DuplicateSOPinstance);
-                }
                 coerceAttributes(data, inst, modified);
+                data.coerceAttributes(inst.getAttributes(), modified);
+                modified.remove(Tag.OriginalAttributesSequence);
                 if (storeDuplicate == StoreDuplicate.IGNORE)
                     return false;
                 break;
             case REPLACE:
                 inst.setReplaced(true);
-                inst = newInstance(data, storeParam);
+                inst = newInstance(sourceAET, data, fs.getAvailability(), storeParam);
                 coerceAttributes(data, inst, modified);
-                storeOriginalAttributes(data, modified, inst, storeParam);
+                storeOriginalAttributes(sourceAET, data, modified, inst, storeParam);
                 break;
             }
         } catch (NoResultException e) {
-            inst = newInstance(data, storeParam);
+            inst = newInstance(sourceAET, data, fs.getAvailability(), storeParam);
             coerceAttributes(data, inst, modified);
-            storeOriginalAttributes(data, modified, inst, storeParam);
+            storeOriginalAttributes(sourceAET, data, modified, inst, storeParam);
         }
         fileRef.setInstance(inst);
         em.persist(fileRef);
@@ -131,25 +127,25 @@ public class InstanceStoreBean implements InstanceStore {
         data.coerceAttributes(series.getAttributes(), modified);
     }
 
-    private static void storeOriginalAttributes(Attributes data, Attributes modified,
-            Instance inst, StoreParam storeParam) {
+    private static void storeOriginalAttributes(String sourceAET, Attributes data,
+            Attributes modified, Instance inst, StoreParam storeParam) {
         if (!modified.isEmpty() && storeParam.isStoreOriginalAttributes()) {
             Attributes instAttrs = inst.getAttributes();
             Attributes item = new Attributes(4);
             instAttrs.ensureSequence(Tag.OriginalAttributesSequence, 1).add(item);
             item.setDate(Tag.AttributeModificationDateTime, VR.DT, new Date());
             item.setString(Tag.ModifyingSystem, VR.LO, storeParam.getModifyingSystem());
-            item.setString(Tag.SourceOfPreviousValues, VR.LO,
-                    data.getString(DCM4CHEE_ARC, SOURCE_AET));
+            item.setString(Tag.SourceOfPreviousValues, VR.LO, sourceAET);
             item.newSequence(Tag.ModifiedAttributesSequence, 1).add(modified);
             inst.setAttributes(instAttrs, storeParam);
         }
     }
 
     @Override
-    public Instance newInstance(Attributes data, StoreParam storeParam) {
+    public Instance newInstance(String sourceAET, Attributes data, Availability availability,
+            StoreParam storeParam) {
         Instance inst = new Instance();
-        Series series = getSeries(data, storeParam);
+        Series series = getSeries(sourceAET, data, availability, storeParam);
         inst.setSeries(series);
         inst.setConceptNameCode(
                 CodeFactory.getCode(em, data.getNestedDataset(Tag.ConceptNameCodeSequence)));
@@ -157,9 +153,9 @@ public class InstanceStoreBean implements InstanceStore {
                 data.getSequence(Tag.VerifyingObserverSequence), storeParam));
         inst.setContentItems(createContentItems(
                 data.getSequence(Tag.ContentSequence), storeParam));
-        inst.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
-        inst.setExternalRetrieveAET(data.getString(DCM4CHEE_ARC, EXT_RETRIEVE_AET));
-        inst.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
+        inst.setRetrieveAETs(storeParam.getRetrieveAETs());
+        inst.setExternalRetrieveAET(storeParam.getExternalRetrieveAET());
+        inst.setAvailability(availability);
         inst.setAttributes(data, storeParam);
         em.persist(inst);
         setDirty(series);
@@ -356,7 +352,8 @@ public class InstanceStoreBean implements InstanceStore {
     }
 
 
-    private Series getSeries(Attributes data, StoreParam storeParam) {
+    private Series getSeries(String sourceAET, Attributes data, Availability availability,
+            StoreParam storeParam) {
         String seriesIUID = data.getString(Tag.SeriesInstanceUID, null);
         Series series = cachedSeries;
         if (series == null || !series.getSeriesInstanceUID().equals(seriesIUID)) {
@@ -365,16 +362,16 @@ public class InstanceStoreBean implements InstanceStore {
                 cachedSeries = series = findSeries(seriesIUID);
             } catch (NoResultException e) {
                 cachedSeries = series = new Series();
-                Study study = getStudy(data, storeParam);
+                Study study = getStudy(data, availability, storeParam);
                 series.setStudy(study);
                 series.setInstitutionCode(
                         CodeFactory.getCode(em, data.getNestedDataset(Tag.InstitutionCodeSequence)));
                 series.setRequestAttributes(createRequestAttributes(
                         data.getSequence(Tag.RequestAttributesSequence), storeParam));
-                series.setSourceAET(data.getString(DCM4CHEE_ARC, SOURCE_AET));
-                series.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
-                series.setExternalRetrieveAET(data.getString(DCM4CHEE_ARC, EXT_RETRIEVE_AET));
-                series.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
+                series.setSourceAET(sourceAET);
+                series.setRetrieveAETs(storeParam.getRetrieveAETs());
+                series.setExternalRetrieveAET(storeParam.getExternalRetrieveAET());
+                series.setAvailability(availability);
                 series.setAttributes(data, storeParam);
                 em.persist(series);
                 return series;
@@ -433,7 +430,7 @@ public class InstanceStoreBean implements InstanceStore {
         return list;
     }
 
-    private Study getStudy(Attributes data, StoreParam storeParam) {
+    private Study getStudy(Attributes data, Availability availability, StoreParam storeParam) {
         Study study;
         try {
             study = findStudy(data.getString(Tag.StudyInstanceUID, null));
@@ -452,9 +449,9 @@ public class InstanceStoreBean implements InstanceStore {
                             Tag.IssuerOfAccessionNumberSequence)));
             study.setModalitiesInStudy(data.getString(Tag.Modality, null));
             study.setSOPClassesInStudy(data.getString(Tag.SOPClassUID, null));
-            study.setRetrieveAETs(data.getStrings(Tag.RetrieveAETitle));
-            study.setExternalRetrieveAET(data.getString(DCM4CHEE_ARC, EXT_RETRIEVE_AET));
-            study.setAvailability(Availability.valueOf(data.getString(Tag.InstanceAvailability)));
+            study.setRetrieveAETs(storeParam.getRetrieveAETs());
+            study.setExternalRetrieveAET(storeParam.getExternalRetrieveAET());
+            study.setAvailability(availability);
             study.setAttributes(data, storeParam);
             em.persist(study);
         }

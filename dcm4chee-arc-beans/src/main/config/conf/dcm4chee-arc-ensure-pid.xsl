@@ -8,7 +8,7 @@
           <xsl:copy-of select="DicomAttribute[@tag='0020000D']/Value"/>
         </DicomAttribute>
         <DicomAttribute tag="00100021" vr="LO">
-          <Value>DCM4CHEE-ARC</Value>
+          <Value number="1">DCM4CHEE-ARC</Value>
         </DicomAttribute>
       </xsl:if>
     </NativeDicomModel>
