@@ -91,11 +91,20 @@ public class Configuration {
         return map.get(aet);
     }
 
-    @SuppressWarnings("unchecked")
     public static Templates getRetrieveCoercionFor(ApplicationEntity ae, String aet) {
-        Map<String, Templates> map = (Map<String, Templates>)
-                ae.getProperty("Retrieve.coercions");
-        return map.get(aet);
+        return getTemplatesFor(ae, "Retrieve.coercions", aet);
+    }
+
+    public static Templates getStorageCoercionFor(ApplicationEntity ae, String aet) {
+        return getTemplatesFor(ae, "Storage.coercions", aet);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Templates getTemplatesFor(ApplicationEntity ae, String key,
+            String aet) {
+        Map<String, Templates> map = (Map<String, Templates>) ae.getProperty(key);
+        Templates templates = map.get(aet);
+        return templates != null ? templates : map.get(null);
     }
 
 }

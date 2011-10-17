@@ -44,10 +44,14 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
+import javax.xml.transform.Templates;
+
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.io.DicomInputStream;
+import org.dcm4che.io.SAXTransformer;
+import org.dcm4che.io.SAXWriter;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Status;
@@ -136,17 +140,33 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             Object storage, File file, MessageDigest digest) throws DicomServiceException {
         FileSystem fs = (FileSystem) storage;
         Attributes ds = readDataset(as, rq, file);
+        if (ds.bigEndian())
+            ds = new Attributes(ds, false);
+        String sourceAET = as.getRemoteAET();
+        Attributes modified = new Attributes();
         ApplicationEntity ae = as.getApplicationEntity();
         AttributesFormat filePathFormatFor = Configuration.renameFilePathFormatFor(ae);
+        Templates templates = Configuration.getStorageCoercionFor(ae, sourceAET);
+        if (templates != null) {
+            Attributes modify = new Attributes();
+            try {
+                SAXWriter w = SAXTransformer.getSAXWriter(templates, modify);
+                w.setIncludeKeyword(false);
+                w.write(ds);
+            } catch (Exception e) {
+                new IOException(e);
+            }
+            ds.coerceAttributes(modify, modified);
+        }
         File dst = filePathFormatFor != null
                 ? rename(as, rq, fs, file, filePathFormatFor.format(ds))
                 : file;
         String filePath = dst.toURI().toString().substring(fs.getURI().length());
         InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
         try {
-            ds.setString(InstanceStore.DCM4CHEE_ARC, InstanceStore.SOURCE_AET, VR.AE, as.getRemoteAET());
+            ds.setString(InstanceStore.DCM4CHEE_ARC, InstanceStore.SOURCE_AET, VR.AE, sourceAET);
             ds.setString(Tag.RetrieveAETitle, VR.AE, as.getLocalAET());
-            if (store.addFileRef(ds, rsp,
+            if (store.addFileRef(ds, modified, rsp,
                     new FileRef(fs, filePath, tsuid, dst.length(), digest(digest)),
                     Configuration.storeParamFor(ae)))
                 return null;

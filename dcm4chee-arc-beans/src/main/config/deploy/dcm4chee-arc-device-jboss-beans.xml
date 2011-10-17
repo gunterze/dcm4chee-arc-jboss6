@@ -87,8 +87,8 @@
          <value>524432</value> <!-- ReferringPhysicianName (0008,0090) -->
          <value>528432</value> <!-- StudyDescription (0008,1030) -->
          <value>528434</value> <!-- ProcedureCodeSequence (0008,1032) -->
-         <value>1048589</value> <!-- StudyInstanceUID (0020,000D) -->
-         <value>1048592</value> <!-- StudyID (0020,0010) -->
+         <value>2097165</value> <!-- StudyInstanceUID (0020,000D) -->
+         <value>2097168</value> <!-- StudyID (0020,0010) -->
       </array>
     </property>
     <property name="seriesAttributes">
@@ -191,6 +191,19 @@
     </constructor>
   </bean>
 
+  <bean name="EnsurePID" class="javax.xml.transform.Templates">
+    <constructor factoryMethod="newTemplates">
+      <factory bean="SAXTranformerFactory"/>
+      <parameter>
+        <bean class="javax.xml.transform.stream.StreamSource">
+          <constructor>
+            <parameter class="java.lang.String">resource:dcm4chee-arc-ensure-pid.xsl</parameter>
+          </constructor>
+        </bean>
+      </parameter>
+    </constructor>
+  </bean>
+
   <!-- The DICOM Device -->
   <bean name="Device" class="org.dcm4che.net.Device">
     <constructor>
@@ -266,6 +279,17 @@
                 </property>
               </bean>
             </value>
+          </entry>
+        </map>
+      </parameter>
+    </install>
+    <install method="setProperty">
+      <parameter>Storage.coercions</parameter>
+      <parameter>
+        <map keyClass="java.lang.String" valueClass="javax.xml.transform.Templates">
+          <entry>
+            <key>ENSURE_PID</key>
+            <value><inject bean="EnsurePID" /></value>
           </entry>
         </map>
       </parameter>

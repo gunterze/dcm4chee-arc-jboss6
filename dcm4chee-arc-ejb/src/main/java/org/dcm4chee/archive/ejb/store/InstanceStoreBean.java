@@ -71,6 +71,7 @@ import org.dcm4chee.archive.persistence.Series;
 import org.dcm4chee.archive.persistence.StoreParam;
 import org.dcm4chee.archive.persistence.Study;
 import org.dcm4chee.archive.persistence.VerifyingObserver;
+import org.dcm4chee.archive.persistence.StoreParam.StoreDuplicate;
 
 import com.mysema.query.NonUniqueResultException;
 
@@ -85,83 +86,75 @@ public class InstanceStoreBean implements InstanceStore {
     private Series cachedSeries;
 
     @Override
-    public boolean addFileRef(Attributes data, Attributes rsp, FileRef fileRef,
-            StoreParam storeParam) {
+    public boolean addFileRef(Attributes data, Attributes modified, Attributes rsp,
+            FileRef fileRef, StoreParam storeParam) {
         FileSystem fs = fileRef.getFileSystem();
         data.setString(Tag.InstanceAvailability, VR.CS, fs.getAvailability().toString());
         Instance inst;
         try {
             inst = findInstance(data.getString(Tag.SOPInstanceUID, null));
-            switch (storeParam.getStoreDuplicate()) {
+            StoreDuplicate storeDuplicate = storeParam.getStoreDuplicate();
+            switch (storeDuplicate) {
             case IGNORE:
-                warningCoercionOfDataElements(coerceAttributes(data, inst), rsp, storeParam);
-                return false;
             case STORE:
-                if (!data.matches(inst.getAttributes(), false, false)) {
+                if (data.coerceAttributes(inst.getAttributes(), null)) {
                     rsp.setInt(Tag.Status, VR.US, Status.DuplicateSOPinstance);
                     return false;
                 }
-                warningCoercionOfDataElements(coerceAttributes(data, inst), rsp, storeParam);
+                coerceAttributes(data, inst, modified);
+                warningCoercionOfDataElements(modified, rsp, storeParam);
+                if (storeDuplicate == StoreDuplicate.IGNORE)
+                    return false;
                 break;
             case REPLACE:
                 inst.setReplaced(true);
                 inst = newInstance(data, storeParam);
-                warningCoercionOfDataElements(
-                        storeOriginalAttributes(
-                                coerceAttributes(data, inst),
-                                data.getString(DCM4CHEE_ARC, SOURCE_AET),
-                                inst, storeParam),
-                        rsp, storeParam);
+                coerceAttributes(data, inst, modified);
+                storeOriginalAttributes(data, modified, inst, storeParam);
+                warningCoercionOfDataElements(modified, rsp, storeParam);
                 break;
             }
         } catch (NoResultException e) {
             inst = newInstance(data, storeParam);
-            warningCoercionOfDataElements(
-                    storeOriginalAttributes(
-                            coerceAttributes(data, inst),
-                            data.getString(DCM4CHEE_ARC, SOURCE_AET),
-                            inst, storeParam),
-                    rsp, storeParam);
+            coerceAttributes(data, inst, modified);
+            storeOriginalAttributes(data, modified, inst, storeParam);
+            warningCoercionOfDataElements(modified, rsp, storeParam);
         }
         fileRef.setInstance(inst);
         em.persist(fileRef);
         return true;
     }
 
-    private static Attributes coerceAttributes(Attributes data, Instance inst) {
+    private static void coerceAttributes(Attributes data, Instance inst, Attributes modified) {
         Series series = inst.getSeries();
         Study study = series.getStudy();
         Patient patient = study.getPatient();
-        Attributes original = new Attributes();
-        data.coerceAttributes(patient.getAttributes(), original);
-        data.coerceAttributes(study.getAttributes(), original);
-        data.coerceAttributes(series.getAttributes(), original);
-        data.coerceAttributes(inst.getAttributes(), original);
-        return original;
+        data.coerceAttributes(patient.getAttributes(), modified);
+        data.coerceAttributes(study.getAttributes(), modified);
+        data.coerceAttributes(series.getAttributes(), modified);
     }
 
-    private static Attributes warningCoercionOfDataElements(Attributes original, Attributes rsp,
+    private static void warningCoercionOfDataElements(Attributes modified, Attributes rsp,
             StoreParam storeParam) {
-        if (!original.isEmpty() && !storeParam.isSuppressWarningCoercionOfDataElements()) {
+        if (!modified.isEmpty() && !storeParam.isSuppressWarningCoercionOfDataElements()) {
             rsp.setInt(Tag.Status, VR.US, Status.CoercionOfDataElements);
-            rsp.setInt(Tag.OffendingElement, VR.AT, original.tags());
+            rsp.setInt(Tag.OffendingElement, VR.AT, modified.tags());
         }
-        return original;
     }
 
-    private static Attributes storeOriginalAttributes(Attributes original, String sourceAET,
+    private static void storeOriginalAttributes(Attributes data, Attributes modified,
             Instance inst, StoreParam storeParam) {
-        if (!original.isEmpty() && storeParam.isStoreOriginalAttributes()) {
-            Attributes item = new Attributes(4);
+        if (!modified.isEmpty() && storeParam.isStoreOriginalAttributes()) {
             Attributes instAttrs = inst.getAttributes();
+            Attributes item = new Attributes(4);
             instAttrs.ensureSequence(Tag.OriginalAttributesSequence, 1).add(item);
-            item.setDate(Tag.AttributeModificationDateTime, new Date());
+            item.setDate(Tag.AttributeModificationDateTime, VR.DT, new Date());
             item.setString(Tag.ModifyingSystem, VR.LO, storeParam.getModifyingSystem());
-            item.setString(Tag.SourceOfPreviousValues, VR.LO, sourceAET);
-            item.newSequence(Tag.ModifiedAttributesSequence, 1).add(original);
+            item.setString(Tag.SourceOfPreviousValues, VR.LO,
+                    data.getString(DCM4CHEE_ARC, SOURCE_AET));
+            item.newSequence(Tag.ModifiedAttributesSequence, 1).add(modified);
             inst.setAttributes(instAttrs, storeParam);
         }
-        return original;
     }
 
     @Override

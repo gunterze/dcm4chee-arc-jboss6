@@ -59,7 +59,8 @@ public interface InstanceStore {
 
     Instance newInstance(Attributes data, StoreParam storeParam);
 
-    boolean addFileRef(Attributes data, Attributes rsp, FileRef fileRef, StoreParam storeParam);
+    boolean addFileRef(Attributes data, Attributes modified, Attributes rsp, FileRef fileRef,
+            StoreParam storeParam);
 
     void close();
 
