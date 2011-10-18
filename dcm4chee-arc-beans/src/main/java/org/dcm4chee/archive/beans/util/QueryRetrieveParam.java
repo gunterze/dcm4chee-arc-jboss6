@@ -38,30 +38,37 @@
 
 package org.dcm4chee.archive.beans.util;
 
-import java.util.Map;
-
-import org.dcm4che.net.ApplicationEntity;
-import org.dcm4che.net.Connection;
-import org.dcm4chee.archive.persistence.StoreParam;
-
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class Configuration {
+public class QueryRetrieveParam {
 
-    public static StoreParam storeParamFor(ApplicationEntity ae) {
-        return (StoreParam) ae.getProperty("StoreParam");
+    private boolean matchUnknown;
+    private boolean sendPendingCGet;
+    private long sendPendingCMoveInterval;
+
+    public final boolean isMatchUnknown() {
+        return matchUnknown;
     }
 
-    public static QueryRetrieveParam queryRetrieveParamFor(ApplicationEntity ae) {
-        return (QueryRetrieveParam) ae.getProperty("QueryRetrieveParam");
+    public final void setMatchUnknown(boolean matchUnknown) {
+        this.matchUnknown = matchUnknown;
     }
 
-    @SuppressWarnings("unchecked")
-    public static Connection getConnectionTo(ApplicationEntity ae, String aet) {
-        Map<String, Connection> map = (Map<String, Connection>)
-                ae.getProperty("Retrieve.connections");
-        return map.get(aet);
+    public final boolean isSendPendingCGet() {
+        return sendPendingCGet;
+    }
+
+    public final void setSendPendingCGet(boolean sendPendingCGet) {
+        this.sendPendingCGet = sendPendingCGet;
+    }
+
+    public final long getSendPendingCMoveInterval() {
+        return sendPendingCMoveInterval;
+    }
+
+    public final void setSendPendingCMoveInterval(long sendPendingCMoveInterval) {
+        this.sendPendingCMoveInterval = sendPendingCMoveInterval;
     }
 
 }

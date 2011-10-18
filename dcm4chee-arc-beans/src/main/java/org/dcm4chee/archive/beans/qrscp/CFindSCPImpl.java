@@ -92,7 +92,7 @@ public class CFindSCPImpl extends BasicCFindSCP {
         QueryParam queryParam = new QueryParam();
         queryParam.setCombinedDatetimeMatching(queryOpts.contains(QueryOption.DATETIME));
         queryParam.setFuzzySemanticMatching(queryOpts.contains(QueryOption.FUZZY));
-        queryParam.setMatchUnknown(Configuration.isMatchUnknown(ae));
+        queryParam.setMatchUnknown(Configuration.queryRetrieveParamFor(ae).isMatchUnknown());
         queryParam.setRoles(roles());
         try {
             CompositeQuery query = (CompositeQuery) JNDIUtils.lookup(CompositeQuery.JNDI_NAME);

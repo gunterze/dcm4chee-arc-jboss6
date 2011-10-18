@@ -114,7 +114,8 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
 
         };
         retrieveTask.setSendPendingRSPInterval(
-                Configuration.getSendPendingCMoveInterval(as.getApplicationEntity()));
+                Configuration.queryRetrieveParamFor(as.getApplicationEntity())
+                    .getSendPendingCMoveInterval());
         return retrieveTask;
     }
 

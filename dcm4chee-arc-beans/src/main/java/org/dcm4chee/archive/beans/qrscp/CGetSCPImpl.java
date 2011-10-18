@@ -94,7 +94,9 @@ public class CGetSCPImpl extends BasicCGetSCP {
         RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches, withoutBulkData,
                 Configuration.storeParamFor(as.getApplicationEntity())
                     .getOutgoingAttributeCoercionFor(as.getRemoteAET()));
-        retrieveTask.setSendPendingRSP(Configuration.isSendPendingCGet(as.getApplicationEntity()));
+        retrieveTask.setSendPendingRSP(
+                Configuration.queryRetrieveParamFor(as.getApplicationEntity())
+                    .isSendPendingCGet());
         return retrieveTask;
     }
 

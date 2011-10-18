@@ -51,18 +51,6 @@
       factoryMethod="newSingleThreadScheduledExecutor" />
   </bean>
 
-  <bean name="True" class="java.lang.Boolean">
-    <constructor factoryClass="java.lang.Boolean" factoryMethod="valueOf">
-      <parameter>true</parameter>
-    </constructor>
-  </bean>
-
-  <bean name="False" class="java.lang.Boolean">
-    <constructor factoryClass="java.lang.Boolean" factoryMethod="valueOf">
-      <parameter>false</parameter>
-    </constructor>
-  </bean>
-
   <bean name="SAXTranformerFactory" class="javax.xml.transform.sax.SAXTransformerFactory">
     <constructor factoryClass="javax.xml.transform.sax.SAXTransformerFactory"
         factoryMethod="newInstance" />
@@ -225,6 +213,13 @@
     </property>
   </bean>
 
+ <!-- Query Retrieve Param -->
+  <bean name="QueryRetrieveParam" class="org.dcm4chee.archive.beans.util.QueryRetrieveParam">
+    <property name="matchUnknown">true</property>
+    <property name="sendPendingCGet">true</property>
+    <property name="sendPendingCMoveInterval">5000</property>
+  </bean>
+
   <!-- The DICOM Device -->
   <bean name="Device" class="org.dcm4che.net.Device">
     <constructor>
@@ -239,26 +234,12 @@
     <incallback method="addApplicationEntity" />
     <uncallback method="removeApplicationEntity" />
     <install method="setProperty">
-      <parameter>Storage.StoreParam</parameter>
+      <parameter>StoreParam</parameter>
       <parameter><inject bean="StoreParam" /></parameter>
     </install>
     <install method="setProperty">
-      <parameter>Query.matchUnknown</parameter>
-      <parameter><inject bean="True"/></parameter>
-    </install>
-    <install method="setProperty">
-      <parameter>Retrieve.sendPendingCGet</parameter>
-      <parameter><inject bean="True"/></parameter>
-    </install>
-    <install method="setProperty">
-      <parameter>Retrieve.sendPendingCMoveInterval</parameter>
-      <parameter>
-        <javabean xmlns="urn:jboss:javabean:2.0" class="java.lang.Long">
-          <constructor>
-            <property name="anLong">5000</property>
-          </constructor>
-        </javabean>
-      </parameter>
+      <parameter>QueryRetrieveParam</parameter>
+      <parameter><inject bean="QueryRetrieveParam" /></parameter>
     </install>
     <install method="setProperty">
       <parameter>Retrieve.connections</parameter>
