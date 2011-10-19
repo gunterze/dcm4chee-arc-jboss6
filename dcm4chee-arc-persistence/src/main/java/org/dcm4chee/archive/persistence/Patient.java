@@ -165,6 +165,9 @@ public class Patient implements Serializable {
     @OneToMany(mappedBy = "patient", orphanRemoval = true)
     private Collection<Study> studies;
 
+    @OneToMany(mappedBy = "patient", orphanRemoval = true)
+    private Collection<ServiceRequest> serviceRequests;
+
     @Override
     public String toString() {
         return "Patient[pk=" + pk
@@ -258,6 +261,10 @@ public class Patient implements Serializable {
 
     public Collection<Study> getStudies() {
         return studies;
+    }
+
+    public Collection<ServiceRequest> getServiceRequests() {
+        return serviceRequests;
     }
 
     public byte[] getEncodedAttributes() {

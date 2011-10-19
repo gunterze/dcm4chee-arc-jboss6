@@ -48,8 +48,10 @@ import org.dcm4chee.archive.persistence.QContentItem;
 import org.dcm4chee.archive.persistence.QInstance;
 import org.dcm4chee.archive.persistence.QIssuer;
 import org.dcm4chee.archive.persistence.QPatient;
-import org.dcm4chee.archive.persistence.QRequestAttributes;
+import org.dcm4chee.archive.persistence.QRequestedProcedure;
+import org.dcm4chee.archive.persistence.QScheduledProcedureStep;
 import org.dcm4chee.archive.persistence.QSeries;
+import org.dcm4chee.archive.persistence.QServiceRequest;
 import org.dcm4chee.archive.persistence.QStudy;
 import org.dcm4chee.archive.persistence.QStudyPermission;
 import org.dcm4chee.archive.persistence.QVerifyingObserver;
@@ -408,30 +410,30 @@ abstract class Builder {
         boolean matchUnknown = queryParam.isMatchUnknown();
         String accNo = item.getString(Tag.AccessionNumber, "*");
         BooleanBuilder builder = new BooleanBuilder()
-            .and(wildCard(QRequestAttributes.requestAttributes.requestedProcedureID,
-                    item.getString(Tag.RequestedProcedureID, "*"),
-                    matchUnknown, false))
-            .and(wildCard(QRequestAttributes.requestAttributes.scheduledProcedureStepID,
+            .and(wildCard(QScheduledProcedureStep.scheduledProcedureStep.scheduledProcedureStepID,
                     item.getString(Tag.ScheduledProcedureStepID, "*"),
                     matchUnknown, false))
-            .and(wildCard(QRequestAttributes.requestAttributes.requestingService,
+            .and(wildCard(QRequestedProcedure.requestedProcedure.requestedProcedureID,
+                    item.getString(Tag.RequestedProcedureID, "*"),
+                    matchUnknown, false))
+            .and(uids(QRequestedProcedure.requestedProcedure.studyInstanceUID,
+                    item.getStrings(Tag.StudyInstanceUID)))
+            .and(wildCard(QServiceRequest.serviceRequest.requestingService,
                     item.getString(Tag.RequestingService, "*"),
                     matchUnknown, true))
             .and(MatchPersonName.match(
-                QRequestAttributes.requestAttributes.requestingPhysician,
-                QRequestAttributes.requestAttributes.requestingPhysicianIdeographicName,
-                QRequestAttributes.requestAttributes.requestingPhysicianPhoneticName,
-                QRequestAttributes.requestAttributes.requestingPhysicianFamilyNameSoundex,
-                QRequestAttributes.requestAttributes.requestingPhysicianGivenNameSoundex,
+                QServiceRequest.serviceRequest.requestingPhysician,
+                QServiceRequest.serviceRequest.requestingPhysicianIdeographicName,
+                QServiceRequest.serviceRequest.requestingPhysicianPhoneticName,
+                QServiceRequest.serviceRequest.requestingPhysicianFamilyNameSoundex,
+                QServiceRequest.serviceRequest.requestingPhysicianGivenNameSoundex,
                 item.getString(Tag.ReferringPhysicianName, "*"),
                 queryParam, storeParam.getFuzzyStr()))
-            .and(uids(QRequestAttributes.requestAttributes.studyInstanceUID,
-                    item.getStrings(Tag.StudyInstanceUID)))
-            .and(wildCard(QRequestAttributes.requestAttributes.accessionNumber, accNo, matchUnknown, false));
+            .and(wildCard(QServiceRequest.serviceRequest.accessionNumber, accNo, matchUnknown, false));
 
         if (!accNo.equals("*"))
             builder.and(
-                    issuer(QRequestAttributes.requestAttributes.issuerOfAccessionNumber,
+                    issuer(QServiceRequest.serviceRequest.issuerOfAccessionNumber,
                         item.getNestedDataset(Tag.IssuerOfAccessionNumberSequence),
                         matchUnknown));
 
@@ -440,11 +442,13 @@ abstract class Builder {
 
         return matchUnknown(
                 new HibernateSubQuery()
-                    .from(QRequestAttributes.requestAttributes)
-                    .where(QSeries.series.requestAttributes.contains(QRequestAttributes.requestAttributes),
+                    .from(QScheduledProcedureStep.scheduledProcedureStep)
+                    .innerJoin(QScheduledProcedureStep.scheduledProcedureStep.requestedProcedure, QRequestedProcedure.requestedProcedure)
+                    .innerJoin(QRequestedProcedure.requestedProcedure.serviceRequest, QServiceRequest.serviceRequest)
+                    .where(QSeries.series.scheduledProcedureSteps.contains(QScheduledProcedureStep.scheduledProcedureStep),
                             builder)
                     .exists(),
-                QSeries.series.requestAttributes,
+                QSeries.series.scheduledProcedureSteps,
                 matchUnknown);
     }
 
@@ -477,7 +481,7 @@ abstract class Builder {
                             .contains(QVerifyingObserver.verifyingObserver),
                             predicate)
                     .exists(),
-                QSeries.series.requestAttributes,
+                QInstance.instance.verifyingObservers,
                 matchUnknown);
     }
 

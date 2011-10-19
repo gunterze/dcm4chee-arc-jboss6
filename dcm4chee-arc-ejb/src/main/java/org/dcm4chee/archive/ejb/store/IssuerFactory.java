@@ -49,7 +49,7 @@ import org.dcm4chee.archive.persistence.Issuer;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class IssuerFactory {
+public abstract class IssuerFactory {
 
     public static Issuer getIssuer(EntityManager em, String entityID,
             String entityUID, String entityUIDType) {

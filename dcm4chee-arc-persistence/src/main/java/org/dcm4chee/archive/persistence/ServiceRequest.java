@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.persistence;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -48,6 +49,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.dcm4che.data.Attributes;
@@ -55,44 +59,20 @@ import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
 
 /**
- * @author Damien Evans <damien.daddy@gmail.com>
- * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
+@NamedQueries({
+    @NamedQuery(
+        name="ServiceRequest.findByAccessionNumber",
+        query="SELECT rq FROM ServiceRequest rq WHERE rq.accessionNumber = ?1")
+})
 @Entity
-@Table(name = "series_req")
-public class RequestAttributes implements Serializable {
+@Table(name = "request")
+public class ServiceRequest implements Serializable {
 
-    private static final long serialVersionUID = -2985695106493984104L;
+    private static final long serialVersionUID = 4625226424616368458L;
 
-    public RequestAttributes() {}
-
-    public RequestAttributes(Attributes item, StoreParam storeParam) {
-        accessionNumber = item.getString(Tag.AccessionNumber, "*");
-        studyInstanceUID = item.getString(Tag.StudyInstanceUID, "*");
-        requestedProcedureID = item.getString(Tag.RequestedProcedureID, "*");
-        scheduledProcedureStepID = item.getString(Tag.ScheduledProcedureStepID, "*");
-        requestingService = item.getString(Tag.RequestingService, "*");
-        PersonName pn = new PersonName(item.getString(Tag.RequestingPhysician), true);
-        if (pn.isEmpty()) {
-            requestingPhysician = "*";
-            requestingPhysicianIdeographicName = "*";
-            requestingPhysicianPhoneticName = "*";
-            requestingPhysicianFamilyNameSoundex = "*";
-            requestingPhysicianGivenNameSoundex = "*";
-        } else {
-            requestingPhysician = pn.contains(PersonName.Group.Alphabetic) 
-                    ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
-            requestingPhysicianIdeographicName = pn.contains(PersonName.Group.Ideographic)
-                    ? pn.toString(PersonName.Group.Ideographic, false) : "*";
-            requestingPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
-                    ? pn.toString(PersonName.Group.Phonetic, false) : "*";
-            requestingPhysicianFamilyNameSoundex =
-                    storeParam.toFuzzy(pn.get(PersonName.Component.FamilyName), "*");
-            requestingPhysicianGivenNameSoundex =
-                    storeParam.toFuzzy(pn.get(PersonName.Component.GivenName), "*");
-        }
-    }
+    public static final String FIND_BY_ACCESSION_NUMBER = "ServiceRequest.findByAccessionNumber";
 
     @Id
     @GeneratedValue
@@ -106,18 +86,6 @@ public class RequestAttributes implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "accno_issuer_fk")
     private Issuer issuerOfAccessionNumber;
-
-    @Basic(optional = false)
-    @Column(name = "study_iuid")
-    private String studyInstanceUID;
-
-    @Basic(optional = false)
-    @Column(name = "req_proc_id")
-    private String requestedProcedureID;
-
-    @Basic(optional = false)
-    @Column(name = "sps_id")
-    private String scheduledProcedureStepID;
 
     @Basic(optional = false)
     @Column(name = "req_service")
@@ -143,6 +111,20 @@ public class RequestAttributes implements Serializable {
     @Column(name = "req_phys_p_name")
     private String requestingPhysicianPhoneticName;
 
+    @ManyToOne
+    @JoinColumn(name = "patient_fk")
+    private Patient patient;
+
+    @OneToMany(mappedBy = "serviceRequest", orphanRemoval = true)
+    private Collection<RequestedProcedure> requestedProcedures;
+
+    @Override
+    public String toString() {
+        return "ServiceRequest[pk=" + pk
+                + ", accNo=" + accessionNumber
+                + "]";
+    }
+
     public long getPk() {
         return pk;
     }
@@ -151,24 +133,8 @@ public class RequestAttributes implements Serializable {
         return accessionNumber;
     }
 
-    public Issuer getIssuerOfAccessionNumber() {
-        return issuerOfAccessionNumber;
-    }
-
     public void setIssuerOfAccessionNumber(Issuer issuerOfAccessionNumber) {
         this.issuerOfAccessionNumber = issuerOfAccessionNumber;
-    }
-
-    public String getStudyInstanceUID() {
-        return studyInstanceUID;
-    }
-
-    public String getRequestedProcedureID() {
-        return requestedProcedureID;
-    }
-
-    public String getScheduledProcedureStepID() {
-        return scheduledProcedureStepID;
     }
 
     public String getRequestingService() {
@@ -195,4 +161,46 @@ public class RequestAttributes implements Serializable {
         return requestingPhysicianPhoneticName;
     }
 
+    public Issuer getIssuerOfAccessionNumber() {
+        return issuerOfAccessionNumber;
+    }
+
+    public Patient getPatient() {
+        return patient;
+    }
+
+    public void setPatient(Patient patient) {
+        this.patient = patient;
+    }
+
+    public Collection<RequestedProcedure> getRequestedProcedures() {
+        return requestedProcedures;
+    }
+
+    public void setAttributes(Attributes requestAttrs, Attributes instAttrs,
+            StoreParam storeParam) {
+        accessionNumber = requestAttrs.getString(Tag.AccessionNumber);
+        if (accessionNumber == null)
+            accessionNumber = instAttrs.getString(Tag.AccessionNumber);
+        requestingService = requestAttrs.getString(Tag.RequestingService, "*");
+        PersonName pn = new PersonName(requestAttrs.getString(Tag.RequestingPhysician), true);
+        if (pn.isEmpty()) {
+            requestingPhysician = "*";
+            requestingPhysicianIdeographicName = "*";
+            requestingPhysicianPhoneticName = "*";
+            requestingPhysicianFamilyNameSoundex = "*";
+            requestingPhysicianGivenNameSoundex = "*";
+        } else {
+            requestingPhysician = pn.contains(PersonName.Group.Alphabetic) 
+                    ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
+            requestingPhysicianIdeographicName = pn.contains(PersonName.Group.Ideographic)
+                    ? pn.toString(PersonName.Group.Ideographic, false) : "*";
+            requestingPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
+                    ? pn.toString(PersonName.Group.Phonetic, false) : "*";
+            requestingPhysicianFamilyNameSoundex =
+                    storeParam.toFuzzy(pn.get(PersonName.Component.FamilyName), "*");
+            requestingPhysicianGivenNameSoundex =
+                    storeParam.toFuzzy(pn.get(PersonName.Component.GivenName), "*");
+        }
+    }
 }

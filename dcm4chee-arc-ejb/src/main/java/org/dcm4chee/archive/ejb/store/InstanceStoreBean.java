@@ -65,7 +65,7 @@ import org.dcm4chee.archive.persistence.FileSystem;
 import org.dcm4chee.archive.persistence.FileSystemStatus;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.Patient;
-import org.dcm4chee.archive.persistence.RequestAttributes;
+import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
 import org.dcm4chee.archive.persistence.Series;
 import org.dcm4chee.archive.persistence.StoreParam;
 import org.dcm4chee.archive.persistence.Study;
@@ -366,8 +366,10 @@ public class InstanceStoreBean implements InstanceStore {
                 series.setStudy(study);
                 series.setInstitutionCode(
                         CodeFactory.getCode(em, data.getNestedDataset(Tag.InstitutionCodeSequence)));
-                series.setRequestAttributes(createRequestAttributes(
-                        data.getSequence(Tag.RequestAttributesSequence), storeParam));
+                series.setScheduledProcedureSteps(
+                        getScheduledProcedureSteps(
+                                study.getPatient(),
+                                data.getSequence(Tag.RequestAttributesSequence), storeParam));
                 series.setSourceAET(sourceAET);
                 series.setRetrieveAETs(storeParam.getRetrieveAETs());
                 series.setExternalRetrieveAET(storeParam.getExternalRetrieveAET());
@@ -382,6 +384,22 @@ public class InstanceStoreBean implements InstanceStore {
             series.setAttributes(seriesAttrs, storeParam);
         }
         return series;
+    }
+
+    private Collection<ScheduledProcedureStep> getScheduledProcedureSteps(
+            Patient patient, Sequence requestAttrsSeq, StoreParam storeParam) {
+        if (requestAttrsSeq == null)
+            return null;
+        ArrayList<ScheduledProcedureStep> list =
+                new ArrayList<ScheduledProcedureStep>(requestAttrsSeq.size());
+        for (Attributes requestAttrs : requestAttrsSeq) {
+            ScheduledProcedureStep sps =
+                    RequestFactory.getScheduledProcedureStep(em, requestAttrs,
+                            requestAttrsSeq.getParent(), patient, storeParam);
+            if (sps != null)
+                list.add(sps);
+        }
+        return list;
     }
 
     @Override
@@ -412,22 +430,6 @@ public class InstanceStoreBean implements InstanceStore {
         study.setAvailability(availabilityOf(study));
 
         em.flush();
-    }
-
-    private List<RequestAttributes> createRequestAttributes(Sequence seq, StoreParam storeParam) {
-        if (seq == null || seq.isEmpty())
-            return null;
-
-        ArrayList<RequestAttributes> list =
-                new ArrayList<RequestAttributes>(seq.size());
-        for (Attributes item : seq) {
-            RequestAttributes rqAttrs = new RequestAttributes(item, storeParam);
-            rqAttrs.setIssuerOfAccessionNumber(
-                    IssuerFactory.getIssuer(em, item.getNestedDataset(
-                            Tag.IssuerOfAccessionNumberSequence)));
-            list.add(rqAttrs);
-        }
-        return list;
     }
 
     private Study getStudy(Attributes data, Availability availability, StoreParam storeParam) {

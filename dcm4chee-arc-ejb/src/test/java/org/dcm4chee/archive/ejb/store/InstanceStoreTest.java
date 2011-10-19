@@ -77,6 +77,7 @@ public class InstanceStoreTest {
                         InstanceStoreBean.class,
                         CodeFactory.class,
                         IssuerFactory.class,
+                        RequestFactory.class,
                         PatientFactory.class,
                         RemovePatient.class)
                 .addAsResource("ct-1.xml")

@@ -53,7 +53,7 @@ import org.dcm4chee.archive.persistence.Code;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class CodeFactory {
+public abstract class CodeFactory {
 
     public static Code getCode(EntityManager em, String codeValue,
             String codingSchemeDesignator, String codingSchemeVersion,

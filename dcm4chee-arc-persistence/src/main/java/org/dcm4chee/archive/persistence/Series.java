@@ -43,13 +43,14 @@ import java.util.Collection;
 import java.util.Date;
 
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -243,6 +244,23 @@ public class Series implements Serializable {
     @Transient
     private Attributes cachedAttributes;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inst_code_fk")
+    private Code institutionCode;
+
+    @ManyToMany
+    @JoinTable(name = "rel_series_sps", 
+        joinColumns = @JoinColumn(name = "series_fk", referencedColumnName = "pk"),
+        inverseJoinColumns = @JoinColumn(name = "sps_fk", referencedColumnName = "pk"))
+    private Collection<ScheduledProcedureStep> scheduledProcedureSteps;
+
+    @ManyToOne
+    @JoinColumn(name = "study_fk")
+    private Study study;
+
+    @OneToMany(mappedBy = "series", orphanRemoval = true)
+    private Collection<Instance> instances;
+
     @Override
     public String toString() {
         return "Series[pk=" + pk
@@ -252,21 +270,6 @@ public class Series implements Serializable {
                 + ", numI=" + numberOfSeriesRelatedInstances
                 + "]";
     }
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inst_code_fk")
-    private Code institutionCode;
-
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "series_fk")
-    private Collection<RequestAttributes> requestAttributes;
-
-    @ManyToOne
-    @JoinColumn(name = "study_fk")
-    private Study study;
-
-    @OneToMany(mappedBy = "series", orphanRemoval = true)
-    private Collection<Instance> instances;
 
     @PrePersist
     public void onPrePersist() {
@@ -442,12 +445,13 @@ public class Series implements Serializable {
         this.institutionCode = institutionCode;
     }
 
-    public Collection<RequestAttributes> getRequestAttributes() {
-        return requestAttributes;
+    public Collection<ScheduledProcedureStep> getScheduledProcedureSteps() {
+        return scheduledProcedureSteps;
     }
 
-    public void setRequestAttributes(Collection<RequestAttributes> requestAttributes) {
-        this.requestAttributes = requestAttributes;
+    public void setScheduledProcedureSteps(
+            Collection<ScheduledProcedureStep> scheduledProcedureSteps) {
+        this.scheduledProcedureSteps = scheduledProcedureSteps;
     }
 
     public Study getStudy() {

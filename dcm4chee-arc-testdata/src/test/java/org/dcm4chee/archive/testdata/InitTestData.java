@@ -49,6 +49,7 @@ import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.ejb.store.InstanceStoreBean;
 import org.dcm4chee.archive.ejb.store.IssuerFactory;
 import org.dcm4chee.archive.ejb.store.PatientFactory;
+import org.dcm4chee.archive.ejb.store.RequestFactory;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.StoreParam;
 import org.jboss.arquillian.api.Deployment;
@@ -71,8 +72,9 @@ public class InitTestData {
         InstanceStoreBean.class,
         CodeFactory.class,
         IssuerFactory.class,
+        RequestFactory.class,
         PatientFactory.class
-    };
+   };
 
     private static final String[] RESOURCES = {
         "date-range-1.xml",

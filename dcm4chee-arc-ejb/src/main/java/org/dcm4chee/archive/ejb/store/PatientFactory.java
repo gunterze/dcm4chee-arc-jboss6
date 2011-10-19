@@ -53,7 +53,7 @@ import org.dcm4chee.archive.persistence.StoreParam;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class PatientFactory {
+public abstract class PatientFactory {
 
     public static Patient findPatient(EntityManager em, Attributes attrs, StoreParam storeParam) {
         String pid = attrs.getString(Tag.PatientID);

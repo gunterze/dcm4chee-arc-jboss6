@@ -163,29 +163,6 @@
     </attributes>
   </entity>
 
-  <entity class="RequestAttributes">
-    <table name="series_req" />
-    <sequence-generator name="seq" sequence-name="series_req_pk_seq" />
-    <attributes>
-      <id name="pk">
-        <column name="pk" />
-        <generated-value strategy="${generated-value-strategy}" generator="seq" />
-      </id>
-      <basic name="requestingService" optional="false">
-        <column name="req_service" column-definition="${nvarchar2}" />
-      </basic>
-      <basic name="requestingPhysician" optional="false">
-        <column name="req_physician" column-definition="${nvarchar2}" />
-      </basic>
-      <basic name="requestingPhysicianIdeographicName" optional="false">
-        <column name="req_phys_i_name" column-definition="${nvarchar2}" />
-      </basic>
-      <basic name="requestingPhysicianPhoneticName" optional="false">
-        <column name="req_phys_p_name" column-definition="${nvarchar2}" />
-      </basic>
-    </attributes>
-  </entity>
-
   <entity class="Instance">
     <table name="instance" />
     <sequence-generator name="seq" sequence-name="instance_pk_seq" />
@@ -245,6 +222,51 @@
   <entity class="StudyPermission">
     <table name="study_permission" />
     <sequence-generator name="seq" sequence-name="study_permission_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="ServiceRequest">
+    <table name="request" />
+    <sequence-generator name="seq" sequence-name="request_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+      <basic name="requestingService" optional="false">
+        <column name="req_service" column-definition="${nvarchar2}" />
+      </basic>
+      <basic name="requestingPhysician" optional="false">
+        <column name="req_physician" column-definition="${nvarchar2}" />
+      </basic>
+      <basic name="requestingPhysicianIdeographicName" optional="false">
+        <column name="req_phys_i_name" column-definition="${nvarchar2}" />
+      </basic>
+      <basic name="requestingPhysicianPhoneticName" optional="false">
+        <column name="req_phys_p_name" column-definition="${nvarchar2}" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="RequestedProcedure">
+    <table name="req_proc" />
+    <sequence-generator name="seq" sequence-name="req_proc_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="ScheduledProcedureStep">
+    <table name="sps" />
+    <sequence-generator name="seq" sequence-name="sps_pk_seq" />
     <attributes>
       <id name="pk">
         <column name="pk" />
