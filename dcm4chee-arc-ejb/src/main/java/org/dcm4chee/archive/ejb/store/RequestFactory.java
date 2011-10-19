@@ -56,9 +56,8 @@ import org.dcm4chee.archive.persistence.StoreParam;
 public abstract class RequestFactory {
 
     public static ScheduledProcedureStep getScheduledProcedureStep(EntityManager em,
-            Attributes requestAttrs, Attributes instAttrs, Patient patient,
-            StoreParam storeParam) {
-        String spsid = requestAttrs.getString(Tag.ScheduledProcedureStepID);
+            Attributes attrs, Patient patient, StoreParam storeParam) {
+        String spsid = attrs.getString(Tag.ScheduledProcedureStepID);
         if (spsid == null)
             return null;
 
@@ -69,14 +68,13 @@ public abstract class RequestFactory {
                     .setParameter(1, spsid);
             return query.getSingleResult();
         } catch (NoResultException e) {
-            RequestedProcedure rp = getRequestedProcedure(em,
-                    requestAttrs, instAttrs, patient, storeParam);
+            RequestedProcedure rp = getRequestedProcedure(em, attrs, patient, storeParam);
             if (rp == null)
                 return null;
 
             ScheduledProcedureStep sps = new ScheduledProcedureStep();
             sps.setRequestedProcedure(rp);
-            sps.setAttributes(requestAttrs, storeParam);
+            sps.setAttributes(attrs, storeParam);
             em.persist(sps);
             return sps;
         }
@@ -84,9 +82,8 @@ public abstract class RequestFactory {
     }
 
     private static RequestedProcedure getRequestedProcedure(EntityManager em,
-            Attributes requestAttrs, Attributes instAttrs, Patient patient,
-            StoreParam storeParam) {
-        String rpid = requestAttrs.getString(Tag.RequestedProcedureID);
+            Attributes attrs, Patient patient, StoreParam storeParam) {
+        String rpid = attrs.getString(Tag.RequestedProcedureID);
         if (rpid == null)
             return null;
 
@@ -97,25 +94,21 @@ public abstract class RequestFactory {
                     .setParameter(1, rpid);
             return query.getSingleResult();
         } catch (NoResultException e) {
-            ServiceRequest rq = getServiceRequest(em,
-                    requestAttrs, instAttrs, patient, storeParam);
+            ServiceRequest rq = getServiceRequest(em, attrs, patient, storeParam);
             if (rq == null)
                 return null;
 
             RequestedProcedure rp = new RequestedProcedure();
             rp.setServiceRequest(rq);
-            rp.setAttributes(requestAttrs, instAttrs, storeParam);
+            rp.setAttributes(attrs, storeParam);
             em.persist(rp);
             return rp;
         }
     }
 
     private static ServiceRequest getServiceRequest(EntityManager em,
-            Attributes requestAttrs, Attributes instAttrs, Patient patient,
-            StoreParam storeParam) {
-        String accno = requestAttrs.getString(Tag.AccessionNumber);
-        if (accno == null)
-            accno = instAttrs.getString(Tag.AccessionNumber);
+            Attributes attrs, Patient patient, StoreParam storeParam) {
+        String accno = attrs.getString(Tag.AccessionNumber);
         if (accno == null)
             return null;
 
@@ -130,9 +123,9 @@ public abstract class RequestFactory {
             request.setPatient(patient);
             request.setIssuerOfAccessionNumber(
                     IssuerFactory.getIssuer(em,
-                            requestAttrs.getNestedDataset(
+                            attrs.getNestedDataset(
                                     Tag.IssuerOfAccessionNumberSequence)));
-            request.setAttributes(requestAttrs, instAttrs, storeParam);
+            request.setAttributes(attrs, storeParam);
             em.persist(request);
             return request;
         }

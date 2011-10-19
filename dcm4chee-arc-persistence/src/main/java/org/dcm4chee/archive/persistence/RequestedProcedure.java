@@ -129,12 +129,9 @@ public class RequestedProcedure implements Serializable {
         return scheduledProcedureSteps;
     }
 
-    public void setAttributes(Attributes requestAttrs, Attributes instAttrs,
-            StoreParam storeParam) {
-        requestedProcedureID = requestAttrs.getString(Tag.RequestedProcedureID);
-        studyInstanceUID = requestAttrs.getString(Tag.StudyInstanceUID);
-        if (studyInstanceUID == null)
-            studyInstanceUID = instAttrs.getString(Tag.StudyInstanceUID);
+    public void setAttributes(Attributes attrs, StoreParam storeParam) {
+        requestedProcedureID = attrs.getString(Tag.RequestedProcedureID);
+        studyInstanceUID = attrs.getString(Tag.StudyInstanceUID);
     }
 
 }

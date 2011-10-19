@@ -177,13 +177,10 @@ public class ServiceRequest implements Serializable {
         return requestedProcedures;
     }
 
-    public void setAttributes(Attributes requestAttrs, Attributes instAttrs,
-            StoreParam storeParam) {
-        accessionNumber = requestAttrs.getString(Tag.AccessionNumber);
-        if (accessionNumber == null)
-            accessionNumber = instAttrs.getString(Tag.AccessionNumber);
-        requestingService = requestAttrs.getString(Tag.RequestingService, "*");
-        PersonName pn = new PersonName(requestAttrs.getString(Tag.RequestingPhysician), true);
+    public void setAttributes(Attributes attrs, StoreParam storeParam) {
+        accessionNumber = attrs.getString(Tag.AccessionNumber);
+        requestingService = attrs.getString(Tag.RequestingService, "*");
+        PersonName pn = new PersonName(attrs.getString(Tag.RequestingPhysician), true);
         if (pn.isEmpty()) {
             requestingPhysician = "*";
             requestingPhysicianIdeographicName = "*";

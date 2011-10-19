@@ -368,8 +368,8 @@ public class InstanceStoreBean implements InstanceStore {
                         CodeFactory.getCode(em, data.getNestedDataset(Tag.InstitutionCodeSequence)));
                 series.setScheduledProcedureSteps(
                         getScheduledProcedureSteps(
-                                study.getPatient(),
-                                data.getSequence(Tag.RequestAttributesSequence), storeParam));
+                                data.getSequence(Tag.RequestAttributesSequence), data,
+                                study.getPatient(), storeParam));
                 series.setSourceAET(sourceAET);
                 series.setRetrieveAETs(storeParam.getRetrieveAETs());
                 series.setExternalRetrieveAET(storeParam.getExternalRetrieveAET());
@@ -387,15 +387,19 @@ public class InstanceStoreBean implements InstanceStore {
     }
 
     private Collection<ScheduledProcedureStep> getScheduledProcedureSteps(
-            Patient patient, Sequence requestAttrsSeq, StoreParam storeParam) {
+            Sequence requestAttrsSeq, Attributes data, Patient patient,
+            StoreParam storeParam) {
         if (requestAttrsSeq == null)
             return null;
         ArrayList<ScheduledProcedureStep> list =
                 new ArrayList<ScheduledProcedureStep>(requestAttrsSeq.size());
         for (Attributes requestAttrs : requestAttrsSeq) {
-            ScheduledProcedureStep sps =
-                    RequestFactory.getScheduledProcedureStep(em, requestAttrs,
-                            requestAttrsSeq.getParent(), patient, storeParam);
+            Attributes attrs = new Attributes(
+                    data.bigEndian(), data.size() + requestAttrs.size());
+            attrs.addAll(data);
+            attrs.addAll(requestAttrs);
+            ScheduledProcedureStep sps = RequestFactory.getScheduledProcedureStep(em,
+                    attrs, patient, storeParam);
             if (sps != null)
                 list.add(sps);
         }
