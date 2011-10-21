@@ -171,20 +171,20 @@
          <value>524434</value> <!-- Referring Physician's Address (0008,0092) -->
          <value>524436</value> <!-- Referring Physician's TelephoneNumbers (0008,0094) -->
          <value>524438</value> <!-- Referring Physician IdentificationSequence (0008,0096) -->
-         <!-- Admitting Diagnoses Description (0008,1080) -->
-         <!-- Admitting Diagnoses Code Sequence (0008,1084) -->
-         <!-- Visit Status ID (0038,0008) -->
-         <!-- Admission ID (0038,0010) -->
-         <!-- Issuer of Admission ID Sequence (0038,0014) -->
-         <!-- Route of Admissions (0038,0016) -->
-         <!-- Admitting Date (0038,0020) -->
-         <!-- Admitting Time (0038,0021) -->
-         <!-- Service Episode ID (0038,0060) -->
-         <!-- Service Episode Description (0038,0062) -->
-         <!-- Issuer of Service Episode ID Sequence (0038,0064) -->
-         <!-- Current Patient Location (0038,0300) -->
-         <!-- Patient’s Institution Residence (0038,0400) -->
-         <!-- Visit Comments (0038,4000) -->
+         <value>528512</value> <!-- Admitting Diagnoses Description (0008,1080) -->
+         <value>528516</value> <!-- Admitting Diagnoses Code Sequence (0008,1084) -->
+         <value>3670024</value> <!-- Visit Status ID (0038,0008) -->
+         <value>3670032</value> <!-- Admission ID (0038,0010) -->
+         <value>3670036</value> <!-- Issuer of Admission ID Sequence (0038,0014) -->
+         <value>3670038</value> <!-- Route of Admissions (0038,0016) -->
+         <value>3670048</value> <!-- Admitting Date (0038,0020) -->
+         <value>3670049</value> <!-- Admitting Time (0038,0021) -->
+         <value>3670112</value> <!-- Service Episode ID (0038,0060) -->
+         <value>3670114</value> <!-- Service Episode Description (0038,0062) -->
+         <value>3670116</value> <!-- Issuer of Service Episode ID Sequence (0038,0064) -->
+         <value>3670784</value> <!-- Current Patient Location (0038,0300) -->
+         <value>3671040</value> <!-- Patient’s Institution Residence (0038,0400) -->
+         <value>3686400</value> <!-- Visit Comments (0038,4000) -->
       </array>
     </property>
     <property name="serviceRequestAttributes">
@@ -192,20 +192,20 @@
          <value>524293</value> <!-- Specific Character Set (0008,0005) -->
          <value>524368</value> <!-- Accession Number (0008,0050) -->
          <value>524369</value> <!-- Issuer of Accession Number Sequence (0008,0051) -->
-         <!-- Requesting Physician Identification Sequence (0032,1031) -->
-         <!-- Requesting Physician (0032,1032) -->
-         <!-- Requesting Service (0032,1033) -->
-         <!-- Requesting Service Code Sequence (0032,1034) -->
-         <!-- Issue Date of Imaging Service Request (0040,2004) -->
-         <!-- Issue Time of Imaging Service Request (0040,2005) -->
-         <!-- Order Placer Identifier Sequence (0040,0026) -->
-         <!-- Filler Placer Identifier Sequence (0040,0027) -->
-         <!-- Order entered by (0040,2008) -->
-         <!-- Order Enterer’s Location (0040,2009) -->
-         <!-- Order Callback Phone Number (0040,2010) -->
-         <!-- Placer Order Number / Imaging Service Request (0040,2016) -->
-         <!-- File Order Number / Imaging Service Request (0040,2017) -->
-         <!-- Imaging Service Request Comments (0040,2400) -->
+         <value>3280945</value> <!-- Requesting Physician Identification Sequence (0032,1031) -->
+         <value>3280946</value> <!-- Requesting Physician (0032,1032) -->
+         <value>3280947</value> <!-- Requesting Service (0032,1033) -->
+         <value>3280948</value> <!-- Requesting Service Code Sequence (0032,1034) -->
+         <value>4194342</value> <!-- Order Placer Identifier Sequence (0040,0026) -->
+         <value>4194343</value> <!-- Filler Placer Identifier Sequence (0040,0027) -->
+         <value>4202500</value> <!-- Issue Date of Imaging Service Request (0040,2004) -->
+         <value>4202501</value> <!-- Issue Time of Imaging Service Request (0040,2005) -->
+         <value>4202504</value> <!-- Order entered by (0040,2008) -->
+         <value>4202505</value> <!-- Order Enterer’s Location (0040,2009) -->
+         <value>4202512</value> <!-- Order Callback Phone Number (0040,2010) -->
+         <value>4202518</value> <!-- Placer Order Number / Imaging Service Request (0040,2016) -->
+         <value>4202519</value> <!-- File Order Number / Imaging Service Request (0040,2017) -->
+         <value>4203520</value> <!-- Imaging Service Request Comments (0040,2400) -->
       </array>
     </property>
     <property name="requestedProcedureAttributes">
@@ -214,43 +214,43 @@
          <value>524320</value> <!-- Study Date (0008,0020) -->
          <value>524336</value> <!-- Study Time (0008,0030) -->
          <value>2097165</value> <!-- Study Instance UID (0020,000D) -->
-         <value></value> <!-- Requested Procedure Description (0032,1060) -->
-         <value></value> <!-- Requested Procedure Code Sequence (0032,1064) -->
-         <value></value> <!-- Requested Procedure ID (0040,1001) -->
-         <value></value> <!-- Reason for the Requested Procedure (0040,1002) -->
-         <value></value> <!-- Requested Procedure Priority (0040,1003) -->
-         <value></value> <!-- Patient Transport Arrangements (0040,1004) -->
-         <value></value> <!-- Requested Procedure Location (0040,1005) -->
-         <value></value> <!-- Confidentiality Code (0040,1008) -->
-         <value></value> <!-- Reporting Priority (0040,1009) -->
-         <value></value> <!-- Reason for Requested Procedure Code Sequence (0040,100A) -->
-         <value></value> <!-- Names of Intended Recipients of Results (0040,1010) -->
-         <value></value> <!-- Intended Recipients of Results Identification Sequence (0040,1011) -->
-        <value></value>  <!-- Requested Procedure Comments (0040,1400) -->
+         <value>3280992</value> <!-- Requested Procedure Description (0032,1060) -->
+         <value>3280996</value> <!-- Requested Procedure Code Sequence (0032,1064) -->
+         <value>4198401</value> <!-- Requested Procedure ID (0040,1001) -->
+         <value>4198402</value> <!-- Reason for the Requested Procedure (0040,1002) -->
+         <value>4198403</value> <!-- Requested Procedure Priority (0040,1003) -->
+         <value>4198404</value> <!-- Patient Transport Arrangements (0040,1004) -->
+         <value>4198405</value> <!-- Requested Procedure Location (0040,1005) -->
+         <value>4198408</value> <!-- Confidentiality Code (0040,1008) -->
+         <value>4198409</value> <!-- Reporting Priority (0040,1009) -->
+         <value>4198410</value> <!-- Reason for Requested Procedure Code Sequence (0040,100A) -->
+         <value>4198416</value> <!-- Names of Intended Recipients of Results (0040,1010) -->
+         <value>4198417</value> <!-- Intended Recipients of Results Identification Sequence (0040,1011) -->
+         <value>4199424</value> <!-- Requested Procedure Comments (0040,1400) -->
       </array>
     </property>
     <property name="scheduledProcedureStepAttributes">
       <array>
          <value>524293</value> <!-- Specific Character Set (0008,0005) -->
          <value>524384</value> <!-- Modality (0008,0060) -->
-         <value></value> <!-- Anatomical Orientation Type (0010,2210) -->
-         <value></value> <!-- Requested Contrast Agent (0032,1070) -->
-         <value></value> <!-- Scheduled Station AE Title (0040,0001) -->
-         <value></value> <!-- Scheduled Station Name (0040,0010) -->
-         <value></value> <!-- Scheduled Procedure Step Location (0040,0011) -->
-         <value></value> <!-- Pre-Medication (0040,0012) -->
-         <value></value> <!-- Scheduled Procedure Step Start Date (0040,0002) -->
-         <value></value> <!-- Scheduled Procedure Step Start Time (0040,0003) -->
-         <value></value> <!-- Scheduled Procedure Step End Date (0040,0004) -->
-         <value></value> <!-- Scheduled Procedure Step End Time (0040,0005) -->
-         <value></value> <!-- Scheduled Performing Physician's Name (0040,0006) -->
-         <value></value> <!-- Scheduled Procedure Step Description (0040,0007) -->
-         <value></value> <!-- Scheduled Protocol Code Sequence (0040,0008) -->
-         <value></value> <!-- Scheduled Procedure Step ID (0040,0009) -->
-         <value></value> <!-- Scheduled Performing Physician Identification Sequence (0040,000B) -->
-         <value></value> <!-- Scheduled Procedure Step Status (0040,0020) -->
-         <value></value> <!-- Comments on the Scheduled Procedure Step (0040,0400) -->
-         <value></value> <!-- Scheduled Specimen Sequence (0040,0500) -->
+         <value>1057296</value> <!-- Anatomical Orientation Type (0010,2210) -->
+         <value>3281008</value> <!-- Requested Contrast Agent (0032,1070) -->
+         <value>4194305</value> <!-- Scheduled Station AE Title (0040,0001) -->
+         <value>4194306</value> <!-- Scheduled Procedure Step Start Date (0040,0002) -->
+         <value>4194307</value> <!-- Scheduled Procedure Step Start Time (0040,0003) -->
+         <value>4194308</value> <!-- Scheduled Procedure Step End Date (0040,0004) -->
+         <value>4194309</value> <!-- Scheduled Procedure Step End Time (0040,0005) -->
+         <value>4194310</value> <!-- Scheduled Performing Physician's Name (0040,0006) -->
+         <value>4194311</value> <!-- Scheduled Procedure Step Description (0040,0007) -->
+         <value>4194312</value> <!-- Scheduled Protocol Code Sequence (0040,0008) -->
+         <value>4194313</value> <!-- Scheduled Procedure Step ID (0040,0009) -->
+         <value>4194315</value> <!-- Scheduled Performing Physician Identification Sequence (0040,000B) -->
+         <value>4194320</value> <!-- Scheduled Station Name (0040,0010) -->
+         <value>4194321</value> <!-- Scheduled Procedure Step Location (0040,0011) -->
+         <value>4194322</value> <!-- Pre-Medication (0040,0012) -->
+         <value>4194336</value> <!-- Scheduled Procedure Step Status (0040,0020) -->
+         <value>4195328</value> <!-- Comments on the Scheduled Procedure Step (0040,0400) -->
+         <value>4195584</value> <!-- Scheduled Specimen Sequence (0040,0500) -->
       </array>
     </property>
     <property name="fuzzyStr">
