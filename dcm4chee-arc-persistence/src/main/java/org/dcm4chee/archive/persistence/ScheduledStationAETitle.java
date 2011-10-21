@@ -36,44 +36,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.ejb.store;
+package org.dcm4chee.archive.persistence;
 
-import javax.persistence.EntityManager;
-import javax.persistence.NonUniqueResultException;
+import java.io.Serializable;
 
-import org.dcm4che.data.Attributes;
-import org.dcm4che.data.Tag;
-import org.dcm4chee.archive.persistence.Patient;
-import org.dcm4chee.archive.persistence.StoreParam;
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public abstract class PatientFactory {
+@Entity
+@Table(name = "sps_station_aet")
+public class ScheduledStationAETitle implements Serializable  {
 
-    public static Patient findPatient(EntityManager em, Attributes attrs, StoreParam storeParam) {
-        String pid = attrs.getString(Tag.PatientID);
-        String issuer = attrs.getString(Tag.IssuerOfPatientID, "*");
-        if (pid == null)
-            throw new NonUniqueResultException();
-        return em.createNamedQuery(Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
-                .setParameter(1, pid)
-                .setParameter(2, issuer)
-                .getSingleResult();
+    private static final long serialVersionUID = -145604862103707241L;
+
+    public ScheduledStationAETitle() {}
+
+    public ScheduledStationAETitle(String aeTitle) {
+        this.aeTitle = aeTitle;
     }
 
-    public static Patient followMergedWith(Patient patient) {
-        while (patient.getMergedWith() != null)
-            patient = patient.getMergedWith();
-        return patient;
+    @Id
+    @GeneratedValue
+    @Column(name = "pk")
+    private long pk;
+
+    @Basic(optional = false)
+    @Column(name = "station_aet")
+    private String aeTitle;
+
+    public long getPk() {
+        return pk;
     }
 
-    public static Patient createNewPatient(EntityManager em, Attributes attrs,
-            StoreParam storeParam) {
-        Patient patient = new Patient();
-        patient.setAttributes(attrs, storeParam);
-        em.persist(patient);
-        return patient;
+    public String getAETitle() {
+        return aeTitle;
     }
-
 }

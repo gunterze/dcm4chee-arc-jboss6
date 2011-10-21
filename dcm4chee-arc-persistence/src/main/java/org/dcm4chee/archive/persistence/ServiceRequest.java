@@ -53,6 +53,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.PersonName;
@@ -63,8 +64,15 @@ import org.dcm4che.data.Tag;
  */
 @NamedQueries({
     @NamedQuery(
-        name="ServiceRequest.findByAccessionNumber",
-        query="SELECT rq FROM ServiceRequest rq WHERE rq.accessionNumber = ?1")
+        name="ServiceRequest.findByAccessionNumberWithoutIssuer",
+        query="SELECT rq FROM ServiceRequest rq " +
+              "WHERE rq.accessionNumber = ?1 " +
+                "AND rq.issuerOfAccessionNumber IS NULL"),
+    @NamedQuery(
+        name="ServiceRequest.findByAccessionNumberWithIssuer",
+        query="SELECT rq FROM ServiceRequest rq " +
+              "WHERE rq.accessionNumber = ?1 " +
+                "AND rq.issuerOfAccessionNumber = ?2")
 })
 @Entity
 @Table(name = "request")
@@ -72,7 +80,11 @@ public class ServiceRequest implements Serializable {
 
     private static final long serialVersionUID = 4625226424616368458L;
 
-    public static final String FIND_BY_ACCESSION_NUMBER = "ServiceRequest.findByAccessionNumber";
+    public static final String FIND_BY_ACCESSION_NUMBER_WITHOUT_ISSUER =
+        "ServiceRequest.findByAccessionNumberWithoutIssuer";
+
+    public static final String FIND_BY_ACCESSION_NUMBER_WITH_ISSUER =
+        "ServiceRequest.findByAccessionNumberWithIssuer";
 
     @Id
     @GeneratedValue
@@ -111,9 +123,16 @@ public class ServiceRequest implements Serializable {
     @Column(name = "req_phys_p_name")
     private String requestingPhysicianPhoneticName;
 
+    @Basic(optional = false)
+    @Column(name = "request_attrs")
+    private byte[] encodedAttributes;
+
+    @Transient
+    private Attributes cachedAttributes;
+
     @ManyToOne
-    @JoinColumn(name = "patient_fk")
-    private Patient patient;
+    @JoinColumn(name = "visit_fk")
+    private Visit visit;
 
     @OneToMany(mappedBy = "serviceRequest", orphanRemoval = true)
     private Collection<RequestedProcedure> requestedProcedures;
@@ -165,39 +184,41 @@ public class ServiceRequest implements Serializable {
         return issuerOfAccessionNumber;
     }
 
-    public Patient getPatient() {
-        return patient;
+    public void setVisit(Visit visit) {
+        this.visit = visit;
     }
 
-    public void setPatient(Patient patient) {
-        this.patient = patient;
+    public Visit getVisit() {
+        return visit;
     }
 
     public Collection<RequestedProcedure> getRequestedProcedures() {
         return requestedProcedures;
     }
 
+    public Attributes getAttributes() throws BlobCorruptedException {
+        if (cachedAttributes == null)
+            cachedAttributes = Utils.decodeAttributes(encodedAttributes);
+        return cachedAttributes;
+    }
+
     public void setAttributes(Attributes attrs, StoreParam storeParam) {
         accessionNumber = attrs.getString(Tag.AccessionNumber);
         requestingService = attrs.getString(Tag.RequestingService, "*");
         PersonName pn = new PersonName(attrs.getString(Tag.RequestingPhysician), true);
-        if (pn.isEmpty()) {
-            requestingPhysician = "*";
-            requestingPhysicianIdeographicName = "*";
-            requestingPhysicianPhoneticName = "*";
-            requestingPhysicianFamilyNameSoundex = "*";
-            requestingPhysicianGivenNameSoundex = "*";
-        } else {
-            requestingPhysician = pn.contains(PersonName.Group.Alphabetic) 
-                    ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
-            requestingPhysicianIdeographicName = pn.contains(PersonName.Group.Ideographic)
-                    ? pn.toString(PersonName.Group.Ideographic, false) : "*";
-            requestingPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
-                    ? pn.toString(PersonName.Group.Phonetic, false) : "*";
-            requestingPhysicianFamilyNameSoundex =
-                    storeParam.toFuzzy(pn.get(PersonName.Component.FamilyName), "*");
-            requestingPhysicianGivenNameSoundex =
-                    storeParam.toFuzzy(pn.get(PersonName.Component.GivenName), "*");
-        }
+        requestingPhysician = pn.contains(PersonName.Group.Alphabetic) 
+                ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
+        requestingPhysicianIdeographicName = pn.contains(PersonName.Group.Ideographic)
+                ? pn.toString(PersonName.Group.Ideographic, false) : "*";
+        requestingPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
+                ? pn.toString(PersonName.Group.Phonetic, false) : "*";
+        requestingPhysicianFamilyNameSoundex =
+                storeParam.toFuzzy(pn.get(PersonName.Component.FamilyName), "*");
+        requestingPhysicianGivenNameSoundex =
+                storeParam.toFuzzy(pn.get(PersonName.Component.GivenName), "*");
+
+        encodedAttributes = Utils.encodeAttributes(
+                cachedAttributes = new Attributes(attrs, 
+                        storeParam.getServiceRequestAttributes()));
     }
 }

@@ -42,7 +42,7 @@ import static org.junit.Assert.*;
 
 import javax.ejb.EJB;
 
-import org.dcm4chee.archive.persistence.Action;
+import org.dcm4chee.archive.persistence.StudyPermissionAction;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -68,24 +68,24 @@ public class StudyPermissionManagerTest {
 
     @Before
     public void clearDB(){
-        mgr.revokeStudyPermission("1.2.3.4", "DCM4CHEE_TEST", Action.QUERY);
-        mgr.revokeStudyPermission("1.2.3.4", "DCM4CHEE_TEST", Action.EXPORT);
+        mgr.revokeStudyPermission("1.2.3.4", "DCM4CHEE_TEST", StudyPermissionAction.QUERY);
+        mgr.revokeStudyPermission("1.2.3.4", "DCM4CHEE_TEST", StudyPermissionAction.EXPORT);
     }
 
     @Test
     public void test() throws Exception {
-        assertFalse(mgr.hasStudyPermission("1.2.3.4", "DCM4CHEE_TEST", Action.QUERY));
+        assertFalse(mgr.hasStudyPermission("1.2.3.4", "DCM4CHEE_TEST", StudyPermissionAction.QUERY));
         assertFalse(mgr.hasStudyExportPermission("1.2.3.4", "DCM4CHEE_TEST", "DCM4CHEE"));
-        assertTrue(mgr.grantStudyPermission("1.2.3.4", "DCM4CHEE_TEST", Action.QUERY));
+        assertTrue(mgr.grantStudyPermission("1.2.3.4", "DCM4CHEE_TEST", StudyPermissionAction.QUERY));
         assertTrue(mgr.grantStudyExportPermission("1.2.3.4", "DCM4CHEE_TEST", "DCM4CHEE"));
-        assertTrue(mgr.hasStudyPermission("1.2.3.4", "DCM4CHEE_TEST", Action.QUERY));
+        assertTrue(mgr.hasStudyPermission("1.2.3.4", "DCM4CHEE_TEST", StudyPermissionAction.QUERY));
         assertTrue(mgr.hasStudyExportPermission("1.2.3.4", "DCM4CHEE_TEST", "DCM4CHEE"));
         assertEquals(2, mgr.findStudyPermissions("1.2.3.4").size());
-        assertFalse(mgr.grantStudyPermission("1.2.3.4", "DCM4CHEE_TEST", Action.QUERY));
+        assertFalse(mgr.grantStudyPermission("1.2.3.4", "DCM4CHEE_TEST", StudyPermissionAction.QUERY));
         assertFalse(mgr.grantStudyExportPermission("1.2.3.4", "DCM4CHEE_TEST", "DCM4CHEE"));
-        assertTrue(mgr.revokeStudyPermission("1.2.3.4", "DCM4CHEE_TEST", Action.QUERY));
+        assertTrue(mgr.revokeStudyPermission("1.2.3.4", "DCM4CHEE_TEST", StudyPermissionAction.QUERY));
         assertTrue(mgr.revokeStudyExportPermission("1.2.3.4", "DCM4CHEE_TEST", "DCM4CHEE"));
-        assertFalse(mgr.revokeStudyPermission("1.2.3.4", "DCM4CHEE_TEST", Action.QUERY));
+        assertFalse(mgr.revokeStudyPermission("1.2.3.4", "DCM4CHEE_TEST", StudyPermissionAction.QUERY));
         assertFalse(mgr.revokeStudyExportPermission("1.2.3.4", "DCM4CHEE_TEST", "DCM4CHEE"));
     }
 }

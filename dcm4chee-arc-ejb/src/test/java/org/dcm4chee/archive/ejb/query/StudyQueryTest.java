@@ -53,7 +53,7 @@ import org.dcm4che.data.VR;
 import org.dcm4che.soundex.ESoundex;
 import org.dcm4chee.archive.ejb.permission.StudyPermissionManager;
 import org.dcm4chee.archive.ejb.permission.StudyPermissionManagerBean;
-import org.dcm4chee.archive.persistence.Action;
+import org.dcm4chee.archive.persistence.StudyPermissionAction;
 import org.dcm4chee.archive.persistence.StoreParam;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -333,9 +333,9 @@ public class StudyQueryTest {
     
     @Before
     public void clearDB(){
-        mgr.revokeStudyPermission("1.2.40.0.13.1.1.99.10", "DCM4CHEE_TEST", Action.QUERY);
-        mgr.revokeStudyPermission("1.2.40.0.13.1.1.99.11", "DCM4CHEE_TEST", Action.QUERY);
-        mgr.revokeStudyPermission("1.2.40.0.13.1.1.99.12", "DCM4CHEE_TEST", Action.QUERY);
+        mgr.revokeStudyPermission("1.2.40.0.13.1.1.99.10", "DCM4CHEE_TEST", StudyPermissionAction.QUERY);
+        mgr.revokeStudyPermission("1.2.40.0.13.1.1.99.11", "DCM4CHEE_TEST", StudyPermissionAction.QUERY);
+        mgr.revokeStudyPermission("1.2.40.0.13.1.1.99.12", "DCM4CHEE_TEST", StudyPermissionAction.QUERY);
     }
 
     @Test
@@ -344,7 +344,7 @@ public class StudyQueryTest {
         "1.2.40.0.13.1.1.99.12" };
         Collection<String> col = Arrays.asList(StudyIUIDs);
         for (String studyIUID : StudyIUIDs)
-            assertTrue(mgr.grantStudyPermission(studyIUID, "DCM4CHEE_TEST", Action.QUERY));
+            assertTrue(mgr.grantStudyPermission(studyIUID, "DCM4CHEE_TEST", StudyPermissionAction.QUERY));
         query.findStudies(null, new Attributes(),
                 new QueryParam().setRoles("DCM4CHEE_TEST", "FooBar"), STORE_PARAM);
         ArrayList<String> result = studyIUIDResultList(query);
@@ -354,7 +354,7 @@ public class StudyQueryTest {
         assertFalse(equals(result, col));
         query.close();
         for (String studyIUID : StudyIUIDs)
-            assertTrue(mgr.revokeStudyPermission(studyIUID, "DCM4CHEE_TEST", Action.QUERY));
+            assertTrue(mgr.revokeStudyPermission(studyIUID, "DCM4CHEE_TEST", StudyPermissionAction.QUERY));
     }
 
     private boolean equals(ArrayList<String> result, Collection<String> col) {

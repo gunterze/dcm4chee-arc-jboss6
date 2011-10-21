@@ -42,7 +42,7 @@ import java.util.List;
 
 import javax.ejb.Local;
 
-import org.dcm4chee.archive.persistence.Action;
+import org.dcm4chee.archive.persistence.StudyPermissionAction;
 import org.dcm4chee.archive.persistence.StudyPermission;
 
 /**
@@ -53,15 +53,15 @@ public interface StudyPermissionManager {
 
     List<StudyPermission> findStudyPermissions(String studyInstanceUID);
 
-    boolean hasStudyPermission(String studyInstanceUID, String role, Action action);
+    boolean hasStudyPermission(String studyInstanceUID, String role, StudyPermissionAction action);
 
     boolean hasStudyExportPermission(String studyInstanceUID, String role, String destination);
 
-    boolean grantStudyPermission(String studyInstanceUID, String role, Action action);
+    boolean grantStudyPermission(String studyInstanceUID, String role, StudyPermissionAction action);
 
     boolean grantStudyExportPermission(String studyInstanceUID, String role, String destination);
 
-    boolean revokeStudyPermission(String studyInstanceUID, String role, Action action);
+    boolean revokeStudyPermission(String studyInstanceUID, String role, StudyPermissionAction action);
 
     boolean revokeStudyExportPermission(String studyInstanceUID, String role, String destination);
 }

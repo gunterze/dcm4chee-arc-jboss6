@@ -44,6 +44,7 @@ import java.util.Collection;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -62,63 +63,58 @@ import org.dcm4che.data.Tag;
  */
 @NamedQueries({
     @NamedQuery(
-        name="RequestedProcedure.findByRequestedProcedureIDWithoutIssuer",
-        query="SELECT rp FROM RequestedProcedure rp " + 
-              "WHERE rp.requestedProcedureID = ?1 " +
-                "AND rp.serviceRequest.accessionNumber = ?2 " +
-                "AND rp.serviceRequest.issuerOfAccessionNumber IS NULL"),
+        name="Visit.findByAdmissionIDWithoutIssuer",
+        query="SELECT v FROM Visit v " +
+              "WHERE v.admissionID = ?1 " +
+                "AND v.issuerOfAdmissionID IS NULL"),
     @NamedQuery(
-        name="RequestedProcedure.findByRequestedProcedureIDWithIssuer",
-        query="SELECT rp FROM RequestedProcedure rp " + 
-              "WHERE rp.requestedProcedureID = ?1 " +
-                "AND rp.serviceRequest.accessionNumber = ?2 " +
-                "AND rp.serviceRequest.issuerOfAccessionNumber = ?3")
-
+        name="Visit.findByAdmissionIDWithIssuer",
+        query="SELECT v FROM Visit v " +
+              "WHERE v.admissionID = ?1 " +
+                "AND v.issuerOfAdmissionID = ?2")
 })
 @Entity
-@Table(name = "req_proc")
-public class RequestedProcedure implements Serializable {
+@Table(name = "visit")
+public class Visit implements Serializable {
 
-    private static final long serialVersionUID = -573191967238630680L;
+    private static final long serialVersionUID = -7337987599249805143L;
 
-    public static final String FIND_BY_REQUESTED_PROCEDURE_ID_WITHOUT_ISSUER =
-            "RequestedProcedure.findByRequestedProcedureIDWithoutIssuer";
+    public static final String FIND_BY_ADMISSION_ID_WITHOUT_ISSUER =
+            "Visit.findByAdmissionIDWithoutIssuer";
 
-    public static final String FIND_BY_REQUESTED_PROCEDURE_ID_WITH_ISSUER =
-            "RequestedProcedure.findByRequestedProcedureIDWithIssuer";
+    public static final String FIND_BY_ADMISSION_ID_WITH_ISSUER =
+            "Visit.findByAdmissionIDWithIssuer";
 
-   @Id
+    @Id
     @GeneratedValue
     @Column(name = "pk")
     private long pk;
 
     @Basic(optional = false)
-    @Column(name = "study_iuid")
-    private String studyInstanceUID;
+    @Column(name = "admission_id")
+    private String admissionID;
 
-    @Basic(optional = false)
-    @Column(name = "req_proc_id")
-    private String requestedProcedureID;
-
-    @Basic(optional = false)
-    @Column(name = "req_proc_attrs")
+    @Column(name = "visit_attrs")
     private byte[] encodedAttributes;
 
     @Transient
     private Attributes cachedAttributes;
 
-    @ManyToOne
-    @JoinColumn(name = "request_fk")
-    private ServiceRequest serviceRequest;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "admission_issuer_fk")
+    private Issuer issuerOfAdmissionID;
 
-    @OneToMany(mappedBy = "requestedProcedure", orphanRemoval = true)
-    private Collection<ScheduledProcedureStep> scheduledProcedureSteps;
+    @ManyToOne
+    @JoinColumn(name = "patient_fk")
+    private Patient patient;
+
+    @OneToMany(mappedBy = "visit")
+    private Collection<ServiceRequest> serviceRequests;
 
     @Override
     public String toString() {
-        return "RequestedProcedure[pk=" + pk
-                + ", id=" + requestedProcedureID
-                + ", suid=" + studyInstanceUID
+        return "Visit[pk=" + pk
+                + ", id=" + admissionID
                 + "]";
     }
 
@@ -126,28 +122,28 @@ public class RequestedProcedure implements Serializable {
         return pk;
     }
 
-    public String getStudyInstanceUID() {
-        return studyInstanceUID;
+    public String getAdmissionID() {
+        return admissionID;
     }
 
-    public String getRequestedProcedureID() {
-        return requestedProcedureID;
+    public void setIssuerOfAdmissionID(Issuer issuerOfAdmissionID) {
+        this.issuerOfAdmissionID = issuerOfAdmissionID;
     }
 
-    public ServiceRequest getServiceRequest() {
-        return serviceRequest;
+    public Issuer getIssuerOfAdmissionID() {
+        return issuerOfAdmissionID;
     }
 
-    public void setServiceRequest(ServiceRequest serviceRequest) {
-        this.serviceRequest = serviceRequest;
+    public Patient getPatient() {
+        return patient;
     }
 
-    public void setScheduledProcedureSteps(Collection<ScheduledProcedureStep> scheduledProcedureSteps) {
-        this.scheduledProcedureSteps = scheduledProcedureSteps;
+    public void setPatient(Patient patient) {
+        this.patient = patient;
     }
 
-    public Collection<ScheduledProcedureStep> getScheduledProcedureSteps() {
-        return scheduledProcedureSteps;
+    public Collection<ServiceRequest> getServiceRequests() {
+        return serviceRequests;
     }
 
     public Attributes getAttributes() throws BlobCorruptedException {
@@ -157,12 +153,10 @@ public class RequestedProcedure implements Serializable {
     }
 
     public void setAttributes(Attributes attrs, StoreParam storeParam) {
-        requestedProcedureID = attrs.getString(Tag.RequestedProcedureID);
-        studyInstanceUID = attrs.getString(Tag.StudyInstanceUID);
+        admissionID = attrs.getString(Tag.AdmissionID, "*");
 
         encodedAttributes = Utils.encodeAttributes(
                 cachedAttributes = new Attributes(attrs, 
-                        storeParam.getRequestedProcedureAttributes()));
+                        storeParam.getServiceRequestAttributes()));
     }
-
 }

@@ -149,7 +149,7 @@
         <column name="institution" column-definition="${nvarchar2}" />
       </basic>
       <basic name="performingPhysicianName" optional="false">
-        <column name="perf_physician" column-definition="${nvarchar2}" />
+        <column name="perf_phys_name" column-definition="${nvarchar2}" />
       </basic>
       <basic name="performingPhysicianIdeographicName" optional="false">
         <column name="perf_phys_i_name" column-definition="${nvarchar2}" />
@@ -230,6 +230,20 @@
     </attributes>
   </entity>
 
+  <entity class="Visit">
+    <table name="visit" />
+    <sequence-generator name="seq" sequence-name="visit_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="visit_attrs" column-definition="${blob}" />
+      </basic>
+    </attributes>
+  </entity>
+
   <entity class="ServiceRequest">
     <table name="request" />
     <sequence-generator name="seq" sequence-name="request_pk_seq" />
@@ -250,6 +264,9 @@
       <basic name="requestingPhysicianPhoneticName" optional="false">
         <column name="req_phys_p_name" column-definition="${nvarchar2}" />
       </basic>
+      <basic name="encodedAttributes" optional="false">
+        <column name="request_attrs" column-definition="${blob}" />
+      </basic>
     </attributes>
   </entity>
 
@@ -261,6 +278,9 @@
         <column name="pk" />
         <generated-value strategy="${generated-value-strategy}" generator="seq" />
       </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="req_proc_attrs" column-definition="${blob}" />
+      </basic>
     </attributes>
   </entity>
 
@@ -272,6 +292,43 @@
         <column name="pk" />
         <generated-value strategy="${generated-value-strategy}" generator="seq" />
       </id>
+      <basic name="scheduledPerformingPhysicianName" optional="false">
+        <column name="perf_phys_name" column-definition="${nvarchar2}" />
+      </basic>
+      <basic name="scheduledPerformingPhysicianIdeographicName" optional="false">
+        <column name="perf_phys_i_name" column-definition="${nvarchar2}" />
+      </basic>
+      <basic name="scheduledPerformingPhysicianPhoneticName" optional="false">
+        <column name="perf_phys_p_name" column-definition="${nvarchar2}" />
+      </basic>
+      <basic name="encodedAttributes" optional="false">
+        <column name="sps_attrs" column-definition="${blob}" />
+      </basic>
+    </attributes>
+  </entity>
+
+  <entity class="ScheduledStationAETitle">
+    <table name="sps_aet" />
+    <sequence-generator name="seq" sequence-name="sps_aet_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+    </attributes>
+  </entity>
+
+  <entity class="PerformedProcedureStep">
+    <table name="pps" />
+    <sequence-generator name="seq" sequence-name="pps_pk_seq" />
+    <attributes>
+      <id name="pk">
+        <column name="pk" />
+        <generated-value strategy="${generated-value-strategy}" generator="seq" />
+      </id>
+      <basic name="encodedAttributes" optional="false">
+        <column name="pps_attrs" column-definition="${blob}" />
+      </basic>
     </attributes>
   </entity>
 

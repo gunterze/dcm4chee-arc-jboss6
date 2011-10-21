@@ -38,11 +38,6 @@
 
 package org.dcm4chee.archive.persistence;
 
-/**
- * @author Damien Evans <damien.daddy@gmail.com>
- * @author Justin Falk <jfalkmu@gmail.com>
- * @author Gunter Zeilinger <gunterze@gmail.com>
- */
 public enum FileSystemStatus {
     RW,
     Rw,

@@ -38,9 +38,6 @@
 
 package org.dcm4chee.archive.persistence;
 
-/**
- * @author Gunter Zeilinger <gunterze@gmail.com>
- */
-public enum Action {
+public enum StudyPermissionAction {
     QUERY, READ, APPEND, UPDATE, DELETE, EXPORT
 }

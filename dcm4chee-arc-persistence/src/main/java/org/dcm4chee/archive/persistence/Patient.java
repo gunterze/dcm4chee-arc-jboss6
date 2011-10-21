@@ -69,9 +69,6 @@ import org.dcm4che.data.Tag;
  */
 @NamedQueries({
 @NamedQuery(
-    name="Patient.findByPatientID",
-    query="SELECT p FROM Patient p WHERE p.patientID = ?1"),
-@NamedQuery(
     name="Patient.findByPatientIDWithIssuer",
     query="SELECT p FROM Patient p " +
           "WHERE p.patientID = ?1 AND issuerOfPatientID = ?2")
@@ -81,8 +78,6 @@ import org.dcm4che.data.Tag;
 public class Patient implements Serializable {
 
     private static final long serialVersionUID = 6430339764844147679L;
-
-    public static final String FIND_BY_PATIENT_ID = "Patient.findByPatientID";
 
     public static final String FIND_BY_PATIENT_ID_WITH_ISSUER =
             "Patient.findByPatientIDWithIssuer";
@@ -166,7 +161,10 @@ public class Patient implements Serializable {
     private Collection<Study> studies;
 
     @OneToMany(mappedBy = "patient", orphanRemoval = true)
-    private Collection<ServiceRequest> serviceRequests;
+    private Collection<Visit> visits;
+
+    @OneToMany(mappedBy = "patient", orphanRemoval = true)
+    private Collection<PerformedProcedureStep> performedProcedureSteps;
 
     @Override
     public String toString() {
@@ -263,8 +261,12 @@ public class Patient implements Serializable {
         return studies;
     }
 
-    public Collection<ServiceRequest> getServiceRequests() {
-        return serviceRequests;
+    public Collection<Visit> getVisits() {
+        return visits;
+    }
+
+    public Collection<PerformedProcedureStep> getPerformedProcedureSteps() {
+        return performedProcedureSteps;
     }
 
     public byte[] getEncodedAttributes() {
@@ -281,24 +283,16 @@ public class Patient implements Serializable {
         patientID = attrs.getString(Tag.PatientID, "*");
         issuerOfPatientID = attrs.getString(Tag.IssuerOfPatientID, "*");
         PersonName pn = new PersonName(attrs.getString(Tag.PatientName), true);
-        if (pn.isEmpty()) {
-            patientName = "*";
-            patientIdeographicName = "*";
-            patientPhoneticName = "*";
-            patientFamilyNameSoundex = "*";
-            patientGivenNameSoundex = "*";
-        } else {
-            patientName = pn.contains(PersonName.Group.Alphabetic) 
-                    ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
-            patientIdeographicName = pn.contains(PersonName.Group.Ideographic)
-                    ? pn.toString(PersonName.Group.Ideographic, false) : "*";
-            patientPhoneticName = pn.contains(PersonName.Group.Phonetic)
-                    ? pn.toString(PersonName.Group.Phonetic, false) : "*";
-            patientFamilyNameSoundex = storeParam.toFuzzy(
-                    pn.get(PersonName.Component.FamilyName), "*");
-            patientGivenNameSoundex = storeParam.toFuzzy(
-                    pn.get(PersonName.Component.GivenName), "*");
-        }
+        patientName = pn.contains(PersonName.Group.Alphabetic) 
+                ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
+        patientIdeographicName = pn.contains(PersonName.Group.Ideographic)
+                ? pn.toString(PersonName.Group.Ideographic, false) : "*";
+        patientPhoneticName = pn.contains(PersonName.Group.Phonetic)
+                ? pn.toString(PersonName.Group.Phonetic, false) : "*";
+        patientFamilyNameSoundex = storeParam.toFuzzy(
+                pn.get(PersonName.Component.FamilyName), "*");
+        patientGivenNameSoundex = storeParam.toFuzzy(
+                pn.get(PersonName.Component.GivenName), "*");
         patientBirthDate = attrs.getString(Tag.PatientBirthDate, "*");
         patientSex = attrs.getString(Tag.PatientSex, "*").toUpperCase();
 

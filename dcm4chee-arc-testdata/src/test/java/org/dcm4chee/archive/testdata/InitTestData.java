@@ -49,6 +49,7 @@ import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.ejb.store.InstanceStoreBean;
 import org.dcm4chee.archive.ejb.store.IssuerFactory;
 import org.dcm4chee.archive.ejb.store.PatientFactory;
+import org.dcm4chee.archive.ejb.store.PatientMismatchException;
 import org.dcm4chee.archive.ejb.store.RequestFactory;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.StoreParam;
@@ -73,8 +74,9 @@ public class InitTestData {
         CodeFactory.class,
         IssuerFactory.class,
         RequestFactory.class,
-        PatientFactory.class
-   };
+        PatientFactory.class,
+        PatientMismatchException.class
+    };
 
     private static final String[] RESOURCES = {
         "date-range-1.xml",
@@ -190,6 +192,29 @@ public class InitTestData {
                 Tag.PresentationCreationTime,
                 Tag.ContentCreatorName,
                 Tag.OriginalAttributesSequence);
+        STORE_PARAM.setVisitAttributes(
+                Tag.AdmissionID,
+                Tag.IssuerOfAdmissionIDSequence
+                );
+        STORE_PARAM.setServiceRequestAttributes(
+                Tag.AccessionNumber,
+                Tag.IssuerOfAccessionNumberSequence,
+                Tag.RequestingPhysician,
+                Tag.RequestingService
+                );
+        STORE_PARAM.setRequestedProcedureAttributes(
+                Tag.StudyInstanceUID,
+                Tag.RequestedProcedureID
+                );
+        STORE_PARAM.setScheduledProcedureStepAttributes(
+                Tag.Modality,
+                Tag.ScheduledStationAETitle,
+                Tag.ScheduledProcedureStepStartDate,
+                Tag.ScheduledProcedureStepStartTime,
+                Tag.ScheduledPerformingPhysicianName,
+                Tag.ScheduledProcedureStepID,
+                Tag.ScheduledProcedureStepStatus
+                );
         STORE_PARAM.setFuzzyStr(new ESoundex());
         STORE_PARAM.setRetrieveAETs(RETRIEVE_AETS);
     }

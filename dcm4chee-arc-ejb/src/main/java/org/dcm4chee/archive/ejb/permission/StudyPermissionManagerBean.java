@@ -45,7 +45,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 
-import org.dcm4chee.archive.persistence.Action;
+import org.dcm4chee.archive.persistence.StudyPermissionAction;
 import org.dcm4chee.archive.persistence.StudyPermission;
 
 /**
@@ -70,7 +70,7 @@ public class StudyPermissionManagerBean implements StudyPermissionManager {
     }
 
     @Override
-    public boolean hasStudyPermission(String studyInstanceUID, String role, Action action) {
+    public boolean hasStudyPermission(String studyInstanceUID, String role, StudyPermissionAction action) {
         EntityManager em = emf.createEntityManager();
         try {
             return hasStudyPermission(studyInstanceUID, role, action, em);
@@ -79,7 +79,7 @@ public class StudyPermissionManagerBean implements StudyPermissionManager {
         }
     }
 
-    private static boolean hasStudyPermission(String studyInstanceUID, String role, Action action,
+    private static boolean hasStudyPermission(String studyInstanceUID, String role, StudyPermissionAction action,
             EntityManager em) {
         return !em.createNamedQuery(StudyPermission.CHECK_PERMISSION)
                 .setParameter(1, studyInstanceUID)
@@ -108,7 +108,7 @@ public class StudyPermissionManagerBean implements StudyPermissionManager {
     }
 
     @Override
-    public boolean grantStudyPermission(String studyInstanceUID, String role, Action action) {
+    public boolean grantStudyPermission(String studyInstanceUID, String role, StudyPermissionAction action) {
         EntityManager em = emf.createEntityManager();
         try {
             if (hasStudyPermission(studyInstanceUID, role, action, em))
@@ -136,7 +136,7 @@ public class StudyPermissionManagerBean implements StudyPermissionManager {
     }
 
     @Override
-    public boolean revokeStudyPermission(String studyInstanceUID, String role, Action action) {
+    public boolean revokeStudyPermission(String studyInstanceUID, String role, StudyPermissionAction action) {
         EntityManager em = emf.createEntityManager();
         try {
             return em.createNamedQuery(StudyPermission.REVOKE_PERMISSION)

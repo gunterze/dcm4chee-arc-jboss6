@@ -41,7 +41,7 @@ package org.dcm4chee.archive.ejb.query;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
-import org.dcm4chee.archive.persistence.Action;
+import org.dcm4chee.archive.persistence.StudyPermissionAction;
 import org.dcm4chee.archive.persistence.Code;
 import org.dcm4chee.archive.persistence.QCode;
 import org.dcm4chee.archive.persistence.QContentItem;
@@ -144,7 +144,7 @@ abstract class Builder {
         builder.and(wildCard(QStudy.study.studyCustomAttribute3,
                 StoreParam.selectStringValue(keys, storeParam.getStudyCustomAttribute3(), "*"),
                 matchUnknown, true));
-        builder.and(permission(queryParam.getRoles(), Action.QUERY));
+        builder.and(permission(queryParam.getRoles(), StudyPermissionAction.QUERY));
     }
 
     static void addSeriesLevelPredicates(BooleanBuilder builder, Attributes keys,
@@ -508,7 +508,7 @@ abstract class Builder {
             .exists();
     }
 
-    static Predicate permission(String[] roles, Action action) {
+    static Predicate permission(String[] roles, StudyPermissionAction action) {
         if (roles == null || roles.length == 0)
             return null;
         

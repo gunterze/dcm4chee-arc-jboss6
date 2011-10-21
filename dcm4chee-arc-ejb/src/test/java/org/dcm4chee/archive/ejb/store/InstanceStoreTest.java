@@ -79,6 +79,7 @@ public class InstanceStoreTest {
                         IssuerFactory.class,
                         RequestFactory.class,
                         PatientFactory.class,
+                        PatientMismatchException.class,
                         RemovePatient.class)
                 .addAsResource("ct-1.xml")
                 .addAsResource("ct-2.xml")
@@ -170,6 +171,25 @@ public class InstanceStoreTest {
                 Tag.PresentationCreationTime,
                 Tag.ContentCreatorName,
                 Tag.OriginalAttributesSequence);
+        STORE_PARAM.setVisitAttributes(
+                Tag.AdmissionID,
+                Tag.IssuerOfAdmissionIDSequence);
+        STORE_PARAM.setServiceRequestAttributes(
+                Tag.AccessionNumber,
+                Tag.IssuerOfAccessionNumberSequence,
+                Tag.RequestingPhysician,
+                Tag.RequestingService);
+        STORE_PARAM.setRequestedProcedureAttributes(
+                Tag.StudyInstanceUID,
+                Tag.RequestedProcedureID);
+        STORE_PARAM.setScheduledProcedureStepAttributes(
+                Tag.Modality,
+                Tag.ScheduledStationAETitle,
+                Tag.ScheduledProcedureStepStartDate,
+                Tag.ScheduledProcedureStepStartTime,
+                Tag.ScheduledPerformingPhysicianName,
+                Tag.ScheduledProcedureStepID,
+                Tag.ScheduledProcedureStepStatus);
         STORE_PARAM.setFuzzyStr(new ESoundex());
     }
 

@@ -312,7 +312,7 @@ public class Instance implements Serializable {
         this.storageComitted = storageComitted;
     }
 
-   public byte[] getEncodedAttributes() {
+    public byte[] getEncodedAttributes() {
         return encodedAttributes;
     }
 

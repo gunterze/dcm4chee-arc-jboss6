@@ -86,87 +86,171 @@
   <bean name="StoreParam" class="org.dcm4chee.archive.persistence.StoreParam">
     <property name="patientAttributes">
       <array>
-         <value>524293</value> <!-- SpecificCharacterSet (0008,0005) -->
-         <value>1048592</value> <!-- PatientName (0010,0010) -->
-         <value>1048608</value> <!-- PatientID (0010,0020) -->
-         <value>1048609</value> <!-- IssuerOfPatientID (0010,0021) -->
-         <value>1052674</value> <!-- OtherPatientIDSequence (0010,1002) -->
-         <value>1048624</value> <!-- PatientBirthDate (0010,0030) -->
-         <value>1048640</value> <!-- PatientSex (0010,0040) -->
-         <value>1064960</value> <!-- PatientComments (0010,4000) -->
+         <value>524293</value> <!-- Specific Character Set (0008,0005) -->
+         <value>1048592</value> <!-- Patient's Name (0010,0010) -->
+         <value>1048608</value> <!-- Patient's ID (0010,0020) -->
+         <value>1048609</value> <!-- Issuer of Patient ID (0010,0021) -->
+         <value>1052674</value> <!-- Other Patient IDs Sequence (0010,1002) -->
+         <value>1048624</value> <!-- Patient's Birth Date (0010,0030) -->
+         <value>1048640</value> <!-- Patient's Sex (0010,0040) -->
+         <value>1064960</value> <!-- Patient's Comments (0010,4000) -->
       </array>
     </property>
     <property name="studyAttributes">
       <array>
-         <value>524293</value> <!-- SpecificCharacterSet (0008,0005) -->
-         <value>524320</value> <!-- StudyDate (0008,0020) -->
-         <value>524336</value> <!-- StudyTime (0008,0030) -->
-         <value>524368</value> <!-- AccessionNumber (0008,0050) -->
-         <value>524369</value> <!-- IssuerOfAccessionNumberSequence (0008,0051) -->
-         <value>524432</value> <!-- ReferringPhysicianName (0008,0090) -->
-         <value>528432</value> <!-- StudyDescription (0008,1030) -->
-         <value>528434</value> <!-- ProcedureCodeSequence (0008,1032) -->
-         <value>2097165</value> <!-- StudyInstanceUID (0020,000D) -->
-         <value>2097168</value> <!-- StudyID (0020,0010) -->
+         <value>524293</value> <!-- Specific Character Set (0008,0005) -->
+         <value>524320</value> <!-- Study Date (0008,0020) -->
+         <value>524336</value> <!-- Study Time (0008,0030) -->
+         <value>524368</value> <!-- Accession Number (0008,0050) -->
+         <value>524369</value> <!-- Issuer of Accession Number Sequence (0008,0051) -->
+         <value>524432</value> <!-- Referring Physician's Name (0008,0090) -->
+         <value>528432</value> <!-- Study Description (0008,1030) -->
+         <value>528434</value> <!-- Procedure Code Sequence (0008,1032) -->
+         <value>2097165</value> <!-- Study Instance UID (0020,000D) -->
+         <value>2097168</value> <!-- Study ID (0020,0010) -->
       </array>
     </property>
     <property name="seriesAttributes">
       <array>
-         <value>524293</value> <!-- SpecificCharacterSet (0008,0005) -->
+         <value>524293</value> <!-- Specific Character Set (0008,0005) -->
          <value>524384</value> <!-- Modality (0008,0060) -->
          <value>524400</value> <!-- Manufacturer (0008,0070) -->
-         <value>524416</value> <!-- InstitutionName (0008,0080) -->
-         <value>524418</value> <!-- InstitutionCodeSequence (0008,0082) -->
-         <value>528400</value> <!-- StationName (0008,1010) -->
-         <value>528446</value> <!-- SeriesDescription (0008,103E) -->
-         <value>528448</value> <!-- InstitutionalDepartmentName (0008,1040) -->
-         <value>528464</value> <!-- PerformingPhysicianName (0008,1050) -->
-         <value>528528</value> <!-- ManufacturerModelName (0008,1090) -->
-         <value>528657</value> <!-- ReferencedPerformedProcedureStepSequence (0008,1111) -->
-         <value>1572885</value> <!-- BodyPartExamined (0018,0015) -->
-         <value>2097166</value> <!-- SeriesInstanceUID (0020,000E) -->
-         <value>2097169</value> <!-- SeriesNumber (0020,0011) -->
+         <value>524416</value> <!-- Institution Name (0008,0080) -->
+         <value>524418</value> <!-- Institution Code Sequence (0008,0082) -->
+         <value>528400</value> <!-- Station Name (0008,1010) -->
+         <value>528446</value> <!-- Series Description (0008,103E) -->
+         <value>528448</value> <!-- Institutional Department Name (0008,1040) -->
+         <value>528464</value> <!-- Performing Physician's Name (0008,1050) -->
+         <value>528528</value> <!-- Manufacturer Model Name (0008,1090) -->
+         <value>528657</value> <!-- Referenced Performed Procedure Step Sequence (0008,1111) -->
+         <value>1572885</value> <!-- Body Part Examined (0018,0015) -->
+         <value>2097166</value> <!-- Series Instance UID (0020,000E) -->
+         <value>2097169</value> <!-- Series Number (0020,0011) -->
          <value>2097248</value> <!-- Laterality (0020,0060) -->
-         <value>4194884</value> <!-- PerformedProcedureStep StartDate (0040,0244) -->
-         <value>4194885</value> <!-- PerformedProcedureStepStartTime (0040,0245) -->
+         <value>4194884</value> <!-- Performed Procedure Step Start Date (0040,0244) -->
+         <value>4194885</value> <!-- Performed Procedure Step Start Time (0040,0245) -->
          <value>4194933</value> <!-- RequestAttributesSequence (0040,0275) -->
       </array>
     </property>
     <property name="instanceAttributes">
       <array>
-         <value>524293</value> <!-- SpecificCharacterSet (0008,0005) -->
+         <value>524293</value> <!-- Specific Character Set (0008,0005) -->
          <value>524296</value> <!-- Image Type (0008,0008) -->
-         <value>524310</value> <!-- SOPClassUID (0008,0016) -->
-         <value>524312</value> <!-- SOPInstanceUID (0008,0018) -->
-         <value>524322</value> <!-- AcquisitionDate (0008,0022) -->
-         <value>524323</value> <!-- ContentDate (0008,0023) -->
-         <value>524330</value> <!-- AcquisitionDateTime (0008,002A) -->
-         <value>524338</value> <!-- AcquisitionTime (0008,0032) -->
-         <value>524339</value> <!-- ContentTime (0008,0033) -->
-         <value>528661</value> <!-- ReferencedSeriesSequence (0008,1115) -->
-         <value>2097171</value> <!-- InstanceNumber (0020,0013) -->
-         <value>2621444</value> <!-- PhotometricInterpretation (0028,0004) -->
-         <value>2621448</value> <!-- NumberOfFrames (0028,0008) -->
+         <value>524310</value> <!-- SOP Class UID (0008,0016) -->
+         <value>524312</value> <!-- SOP Instance UID (0008,0018) -->
+         <value>524323</value> <!-- Content Date (0008,0023) -->
+         <value>524339</value> <!-- Content Time (0008,0033) -->
+         <value>528661</value> <!-- Referenced Series Sequence (0008,1115) -->
+         <value>2097171</value> <!-- Instance Number (0020,0013) -->
+         <value>2621448</value> <!-- Number of Frames (0028,0008) -->
          <value>2621456</value> <!-- Rows (0028,0010) -->
          <value>2621457</value> <!-- Columns (0028,0011) -->
-         <value>2621696</value> <!-- BitsAllocated (0028,0100) -->
-         <value>4235314</value> <!-- ObservationDateTime (0040,A032) -->
-         <value>4235331</value> <!-- ConceptNameCodeSequence (0040,A043) -->
-         <value>4235379</value> <!-- VerifyingObserverSequence (0040,A073) -->
-         <value>4236144</value> <!-- ReferencedRequestSequence (0040,A370) -->
-         <value>4236149</value> <!-- CurrentRequestedProcedureEvidenceSequence (0040,A375) -->
-         <value>4236165</value> <!-- PertinentOtherEvidenceSequence (0040,A385) -->
-         <value>4236433</value> <!-- CompletionFlag (0040,A491) -->
-         <value>4236435</value> <!-- VerificationFlag (0040,A493) -->
-         <value>4236581</value> <!-- IdenticalDocumentsSequence (0040,A525) -->
-         <value>4325392</value> <!-- DocumentTitle (0042,0010) -->
+         <value>2621696</value> <!-- Bits Allocated (0028,0100) -->
+         <value>4235331</value> <!-- Concept Name Code Sequence (0040,A043) -->
+         <value>4235379</value> <!-- Verifying Observer Sequence (0040,A073) -->
+         <value>4236144</value> <!-- Referenced Request Sequence (0040,A370) -->
+         <value>4236433</value> <!-- Completion Flag (0040,A491) -->
+         <value>4236435</value> <!-- Verification Flag (0040,A493) -->
+         <value>4325392</value> <!-- Document Title (0042,0010) -->
          <value>4325394</value> <!-- MIMETypeOfEncapsulatedDocument (0042,0012) -->
-         <value>7340160</value> <!-- ContentLabel (0070,0080) -->
-         <value>7340161</value> <!-- ContentDescription (0070,0081) -->
-         <value>7340162</value> <!-- PresentationCreationDate (0070,0082) -->
-         <value>7340163</value> <!-- PresentationCreationTime (0070,0083) -->
-         <value>7340164</value> <!-- ContentCreatorName (0070,0084) -->
-         <value>67110241</value> <!-- OriginalAttributesSequence (0400,0561) -->
+         <value>7340160</value> <!-- Content Label (0070,0080) -->
+         <value>7340161</value> <!-- Content Description (0070,0081) -->
+         <value>7340162</value> <!-- Presentation Creation Date (0070,0082) -->
+         <value>7340163</value> <!-- Presentation Creation Time (0070,0083) -->
+         <value>7340164</value> <!-- Content Creator's Name (0070,0084) -->
+         <value>67110241</value> <!-- Original Attributes Sequence (0400,0561) -->
+      </array>
+    </property>
+    <property name="visitAttributes">
+      <array>
+         <value>524293</value> <!-- Specific Character Set (0008,0005) -->
+         <value>524416</value> <!-- Institution Name (0008,0080) -->
+         <value>524417</value> <!-- Institution Address (0008,0081) -->
+         <value>524418</value> <!-- Institution Code Sequence (0008,0082) -->
+         <value>524432</value> <!-- Referring Physician's Name (0008,0090) -->
+         <value>524434</value> <!-- Referring Physician's Address (0008,0092) -->
+         <value>524436</value> <!-- Referring Physician's TelephoneNumbers (0008,0094) -->
+         <value>524438</value> <!-- Referring Physician IdentificationSequence (0008,0096) -->
+         <!-- Admitting Diagnoses Description (0008,1080) -->
+         <!-- Admitting Diagnoses Code Sequence (0008,1084) -->
+         <!-- Visit Status ID (0038,0008) -->
+         <!-- Admission ID (0038,0010) -->
+         <!-- Issuer of Admission ID Sequence (0038,0014) -->
+         <!-- Route of Admissions (0038,0016) -->
+         <!-- Admitting Date (0038,0020) -->
+         <!-- Admitting Time (0038,0021) -->
+         <!-- Service Episode ID (0038,0060) -->
+         <!-- Service Episode Description (0038,0062) -->
+         <!-- Issuer of Service Episode ID Sequence (0038,0064) -->
+         <!-- Current Patient Location (0038,0300) -->
+         <!-- Patient’s Institution Residence (0038,0400) -->
+         <!-- Visit Comments (0038,4000) -->
+      </array>
+    </property>
+    <property name="serviceRequestAttributes">
+      <array>
+         <value>524293</value> <!-- Specific Character Set (0008,0005) -->
+         <value>524368</value> <!-- Accession Number (0008,0050) -->
+         <value>524369</value> <!-- Issuer of Accession Number Sequence (0008,0051) -->
+         <!-- Requesting Physician Identification Sequence (0032,1031) -->
+         <!-- Requesting Physician (0032,1032) -->
+         <!-- Requesting Service (0032,1033) -->
+         <!-- Requesting Service Code Sequence (0032,1034) -->
+         <!-- Issue Date of Imaging Service Request (0040,2004) -->
+         <!-- Issue Time of Imaging Service Request (0040,2005) -->
+         <!-- Order Placer Identifier Sequence (0040,0026) -->
+         <!-- Filler Placer Identifier Sequence (0040,0027) -->
+         <!-- Order entered by (0040,2008) -->
+         <!-- Order Enterer’s Location (0040,2009) -->
+         <!-- Order Callback Phone Number (0040,2010) -->
+         <!-- Placer Order Number / Imaging Service Request (0040,2016) -->
+         <!-- File Order Number / Imaging Service Request (0040,2017) -->
+         <!-- Imaging Service Request Comments (0040,2400) -->
+      </array>
+    </property>
+    <property name="requestedProcedureAttributes">
+      <array>
+         <value>524293</value> <!-- Specific Character Set (0008,0005) -->
+         <value>524320</value> <!-- Study Date (0008,0020) -->
+         <value>524336</value> <!-- Study Time (0008,0030) -->
+         <value>2097165</value> <!-- Study Instance UID (0020,000D) -->
+         <value></value> <!-- Requested Procedure Description (0032,1060) -->
+         <value></value> <!-- Requested Procedure Code Sequence (0032,1064) -->
+         <value></value> <!-- Requested Procedure ID (0040,1001) -->
+         <value></value> <!-- Reason for the Requested Procedure (0040,1002) -->
+         <value></value> <!-- Requested Procedure Priority (0040,1003) -->
+         <value></value> <!-- Patient Transport Arrangements (0040,1004) -->
+         <value></value> <!-- Requested Procedure Location (0040,1005) -->
+         <value></value> <!-- Confidentiality Code (0040,1008) -->
+         <value></value> <!-- Reporting Priority (0040,1009) -->
+         <value></value> <!-- Reason for Requested Procedure Code Sequence (0040,100A) -->
+         <value></value> <!-- Names of Intended Recipients of Results (0040,1010) -->
+         <value></value> <!-- Intended Recipients of Results Identification Sequence (0040,1011) -->
+        <value></value>  <!-- Requested Procedure Comments (0040,1400) -->
+      </array>
+    </property>
+    <property name="scheduledProcedureStepAttributes">
+      <array>
+         <value>524293</value> <!-- Specific Character Set (0008,0005) -->
+         <value>524384</value> <!-- Modality (0008,0060) -->
+         <value></value> <!-- Anatomical Orientation Type (0010,2210) -->
+         <value></value> <!-- Requested Contrast Agent (0032,1070) -->
+         <value></value> <!-- Scheduled Station AE Title (0040,0001) -->
+         <value></value> <!-- Scheduled Station Name (0040,0010) -->
+         <value></value> <!-- Scheduled Procedure Step Location (0040,0011) -->
+         <value></value> <!-- Pre-Medication (0040,0012) -->
+         <value></value> <!-- Scheduled Procedure Step Start Date (0040,0002) -->
+         <value></value> <!-- Scheduled Procedure Step Start Time (0040,0003) -->
+         <value></value> <!-- Scheduled Procedure Step End Date (0040,0004) -->
+         <value></value> <!-- Scheduled Procedure Step End Time (0040,0005) -->
+         <value></value> <!-- Scheduled Performing Physician's Name (0040,0006) -->
+         <value></value> <!-- Scheduled Procedure Step Description (0040,0007) -->
+         <value></value> <!-- Scheduled Protocol Code Sequence (0040,0008) -->
+         <value></value> <!-- Scheduled Procedure Step ID (0040,0009) -->
+         <value></value> <!-- Scheduled Performing Physician Identification Sequence (0040,000B) -->
+         <value></value> <!-- Scheduled Procedure Step Status (0040,0020) -->
+         <value></value> <!-- Comments on the Scheduled Procedure Step (0040,0400) -->
+         <value></value> <!-- Scheduled Specimen Sequence (0040,0500) -->
       </array>
     </property>
     <property name="fuzzyStr">

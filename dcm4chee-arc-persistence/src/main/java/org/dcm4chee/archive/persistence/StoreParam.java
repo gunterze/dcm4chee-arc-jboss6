@@ -58,6 +58,11 @@ public class StoreParam {
     private int[] studyAttributes;
     private int[] seriesAttributes;
     private int[] instanceAttributes;
+    private int[] visitAttributes;
+    private int[] serviceRequestAttributes;
+    private int[] requestedProcedureAttributes;
+    private int[] scheduledProcedureStepAttributes;
+    private int[] performedProcedureStepAttributes;
     private ValueSelector patientCustomAttribute1;
     private ValueSelector patientCustomAttribute2;
     private ValueSelector patientCustomAttribute3;
@@ -114,6 +119,46 @@ public class StoreParam {
 
     public final void setInstanceAttributes(int... instanceAttributes) {
         this.instanceAttributes = instanceAttributes;
+    }
+
+    public final int[] getVisitAttributes() {
+        return visitAttributes;
+    }
+
+    public final void setVisitAttributes(int... attrs) {
+        this.visitAttributes = attrs;
+    }
+
+    public final int[] getServiceRequestAttributes() {
+        return serviceRequestAttributes;
+    }
+
+    public final void setServiceRequestAttributes(int... attrs) {
+        this.serviceRequestAttributes = attrs;
+    }
+
+    public final int[] getRequestedProcedureAttributes() {
+        return requestedProcedureAttributes;
+    }
+
+    public final void setRequestedProcedureAttributes(int... attrs) {
+        this.requestedProcedureAttributes = attrs;
+    }
+
+    public final int[] getScheduledProcedureStepAttributes() {
+        return scheduledProcedureStepAttributes;
+    }
+
+    public final void setScheduledProcedureStepAttributes(int... attrs) {
+        this.scheduledProcedureStepAttributes = attrs;
+    }
+
+    public final void setPerformedProcedureStepAttributes(int... attrs) {
+        this.performedProcedureStepAttributes = attrs;
+    }
+
+    public final int[] getPerformedProcedureStepAttributes() {
+        return performedProcedureStepAttributes;
     }
 
     public final ValueSelector getPatientCustomAttribute1() {

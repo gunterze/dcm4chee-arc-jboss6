@@ -431,24 +431,16 @@ public class Study implements Serializable {
         }
         accessionNumber = attrs.getString(Tag.AccessionNumber, "*");
         PersonName pn = new PersonName(attrs.getString(Tag.ReferringPhysicianName), true);
-        if (pn.isEmpty()) {
-            referringPhysicianName = "*";
-            referringPhysicianIdeographicName = "*";
-            referringPhysicianPhoneticName = "*";
-            referringPhysicianFamilyNameSoundex = "*";
-            referringPhysicianGivenNameSoundex = "*";
-        } else {
-            referringPhysicianName = pn.contains(PersonName.Group.Alphabetic) 
-                    ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
-            referringPhysicianIdeographicName = pn.contains(PersonName.Group.Ideographic)
-                    ? pn.toString(PersonName.Group.Ideographic, false) : "*";
-            referringPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
-                    ? pn.toString(PersonName.Group.Phonetic, false) : "*";
-            referringPhysicianFamilyNameSoundex =
-                    storeParam.toFuzzy(pn.get(PersonName.Component.FamilyName), "*");
-            referringPhysicianGivenNameSoundex =
-                    storeParam.toFuzzy(pn.get(PersonName.Component.GivenName), "*");
-        }
+        referringPhysicianName = pn.contains(PersonName.Group.Alphabetic) 
+                ? pn.toString(PersonName.Group.Alphabetic, false) : "*";
+        referringPhysicianIdeographicName = pn.contains(PersonName.Group.Ideographic)
+                ? pn.toString(PersonName.Group.Ideographic, false) : "*";
+        referringPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
+                ? pn.toString(PersonName.Group.Phonetic, false) : "*";
+        referringPhysicianFamilyNameSoundex =
+                storeParam.toFuzzy(pn.get(PersonName.Component.FamilyName), "*");
+        referringPhysicianGivenNameSoundex =
+                storeParam.toFuzzy(pn.get(PersonName.Component.GivenName), "*");
         studyCustomAttribute1 = StoreParam.selectStringValue(attrs,
                 storeParam.getStudyCustomAttribute1(), "*");
         studyCustomAttribute2 = StoreParam.selectStringValue(attrs,

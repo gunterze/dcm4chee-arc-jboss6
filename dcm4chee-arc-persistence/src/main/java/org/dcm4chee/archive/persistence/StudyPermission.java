@@ -65,7 +65,7 @@ import javax.persistence.Table;
     @NamedQuery(
         name="StudyPermission.checkExportPermission",
         query="SELECT p.pk FROM StudyPermission p "
-            + "WHERE p.studyInstanceUID = ?1 AND p.role = ?2 AND p.action = org.dcm4chee.archive.persistence.Action.EXPORT "
+            + "WHERE p.studyInstanceUID = ?1 AND p.role = ?2 AND p.action = org.dcm4chee.archive.persistence.StudyPermissionAction.EXPORT "
             + "AND p.exportDestination = ?3"),
     @NamedQuery(
         name="StudyPermission.revokePermission",
@@ -74,7 +74,7 @@ import javax.persistence.Table;
     @NamedQuery(
         name="StudyPermission.revokeExportPermission",
         query="DELETE FROM StudyPermission p "
-            + "WHERE p.studyInstanceUID = ?1 AND p.role = ?2 AND p.action = org.dcm4chee.archive.persistence.Action.EXPORT "
+            + "WHERE p.studyInstanceUID = ?1 AND p.role = ?2 AND p.action = org.dcm4chee.archive.persistence.StudyPermissionAction.EXPORT "
             + "AND p.exportDestination = ?3")
 })
 @Entity
@@ -104,7 +104,7 @@ public class StudyPermission implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "action", updatable = false)
-    private Action action;
+    private StudyPermissionAction action;
 
     @Column(name = "export_dest", updatable = false)
     private String exportDestination;
@@ -112,14 +112,14 @@ public class StudyPermission implements Serializable {
 
     public StudyPermission() {}
 
-    public StudyPermission(String studyInstanceUID, String role, Action action) {
+    public StudyPermission(String studyInstanceUID, String role, StudyPermissionAction action) {
         this.studyInstanceUID = studyInstanceUID;
         this.role = role;
         this.action = action;
     }
 
     public StudyPermission(String studyInstanceUID, String role, String exportDestination) {
-        this(studyInstanceUID, role, Action.EXPORT);
+        this(studyInstanceUID, role, StudyPermissionAction.EXPORT);
         this.exportDestination = exportDestination;
     }
 
@@ -135,7 +135,7 @@ public class StudyPermission implements Serializable {
         return role;
     }
 
-    public Action getAction() {
+    public StudyPermissionAction getAction() {
         return action;
     }
 

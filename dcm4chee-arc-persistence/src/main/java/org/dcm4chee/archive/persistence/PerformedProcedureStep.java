@@ -47,6 +47,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -62,63 +64,51 @@ import org.dcm4che.data.Tag;
  */
 @NamedQueries({
     @NamedQuery(
-        name="RequestedProcedure.findByRequestedProcedureIDWithoutIssuer",
-        query="SELECT rp FROM RequestedProcedure rp " + 
-              "WHERE rp.requestedProcedureID = ?1 " +
-                "AND rp.serviceRequest.accessionNumber = ?2 " +
-                "AND rp.serviceRequest.issuerOfAccessionNumber IS NULL"),
-    @NamedQuery(
-        name="RequestedProcedure.findByRequestedProcedureIDWithIssuer",
-        query="SELECT rp FROM RequestedProcedure rp " + 
-              "WHERE rp.requestedProcedureID = ?1 " +
-                "AND rp.serviceRequest.accessionNumber = ?2 " +
-                "AND rp.serviceRequest.issuerOfAccessionNumber = ?3")
-
+            name="PerformedProcedureStep.findBySOPInstanceUID",
+            query="SELECT pps FROM PerformedProcedureStep pps WHERE pps.sopInstanceUID = ?1)")
 })
 @Entity
-@Table(name = "req_proc")
-public class RequestedProcedure implements Serializable {
+@Table(name = "pps")
+public class PerformedProcedureStep implements Serializable {
 
-    private static final long serialVersionUID = -573191967238630680L;
+    private static final long serialVersionUID = 4127487385799077653L;
 
-    public static final String FIND_BY_REQUESTED_PROCEDURE_ID_WITHOUT_ISSUER =
-            "RequestedProcedure.findByRequestedProcedureIDWithoutIssuer";
+    public static final String FIND_BY_SOP_INSTANCE_UID =
+            "PerformedProcedureStep.findBySOPInstanceUID";
 
-    public static final String FIND_BY_REQUESTED_PROCEDURE_ID_WITH_ISSUER =
-            "RequestedProcedure.findByRequestedProcedureIDWithIssuer";
-
-   @Id
+    @Id
     @GeneratedValue
     @Column(name = "pk")
     private long pk;
 
     @Basic(optional = false)
-    @Column(name = "study_iuid")
-    private String studyInstanceUID;
+    @Column(name = "sop_iuid")
+    private String sopInstanceUID;
 
     @Basic(optional = false)
-    @Column(name = "req_proc_id")
-    private String requestedProcedureID;
-
-    @Basic(optional = false)
-    @Column(name = "req_proc_attrs")
+    @Column(name = "pps_attrs")
     private byte[] encodedAttributes;
 
     @Transient
     private Attributes cachedAttributes;
 
     @ManyToOne
-    @JoinColumn(name = "request_fk")
-    private ServiceRequest serviceRequest;
+    @JoinColumn(name = "patient_fk")
+    private Patient patient;
 
-    @OneToMany(mappedBy = "requestedProcedure", orphanRemoval = true)
+    @OneToMany(mappedBy = "performedProcedureStep")
+    private Collection<Series> series;
+
+    @ManyToMany
+    @JoinTable(name = "rel_pps_sps", 
+        joinColumns = @JoinColumn(name = "pps_fk", referencedColumnName = "pk"),
+        inverseJoinColumns = @JoinColumn(name = "sps_fk", referencedColumnName = "pk"))
     private Collection<ScheduledProcedureStep> scheduledProcedureSteps;
 
     @Override
     public String toString() {
-        return "RequestedProcedure[pk=" + pk
-                + ", id=" + requestedProcedureID
-                + ", suid=" + studyInstanceUID
+        return "PerformedProcedureStep[pk=" + pk
+                + ", uid=" + sopInstanceUID
                 + "]";
     }
 
@@ -126,28 +116,33 @@ public class RequestedProcedure implements Serializable {
         return pk;
     }
 
-    public String getStudyInstanceUID() {
-        return studyInstanceUID;
+    public String getSopInstanceUID() {
+        return sopInstanceUID;
     }
 
-    public String getRequestedProcedureID() {
-        return requestedProcedureID;
+    public byte[] getEncodedAttributes() {
+        return encodedAttributes;
     }
 
-    public ServiceRequest getServiceRequest() {
-        return serviceRequest;
+    public Patient getPatient() {
+        return patient;
     }
 
-    public void setServiceRequest(ServiceRequest serviceRequest) {
-        this.serviceRequest = serviceRequest;
+    public void setPatient(Patient patient) {
+        this.patient = patient;
     }
 
-    public void setScheduledProcedureSteps(Collection<ScheduledProcedureStep> scheduledProcedureSteps) {
-        this.scheduledProcedureSteps = scheduledProcedureSteps;
+    public Collection<Series> getSeries() {
+        return series;
     }
 
     public Collection<ScheduledProcedureStep> getScheduledProcedureSteps() {
         return scheduledProcedureSteps;
+    }
+
+    public void setScheduledProcedureSteps(
+            Collection<ScheduledProcedureStep> scheduledProcedureSteps) {
+        this.scheduledProcedureSteps = scheduledProcedureSteps;
     }
 
     public Attributes getAttributes() throws BlobCorruptedException {
@@ -157,12 +152,10 @@ public class RequestedProcedure implements Serializable {
     }
 
     public void setAttributes(Attributes attrs, StoreParam storeParam) {
-        requestedProcedureID = attrs.getString(Tag.RequestedProcedureID);
-        studyInstanceUID = attrs.getString(Tag.StudyInstanceUID);
+        sopInstanceUID = attrs.getString(Tag.SOPInstanceUID);
 
         encodedAttributes = Utils.encodeAttributes(
                 cachedAttributes = new Attributes(attrs, 
-                        storeParam.getRequestedProcedureAttributes()));
+                        storeParam.getPerformedProcedureStepAttributes()));
     }
-
 }

@@ -38,17 +38,23 @@
 
 package org.dcm4chee.archive.ejb.store;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.RequestedProcedure;
 import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
+import org.dcm4chee.archive.persistence.ScheduledStationAETitle;
 import org.dcm4chee.archive.persistence.ServiceRequest;
 import org.dcm4chee.archive.persistence.StoreParam;
+import org.dcm4chee.archive.persistence.Visit;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -58,46 +64,123 @@ public abstract class RequestFactory {
     public static ScheduledProcedureStep getScheduledProcedureStep(EntityManager em,
             Attributes attrs, Patient patient, StoreParam storeParam) {
         String spsid = attrs.getString(Tag.ScheduledProcedureStepID);
-        if (spsid == null)
+        String rpid = attrs.getString(Tag.RequestedProcedureID);
+        String accno = attrs.getString(Tag.AccessionNumber);
+        if (spsid == null || rpid == null || accno == null)
             return null;
 
-        try {
-            TypedQuery<ScheduledProcedureStep> query = em.createNamedQuery(
-                            ScheduledProcedureStep.FIND_BY_SPS_ID,
-                            ScheduledProcedureStep.class)
-                    .setParameter(1, spsid);
-            return query.getSingleResult();
-        } catch (NoResultException e) {
-            RequestedProcedure rp = getRequestedProcedure(em, attrs, patient, storeParam);
-            if (rp == null)
-                return null;
+        Issuer isserOfAccNo = IssuerFactory.getIssuer(em,
+                attrs.getNestedDataset(Tag.IssuerOfAccessionNumberSequence));
 
+        try {
+            ScheduledProcedureStep sps = findScheduledProcedureStep(
+                    em, spsid, rpid, accno, isserOfAccNo);
+            RequestedProcedure rp = sps.getRequestedProcedure();
+            ServiceRequest request = rp.getServiceRequest();
+            Visit visit = request.getVisit();
+            Patient patient2 = visit.getPatient();
+            if (patient2 != patient)
+                throw new PatientMismatchException(patient, patient2, request);
+
+            return sps;
+        } catch (NoResultException e) {
+            RequestedProcedure rp = getRequestedProcedure(em, attrs, patient, storeParam,
+                    rpid, accno, isserOfAccNo);
             ScheduledProcedureStep sps = new ScheduledProcedureStep();
             sps.setRequestedProcedure(rp);
+            sps.setScheduledStationAETs(
+                    createScheduledStationAETs(attrs.getStrings(Tag.ScheduledStationAETitle)));
             sps.setAttributes(attrs, storeParam);
             em.persist(sps);
             return sps;
         }
+    }
 
+    private static Collection<ScheduledStationAETitle> createScheduledStationAETs(
+            String[] aets) {
+        if (aets == null || aets.length == 0)
+            return null;
+
+        ArrayList<ScheduledStationAETitle> list =
+                new ArrayList<ScheduledStationAETitle>(aets.length);
+        for (String aet : aets)
+            list.add(new ScheduledStationAETitle(aet));
+        return list ;
+    }
+
+    private static ScheduledProcedureStep findScheduledProcedureStep(EntityManager em,
+            String spsid, String rpid, String accno, Issuer issuerOfAccNo) {
+        TypedQuery<ScheduledProcedureStep> query = em.createNamedQuery(
+                 issuerOfAccNo != null
+                     ? ScheduledProcedureStep.FIND_BY_SPS_ID_WITH_ISSUER
+                     : ScheduledProcedureStep.FIND_BY_SPS_ID_WITHOUT_ISSUER,
+                 ScheduledProcedureStep.class)
+                 .setParameter(1, spsid)
+                 .setParameter(2, rpid)
+                 .setParameter(3, accno);
+        if (issuerOfAccNo != null)
+            query.setParameter(4, issuerOfAccNo);
+        return query.getSingleResult();
+    }
+
+    private static Visit getVisit(EntityManager em, Attributes attrs,
+            Patient patient, StoreParam storeParam) {
+        String admissionID = attrs.getString(Tag.AdmissionID);
+        Issuer issuerOfAdmissionID = IssuerFactory.getIssuer(em,
+                attrs.getNestedDataset(Tag.IssuerOfAdmissionIDSequence));
+
+        if (admissionID == null)
+            return newVisit(em, attrs, patient, issuerOfAdmissionID, storeParam);
+
+        try {
+            Visit visit = findVisit(em, admissionID, issuerOfAdmissionID);
+            Patient patient2 = visit.getPatient();
+            if (patient2 != patient)
+                throw new PatientMismatchException(patient, patient2, visit);
+
+            return visit;
+        } catch (NoResultException e) {
+            return newVisit(em, attrs, patient, issuerOfAdmissionID, storeParam);
+        }
+    }
+
+    private static Visit newVisit(EntityManager em, Attributes attrs,
+            Patient patient, Issuer issuerOfAdmissionID, StoreParam storeParam) {
+        Visit visit = new Visit();
+        visit.setPatient(patient);
+        visit.setIssuerOfAdmissionID(issuerOfAdmissionID);
+        visit.setAttributes(attrs, storeParam);
+        em.persist(visit);
+        return visit;
+    }
+
+    private static Visit findVisit(EntityManager em, String admissionID, Issuer issuer) {
+        TypedQuery<Visit> query = em.createNamedQuery(
+                issuer != null
+                    ? Visit.FIND_BY_ADMISSION_ID_WITH_ISSUER
+                    : Visit.FIND_BY_ADMISSION_ID_WITHOUT_ISSUER,
+                Visit.class)
+                .setParameter(1, admissionID);
+        if (issuer != null)
+            query.setParameter(2, issuer);
+        return query.getSingleResult();
     }
 
     private static RequestedProcedure getRequestedProcedure(EntityManager em,
-            Attributes attrs, Patient patient, StoreParam storeParam) {
-        String rpid = attrs.getString(Tag.RequestedProcedureID);
-        if (rpid == null)
-            return null;
-
+            Attributes attrs, Patient patient, StoreParam storeParam,
+            String rpid, String accno, Issuer issuerOfAccNo) {
         try {
-            TypedQuery<RequestedProcedure> query = em.createNamedQuery(
-                            RequestedProcedure.FIND_BY_REQUESTED_PROCEDURE_ID,
-                            RequestedProcedure.class)
-                    .setParameter(1, rpid);
-            return query.getSingleResult();
-        } catch (NoResultException e) {
-            ServiceRequest rq = getServiceRequest(em, attrs, patient, storeParam);
-            if (rq == null)
-                return null;
+            RequestedProcedure rp = findRequestedProcedure(em, rpid, accno, issuerOfAccNo);
+            ServiceRequest request = rp.getServiceRequest();
+            Visit visit = request.getVisit();
+            Patient patient2 = visit.getPatient();
+            if (patient2 != patient)
+                throw new PatientMismatchException(patient, patient2, request);
 
+            return rp;
+        } catch (NoResultException e) {
+            ServiceRequest rq = getServiceRequest(em, attrs, patient, storeParam,
+                    accno, issuerOfAccNo);
             RequestedProcedure rp = new RequestedProcedure();
             rp.setServiceRequest(rq);
             rp.setAttributes(attrs, storeParam);
@@ -106,29 +189,53 @@ public abstract class RequestFactory {
         }
     }
 
-    private static ServiceRequest getServiceRequest(EntityManager em,
-            Attributes attrs, Patient patient, StoreParam storeParam) {
-        String accno = attrs.getString(Tag.AccessionNumber);
-        if (accno == null)
-            return null;
+    private static RequestedProcedure findRequestedProcedure(EntityManager em,
+            String rpid, String accno, Issuer issuerOfAccNo) {
+        TypedQuery<RequestedProcedure> query = em.createNamedQuery(
+                issuerOfAccNo != null
+                    ? RequestedProcedure.FIND_BY_REQUESTED_PROCEDURE_ID_WITH_ISSUER
+                    : RequestedProcedure.FIND_BY_REQUESTED_PROCEDURE_ID_WITHOUT_ISSUER,
+                    RequestedProcedure.class)
+                .setParameter(1, rpid)
+                .setParameter(2, accno);
+       if (issuerOfAccNo != null)
+           query.setParameter(3, issuerOfAccNo);
+       return query.getSingleResult();
+    }
 
+    private static ServiceRequest getServiceRequest(EntityManager em,
+            Attributes attrs, Patient patient, StoreParam storeParam,
+            String accno, Issuer issuerOfAccNo) {
         try {
-            TypedQuery<ServiceRequest> query = em.createNamedQuery(
-                            ServiceRequest.FIND_BY_ACCESSION_NUMBER,
-                            ServiceRequest.class)
-                    .setParameter(1, accno);
-            return query.getSingleResult();
+            ServiceRequest request = findServiceRequest(em, accno, issuerOfAccNo);
+            Visit visit = request.getVisit();
+            Patient patient2 = visit.getPatient();
+            if (patient2 != patient)
+                throw new PatientMismatchException(patient, patient2, request);
+
+            return request;
         } catch (NoResultException e) {
             ServiceRequest request = new ServiceRequest();
-            request.setPatient(patient);
-            request.setIssuerOfAccessionNumber(
-                    IssuerFactory.getIssuer(em,
-                            attrs.getNestedDataset(
-                                    Tag.IssuerOfAccessionNumberSequence)));
+            Visit visit = getVisit(em, attrs, patient, storeParam);
+            request.setVisit(visit);
+            request.setIssuerOfAccessionNumber(issuerOfAccNo);
             request.setAttributes(attrs, storeParam);
             em.persist(request);
             return request;
         }
+    }
+
+    private static ServiceRequest findServiceRequest(EntityManager em,
+            String accno, Issuer issuerOfAccNo) {
+        TypedQuery<ServiceRequest> query = em.createNamedQuery(
+                issuerOfAccNo != null
+                    ? ServiceRequest.FIND_BY_ACCESSION_NUMBER_WITH_ISSUER
+                    : ServiceRequest.FIND_BY_ACCESSION_NUMBER_WITHOUT_ISSUER,
+                    ServiceRequest.class)
+                .setParameter(1, accno);
+        if (issuerOfAccNo != null)
+            query.setParameter(2, issuerOfAccNo);
+        return query.getSingleResult();
     }
 
 }

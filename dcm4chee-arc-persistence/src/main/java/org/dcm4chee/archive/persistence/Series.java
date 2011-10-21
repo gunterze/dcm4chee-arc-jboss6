@@ -173,7 +173,7 @@ public class Series implements Serializable {
     private String laterality;
 
     @Basic(optional = false)
-    @Column(name = "perf_physician")
+    @Column(name = "perf_phys_name")
     private String performingPhysicianName;
     
     @Basic(optional = false)
@@ -253,6 +253,10 @@ public class Series implements Serializable {
         joinColumns = @JoinColumn(name = "series_fk", referencedColumnName = "pk"),
         inverseJoinColumns = @JoinColumn(name = "sps_fk", referencedColumnName = "pk"))
     private Collection<ScheduledProcedureStep> scheduledProcedureSteps;
+
+    @ManyToOne
+    @JoinColumn(name = "pps_fk")
+    private PerformedProcedureStep performedProcedureStep;
 
     @ManyToOne
     @JoinColumn(name = "study_fk")
@@ -452,6 +456,14 @@ public class Series implements Serializable {
     public void setScheduledProcedureSteps(
             Collection<ScheduledProcedureStep> scheduledProcedureSteps) {
         this.scheduledProcedureSteps = scheduledProcedureSteps;
+    }
+
+    public PerformedProcedureStep getPerformedProcedureStep() {
+        return performedProcedureStep;
+    }
+
+    public void setPerformedProcedureStep(PerformedProcedureStep performedProcedureStep) {
+        this.performedProcedureStep = performedProcedureStep;
     }
 
     public Study getStudy() {
