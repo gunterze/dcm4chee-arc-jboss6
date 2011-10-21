@@ -15,5 +15,18 @@
         </injection-target>
       </resource-ref>
     </session>
+    <session>
+      <ejb-name>ModalityWorklistQueryBean</ejb-name>
+      <ejb-class>org.dcm4chee.archive.ejb.query.ModalityWorklistQueryBean</ejb-class>
+      <resource-ref>
+        <res-ref-name>jdbc/dataSource</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <mapped-name>${ds}</mapped-name>
+        <injection-target>
+          <injection-target-class>org.dcm4chee.archive.ejb.query.ModalityWorklistQueryBean</injection-target-class>
+          <injection-target-name>dataSource</injection-target-name>
+        </injection-target>
+      </resource-ref>
+    </session>
   </enterprise-beans>
 </ejb-jar>

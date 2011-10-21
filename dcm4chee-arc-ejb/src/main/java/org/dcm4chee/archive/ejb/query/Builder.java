@@ -520,4 +520,10 @@ abstract class Builder {
             .exists();
     }
 
+    public static void addModalityWorklistPredicates(BooleanBuilder builder,
+            Attributes keys, QueryParam queryParam, StoreParam storeParam) {
+        // TODO Auto-generated method stub
+        
+    }
+
 }
