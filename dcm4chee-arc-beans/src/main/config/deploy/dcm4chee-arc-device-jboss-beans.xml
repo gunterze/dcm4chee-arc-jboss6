@@ -91,10 +91,62 @@
          <value>1048608</value> <!-- Patient's ID (0010,0020) -->
          <value>1048609</value> <!-- Issuer of Patient ID (0010,0021) -->
          <value>1048612</value> <!-- Issuer of Patient ID Qualifiers Sequence (0010,0024) -->
-         <value>1052674</value> <!-- Other Patient IDs Sequence (0010,1002) -->
          <value>1048624</value> <!-- Patient's Birth Date (0010,0030) -->
+         <value>1048626</value> <!-- Patient's Birth Time (0010,0032) -->
          <value>1048640</value> <!-- Patient's Sex (0010,0040) -->
+         <value>1048656</value> <!-- Patient's Insurance Plan Code Sequence (0010,0050) -->
+         <value>1048833</value> <!-- Patient’s Primary Language Code Sequence (0010,0101) -->
+         <value>1052673</value> <!-- Other Patient Names (0010,1001) -->
+         <value>1052674</value> <!-- Other Patient IDs Sequence (0010,1002) -->
+         <value>1052677</value> <!-- Patient's Birth Name (0010,1005) -->
+         <value>1052688</value> <!-- Patient's Age (0010,1010) -->
+         <value>1052704</value> <!-- Patient's Size (0010,1020) -->
+         <value>1052705</value> <!-- Patient's Size Code Sequence (0010,1021) -->
+         <value>1052720</value> <!-- Patient's Weight (0010,1030) -->
+         <value>1052736</value> <!-- Patient’s Address (0010,1040) -->
+         <value>1052768</value> <!-- Patient's Mother's Birth Name (0010,1060) -->
+         <value>1052800</value> <!-- Military Rank (0010,1080) -->
+         <value>1052801</value> <!-- Branch of Service (0010,1081) -->
+         <value>1052816</value> <!-- Medical Record Locator (0010,1090) -->
+         <value>1056768</value> <!-- Medical Alerts (0010,2000) -->
+         <value>1057040</value> <!-- Allergies (0010,2110) -->
+         <value>1057104</value> <!-- Country of Residence (0010,2150) -->
+         <value>1057106</value> <!-- Region of Residence (0010,2152) -->
+         <value>1057108</value> <!-- Patient’s Telephone Numbers (0010,2154) -->
+         <value>1057120</value> <!-- Ethnic Group (0010,2160) -->
+         <value>1057152</value> <!-- Occupation (0010,2180) -->
+         <value>1057184</value> <!-- Smoking Status (0010,21A0) -->
+         <value>1057200</value> <!-- Additional Patient History (0010,21B0) -->
+         <value>1057216</value> <!-- Pregnancy Status (0010,21C0) -->
+         <value>1057232</value> <!-- Last Menstrual Date (0010,21D0) -->
+         <value>1057264</value> <!-- Patient's Religious Preference (0010,21F0) -->
+         <value>1057281</value> <!-- Patient Species Description (0010,2201) -->
+         <value>1057282</value> <!-- Patient Species Code Sequence (0010,2202) -->
+         <value>1057283</value> <!-- Patient’s Sex Neutered (0010,2203) -->
+         <value>1057426</value> <!-- Patient Breed Description (0010,2292) -->
+         <value>1057427</value> <!-- Patient Breed Code Sequence (0010,2293) -->
+         <value>1057428</value> <!-- Breed Registration Sequence (0010,2294) -->
+         <value>1057431</value> <!-- Responsible Person (0010,2297) -->
+         <value>1057432</value> <!-- Responsible Person Role (0010,2298) -->
+         <value>1057433</value> <!-- Responsible Organization (0010,2299) -->
          <value>1064960</value> <!-- Patient's Comments (0010,4000) -->
+         <value>1179664</value> <!-- Clinical Trial Sponsor Name (0012,0010) -->
+         <value>1179680</value> <!-- Clinical Trial Protocol ID (0012,0020) -->
+         <value>1179681</value> <!-- Clinical Trial Protocol Name (0012,0021) -->
+         <value>1179696</value> <!-- Clinical Trial Site ID (0012,0030) -->
+         <value>1179697</value> <!-- Clinical Trial Site Name (0012,0031) -->
+         <value>1179712</value> <!-- Clinical Trial Subject ID (0012,0040) -->
+         <value>1179714</value> <!-- Clinical Trial Subject Reading ID (0012,0042) -->
+         <value>1179746</value> <!-- Patient Identity Removed (0012,0062) -->
+         <value>1179747</value> <!-- De-identification Method (0012,0063) -->
+         <value>1179748</value> <!-- De-identification Method Code Sequence (0012,0064) -->
+         <value>1179777</value> <!-- Clinical Trial Protocol Ethics Committee Name (0012,0081) -->
+         <value>1179778</value> <!-- Clinical Trial Protocol Ethics Committee Approval Number (0012,0082) -->
+         <value>3670096</value> <!-- Special Needs (0038,0050) -->
+         <value>3670272</value> <!-- Pertinent Documents Sequence (0038,0100) -->
+         <value>3671296</value> <!-- Patient State (0038,0500) -->
+         <value>3671298</value> <!-- Patient Clinical Trial Participation Sequence (0038,0502) -->
+         <value>4206593</value> <!-- Confidentiality Constraint on Patient Data Description (0040,3001) -->
       </array>
     </property>
     <property name="studyAttributes">
@@ -107,6 +159,13 @@
          <value>524432</value> <!-- Referring Physician's Name (0008,0090) -->
          <value>528432</value> <!-- Study Description (0008,1030) -->
          <value>528434</value> <!-- Procedure Code Sequence (0008,1032) -->
+         <value>1052688</value> <!-- Patient's Age (0010,1010) -->
+         <value>1052704</value> <!-- Patient's Size (0010,1020) -->
+         <value>1052705</value> <!-- Patient's Size Code Sequence (0010,1021) -->
+         <value>1052720</value> <!-- Patient's Weight (0010,1030) -->
+         <value>1057152</value> <!-- Occupation (0010,2180) -->
+         <value>1057200</value> <!-- Additional Patient History (0010,21B0) -->
+         <value>1057283</value> <!-- Patient’s Sex Neutered (0010,2203) -->
          <value>2097165</value> <!-- Study Instance UID (0020,000D) -->
          <value>2097168</value> <!-- Study ID (0020,0010) -->
       </array>
