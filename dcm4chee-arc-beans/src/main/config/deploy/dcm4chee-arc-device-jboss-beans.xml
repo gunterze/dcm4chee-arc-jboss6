@@ -90,6 +90,7 @@
          <value>1048592</value> <!-- Patient's Name (0010,0010) -->
          <value>1048608</value> <!-- Patient's ID (0010,0020) -->
          <value>1048609</value> <!-- Issuer of Patient ID (0010,0021) -->
+         <value>1048612</value> <!-- Issuer of Patient ID Qualifiers Sequence (0010,0024) -->
          <value>1052674</value> <!-- Other Patient IDs Sequence (0010,1002) -->
          <value>1048624</value> <!-- Patient's Birth Date (0010,0030) -->
          <value>1048640</value> <!-- Patient's Sex (0010,0040) -->

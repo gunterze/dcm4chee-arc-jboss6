@@ -41,6 +41,7 @@ package org.dcm4chee.archive.ejb.query;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
+import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.StudyPermissionAction;
 import org.dcm4chee.archive.persistence.Code;
 import org.dcm4chee.archive.persistence.QCode;
@@ -73,7 +74,7 @@ import com.mysema.query.types.path.StringPath;
  */
 abstract class Builder {
 
-    static void addPatientLevelPredicates(BooleanBuilder builder, String[] pids,
+    static void addPatientLevelPredicates(BooleanBuilder builder, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam, StoreParam storeParam) {
 
         boolean matchUnknown = queryParam.isMatchUnknown();
@@ -239,21 +240,21 @@ abstract class Builder {
         builder.and(QInstance.instance.replaced.isFalse());
     }
 
-    static Predicate pids(String[] pids, boolean matchUnknown) {
+    static Predicate pids(IDWithIssuer[] pids, boolean matchUnknown) {
         if (pids == null || pids.length == 0)
             return null;
 
         BooleanBuilder result = new BooleanBuilder();
-        for (int i = 0; i < pids.length-1; i++, i++)
-            result.or(pid(pids[i], pids[i+1], matchUnknown));
+        for (IDWithIssuer pid : pids)
+            result.or(pid(pid, matchUnknown));
 
         return result;
     }
 
-    static Predicate pid(String id, String issuer, boolean matchUnknown) {
+    static Predicate pid(IDWithIssuer pid, boolean matchUnknown) {
         return ExpressionUtils.allOf(
-                wildCard(QPatient.patient.patientID, id, matchUnknown, false),
-                wildCard(QPatient.patient.issuerOfPatientID, issuer, matchUnknown, false));
+                wildCard(QPatient.patient.patientID, pid.id, matchUnknown, false),
+                issuer(QPatient.patient.issuerOfPatientID, pid.issuer, matchUnknown));
     }
 
     static Predicate wildCard(StringPath path, String value, boolean matchUnknown, boolean ignoreCase) {
@@ -378,17 +379,34 @@ abstract class Builder {
                matchUnknown);
     }
 
-    static Predicate issuer(QIssuer path, Attributes item,  boolean matchUnknown) {
+    static Predicate issuer(QIssuer path, Attributes item, boolean matchUnknown) {
         if (item == null || item.isEmpty())
             return null;
 
+        return issuer(path,
+                item.getString(Tag.LocalNamespaceEntityID, "*"),
+                item.getString(Tag.UniversalEntityID, "*"),
+                item.getString(Tag.UniversalEntityIDType, "*"),
+                matchUnknown);
+    }
+
+    static Predicate issuer(QIssuer path, Issuer issuer, boolean matchUnknown) {
+        if (issuer == null)
+            return null;
+
+        return issuer(path,
+                issuer.getLocalNamespaceEntityID(),
+                issuer.getUniversalEntityID(),
+                issuer.getUniversalEntityIDType(),
+                matchUnknown);
+    }
+
+    private static Predicate issuer(QIssuer path, String entityID,
+            String entityUID, String entityUIDType, boolean matchUnknown) {
         Predicate predicate = ExpressionUtils.allOf(
-               wildCard(QIssuer.issuer.entityID,
-                       item.getString(Tag.LocalNamespaceEntityID, "*"), false, false),
-               wildCard(QIssuer.issuer.entityUID,
-                       item.getString(Tag.UniversalEntityID, "*"), false, false),
-               wildCard(QIssuer.issuer.entityUIDType,
-                       item.getString(Tag.UniversalEntityIDType, "*"), false, false));
+               wildCard(QIssuer.issuer.entityID, entityID, false, false),
+               wildCard(QIssuer.issuer.entityUID, entityUID, false, false),
+               wildCard(QIssuer.issuer.entityUIDType, entityUIDType, false, false));
 
         if (predicate == null)
             return null;

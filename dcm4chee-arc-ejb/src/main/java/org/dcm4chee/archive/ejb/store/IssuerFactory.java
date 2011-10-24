@@ -84,4 +84,17 @@ public abstract class IssuerFactory {
                     issuerItem.getString(Tag.UniversalEntityIDType, null))
                 : null;
     }
+
+    public static Issuer getIssuerOfPatientID(EntityManager em, Attributes attrs) {
+        String issuer = attrs.getString(Tag.IssuerOfPatientID);
+        Attributes issuerItem = attrs.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence);
+        return issuerItem != null
+                ? getIssuer(em,
+                        issuer,
+                        issuerItem.getString(Tag.UniversalEntityID, null),
+                        issuerItem.getString(Tag.UniversalEntityIDType, null))
+                : issuer != null
+                        ? getIssuer(em, issuer, null, null)
+                        : null;
+    }
 }

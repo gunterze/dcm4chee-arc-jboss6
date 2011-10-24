@@ -103,7 +103,7 @@ public class CGetSCPImpl extends BasicCGetSCP {
     private List<InstanceLocator> calculateMatches(Attributes rq, Attributes keys)
             throws DicomServiceException {
         try {
-            return calculateMatches.find(keys);
+            return calculateMatches.find(CFindSCPImpl.pids(keys), keys);
         }  catch (Exception e) {
             throw new DicomServiceException(Status.UnableToCalculateNumberOfMatches, e);
         }

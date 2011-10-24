@@ -69,15 +69,22 @@ import org.dcm4che.data.Tag;
  */
 @NamedQueries({
 @NamedQuery(
+    name="Patient.findByPatientIDWithoutIssuer",
+    query="SELECT p FROM Patient p " +
+          "WHERE p.patientID = ?1 AND p.issuerOfPatientID IS NULL"),
+@NamedQuery(
     name="Patient.findByPatientIDWithIssuer",
     query="SELECT p FROM Patient p " +
-          "WHERE p.patientID = ?1 AND issuerOfPatientID = ?2")
+          "WHERE p.patientID = ?1 AND p.issuerOfPatientID = ?2")
 })
 @Entity
 @Table(name = "patient")
 public class Patient implements Serializable {
 
     private static final long serialVersionUID = 6430339764844147679L;
+
+    public static final String FIND_BY_PATIENT_ID_WITHOUT_ISSUER =
+            "Patient.findByPatientIDWithoutIssuer";
 
     public static final String FIND_BY_PATIENT_ID_WITH_ISSUER =
             "Patient.findByPatientIDWithIssuer";
@@ -99,9 +106,9 @@ public class Patient implements Serializable {
     @Column(name = "pat_id")
     private String patientID;
 
-    @Basic(optional = false)
-    @Column(name = "pat_id_issuer")
-    private String issuerOfPatientID;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pat_id_issuer_fk")
+    private Issuer issuerOfPatientID;
 
     @Basic(optional = false)
     @Column(name = "pat_name")
@@ -205,7 +212,11 @@ public class Patient implements Serializable {
         return patientID;
     }
 
-    public String getIssuerOfPatientID() {
+    public void setIssuerOfPatientID(Issuer issuerOfPatientID) {
+        this.issuerOfPatientID = issuerOfPatientID;
+    }
+
+    public Issuer getIssuerOfPatientID() {
         return issuerOfPatientID;
     }
 
@@ -281,7 +292,6 @@ public class Patient implements Serializable {
 
     public void setAttributes(Attributes attrs, StoreParam storeParam) {
         patientID = attrs.getString(Tag.PatientID, "*");
-        issuerOfPatientID = attrs.getString(Tag.IssuerOfPatientID, "*");
         PersonName pn = new PersonName(attrs.getString(Tag.PatientName), true);
         patientName = pn.contains(PersonName.Group.Alphabetic) 
                 ? pn.toString(PersonName.Group.Alphabetic, false) : "*";

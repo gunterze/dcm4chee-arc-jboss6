@@ -53,6 +53,7 @@ import org.dcm4che.data.VR;
 import org.dcm4che.soundex.ESoundex;
 import org.dcm4chee.archive.ejb.permission.StudyPermissionManager;
 import org.dcm4chee.archive.ejb.permission.StudyPermissionManagerBean;
+import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.StudyPermissionAction;
 import org.dcm4chee.archive.persistence.StoreParam;
 import org.jboss.arquillian.api.Deployment;
@@ -70,18 +71,6 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class StudyQueryTest {
 
-    private static final String[] RangeMatchingPIDs =
-            { "RANGE-MATCHING", "DCM4CHEE_TESTDATA" };
-
-    private static final String[] AccessionNumberPIDs =
-            { "ISSUER_OF_ACCNO", "DCM4CHEE_TESTDATA" };
-    
-    private static final String[] ProcedureCodesPIDs = 
-            { "PROC_CODE_SEQ", "DCM4CHEE_TESTDATA" };
-    
-    private static final String[] ModalitiesInStudyPIDs =
-            { "MODS_IN_STUDY", "DCM4CHEE_TESTDATA" };
-
     private static final QueryParam QUERY_PARAM = new QueryParam();
     private static final QueryParam MATCH_UNKNOWN = new QueryParam().setMatchUnknown(true);
     private static final QueryParam COMBINED_DATE_TIME =
@@ -90,12 +79,18 @@ public class StudyQueryTest {
             new QueryParam().setCombinedDatetimeMatching(true).setMatchUnknown(true);
     private static final StoreParam STORE_PARAM = new StoreParam();
     static { STORE_PARAM.setFuzzyStr(new ESoundex()); }
+    private static final Issuer ISSUER = new Issuer("DCM4CHEE_TESTDATA", "*", "*");
+
+    private static IDWithIssuer[] pids(String id) {
+        return new IDWithIssuer[] { new IDWithIssuer(id, ISSUER) };
+    }
 
     @Deployment
     public static WebArchive createDeployment() {
         return ShrinkWrap.create(WebArchive.class, "test.war")
                 .addClasses(
                         QueryParam.class,
+                        IDWithIssuer.class,
                         CompositeQuery.class,
                         CompositeQueryBean.class,
                         CompositeQueryImpl.class,
@@ -108,7 +103,7 @@ public class StudyQueryTest {
                         MatchPersonName.class,
                         StudyPermissionManager.class,
                         StudyPermissionManagerBean.class)
-                .addAsWebInfResource("META-INF/ejb-jar.xml", "ejb-jar.xml");
+                .addAsWebInfResource("META-INF/composite-query-ejb-jar.xml", "ejb-jar.xml");
     }
 
     @EJB()
@@ -119,35 +114,35 @@ public class StudyQueryTest {
 
     @Test
     public void testByModalitiesInStudyPR() throws Exception {
-        query.findStudies(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), QUERY_PARAM, STORE_PARAM);
+        query.findStudies(pids("MODS_IN_STUDY"), modalitiesInStudy("PR"), QUERY_PARAM, STORE_PARAM);
         assertTrue(countMatches(query, 2));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyMatchUnknownPR() throws Exception {
-        query.findStudies(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), MATCH_UNKNOWN, STORE_PARAM);
+        query.findStudies(pids("MODS_IN_STUDY"), modalitiesInStudy("PR"), MATCH_UNKNOWN, STORE_PARAM);
         assertTrue(countMatches(query, 3));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyCT() throws Exception {
-        query.findStudies(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), QUERY_PARAM, STORE_PARAM);
+        query.findStudies(pids("MODS_IN_STUDY"), modalitiesInStudy("CT"), QUERY_PARAM, STORE_PARAM);
         assertTrue(countMatches(query, 1));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyMatchUnknownCT() throws Exception {
-        query.findStudies(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), MATCH_UNKNOWN, STORE_PARAM);
+        query.findStudies(pids("MODS_IN_STUDY"), modalitiesInStudy("CT"), MATCH_UNKNOWN, STORE_PARAM);
         assertTrue(countMatches(query, 2));
         query.close();
     }
 
     @Test
     public void testByDateTime() throws Exception {
-        query.findStudies(RangeMatchingPIDs, studyDateTimeRange("20110620", "103000.000"),
+        query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange("20110620", "103000.000"),
                 QUERY_PARAM, STORE_PARAM);
         assertTrue(query.hasMoreMatches());
         String studyUID = query.nextMatch().getString(Tag.StudyInstanceUID);
@@ -158,7 +153,7 @@ public class StudyQueryTest {
 
     @Test
     public void testByOpenEndTime() throws Exception {
-        query.findStudies(RangeMatchingPIDs, studyDateTimeRange(null, "1030-"), QUERY_PARAM, STORE_PARAM);
+        query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange(null, "1030-"), QUERY_PARAM, STORE_PARAM);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
@@ -171,7 +166,7 @@ public class StudyQueryTest {
 
     @Test
     public void testByOpenStartTime() throws Exception {
-        query.findStudies(RangeMatchingPIDs, studyDateTimeRange(null, "-1430"), QUERY_PARAM, STORE_PARAM);
+        query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange(null, "-1430"), QUERY_PARAM, STORE_PARAM);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
         String studyUIDs[] =
@@ -184,7 +179,7 @@ public class StudyQueryTest {
     
     @Test
     public void testByDateTimeMatchUnknown() throws Exception {
-        query.findStudies(RangeMatchingPIDs, studyDateTimeRange("20110620", "103000.000"),
+        query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange("20110620", "103000.000"),
                 MATCH_UNKNOWN, STORE_PARAM);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
@@ -196,7 +191,7 @@ public class StudyQueryTest {
 
     @Test
     public void testByTimeRange() throws Exception {
-        query.findStudies(RangeMatchingPIDs, studyDateTimeRange(null, "1030-1430"),
+        query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange(null, "1030-1430"),
                 QUERY_PARAM, STORE_PARAM);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
@@ -210,7 +205,7 @@ public class StudyQueryTest {
 
     @Test
     public void testByDateRange() throws Exception {
-        query.findStudies(RangeMatchingPIDs, studyDateTimeRange("20100620-20110620", null),
+        query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange("20100620-20110620", null),
                 QUERY_PARAM, STORE_PARAM);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
@@ -225,7 +220,7 @@ public class StudyQueryTest {
 
     @Test
     public void testByDateTimeRange() throws Exception {
-        query.findStudies(RangeMatchingPIDs, studyDateTimeRange("20100620-20110620", "1030-1430"),
+        query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange("20100620-20110620", "1030-1430"),
                 QUERY_PARAM, STORE_PARAM);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
@@ -239,7 +234,7 @@ public class StudyQueryTest {
 
     @Test
     public void testByDateTimeRangeCombined() throws Exception {
-        query.findStudies(RangeMatchingPIDs, studyDateTimeRange("20100620-20110620", "1040-1430"),
+        query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange("20100620-20110620", "1040-1430"),
                 COMBINED_DATE_TIME, STORE_PARAM);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
@@ -254,7 +249,7 @@ public class StudyQueryTest {
 
     @Test
     public void testByDateTimeRangeCombinedOpenEndRange() throws Exception {
-        query.findStudies(RangeMatchingPIDs, studyDateTimeRange("20100620-", "1040-"),
+        query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange("20100620-", "1040-"),
                 COMBINED_DATE_TIME, STORE_PARAM);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
@@ -269,7 +264,7 @@ public class StudyQueryTest {
 
     @Test
     public void testByDateTimeRangeCombinedOpenStartRange() throws Exception {
-        query.findStudies(RangeMatchingPIDs, studyDateTimeRange("-20110620", "-1420"),
+        query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange("-20110620", "-1420"),
                 COMBINED_DATE_TIME, STORE_PARAM);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
@@ -284,7 +279,7 @@ public class StudyQueryTest {
 
     @Test
     public void testByDateTimeRangeCombinedMatchUnknown() throws Exception {
-        query.findStudies(RangeMatchingPIDs, studyDateTimeRange("20100620-20110620", "1040-1430"),
+        query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange("20100620-20110620", "1040-1430"),
                 COMBINED_DATE_TIME_MATCH_UNKNOWN, STORE_PARAM);
         assertTrue(query.hasMoreMatches());
         ArrayList<String> result = studyIUIDResultList(query);
@@ -299,7 +294,7 @@ public class StudyQueryTest {
 
     @Test
     public void testByIssuerOfAccessionNumber() throws Exception {
-        query.findStudies(AccessionNumberPIDs,
+        query.findStudies(pids("ISSUER_OF_ACCNO"),
                 issuerOfAccessionNumber("A1234", "DCM4CHEE_TESTDATA_ACCNO_ISSUER_1", null, null),
                 QUERY_PARAM, STORE_PARAM);
         assertTrue(countMatches(query, 1));
@@ -308,7 +303,7 @@ public class StudyQueryTest {
 
     @Test
     public void testByIssuerOfAccessionNumberMatchUnknown() throws Exception {
-        query.findStudies(AccessionNumberPIDs,
+        query.findStudies(pids("ISSUER_OF_ACCNO"),
                 issuerOfAccessionNumber("A1234","DCM4CHEE_TESTDATA_ACCNO_ISSUER_2", null, null),
                 MATCH_UNKNOWN, STORE_PARAM);
         assertTrue(countMatches(query, 2));
@@ -317,7 +312,7 @@ public class StudyQueryTest {
 
     @Test
     public void testByProcedureCodes() throws Exception {
-        query.findStudies(ProcedureCodesPIDs,
+        query.findStudies(pids("PROC_CODE_SEQ"),
                 procedureCodes("PROC_CODE_1", "99DCM4CHEE_TEST", null), QUERY_PARAM, STORE_PARAM);
         assertTrue(countMatches(query, 1));
         query.close();
@@ -325,7 +320,7 @@ public class StudyQueryTest {
     
     @Test
     public void testByProcedureCodesMatchUnknown() throws Exception {
-        query.findStudies(ProcedureCodesPIDs,
+        query.findStudies(pids("PROC_CODE_SEQ"),
                 procedureCodes("PROC_CODE_2", "99DCM4CHEE_TEST", null), MATCH_UNKNOWN, STORE_PARAM);
         assertTrue(countMatches(query, 2));
         query.close();

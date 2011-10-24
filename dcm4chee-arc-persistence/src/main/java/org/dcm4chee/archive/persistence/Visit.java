@@ -108,7 +108,7 @@ public class Visit implements Serializable {
     @JoinColumn(name = "patient_fk")
     private Patient patient;
 
-    @OneToMany(mappedBy = "visit")
+    @OneToMany(mappedBy = "visit", orphanRemoval = true)
     private Collection<ServiceRequest> serviceRequests;
 
     @Override

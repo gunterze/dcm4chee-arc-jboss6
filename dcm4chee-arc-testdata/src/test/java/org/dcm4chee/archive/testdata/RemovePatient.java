@@ -40,8 +40,10 @@ package org.dcm4chee.archive.testdata;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
+import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.Patient;
 
 /**
@@ -53,13 +55,21 @@ public class RemovePatient {
     @PersistenceContext(unitName = "dcm4chee-arc")
     private EntityManager em;
 
-    public void removePatient(String pid, String issuer) {
-        Patient patient = em.createNamedQuery(
-                Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
-            .setParameter(1, pid)
-            .setParameter(2, issuer)
+    public void removePatient(String pid, String entityID) {
+        Issuer issuer = em.createNamedQuery(Issuer.FIND_BY_ENTITY_ID, Issuer.class)
+            .setParameter(1, entityID)
             .getSingleResult();
-        em.remove(patient);
+        try {
+            Patient patient = em.createNamedQuery(
+                    Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
+                .setParameter(1, pid)
+                .setParameter(2, issuer)
+                .getSingleResult();
+            em.remove(patient);
+        } catch (NoResultException e) {
+            System.out.println("Patient(id=" + pid
+                    + ", issuer=" + entityID + ") already removed");
+        }
     }
 
 

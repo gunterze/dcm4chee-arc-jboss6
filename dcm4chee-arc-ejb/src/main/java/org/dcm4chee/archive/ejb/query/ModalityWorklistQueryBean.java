@@ -104,7 +104,7 @@ public class ModalityWorklistQueryBean implements ModalityWorklistQuery {
     }
 
     @Override
-    public void findScheduledProcedureSteps(String[] pids, Attributes keys,
+    public void findScheduledProcedureSteps(IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam, StoreParam storeParam) {
         BooleanBuilder builder = new BooleanBuilder();
         Builder.addPatientLevelPredicates(builder, pids, keys, queryParam, storeParam);

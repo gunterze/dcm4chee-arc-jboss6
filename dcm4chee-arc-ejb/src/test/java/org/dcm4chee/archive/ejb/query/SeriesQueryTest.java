@@ -46,6 +46,7 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.soundex.ESoundex;
+import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.StoreParam;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -61,22 +62,22 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class SeriesQueryTest {
     
-    private static final String[] RequestedAttributesSeqPIDs =
-            { "REQ_ATTRS_SEQ", "DCM4CHEE_TESTDATA" };
-
-    private static final String[] ModalitiesInStudyPIDs =
-            { "MODS_IN_STUDY", "DCM4CHEE_TESTDATA" };
-
     private static final QueryParam QUERY_PARAM = new QueryParam();
     private static final QueryParam MATCH_UNKNOWN = new QueryParam().setMatchUnknown(true);
     private static final StoreParam STORE_PARAM = new StoreParam();
     static { STORE_PARAM.setFuzzyStr(new ESoundex()); }
+    private static final Issuer ISSUER = new Issuer("DCM4CHEE_TESTDATA", "*", "*");
+
+    private static IDWithIssuer[] pids(String id) {
+        return new IDWithIssuer[] { new IDWithIssuer(id, ISSUER) };
+    }
 
     @Deployment
     public static WebArchive createDeployment() {
         return ShrinkWrap.create(WebArchive.class, "test.war")
                 .addClasses(
                         QueryParam.class,
+                        IDWithIssuer.class,
                         CompositeQuery.class,
                         CompositeQueryBean.class,
                         CompositeQueryImpl.class,
@@ -87,7 +88,7 @@ public class SeriesQueryTest {
                         Builder.class,
                         MatchDateTimeRange.class,
                         MatchPersonName.class)
-                .addAsWebInfResource("META-INF/ejb-jar.xml", "ejb-jar.xml");
+                .addAsWebInfResource("META-INF/composite-query-ejb-jar.xml", "ejb-jar.xml");
     }
 
     @EJB
@@ -95,35 +96,35 @@ public class SeriesQueryTest {
 
     @Test
     public void testByModality() throws Exception {
-        query.findSeries(ModalitiesInStudyPIDs, modality("PR"), QUERY_PARAM, STORE_PARAM);
+        query.findSeries(pids("MODS_IN_STUDY"), modality("PR"), QUERY_PARAM, STORE_PARAM);
         assertTrue(countMatches(query, 2));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyPR() throws Exception {
-        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), QUERY_PARAM, STORE_PARAM);
+        query.findSeries(pids("MODS_IN_STUDY"), modalitiesInStudy("PR"), QUERY_PARAM, STORE_PARAM);
         assertTrue(countMatches(query,4));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyMatchUnknownPR() throws Exception {
-        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("PR"), MATCH_UNKNOWN, STORE_PARAM);
+        query.findSeries(pids("MODS_IN_STUDY"), modalitiesInStudy("PR"), MATCH_UNKNOWN, STORE_PARAM);
         assertTrue(countMatches(query, 5));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyCT() throws Exception {
-        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), QUERY_PARAM, STORE_PARAM);
+        query.findSeries(pids("MODS_IN_STUDY"), modalitiesInStudy("CT"), QUERY_PARAM, STORE_PARAM);
         assertTrue(countMatches(query, 2));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyMatchUnknownCT() throws Exception {
-        query.findSeries(ModalitiesInStudyPIDs, modalitiesInStudy("CT"), MATCH_UNKNOWN, STORE_PARAM);
+        query.findSeries(pids("MODS_IN_STUDY"), modalitiesInStudy("CT"), MATCH_UNKNOWN, STORE_PARAM);
         assertTrue(countMatches(query, 3));
         query.close();
     }
@@ -145,7 +146,7 @@ public class SeriesQueryTest {
         issuer.setNull(Tag.UniversalEntityID, VR.UT);
         issuer.setNull(Tag.UniversalEntityIDType, VR.CS);
         
-        query.findSeries(RequestedAttributesSeqPIDs, keys, QUERY_PARAM, STORE_PARAM);
+        query.findSeries(pids("REQ_ATTRS_SEQ"), keys, QUERY_PARAM, STORE_PARAM);
         assertTrue(countMatches(query, 1));
         query.close();
     }

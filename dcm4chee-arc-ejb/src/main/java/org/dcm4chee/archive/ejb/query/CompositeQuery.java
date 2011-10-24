@@ -48,13 +48,17 @@ public interface CompositeQuery {
 
     public static final String JNDI_NAME = "CompositeQueryBean/local";
 
-    void findPatients(String[] pids, Attributes keys, QueryParam queryParam, StoreParam storeParam);
+    void findPatients(IDWithIssuer[] pids, Attributes keys,
+            QueryParam queryParam, StoreParam storeParam);
 
-    void findStudies(String[] pids, Attributes keys, QueryParam queryParam, StoreParam storeParam);
+    void findStudies(IDWithIssuer[] pids, Attributes keys,
+            QueryParam queryParam, StoreParam storeParam);
 
-    void findSeries(String[] pids, Attributes keys, QueryParam queryParam, StoreParam storeParam);
+    void findSeries(IDWithIssuer[] pids, Attributes keys,
+            QueryParam queryParam, StoreParam storeParam);
 
-    void findInstances(String[] pids, Attributes keys, QueryParam queryParam, StoreParam storeParam);
+    void findInstances(IDWithIssuer[] pids, Attributes keys,
+            QueryParam queryParam, StoreParam storeParam);
 
     boolean optionalKeyNotSupported();
 

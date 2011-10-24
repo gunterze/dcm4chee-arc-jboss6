@@ -63,6 +63,7 @@ import org.dcm4chee.archive.persistence.ContentItem;
 import org.dcm4chee.archive.persistence.FileRef;
 import org.dcm4chee.archive.persistence.FileSystem;
 import org.dcm4chee.archive.persistence.Instance;
+import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
 import org.dcm4chee.archive.persistence.Series;
@@ -469,16 +470,17 @@ public class InstanceStoreBean implements InstanceStore {
 
     private Patient getPatient(Attributes data, StoreParam storeParam) {
         Patient patient;
+        Issuer issuer = IssuerFactory.getIssuerOfPatientID(em, data);
         try {
             patient = PatientFactory.followMergedWith(
-                    PatientFactory.findPatient(em, data, storeParam));
+                    PatientFactory.findPatient(em, data, issuer, storeParam));
             Attributes patientAttrs = patient.getAttributes();
             if (patientAttrs.mergeSelected(data, storeParam.getPatientAttributes()))
                 patient.setAttributes(patientAttrs, storeParam);
         } catch (NonUniqueResultException e) {
-            patient = PatientFactory.createNewPatient(em, data, storeParam);
+            patient = PatientFactory.createNewPatient(em, data, issuer, storeParam);
         } catch (NoResultException e) {
-            patient = PatientFactory.createNewPatient(em, data, storeParam);
+            patient = PatientFactory.createNewPatient(em, data, issuer, storeParam);
         }
         return patient;
     }

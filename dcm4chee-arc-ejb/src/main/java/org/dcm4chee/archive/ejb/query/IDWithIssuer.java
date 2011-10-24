@@ -38,24 +38,18 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.persistence.StoreParam;
+import org.dcm4chee.archive.persistence.Issuer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public interface ModalityWorklistQuery {
+public class IDWithIssuer {
 
-    public static final String JNDI_NAME = "ModalityWorklistQueryBean/local";
+    public final String id;
+    public final Issuer issuer;
 
-    void findScheduledProcedureSteps(IDWithIssuer[] pids, Attributes keys,
-            QueryParam queryParam, StoreParam storeParam);
-
-    boolean optionalKeyNotSupported();
-
-    boolean hasMoreMatches();
-
-    Attributes nextMatch();
-
-    void close();
+    public IDWithIssuer(String id, Issuer issuer) {
+        this.id = id;
+        this.issuer = issuer;
+    }
 }

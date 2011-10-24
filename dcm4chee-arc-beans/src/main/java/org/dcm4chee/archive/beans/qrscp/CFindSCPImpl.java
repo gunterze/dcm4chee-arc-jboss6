@@ -58,7 +58,9 @@ import org.dcm4che.util.AttributesValidator;
 import org.dcm4chee.archive.beans.util.Configuration;
 import org.dcm4chee.archive.beans.util.JNDIUtils;
 import org.dcm4chee.archive.ejb.query.CompositeQuery;
+import org.dcm4chee.archive.ejb.query.IDWithIssuer;
 import org.dcm4chee.archive.ejb.query.QueryParam;
+import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
@@ -85,7 +87,7 @@ public class CFindSCPImpl extends BasicCFindSCP {
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
         level.validateQueryKeys(validator, rootLevel, relational);
-        String[] pids = pids(keys);
+        IDWithIssuer[] pids = pids(keys);
         ApplicationEntity ae = as.getApplicationEntity();
         StoreParam storeParam = Configuration.storeParamFor(ae);
         EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
@@ -116,17 +118,29 @@ public class CFindSCPImpl extends BasicCFindSCP {
         }
     }
 
+    static IDWithIssuer[] pids(Attributes keys) {
+        String id = keys.getString(Tag.PatientID, "*");
+        if (id.equals("*"))
+            return null;
+
+        String entityID = keys.getString(Tag.IssuerOfPatientID, "*");
+        Attributes issuerItem = keys.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence);
+        String entityUID = issuerItem != null
+                ? issuerItem.getString(Tag.UniversalEntityID, "*")
+                : "*";
+        String entityUIDType = issuerItem != null
+                ? issuerItem.getString(Tag.UniversalEntityIDType, "*")
+                : "*";
+        Issuer issuer = entityID.equals("*")
+                     && entityUID.equals("*")
+                     && entityUIDType.equals("*")
+                     ? null
+                     : new Issuer(entityID, entityUID, entityUIDType);
+        return new IDWithIssuer[] { new IDWithIssuer(id, issuer) };
+    }
+
     private String[] roles() {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    private String[] pids(Attributes keys) {
-        String pid = keys.getString(Tag.PatientID, "*");
-        return pid.equals("*")
-                ? null 
-                : new String[] { 
-                    pid,
-                    keys.getString(Tag.IssuerOfPatientID, "*")};
     }
 }

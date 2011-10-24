@@ -51,6 +51,7 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.soundex.ESoundex;
+import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.StoreParam;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -66,10 +67,6 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class PatientQueryTest {
 
-    private static String[] dobPatientData = { "DOB*", "DCM4CHEE_TESTDATA" };
-    
-    private static String[] fuzzyPatientData = { "FUZZY*", "DCM4CHEE_TESTDATA" };
-
     private static final QueryParam QUERY_PARAM = new QueryParam();
     private static final QueryParam MATCH_UNKNOWN = new QueryParam().setMatchUnknown(true);
     private static final QueryParam FUZZY_MATCH = new QueryParam().setFuzzySemanticMatching(true);
@@ -77,12 +74,17 @@ public class PatientQueryTest {
             new QueryParam().setFuzzySemanticMatching(true).setMatchUnknown(true);
     private static final StoreParam STORE_PARAM = new StoreParam();
     static { STORE_PARAM.setFuzzyStr(new ESoundex()); }
+    private static final Issuer ISSUER = new Issuer("DCM4CHEE_TESTDATA", "*", "*");
+    private static IDWithIssuer[] pids(String id) {
+        return new IDWithIssuer[] { new IDWithIssuer(id, ISSUER) };
+    }
 
     @Deployment
     public static WebArchive createDeployment() {
         return ShrinkWrap.create(WebArchive.class, "test.war")
                 .addClasses(
                         QueryParam.class,
+                        IDWithIssuer.class,
                         CompositeQuery.class,
                         CompositeQueryBean.class,
                         CompositeQueryImpl.class,
@@ -93,7 +95,7 @@ public class PatientQueryTest {
                         Builder.class,
                         MatchDateTimeRange.class,
                         MatchPersonName.class)
-                .addAsWebInfResource("META-INF/ejb-jar.xml", "ejb-jar.xml");
+                .addAsWebInfResource("META-INF/composite-query-ejb-jar.xml", "ejb-jar.xml");
     }
 
     @EJB
@@ -101,7 +103,7 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientID() throws Exception {
-        query.findPatients(dobPatientData, null, QUERY_PARAM, STORE_PARAM);
+        query.findPatients(pids("DOB*"), null, QUERY_PARAM, STORE_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_20020202", "DOB_NONE" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -115,7 +117,7 @@ public class PatientQueryTest {
         assertTrue(query.hasMoreMatches());
         query.nextMatch();
         assertFalse(query.hasMoreMatches());
-        query.findPatients(fuzzyPatientData, patientName("LUCAS^GEORGE=", false),
+        query.findPatients(pids("FUZZY*"), patientName("LUCAS^GEORGE=", false),
                 QUERY_PARAM, STORE_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_GEORGE" };
@@ -133,7 +135,7 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientBirthDate() throws Exception {
-        query.findPatients(dobPatientData, patientBirthDate("20010101"), QUERY_PARAM, STORE_PARAM);
+        query.findPatients(pids("DOB*"), patientBirthDate("20010101"), QUERY_PARAM, STORE_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -143,7 +145,7 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientBirthDateRange() throws Exception {
-        query.findPatients(dobPatientData, patientBirthDate("20010101-20020202"),
+        query.findPatients(pids("DOB*"), patientBirthDate("20010101-20020202"),
                 QUERY_PARAM, STORE_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_20020202" };
@@ -154,7 +156,7 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientBirthDateMatchUnknown() throws Exception {
-        query.findPatients(dobPatientData, patientBirthDate("20010101"),
+        query.findPatients(pids("DOB*"), patientBirthDate("20010101"),
                 MATCH_UNKNOWN, STORE_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_NONE" };
@@ -165,7 +167,7 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientBirthDateRangeMatchUnknown() throws Exception {
-        query.findPatients(dobPatientData, patientBirthDate("20010101-20020202"),
+        query.findPatients(pids("DOB*"), patientBirthDate("20010101-20020202"),
                 MATCH_UNKNOWN, STORE_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_20020202", "DOB_NONE" };
@@ -176,7 +178,7 @@ public class PatientQueryTest {
     
     @Test
     public void testByPatientNameSoundex1() throws Exception {
-        query.findPatients(fuzzyPatientData, patientName("LUCAS^GEORGE", false),
+        query.findPatients(pids("FUZZY*"), patientName("LUCAS^GEORGE", false),
                 FUZZY_MATCH, STORE_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_GEORGE", "FUZZY_JOERG" };
@@ -187,7 +189,7 @@ public class PatientQueryTest {
     
     @Test
     public void testByPatientNameSoundex2() throws Exception {
-        query.findPatients(fuzzyPatientData, patientName("LUKAS^JÖRG", false),
+        query.findPatients(pids("FUZZY*"), patientName("LUKAS^JÖRG", false),
                 FUZZY_MATCH, STORE_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_GEORGE", "FUZZY_JOERG" };
@@ -198,7 +200,7 @@ public class PatientQueryTest {
     
     @Test
     public void testByPatientNameSoundex3() throws Exception {
-        query.findPatients(fuzzyPatientData, patientName("LUKE", false),
+        query.findPatients(pids("FUZZY*"), patientName("LUKE", false),
                 FUZZY_MATCH, STORE_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_LUKE" };
@@ -209,7 +211,7 @@ public class PatientQueryTest {
     
     @Test
     public void testByPatientNameSoundex4() throws Exception {
-        query.findPatients(fuzzyPatientData, patientName("LU*", false),
+        query.findPatients(pids("FUZZY*"), patientName("LU*", false),
                 FUZZY_MATCH, STORE_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_LUKE" , "FUZZY_JOERG", "FUZZY_GEORGE"};
@@ -220,7 +222,7 @@ public class PatientQueryTest {
     
     @Test
     public void testByPatientNameSoundex5() throws Exception {
-        query.findPatients(fuzzyPatientData, patientName("LU*", false),
+        query.findPatients(pids("FUZZY*"), patientName("LU*", false),
                 FUZZY_MATCH_UNKNOWN, STORE_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_LUKE", "FUZZY_JOERG", "FUZZY_GEORGE", "FUZZY_NONE"};

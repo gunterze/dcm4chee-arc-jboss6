@@ -100,12 +100,7 @@ public class LocateInstancesBean implements LocateInstances {
     }
 
     @Override
-    public List<InstanceLocator> find(Attributes keys) {
-        return find(pids(keys), keys);
-    }
-
-    @Override
-    public List<InstanceLocator> find(String[] pids, Attributes keys) {
+    public List<InstanceLocator> find(IDWithIssuer[] pids, Attributes keys) {
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(Builder.pids(pids, false));
         builder.and(Builder.uids(QStudy.study.studyInstanceUID,
@@ -134,16 +129,6 @@ public class LocateInstancesBean implements LocateInstances {
                 QInstance.instance.retrieveAETs,
                 QInstance.instance.externalRetrieveAET,
                 QInstance.instance.encodedAttributes));
-    }
-
-
-    private String[] pids(Attributes keys) {
-        String pid = keys.getString(Tag.PatientID, "*");
-        return pid.equals("*")
-                ? null
-                : new String[] { 
-                        pid,
-                        keys.getString(Tag.IssuerOfPatientID, "*")};
     }
 
     private List<InstanceLocator> locate(List<Object[]> tuples) {

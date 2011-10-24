@@ -91,12 +91,6 @@ public class Issuer implements Serializable {
         this.entityUIDType = entityUIDType;
     }
 
-    public Issuer(Attributes item) {
-        this(item.getString(Tag.LocalNamespaceEntityID, null),
-             item.getString(Tag.UniversalEntityID, null),
-             item.getString(Tag.UniversalEntityIDType, null));
-    }
-
     @Id
     @GeneratedValue
     @Column(name = "pk")

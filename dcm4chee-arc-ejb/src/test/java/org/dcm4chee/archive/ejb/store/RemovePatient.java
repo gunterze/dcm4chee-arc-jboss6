@@ -43,6 +43,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
 
+import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.Patient;
 
 /**
@@ -54,9 +55,12 @@ public class RemovePatient {
     @PersistenceUnit(unitName = "dcm4chee-arc")
     private EntityManagerFactory emf;
 
-    public void removePatient(String pid, String issuer) {
+    public void removePatient(String pid, String entityID) {
         EntityManager em = emf.createEntityManager();
-        Patient patient = em .createNamedQuery(
+        Issuer issuer = em.createNamedQuery(Issuer.FIND_BY_ENTITY_ID, Issuer.class)
+            .setParameter(1, entityID)
+            .getSingleResult();
+        Patient patient = em.createNamedQuery(
                 Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
             .setParameter(1, pid)
             .setParameter(2, issuer)

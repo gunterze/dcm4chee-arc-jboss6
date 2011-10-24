@@ -56,12 +56,12 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
  */
 public class StudyQueryImpl extends CompositeQueryImpl {
 
-    public StudyQueryImpl(StatelessSession session, String[] pids, Attributes keys,
+    public StudyQueryImpl(StatelessSession session, IDWithIssuer[] pids, Attributes keys,
             QueryParam queryParam, StoreParam storeParam) {
         super(query(session, pids, keys, queryParam, storeParam), false);
     }
 
-    private static ScrollableResults query(StatelessSession session, String[] pids,
+    private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam, StoreParam storeParam) {
         BooleanBuilder builder = new BooleanBuilder();
         Builder.addPatientLevelPredicates(builder, pids, keys, queryParam, storeParam);

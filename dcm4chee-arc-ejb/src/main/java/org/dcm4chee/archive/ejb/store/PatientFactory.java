@@ -40,9 +40,11 @@ package org.dcm4chee.archive.ejb.store;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NonUniqueResultException;
+import javax.persistence.TypedQuery;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.StoreParam;
 
@@ -51,15 +53,19 @@ import org.dcm4chee.archive.persistence.StoreParam;
  */
 public abstract class PatientFactory {
 
-    public static Patient findPatient(EntityManager em, Attributes attrs, StoreParam storeParam) {
+    public static Patient findPatient(EntityManager em, Attributes attrs, Issuer issuer,
+            StoreParam storeParam) {
         String pid = attrs.getString(Tag.PatientID);
-        String issuer = attrs.getString(Tag.IssuerOfPatientID, "*");
         if (pid == null)
             throw new NonUniqueResultException();
-        return em.createNamedQuery(Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
-                .setParameter(1, pid)
-                .setParameter(2, issuer)
-                .getSingleResult();
+        TypedQuery<Patient> query = em.createNamedQuery(
+                    issuer != null 
+                        ? Patient.FIND_BY_PATIENT_ID_WITH_ISSUER
+                        : Patient.FIND_BY_PATIENT_ID_WITHOUT_ISSUER, Patient.class)
+                .setParameter(1, pid);
+        if (issuer != null)
+            query.setParameter(2, issuer);
+        return query.getSingleResult();
     }
 
     public static Patient followMergedWith(Patient patient) {
@@ -68,9 +74,10 @@ public abstract class PatientFactory {
         return patient;
     }
 
-    public static Patient createNewPatient(EntityManager em, Attributes attrs,
+    public static Patient createNewPatient(EntityManager em, Attributes attrs, Issuer issuer,
             StoreParam storeParam) {
         Patient patient = new Patient();
+        patient.setIssuerOfPatientID(issuer);
         patient.setAttributes(attrs, storeParam);
         em.persist(patient);
         return patient;
