@@ -100,6 +100,9 @@ public class InstanceStoreBean implements InstanceStore {
                 modified.remove(Tag.OriginalAttributesSequence);
                 if (storeDuplicate == StoreDuplicate.IGNORE)
                     return false;
+                for (FileRef fileRef2 : inst.getFileRefs())
+                    if (fileRef2.getFileSystem().getGroupID().equals(fs.getGroupID()))
+                        return false;
                 break;
             case REPLACE:
                 inst.setReplaced(true);

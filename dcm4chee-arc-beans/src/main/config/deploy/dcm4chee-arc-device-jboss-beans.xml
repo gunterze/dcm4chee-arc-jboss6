@@ -256,7 +256,7 @@
     <property name="fuzzyStr">
       <bean name="FuzzyStr" class="org.dcm4che.soundex.ESoundex" />
     </property>
-    <property name="storeDuplicate">IGNORE</property>
+    <property name="storeDuplicate">STORE</property>
     <property name="suppressWarningCoercionOfDataElements">false</property>
     <property name="storeOriginalAttributes">true</property>
     <property name="modifyingSystem">DCM4CHEE</property>
