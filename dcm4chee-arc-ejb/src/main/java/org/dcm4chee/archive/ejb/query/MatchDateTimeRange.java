@@ -86,6 +86,12 @@ class MatchDateTimeRange {
         return matchUnknown(path, matchUnknown, range(path, keys.getDateRange(tag, null), dt));
     }
 
+    static Predicate rangeMatch(StringPath path, long dateAndTimeTag, Attributes keys,
+            boolean matchUnknown) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
     static Predicate rangeMatch(StringPath dateField, StringPath timeField, 
             int dateTag, int timeTag, long dateAndTimeTag, 
             Attributes keys, boolean combinedDatetimeMatching, boolean matchUnknown) {
@@ -108,6 +114,7 @@ class MatchDateTimeRange {
         }
         return predicates;
     }
+
 
     private static Predicate matchUnknown(StringPath field, boolean matchUnknown, 
             Predicate predicate) {

@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.ejb.store;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
@@ -53,9 +54,8 @@ import org.dcm4chee.archive.persistence.StoreParam;
  */
 public abstract class PatientFactory {
 
-    public static Patient findPatient(EntityManager em, Attributes attrs, Issuer issuer,
+    public static Patient findPatient(EntityManager em, String pid, Issuer issuer,
             StoreParam storeParam) {
-        String pid = attrs.getString(Tag.PatientID);
         if (pid == null)
             throw new NonUniqueResultException();
         TypedQuery<Patient> query = em.createNamedQuery(
@@ -83,4 +83,57 @@ public abstract class PatientFactory {
         return patient;
     }
 
+    public static Patient findUniqueOrCreatePatient(EntityManager em, Attributes data,
+            StoreParam storeParam) {
+        String pid = data.getString(Tag.PatientID);
+        Issuer issuer = IssuerFactory.getIssuerOfPatientID(em, data);
+        Patient patient;
+        try {
+            patient = followMergedWith(findPatient(em, pid, issuer, storeParam));
+            Attributes patientAttrs = patient.getAttributes();
+            if (patientAttrs.mergeSelected(data, storeParam.getPatientAttributes()))
+                patient.setAttributes(patientAttrs, storeParam);
+        } catch (NonUniqueResultException e) {
+            patient = createNewPatient(em, data, issuer, storeParam);
+        } catch (NoResultException e) {
+            patient = createNewPatient(em, data, issuer, storeParam);
+            try {
+                findPatient(em, pid, issuer, storeParam);
+            } catch (NonUniqueResultException e2) {
+                em.remove(patient);
+                return findUniqueOrCreatePatient(em, data, storeParam);
+            }
+        }
+        return patient;
+    }
+
+    public static Patient updateOrCreatePatient(EntityManager em, Attributes data,
+            StoreParam storeParam) {
+        String pid = data.getString(Tag.PatientID);
+        Issuer issuer = IssuerFactory.getIssuerOfPatientID(em, data);
+        Patient patient;
+        try {
+            patient = PatientFactory.findPatient(em, pid, issuer, storeParam);
+            Patient mergedWith = patient.getMergedWith();
+            if (mergedWith != null)
+                throw new PatientMergedException("" + patient + " merged with " + mergedWith);
+            Attributes patientAttrs = patient.getAttributes();
+            Attributes modified = new Attributes();
+            if (patientAttrs.updateSelectedAttributes(data, modified,
+                    storeParam.getPatientAttributes())) {
+                patient.setAttributes(patientAttrs, storeParam);
+            }
+        } catch (NonUniqueResultException e) {
+            throw new NonUniquePatientException(pid, issuer);
+        } catch (NoResultException e) {
+            patient = createNewPatient(em, data, issuer, storeParam);
+            try {
+                findPatient(em, pid, issuer, storeParam);
+            } catch (NonUniqueResultException e2) {
+                em.remove(patient);
+                return updateOrCreatePatient(em, data, storeParam);
+            }
+        }
+        return patient;
+    }
 }

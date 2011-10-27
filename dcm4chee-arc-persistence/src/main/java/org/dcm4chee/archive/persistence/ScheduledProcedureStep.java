@@ -93,6 +93,13 @@ public class ScheduledProcedureStep implements Serializable {
     public static final String FIND_BY_SPS_ID_WITH_ISSUER =
         "ScheduledProcedureStep.findBySPSIDWithIssuer";
 
+    public static final String SCHEDULED = "SCHEDULED";
+    public static final String ARRIVED = "ARRIVED";
+    public static final String READY = "READY";
+    public static final String STARTED = "STARTED";
+    public static final String DEPARTED = "DEPARTED";
+    public static final String STORED = "STORED";
+
     @Id
     @GeneratedValue
     @Column(name = "pk")

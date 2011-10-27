@@ -72,6 +72,7 @@ public abstract class IssuerFactory {
         } catch (NoResultException e) {
             Issuer issuer = new Issuer(entityID, entityUID, entityUIDType);
             em.persist(issuer);
+            em.flush();
             return issuer;
         }
     }

@@ -46,12 +46,13 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceContextType;
+import javax.persistence.PersistenceUnit;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
@@ -62,18 +63,15 @@ import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.ContentItem;
 import org.dcm4chee.archive.persistence.FileRef;
 import org.dcm4chee.archive.persistence.FileSystem;
+import org.dcm4chee.archive.persistence.FileSystemStatus;
 import org.dcm4chee.archive.persistence.Instance;
-import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
 import org.dcm4chee.archive.persistence.Series;
-import org.dcm4chee.archive.persistence.FileSystemStatus;
 import org.dcm4chee.archive.persistence.StoreParam;
 import org.dcm4chee.archive.persistence.Study;
 import org.dcm4chee.archive.persistence.VerifyingObserver;
 import org.dcm4chee.archive.persistence.StoreParam.StoreDuplicate;
-
-import com.mysema.query.NonUniqueResultException;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -81,13 +79,20 @@ import com.mysema.query.NonUniqueResultException;
 @Stateful
 public class InstanceStoreBean implements InstanceStore {
 
-    @PersistenceContext(unitName = "dcm4chee-arc", type = PersistenceContextType.EXTENDED)
+    @PersistenceUnit(unitName = "dcm4chee-arc")
+    private EntityManagerFactory emf;
     private EntityManager em;
     private Series cachedSeries;
+
+    @PostConstruct
+    public void init() {
+        em = emf.createEntityManager();
+    }
 
     @Override
     public boolean addFileRef(String sourceAET, Attributes data, Attributes modified,
             FileRef fileRef, StoreParam storeParam) {
+        em.joinTransaction();
         FileSystem fs = fileRef.getFileSystem();
         Instance inst;
         try {
@@ -97,7 +102,7 @@ public class InstanceStoreBean implements InstanceStore {
             case IGNORE:
             case STORE:
                 coerceAttributes(data, inst, modified);
-                data.coerceAttributes(inst.getAttributes(), modified);
+                data.updateAttributes(inst.getAttributes(), modified);
                 modified.remove(Tag.OriginalAttributesSequence);
                 if (storeDuplicate == StoreDuplicate.IGNORE)
                     return false;
@@ -126,9 +131,9 @@ public class InstanceStoreBean implements InstanceStore {
         Series series = inst.getSeries();
         Study study = series.getStudy();
         Patient patient = study.getPatient();
-        data.coerceAttributes(patient.getAttributes(), modified);
-        data.coerceAttributes(study.getAttributes(), modified);
-        data.coerceAttributes(series.getAttributes(), modified);
+        data.updateAttributes(patient.getAttributes(), modified);
+        data.updateAttributes(study.getAttributes(), modified);
+        data.updateAttributes(series.getAttributes(), modified);
     }
 
     private static void storeOriginalAttributes(String sourceAET, Attributes data,
@@ -148,6 +153,7 @@ public class InstanceStoreBean implements InstanceStore {
     @Override
     public Instance newInstance(String sourceAET, Attributes data, Availability availability,
             StoreParam storeParam) {
+        em.joinTransaction();
         Instance inst = new Instance();
         Series series = getSeries(sourceAET, data, availability, storeParam);
         inst.setSeries(series);
@@ -398,14 +404,21 @@ public class InstanceStoreBean implements InstanceStore {
         ArrayList<ScheduledProcedureStep> list =
                 new ArrayList<ScheduledProcedureStep>(requestAttrsSeq.size());
         for (Attributes requestAttrs : requestAttrsSeq) {
-            Attributes attrs = new Attributes(
-                    data.bigEndian(), data.size() + requestAttrs.size());
-            attrs.addAll(data);
-            attrs.addAll(requestAttrs);
-            ScheduledProcedureStep sps = RequestFactory.getScheduledProcedureStep(em,
-                    attrs, patient, storeParam);
-            if (sps != null)
+            if (requestAttrs.containsValue(Tag.ScheduledProcedureStepID)
+                    && requestAttrs.containsValue(Tag.RequestedProcedureID)
+                    && (requestAttrs.containsValue(Tag.AccessionNumber)
+                            || data.contains(Tag.AccessionNumber))) {
+                Attributes attrs = new Attributes(data.bigEndian(),
+                        data.size() + requestAttrs.size());
+                attrs.addAll(data);
+                attrs.addAll(requestAttrs);
+                attrs.setString(Tag.ScheduledProcedureStepStatus, VR.CS,
+                        ScheduledProcedureStep.STORED);
+                ScheduledProcedureStep sps =
+                        RequestFactory.findOrCreateScheduledProcedureStep(em,
+                                attrs, patient, storeParam);
                 list.add(sps);
+            }
         }
         return list;
     }
@@ -415,6 +428,8 @@ public class InstanceStoreBean implements InstanceStore {
     public void close() {
         updateCachedSeries();
         cachedSeries = null;
+        em.close();
+        em = null;
     }
 
     private void updateCachedSeries() {
@@ -422,6 +437,7 @@ public class InstanceStoreBean implements InstanceStore {
         if (series == null)
             return;
 
+        em.joinTransaction();
         series.setNumberOfSeriesRelatedInstances(countRelatedInstancesOf(series));
         series.setRetrieveAETs(retrieveAETsOf(series));
         series.setExternalRetrieveAET(externalRetrieveAETOf(series));
@@ -450,7 +466,7 @@ public class InstanceStoreBean implements InstanceStore {
             }
         } catch (NoResultException e) {
             study = new Study();
-            Patient patient = getPatient(data, storeParam);
+            Patient patient = PatientFactory.findUniqueOrCreatePatient(em, data, storeParam);
             study.setPatient(patient);
             study.setProcedureCodes(CodeFactory.createCodes(em,
                     data.getSequence(Tag.ProcedureCodeSequence)));
@@ -466,23 +482,6 @@ public class InstanceStoreBean implements InstanceStore {
             em.persist(study);
         }
         return study;
-    }
-
-    private Patient getPatient(Attributes data, StoreParam storeParam) {
-        Patient patient;
-        Issuer issuer = IssuerFactory.getIssuerOfPatientID(em, data);
-        try {
-            patient = PatientFactory.followMergedWith(
-                    PatientFactory.findPatient(em, data, issuer, storeParam));
-            Attributes patientAttrs = patient.getAttributes();
-            if (patientAttrs.mergeSelected(data, storeParam.getPatientAttributes()))
-                patient.setAttributes(patientAttrs, storeParam);
-        } catch (NonUniqueResultException e) {
-            patient = PatientFactory.createNewPatient(em, data, issuer, storeParam);
-        } catch (NoResultException e) {
-            patient = PatientFactory.createNewPatient(em, data, issuer, storeParam);
-        }
-        return patient;
     }
 
 }

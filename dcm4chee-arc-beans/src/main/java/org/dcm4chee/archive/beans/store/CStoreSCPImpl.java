@@ -160,7 +160,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             } catch (Exception e) {
                 new IOException(e);
             }
-            ds.coerceAttributes(modify, modified);
+            ds.updateAttributes(modify, modified);
         }
         AttributesFormat filePathFormatFor = storeParam.getRenameFilePathFormat();
         File dst = filePathFormatFor != null

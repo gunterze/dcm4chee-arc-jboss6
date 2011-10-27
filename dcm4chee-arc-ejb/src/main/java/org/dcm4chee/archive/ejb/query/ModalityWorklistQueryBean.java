@@ -53,6 +53,7 @@ import javax.persistence.PersistenceUnit;
 import javax.sql.DataSource;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.persistence.QPatient;
 import org.dcm4chee.archive.persistence.QRequestedProcedure;
 import org.dcm4chee.archive.persistence.QScheduledProcedureStep;
@@ -108,7 +109,8 @@ public class ModalityWorklistQueryBean implements ModalityWorklistQuery {
             QueryParam queryParam, StoreParam storeParam) {
         BooleanBuilder builder = new BooleanBuilder();
         Builder.addPatientLevelPredicates(builder, pids, keys, queryParam, storeParam);
-        Builder.addModalityWorklistPredicates(builder, keys, queryParam, storeParam);
+        Builder.addScheduledProcedureStepPredicates(builder, 
+                keys.getNestedDataset(Tag.ScheduledProcedureStepSequence), queryParam, storeParam);
         results = new HibernateQuery(session)
             .from(QScheduledProcedureStep.scheduledProcedureStep)
             .innerJoin(QScheduledProcedureStep.scheduledProcedureStep.requestedProcedure,
@@ -159,7 +161,8 @@ public class ModalityWorklistQueryBean implements ModalityWorklistQuery {
         Utils.decodeAttributes(attrs, visitAttributes);
         Utils.decodeAttributes(attrs, requestAttributes);
         Utils.decodeAttributes(attrs, reqProcAttributes);
-        Utils.decodeAttributes(attrs, spsAttributes);
+        Attributes spsItem = Utils.decodeAttributes(spsAttributes);
+        attrs.newSequence(Tag.ScheduledProcedureStepSequence, 1).add(spsItem );
         return attrs;
     }
 

@@ -38,32 +38,15 @@
 
 package org.dcm4chee.archive.ejb.store;
 
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.dcm4chee.archive.persistence.Issuer;
-import org.dcm4chee.archive.persistence.Patient;
+import org.dcm4che.data.Attributes;
+import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
+import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateless
-public class RemovePatient {
+public interface ModalityWorklistManager {
 
-    @PersistenceContext(unitName = "dcm4chee-arc")
-    private EntityManager em;
-
-    public void removePatient(String pid, String entityID) {
-        Issuer issuer = em.createNamedQuery(Issuer.FIND_BY_ENTITY_ID, Issuer.class)
-            .setParameter(1, entityID)
-            .getSingleResult();
-        Patient patient = em.createNamedQuery(
-                Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
-            .setParameter(1, pid)
-            .setParameter(2, issuer)
-            .getSingleResult();
-        em.remove(patient);
-    }
-
+    ScheduledProcedureStep createScheduledProcedureStep(
+            Attributes attrs, StoreParam storeParam);
 }

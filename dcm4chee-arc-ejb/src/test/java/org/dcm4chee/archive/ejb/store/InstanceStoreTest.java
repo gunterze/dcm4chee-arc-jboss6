@@ -80,6 +80,8 @@ public class InstanceStoreTest {
                         RequestFactory.class,
                         PatientFactory.class,
                         PatientMismatchException.class,
+                        PatientMergedException.class,
+                        NonUniquePatientException.class,
                         RemovePatient.class)
                 .addAsResource("ct-1.xml")
                 .addAsResource("ct-2.xml")

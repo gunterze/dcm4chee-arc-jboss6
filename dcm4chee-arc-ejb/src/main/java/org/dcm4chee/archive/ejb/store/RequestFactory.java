@@ -43,6 +43,7 @@ import java.util.Collection;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
 
 import org.dcm4che.data.Attributes;
@@ -61,39 +62,72 @@ import org.dcm4chee.archive.persistence.Visit;
  */
 public abstract class RequestFactory {
 
-    public static ScheduledProcedureStep getScheduledProcedureStep(EntityManager em,
+    public static ScheduledProcedureStep findOrCreateScheduledProcedureStep(EntityManager em,
             Attributes attrs, Patient patient, StoreParam storeParam) {
         String spsid = attrs.getString(Tag.ScheduledProcedureStepID);
         String rpid = attrs.getString(Tag.RequestedProcedureID);
         String accno = attrs.getString(Tag.AccessionNumber);
-        if (spsid == null || rpid == null || accno == null)
-            return null;
+        return findOrCreateScheduleProcedureStep(em, attrs, patient,
+                storeParam, spsid, rpid, accno);
+    }
 
+    public static ScheduledProcedureStep createScheduledProcedureStep(EntityManager em,
+            Attributes attrs, Patient patient, StoreParam storeParam) {
+        String spsid = attrs.getString(Tag.ScheduledProcedureStepID);
+        String rpid = attrs.getString(Tag.RequestedProcedureID);
+        String accno = attrs.getString(Tag.AccessionNumber);
         Issuer isserOfAccNo = IssuerFactory.getIssuer(em,
                 attrs.getNestedDataset(Tag.IssuerOfAccessionNumberSequence));
+        ScheduledProcedureStep sps = createScheduledProcedureStep(em, attrs, patient,
+                storeParam, spsid, rpid, accno, isserOfAccNo);
+        try {
+            findScheduledProcedureStep(em, spsid, rpid, accno, isserOfAccNo);
+        } catch (NonUniqueResultException e2) {
+            em.remove(sps);
+            throw new EntityAlreadyExistsException(sps.toString());
+        }
+        return sps;
+    }
 
+    private static ScheduledProcedureStep findOrCreateScheduleProcedureStep(
+            EntityManager em, Attributes attrs, Patient patient,
+            StoreParam storeParam, String spsid, String rpid, String accno) {
+        Issuer isserOfAccNo = IssuerFactory.getIssuer(em,
+                attrs.getNestedDataset(Tag.IssuerOfAccessionNumberSequence));
         try {
             ScheduledProcedureStep sps = findScheduledProcedureStep(
                     em, spsid, rpid, accno, isserOfAccNo);
-            RequestedProcedure rp = sps.getRequestedProcedure();
-            ServiceRequest request = rp.getServiceRequest();
-            Visit visit = request.getVisit();
-            Patient patient2 = visit.getPatient();
-            if (patient2 != patient)
-                throw new PatientMismatchException(patient, patient2, request);
-
+            PatientMismatchException.check(sps, patient,
+                    sps.getRequestedProcedure().getServiceRequest().getVisit().getPatient());
             return sps;
         } catch (NoResultException e) {
-            RequestedProcedure rp = getRequestedProcedure(em, attrs, patient, storeParam,
-                    rpid, accno, isserOfAccNo);
-            ScheduledProcedureStep sps = new ScheduledProcedureStep();
-            sps.setRequestedProcedure(rp);
-            sps.setScheduledStationAETs(
-                    createScheduledStationAETs(attrs.getStrings(Tag.ScheduledStationAETitle)));
-            sps.setAttributes(attrs, storeParam);
-            em.persist(sps);
+            ScheduledProcedureStep sps = createScheduledProcedureStep(em, attrs, patient, 
+                    storeParam, spsid, rpid, accno, isserOfAccNo);
+            try {
+                findScheduledProcedureStep(em, spsid, rpid, accno, isserOfAccNo);
+            } catch (NonUniqueResultException e2) {
+                em.remove(sps);
+                return findOrCreateScheduleProcedureStep(em, attrs, patient,
+                        storeParam, spsid, rpid, accno);
+            }
             return sps;
         }
+    }
+
+    private static ScheduledProcedureStep createScheduledProcedureStep(
+            EntityManager em, Attributes attrs, Patient patient,
+            StoreParam storeParam, String spsid, String rpid, String accno,
+            Issuer isserOfAccNo) {
+        ScheduledProcedureStep sps = new ScheduledProcedureStep();
+        RequestedProcedure rp =
+            findOrCreateRequestedProcedure(em, attrs, patient, storeParam,
+                    rpid, accno, isserOfAccNo);
+        sps.setRequestedProcedure(rp);
+        sps.setScheduledStationAETs(
+                createScheduledStationAETs(attrs.getStrings(Tag.ScheduledStationAETitle)));
+        sps.setAttributes(attrs, storeParam);
+        em.persist(sps);
+        return sps;
     }
 
     private static Collection<ScheduledStationAETitle> createScheduledStationAETs(
@@ -134,10 +168,7 @@ public abstract class RequestFactory {
 
         try {
             Visit visit = findVisit(em, admissionID, issuerOfAdmissionID);
-            Patient patient2 = visit.getPatient();
-            if (patient2 != patient)
-                throw new PatientMismatchException(patient, patient2, visit);
-
+            PatientMismatchException.check(visit, patient, visit.getPatient());
             return visit;
         } catch (NoResultException e) {
             return newVisit(em, attrs, patient, issuerOfAdmissionID, storeParam);
@@ -166,17 +197,13 @@ public abstract class RequestFactory {
         return query.getSingleResult();
     }
 
-    private static RequestedProcedure getRequestedProcedure(EntityManager em,
+    private static RequestedProcedure findOrCreateRequestedProcedure(EntityManager em,
             Attributes attrs, Patient patient, StoreParam storeParam,
             String rpid, String accno, Issuer issuerOfAccNo) {
         try {
             RequestedProcedure rp = findRequestedProcedure(em, rpid, accno, issuerOfAccNo);
-            ServiceRequest request = rp.getServiceRequest();
-            Visit visit = request.getVisit();
-            Patient patient2 = visit.getPatient();
-            if (patient2 != patient)
-                throw new PatientMismatchException(patient, patient2, request);
-
+            PatientMismatchException.check(rp, patient,
+                    rp.getServiceRequest().getVisit().getPatient());
             return rp;
         } catch (NoResultException e) {
             ServiceRequest rq = getServiceRequest(em, attrs, patient, storeParam,
@@ -208,11 +235,8 @@ public abstract class RequestFactory {
             String accno, Issuer issuerOfAccNo) {
         try {
             ServiceRequest request = findServiceRequest(em, accno, issuerOfAccNo);
-            Visit visit = request.getVisit();
-            Patient patient2 = visit.getPatient();
-            if (patient2 != patient)
-                throw new PatientMismatchException(patient, patient2, request);
-
+            PatientMismatchException.check(request, patient,
+                    request.getVisit().getPatient());
             return request;
         } catch (NoResultException e) {
             ServiceRequest request = new ServiceRequest();

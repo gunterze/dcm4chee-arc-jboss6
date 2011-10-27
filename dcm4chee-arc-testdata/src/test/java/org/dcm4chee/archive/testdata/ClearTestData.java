@@ -70,6 +70,7 @@ public class ClearTestData {
         "FUZZY_LUKE",
         "FUZZY_NONE",
         "PERSON_NAME",
+        "MWL_TEST",
     };
 
     @Deployment

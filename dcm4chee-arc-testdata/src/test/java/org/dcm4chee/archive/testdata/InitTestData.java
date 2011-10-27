@@ -45,10 +45,15 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.io.SAXReader;
 import org.dcm4che.soundex.ESoundex;
 import org.dcm4chee.archive.ejb.store.CodeFactory;
+import org.dcm4chee.archive.ejb.store.EntityAlreadyExistsException;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.ejb.store.InstanceStoreBean;
 import org.dcm4chee.archive.ejb.store.IssuerFactory;
+import org.dcm4chee.archive.ejb.store.ModalityWorklistManager;
+import org.dcm4chee.archive.ejb.store.ModalityWorklistManagerBean;
+import org.dcm4chee.archive.ejb.store.NonUniquePatientException;
 import org.dcm4chee.archive.ejb.store.PatientFactory;
+import org.dcm4chee.archive.ejb.store.PatientMergedException;
 import org.dcm4chee.archive.ejb.store.PatientMismatchException;
 import org.dcm4chee.archive.ejb.store.RequestFactory;
 import org.dcm4chee.archive.persistence.Availability;
@@ -71,14 +76,19 @@ public class InitTestData {
     private static final Class<?>[] CLASSES = {
         InstanceStore.class,
         InstanceStoreBean.class,
+        ModalityWorklistManager.class,
+        ModalityWorklistManagerBean.class,
         CodeFactory.class,
         IssuerFactory.class,
         RequestFactory.class,
         PatientFactory.class,
-        PatientMismatchException.class
+        PatientMismatchException.class,
+        PatientMergedException.class,
+        NonUniquePatientException.class,
+        EntityAlreadyExistsException.class
     };
 
-    private static final String[] RESOURCES = {
+    private static final String[] INSTANCES = {
         "date-range-1.xml",
         "date-range-2.xml",
         "date-range-3.xml",
@@ -117,6 +127,12 @@ public class InitTestData {
         "fuzzy-4.xml",
         "person-name-1.xml",
    };
+
+    private static final String[] MWL_ITEMS = {
+        "mwl-ct-1.xml",
+        "mwl-mr-1.xml",
+        "mwl-mr-2.xml",
+    };
 
     private static final StoreParam STORE_PARAM = new StoreParam();
     static { 
@@ -224,7 +240,9 @@ public class InitTestData {
        JavaArchive archive = ShrinkWrap.create(JavaArchive.class, "test.jar");
        for (Class<?> clazz : CLASSES)
            archive.addClass(clazz);
-       for (String res : RESOURCES)
+       for (String res : INSTANCES)
+           archive.addAsResource(res);
+       for (String res : MWL_ITEMS)
            archive.addAsResource(res);
        return archive;
     }
@@ -232,13 +250,20 @@ public class InitTestData {
     @EJB
     private InstanceStore instanceStore;
 
+    @EJB
+    private ModalityWorklistManager mwlManager;
+
     @Test
     public void storeTestData() throws Exception {
-        for (String res : RESOURCES) {
+        for (String res : INSTANCES) {
             Attributes ds = SAXReader.parse("resource:" + res, null);
             instanceStore.newInstance(SOURCE_AET, ds, Availability.ONLINE, STORE_PARAM);
         }
         instanceStore.close();
+        for (String res : MWL_ITEMS) {
+            Attributes ds = SAXReader.parse("resource:" + res, null);
+            mwlManager.createScheduledProcedureStep(ds, STORE_PARAM);
+        }
     }
 
 }

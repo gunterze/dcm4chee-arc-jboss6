@@ -38,32 +38,17 @@
 
 package org.dcm4chee.archive.ejb.store;
 
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.dcm4chee.archive.persistence.Issuer;
-import org.dcm4chee.archive.persistence.Patient;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Stateless
-public class RemovePatient {
+public class NonUniquePatientException extends RuntimeException {
 
-    @PersistenceContext(unitName = "dcm4chee-arc")
-    private EntityManager em;
+    private static final long serialVersionUID = -770538934731527268L;
 
-    public void removePatient(String pid, String entityID) {
-        Issuer issuer = em.createNamedQuery(Issuer.FIND_BY_ENTITY_ID, Issuer.class)
-            .setParameter(1, entityID)
-            .getSingleResult();
-        Patient patient = em.createNamedQuery(
-                Patient.FIND_BY_PATIENT_ID_WITH_ISSUER, Patient.class)
-            .setParameter(1, pid)
-            .setParameter(2, issuer)
-            .getSingleResult();
-        em.remove(patient);
+    public NonUniquePatientException(String pid, Issuer issuer) {
+        super("Patient[id=" + pid + ", issuer=" + issuer + "]");
     }
 
 }

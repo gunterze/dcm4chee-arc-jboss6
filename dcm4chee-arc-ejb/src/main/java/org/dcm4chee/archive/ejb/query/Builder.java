@@ -41,9 +41,8 @@ package org.dcm4chee.archive.ejb.query;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
-import org.dcm4chee.archive.persistence.Issuer;
-import org.dcm4chee.archive.persistence.StudyPermissionAction;
 import org.dcm4chee.archive.persistence.Code;
+import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.QCode;
 import org.dcm4chee.archive.persistence.QContentItem;
 import org.dcm4chee.archive.persistence.QInstance;
@@ -56,7 +55,9 @@ import org.dcm4chee.archive.persistence.QServiceRequest;
 import org.dcm4chee.archive.persistence.QStudy;
 import org.dcm4chee.archive.persistence.QStudyPermission;
 import org.dcm4chee.archive.persistence.QVerifyingObserver;
+import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
 import org.dcm4chee.archive.persistence.StoreParam;
+import org.dcm4chee.archive.persistence.StudyPermissionAction;
 
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.hibernate.HibernateSubQuery;
@@ -538,10 +539,46 @@ abstract class Builder {
             .exists();
     }
 
-    public static void addModalityWorklistPredicates(BooleanBuilder builder,
+    static void addScheduledProcedureStepPredicates(BooleanBuilder builder,
             Attributes keys, QueryParam queryParam, StoreParam storeParam) {
+
+        if (keys == null)
+            return;
+
+        builder.and(wildCard(QScheduledProcedureStep.scheduledProcedureStep.modality,
+                keys.getString(Tag.Modality, "*").toUpperCase(), false, false));
+        builder.and(spsAET(keys.getString(Tag.ScheduledStationAETitle, "*")));
+        builder.and(MatchPersonName.match(
+                QScheduledProcedureStep.scheduledProcedureStep.scheduledPerformingPhysicianName,
+                QScheduledProcedureStep.scheduledProcedureStep.scheduledPerformingPhysicianIdeographicName,
+                QScheduledProcedureStep.scheduledProcedureStep.scheduledPerformingPhysicianPhoneticName,
+                QScheduledProcedureStep.scheduledProcedureStep.scheduledPerformingPhysicianFamilyNameSoundex,
+                QScheduledProcedureStep.scheduledProcedureStep.scheduledPerformingPhysicianGivenNameSoundex,
+                keys.getString(Tag.ScheduledPerformingPhysicianName, "*"),
+                queryParam, storeParam.getFuzzyStr()));
+        builder.and(MatchDateTimeRange.rangeMatch(
+                QScheduledProcedureStep.scheduledProcedureStep.startDateTime,
+                Tag.ScheduledProcedureStepStartDateAndTime,
+                keys, false));
+        builder.and(spsStatusPredicate(QScheduledProcedureStep.scheduledProcedureStep.status,
+                keys.getStrings(Tag.ScheduledProcedureStepStatus)));
+    }
+
+    private static Predicate spsAET(String value) {
+        if (value.equals("*"))
+            return null;
+
         // TODO Auto-generated method stub
-        
+        return null;
+    }
+
+    private static Predicate spsStatusPredicate(StringPath path, String[] values) {
+        if (values == null || values.length == 0 || values[0].equals("*"))
+            return path.ne(ScheduledProcedureStep.STORED);
+
+        return values.length == 1
+                ? path.eq(values[0])
+                : path.in(values);
     }
 
 }
