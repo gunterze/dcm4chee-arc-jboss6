@@ -135,7 +135,8 @@ public class Issuer implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder().append("Issuer[id=");
+        StringBuilder sb = new StringBuilder().append("Issuer[pk=").append(pk);
+        sb.append(", id=");
         if (entityID != null)
             sb.append(entityID);
         sb.append(", uid=");
