@@ -52,4 +52,10 @@ public class IDWithIssuer {
         this.id = id;
         this.issuer = issuer;
     }
+
+    @Override
+    public String toString() {
+        // TODO Auto-generated method stub
+        return "IDWithIssuer[id=" + id + ", issuer=" + issuer + "]";
+    }
 }
