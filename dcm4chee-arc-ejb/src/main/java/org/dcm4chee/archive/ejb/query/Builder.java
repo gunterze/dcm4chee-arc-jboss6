@@ -56,7 +56,6 @@ import org.dcm4chee.archive.persistence.QServiceRequest;
 import org.dcm4chee.archive.persistence.QStudy;
 import org.dcm4chee.archive.persistence.QStudyPermission;
 import org.dcm4chee.archive.persistence.QVerifyingObserver;
-import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
 import org.dcm4chee.archive.persistence.StoreParam;
 import org.dcm4chee.archive.persistence.StudyPermissionAction;
 
@@ -585,11 +584,8 @@ abstract class Builder {
         builder.and(wildCard(QScheduledProcedureStep.scheduledProcedureStep.scheduledProcedureStepID,
                 item.getString(Tag.ScheduledProcedureStepID, "*"),
                 matchUnknown, false));
-    }
-
-    static void addScheduledProcedureStepStatusPredicates(BooleanBuilder builder, Attributes item) {
-        builder.and(spsStatusPredicate(QScheduledProcedureStep.scheduledProcedureStep.status,
-                item != null ? item.getStrings(Tag.ScheduledProcedureStepStatus) : null));
+        builder.and(uids(QScheduledProcedureStep.scheduledProcedureStep.status,
+                item.getStrings(Tag.ScheduledProcedureStepStatus), matchUnknown));
     }
 
     private static Predicate scheduledStationAET(String aet, boolean matchUnknown) {
@@ -603,15 +599,6 @@ abstract class Builder {
                     wildCard(QScheduledStationAETitle.scheduledStationAETitle.aeTitle,
                             aet, matchUnknown, false))
             .exists();
-    }
-
-    private static Predicate spsStatusPredicate(StringPath path, String[] values) {
-        if (values == null || values.length == 0 || values[0].equals("*"))
-            return path.ne(ScheduledProcedureStep.STORED);
-
-        return values.length == 1
-                ? path.eq(values[0])
-                : path.in(values);
     }
 
 }

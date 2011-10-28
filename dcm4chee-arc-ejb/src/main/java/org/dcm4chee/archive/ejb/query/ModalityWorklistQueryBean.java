@@ -113,7 +113,6 @@ public class ModalityWorklistQueryBean implements ModalityWorklistQuery {
         Builder.addRequestedProcedurePredicates(builder, keys, queryParam, storeParam);
         Attributes spsItem = keys.getNestedDataset(Tag.ScheduledProcedureStepSequence);
         Builder.addScheduledProcedureStepPredicates(builder, spsItem, queryParam, storeParam);
-        Builder.addScheduledProcedureStepStatusPredicates(builder, spsItem);
         results = new HibernateQuery(session)
             .from(QScheduledProcedureStep.scheduledProcedureStep)
             .innerJoin(QScheduledProcedureStep.scheduledProcedureStep.requestedProcedure,

@@ -409,11 +409,9 @@ public class InstanceStoreBean implements InstanceStore {
                     && (requestAttrs.containsValue(Tag.AccessionNumber)
                             || data.contains(Tag.AccessionNumber))) {
                 Attributes attrs = new Attributes(data.bigEndian(),
-                        data.size() + requestAttrs.size() + 1);
+                        data.size() + requestAttrs.size());
                 attrs.addAll(data);
                 attrs.addAll(requestAttrs);
-                attrs.setString(Tag.ScheduledProcedureStepStatus, VR.CS,
-                        ScheduledProcedureStep.STORED);
                 ScheduledProcedureStep sps =
                         RequestFactory.findOrCreateScheduledProcedureStep(em,
                                 attrs, patient, storeParam);

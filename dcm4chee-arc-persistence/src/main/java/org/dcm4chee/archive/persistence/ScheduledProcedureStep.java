@@ -98,7 +98,6 @@ public class ScheduledProcedureStep implements Serializable {
     public static final String READY = "READY";
     public static final String STARTED = "STARTED";
     public static final String DEPARTED = "DEPARTED";
-    public static final String STORED = "STORED";
 
     @Id
     @GeneratedValue
