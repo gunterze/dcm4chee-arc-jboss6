@@ -113,8 +113,12 @@ public class ScheduledProcedureStep implements Serializable {
     private String modality;
 
     @Basic(optional = false)
-    @Column(name = "start_datetime")
-    private String startDateTime;
+    @Column(name = "scheduledStartDate")
+    private String scheduledStartDate;
+
+    @Basic(optional = false)
+    @Column(name = "scheduledStartTtime")
+    private String scheduledStartTime;
 
     @Basic(optional = false)
     @Column(name = "perf_phys_name")
@@ -162,7 +166,8 @@ public class ScheduledProcedureStep implements Serializable {
     public String toString() {
         return "RequestedProcedure[pk=" + pk
                 + ", id=" + scheduledProcedureStepID
-                + ", start=" + startDateTime
+                + ", startDate=" + scheduledStartDate
+                + ", startTime=" + scheduledStartTime
                 + ", modality=" + modality
                 + ", status=" + status
                 + "]";
@@ -180,8 +185,12 @@ public class ScheduledProcedureStep implements Serializable {
         return modality;
     }
 
-    public String getStartDateTime() {
-        return startDateTime;
+    public String getScheduledStartDate() {
+        return scheduledStartDate;
+    }
+
+    public String getScheduledStartTime() {
+        return scheduledStartTime;
     }
 
     public String getScheduledPerformingPhysicianName() {
@@ -239,7 +248,15 @@ public class ScheduledProcedureStep implements Serializable {
         scheduledProcedureStepID = attrs.getString(Tag.ScheduledProcedureStepID);
         modality = attrs.getString(Tag.Modality, "*").toUpperCase();
         Date dt = attrs.getDate(Tag.ScheduledProcedureStepStartDateAndTime);
-        startDateTime = dt != null ? DateUtils.formatDT(null, dt) : "*";
+        if (dt != null) {
+            scheduledStartDate = DateUtils.formatDA(null, dt);
+            scheduledStartTime = attrs.containsValue(Tag.ScheduledProcedureStepStartTime)
+                    ? DateUtils.formatTM(null, dt)
+                    : "*";
+        } else {
+            scheduledStartDate = "*";
+            scheduledStartTime = "*";
+        }
         PersonName pn = new PersonName(attrs.getString(Tag.ScheduledPerformingPhysicianName), true);
         scheduledPerformingPhysicianName = pn.contains(PersonName.Group.Alphabetic) 
                 ? pn.toString(PersonName.Group.Alphabetic, false) : "*";

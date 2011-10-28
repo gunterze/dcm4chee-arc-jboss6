@@ -210,7 +210,7 @@ public class ModalityWorklistQueryTest {
     public void testByStartDateTime() throws Exception {
         query.findScheduledProcedureSteps(
                 null,
-                spsStartDateTime("20111025", "14-15"),
+                spsStartDateTime("20111025", "1400-1500"),
                 QUERY_PARAM, STORE_PARAM);
         assertSetEquals(spsids(), "9934.1");
         query.close();
@@ -235,7 +235,7 @@ public class ModalityWorklistQueryTest {
         Attributes item = new Attributes(2);
         attrs.newSequence(Tag.ScheduledProcedureStepSequence, 1).add(item);
         item.setString(Tag.ScheduledProcedureStepStartDate, VR.DA, da);
-        item.setString(Tag.ScheduledProcedureStepStartTime, VR.TM, da);
+        item.setString(Tag.ScheduledProcedureStepStartTime, VR.TM, tm);
         return attrs;
     }
 

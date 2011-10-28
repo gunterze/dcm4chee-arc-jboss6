@@ -50,6 +50,7 @@ import org.dcm4chee.archive.persistence.QIssuer;
 import org.dcm4chee.archive.persistence.QPatient;
 import org.dcm4chee.archive.persistence.QRequestedProcedure;
 import org.dcm4chee.archive.persistence.QScheduledProcedureStep;
+import org.dcm4chee.archive.persistence.QScheduledStationAETitle;
 import org.dcm4chee.archive.persistence.QSeries;
 import org.dcm4chee.archive.persistence.QServiceRequest;
 import org.dcm4chee.archive.persistence.QStudy;
@@ -113,11 +114,12 @@ abstract class Builder {
             return;
 
         boolean matchUnknown = queryParam.isMatchUnknown();
+        boolean combinedDatetimeMatching = queryParam.isCombinedDatetimeMatching();
         builder.and(uids(QStudy.study.studyInstanceUID, keys.getStrings(Tag.StudyInstanceUID), false));
         builder.and(wildCard(QStudy.study.studyID, keys.getString(Tag.StudyID, "*"), matchUnknown, false));
         builder.and(MatchDateTimeRange.rangeMatch(QStudy.study.studyDate, QStudy.study.studyTime, 
                 Tag.StudyDate, Tag.StudyTime, Tag.StudyDateAndTime, 
-                keys, queryParam.isCombinedDatetimeMatching(), matchUnknown));
+                keys, combinedDatetimeMatching, matchUnknown));
         builder.and(MatchPersonName.match(QStudy.study.referringPhysicianName,
                 QStudy.study.referringPhysicianIdeographicName,
                 QStudy.study.referringPhysicianPhoneticName,
@@ -208,6 +210,7 @@ abstract class Builder {
             return;
 
         boolean matchUnknown = queryParam.isMatchUnknown();
+        boolean combinedDatetimeMatching = queryParam.isCombinedDatetimeMatching();
         builder.and(uids(QInstance.instance.sopInstanceUID, keys.getStrings(Tag.SOPInstanceUID), false));
         builder.and(uids(QInstance.instance.sopClassUID, keys.getStrings(Tag.SOPClassUID), false));
         builder.and(wildCard(QInstance.instance.instanceNumber,
@@ -220,7 +223,7 @@ abstract class Builder {
                 QInstance.instance.contentDate,
                 QInstance.instance.contentTime,
                 Tag.ContentDate, Tag.ContentTime, Tag.ContentDateAndTime,
-                keys, queryParam.isCombinedDatetimeMatching(), matchUnknown));
+                keys, combinedDatetimeMatching, matchUnknown));
         builder.and(code(QInstance.instance.conceptNameCode,
                 keys.getNestedDataset(Tag.ConceptNameCodeSequence), matchUnknown));
         builder.and(verifyingObserver(keys.getNestedDataset(Tag.VerifyingObserverSequence),
@@ -560,6 +563,7 @@ abstract class Builder {
             return;
 
         boolean matchUnknown = queryParam.isMatchUnknown();
+        boolean combinedDatetimeMatching = queryParam.isCombinedDatetimeMatching();
         builder.and(wildCard(QScheduledProcedureStep.scheduledProcedureStep.modality,
                 item.getString(Tag.Modality, "*").toUpperCase(), matchUnknown, false));
         builder.and(scheduledStationAET(item.getString(Tag.ScheduledStationAETitle, "*"), matchUnknown));
@@ -572,9 +576,12 @@ abstract class Builder {
                 item.getString(Tag.ScheduledPerformingPhysicianName, "*"),
                 queryParam, storeParam.getFuzzyStr()));
         builder.and(MatchDateTimeRange.rangeMatch(
-                QScheduledProcedureStep.scheduledProcedureStep.startDateTime,
+                QScheduledProcedureStep.scheduledProcedureStep.scheduledStartDate,
+                QScheduledProcedureStep.scheduledProcedureStep.scheduledStartTime,
+                Tag.ScheduledProcedureStepStartDate,
+                Tag.ScheduledProcedureStepStartTime,
                 Tag.ScheduledProcedureStepStartDateAndTime,
-                item, matchUnknown));
+                item, combinedDatetimeMatching, matchUnknown));
         builder.and(wildCard(QScheduledProcedureStep.scheduledProcedureStep.scheduledProcedureStepID,
                 item.getString(Tag.ScheduledProcedureStepID, "*"),
                 matchUnknown, false));
@@ -585,12 +592,17 @@ abstract class Builder {
                 item != null ? item.getStrings(Tag.ScheduledProcedureStepStatus) : null));
     }
 
-    private static Predicate scheduledStationAET(String value, boolean matchUnknown) {
-        if (value.equals("*"))
+    private static Predicate scheduledStationAET(String aet, boolean matchUnknown) {
+        if (aet.equals("*"))
             return null;
 
-        // TODO Auto-generated method stub
-        return null;
+        return new HibernateSubQuery()
+            .from(QScheduledStationAETitle.scheduledStationAETitle)
+            .where(QScheduledProcedureStep.scheduledProcedureStep.scheduledStationAETs.contains(
+                    QScheduledStationAETitle.scheduledStationAETitle),
+                    wildCard(QScheduledStationAETitle.scheduledStationAETitle.aeTitle,
+                            aet, matchUnknown, false))
+            .exists();
     }
 
     private static Predicate spsStatusPredicate(StringPath path, String[] values) {

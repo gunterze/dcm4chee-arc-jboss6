@@ -80,16 +80,11 @@ class MatchDateTimeRange {
     static Predicate rangeMatch(StringPath path,
             Attributes keys, int tag, FormatDate dt,
             boolean matchUnknown) {
-        if (!keys.containsValue(tag))
+        DateRange dateRange = keys.getDateRange(tag, null);
+        if (dateRange == null)
             return null;
         
-        return matchUnknown(path, matchUnknown, range(path, keys.getDateRange(tag, null), dt));
-    }
-
-    static Predicate rangeMatch(StringPath path, long dateAndTimeTag, Attributes keys,
-            boolean matchUnknown) {
-        // TODO Auto-generated method stub
-        return null;
+        return matchUnknown(path, matchUnknown, range(path, dateRange, dt));
     }
 
     static Predicate rangeMatch(StringPath dateField, StringPath timeField, 
