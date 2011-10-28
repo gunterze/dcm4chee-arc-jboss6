@@ -113,7 +113,7 @@ abstract class Builder {
             return;
 
         boolean matchUnknown = queryParam.isMatchUnknown();
-        builder.and(uids(QStudy.study.studyInstanceUID, keys.getStrings(Tag.StudyInstanceUID)));
+        builder.and(uids(QStudy.study.studyInstanceUID, keys.getStrings(Tag.StudyInstanceUID), false));
         builder.and(wildCard(QStudy.study.studyID, keys.getString(Tag.StudyID, "*"), matchUnknown, false));
         builder.and(MatchDateTimeRange.rangeMatch(QStudy.study.studyDate, QStudy.study.studyTime, 
                 Tag.StudyDate, Tag.StudyTime, Tag.StudyDateAndTime, 
@@ -156,7 +156,7 @@ abstract class Builder {
 
         boolean matchUnknown = queryParam.isMatchUnknown();
         builder.and(uids(QSeries.series.seriesInstanceUID,
-                keys.getStrings(Tag.SeriesInstanceUID)));
+                keys.getStrings(Tag.SeriesInstanceUID), false));
         builder.and(wildCard(QSeries.series.seriesNumber,
                 keys.getString(Tag.SeriesNumber, "*"), matchUnknown, false));
         builder.and(wildCard(QSeries.series.modality,
@@ -208,8 +208,8 @@ abstract class Builder {
             return;
 
         boolean matchUnknown = queryParam.isMatchUnknown();
-        builder.and(uids(QInstance.instance.sopInstanceUID, keys.getStrings(Tag.SOPInstanceUID)));
-        builder.and(uids(QInstance.instance.sopClassUID, keys.getStrings(Tag.SOPClassUID)));
+        builder.and(uids(QInstance.instance.sopInstanceUID, keys.getStrings(Tag.SOPInstanceUID), false));
+        builder.and(uids(QInstance.instance.sopClassUID, keys.getStrings(Tag.SOPClassUID), false));
         builder.and(wildCard(QInstance.instance.instanceNumber,
                 keys.getString(Tag.InstanceNumber, "*"), matchUnknown, false));
         builder.and(wildCard(QInstance.instance.verificationFlag,
@@ -273,7 +273,7 @@ abstract class Builder {
         } else
             predicate = expr.eq(value);
 
-        return matchUnknown ? ExpressionUtils.or(predicate, path.eq("*")) : predicate;
+        return matchUnknown(predicate, path, matchUnknown);
     }
 
     static boolean isUpperCase(String s) {
@@ -284,6 +284,9 @@ abstract class Builder {
         return s.indexOf('*') >= 0 || s.indexOf('?') >= 0;
     }
 
+    static Predicate matchUnknown(Predicate predicate, StringPath path, boolean matchUnknown) {
+        return matchUnknown ? ExpressionUtils.or(predicate, path.eq("*")) : predicate;
+    }
 
     static <T> Predicate matchUnknown(Predicate predicate, BeanPath<T> path, boolean matchUnknown) {
         return matchUnknown ? ExpressionUtils.or(predicate, path.isNull()) : predicate;
@@ -319,13 +322,14 @@ abstract class Builder {
         return like.toString();
     }
 
-    static Predicate uids(StringPath path, String[] values) {
+    static Predicate uids(StringPath path, String[] values, boolean matchUnknown) {
         if (values == null || values.length == 0 || values[0].equals("*"))
             return null;
 
-        return values.length == 1
-                ? path.eq(values[0])
-                : path.in(values);
+        return matchUnknown(
+                values.length == 1 ? path.eq(values[0]) : path.in(values),
+                path,
+                matchUnknown);
     }
 
     static Predicate modalitiesInStudy(String modality, boolean matchUnknown) {
@@ -427,35 +431,10 @@ abstract class Builder {
             return null;
 
         boolean matchUnknown = queryParam.isMatchUnknown();
-        String accNo = item.getString(Tag.AccessionNumber, "*");
-        BooleanBuilder builder = new BooleanBuilder()
-            .and(wildCard(QScheduledProcedureStep.scheduledProcedureStep.scheduledProcedureStepID,
-                    item.getString(Tag.ScheduledProcedureStepID, "*"),
-                    matchUnknown, false))
-            .and(wildCard(QRequestedProcedure.requestedProcedure.requestedProcedureID,
-                    item.getString(Tag.RequestedProcedureID, "*"),
-                    matchUnknown, false))
-            .and(uids(QRequestedProcedure.requestedProcedure.studyInstanceUID,
-                    item.getStrings(Tag.StudyInstanceUID)))
-            .and(wildCard(QServiceRequest.serviceRequest.requestingService,
-                    item.getString(Tag.RequestingService, "*"),
-                    matchUnknown, true))
-            .and(MatchPersonName.match(
-                QServiceRequest.serviceRequest.requestingPhysician,
-                QServiceRequest.serviceRequest.requestingPhysicianIdeographicName,
-                QServiceRequest.serviceRequest.requestingPhysicianPhoneticName,
-                QServiceRequest.serviceRequest.requestingPhysicianFamilyNameSoundex,
-                QServiceRequest.serviceRequest.requestingPhysicianGivenNameSoundex,
-                item.getString(Tag.ReferringPhysicianName, "*"),
-                queryParam, storeParam.getFuzzyStr()))
-            .and(wildCard(QServiceRequest.serviceRequest.accessionNumber, accNo, matchUnknown, false));
-
-        if (!accNo.equals("*"))
-            builder.and(
-                    issuer(QServiceRequest.serviceRequest.issuerOfAccessionNumber,
-                        item.getNestedDataset(Tag.IssuerOfAccessionNumberSequence),
-                        matchUnknown));
-
+        BooleanBuilder builder = new BooleanBuilder();
+        Builder.addServiceRequestPredicates(builder, item, queryParam, storeParam);
+        Builder.addRequestedProcedurePredicates(builder, item, queryParam, storeParam);
+        Builder.addScheduledProcedureStepPredicates(builder, item, queryParam, storeParam);
         if (!builder.hasValue())
             return null;
 
@@ -489,7 +468,7 @@ abstract class Builder {
                         QVerifyingObserver.verifyingObserver.verifyingObserverGivenNameSoundex,
                         item.getString(Tag.VerifyingObserverName, "*"),
                         queryParam, storeParam.getFuzzyStr()));
-        
+
         if (predicate == null)
             return null;
 
@@ -539,32 +518,74 @@ abstract class Builder {
             .exists();
     }
 
-    static void addScheduledProcedureStepPredicates(BooleanBuilder builder,
-            Attributes keys, QueryParam queryParam, StoreParam storeParam) {
+    static void addServiceRequestPredicates(BooleanBuilder builder,
+            Attributes item, QueryParam queryParam, StoreParam storeParam) {
 
-        if (keys == null)
+        boolean matchUnknown = queryParam.isMatchUnknown();
+        String accNo = item.getString(Tag.AccessionNumber, "*");
+        builder.and(wildCard(QServiceRequest.serviceRequest.requestingService,
+                    item.getString(Tag.RequestingService, "*"),
+                    matchUnknown, true));
+        builder.and(MatchPersonName.match(
+                QServiceRequest.serviceRequest.requestingPhysician,
+                QServiceRequest.serviceRequest.requestingPhysicianIdeographicName,
+                QServiceRequest.serviceRequest.requestingPhysicianPhoneticName,
+                QServiceRequest.serviceRequest.requestingPhysicianFamilyNameSoundex,
+                QServiceRequest.serviceRequest.requestingPhysicianGivenNameSoundex,
+                item.getString(Tag.ReferringPhysicianName, "*"),
+                queryParam, storeParam.getFuzzyStr()));
+        builder.and(wildCard(QServiceRequest.serviceRequest.accessionNumber, accNo, matchUnknown, false));
+
+        if (!accNo.equals("*"))
+            builder.and(
+                    issuer(QServiceRequest.serviceRequest.issuerOfAccessionNumber,
+                        item.getNestedDataset(Tag.IssuerOfAccessionNumberSequence),
+                        matchUnknown));
+
+    }
+
+    static void addRequestedProcedurePredicates(BooleanBuilder builder,
+            Attributes keys, QueryParam queryParam, StoreParam storeParam) {
+        boolean matchUnknown = queryParam.isMatchUnknown();
+        builder.and(wildCard(QRequestedProcedure.requestedProcedure.requestedProcedureID,
+                keys.getString(Tag.RequestedProcedureID, "*"),
+                matchUnknown, false));
+        builder.and(uids(QRequestedProcedure.requestedProcedure.studyInstanceUID,
+                keys.getStrings(Tag.StudyInstanceUID), matchUnknown));
+    }
+
+    static void addScheduledProcedureStepPredicates(BooleanBuilder builder,
+            Attributes item, QueryParam queryParam, StoreParam storeParam) {
+        if (item == null || item.isEmpty())
             return;
 
+        boolean matchUnknown = queryParam.isMatchUnknown();
         builder.and(wildCard(QScheduledProcedureStep.scheduledProcedureStep.modality,
-                keys.getString(Tag.Modality, "*").toUpperCase(), false, false));
-        builder.and(spsAET(keys.getString(Tag.ScheduledStationAETitle, "*")));
+                item.getString(Tag.Modality, "*").toUpperCase(), matchUnknown, false));
+        builder.and(scheduledStationAET(item.getString(Tag.ScheduledStationAETitle, "*"), matchUnknown));
         builder.and(MatchPersonName.match(
                 QScheduledProcedureStep.scheduledProcedureStep.scheduledPerformingPhysicianName,
                 QScheduledProcedureStep.scheduledProcedureStep.scheduledPerformingPhysicianIdeographicName,
                 QScheduledProcedureStep.scheduledProcedureStep.scheduledPerformingPhysicianPhoneticName,
                 QScheduledProcedureStep.scheduledProcedureStep.scheduledPerformingPhysicianFamilyNameSoundex,
                 QScheduledProcedureStep.scheduledProcedureStep.scheduledPerformingPhysicianGivenNameSoundex,
-                keys.getString(Tag.ScheduledPerformingPhysicianName, "*"),
+                item.getString(Tag.ScheduledPerformingPhysicianName, "*"),
                 queryParam, storeParam.getFuzzyStr()));
         builder.and(MatchDateTimeRange.rangeMatch(
                 QScheduledProcedureStep.scheduledProcedureStep.startDateTime,
                 Tag.ScheduledProcedureStepStartDateAndTime,
-                keys, false));
-        builder.and(spsStatusPredicate(QScheduledProcedureStep.scheduledProcedureStep.status,
-                keys.getStrings(Tag.ScheduledProcedureStepStatus)));
+                item, matchUnknown));
+        builder.and(wildCard(QScheduledProcedureStep.scheduledProcedureStep.scheduledProcedureStepID,
+                item.getString(Tag.ScheduledProcedureStepID, "*"),
+                matchUnknown, false));
     }
 
-    private static Predicate spsAET(String value) {
+    static void addScheduledProcedureStepStatusPredicates(BooleanBuilder builder, Attributes item) {
+        builder.and(spsStatusPredicate(QScheduledProcedureStep.scheduledProcedureStep.status,
+                item != null ? item.getStrings(Tag.ScheduledProcedureStepStatus) : null));
+    }
+
+    private static Predicate scheduledStationAET(String value, boolean matchUnknown) {
         if (value.equals("*"))
             return null;
 

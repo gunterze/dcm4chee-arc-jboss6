@@ -107,7 +107,7 @@ public class ModalityWorklistQueryTest {
     @Test
     public void testByModality() throws Exception {
         query.findScheduledProcedureSteps(
-                pids("MWL_TEST"),
+                null,
                 sps(Tag.Modality, VR.CS, "CT"),
                 QUERY_PARAM, STORE_PARAM);
         assertSetEquals(spsids(), "9933.1");
@@ -115,9 +115,49 @@ public class ModalityWorklistQueryTest {
     }
 
     @Test
+    public void testByAccessionNumber() throws Exception {
+        query.findScheduledProcedureSteps(
+                null,
+                attrs(Tag.AccessionNumber, VR.SH, "MWL_TEST"),
+                QUERY_PARAM, STORE_PARAM);
+        assertSetEquals(spsids(), "9933.1", "9934.1", "9934.2");
+        query.close();
+    }
+
+    @Test
+    public void testByStudyInstanceUID() throws Exception {
+        query.findScheduledProcedureSteps(
+                null,
+                attrs(Tag.StudyInstanceUID, VR.UI, "1.2.40.0.13.1.1.99.33"),
+                QUERY_PARAM, STORE_PARAM);
+        assertSetEquals(spsids(), "9933.1");
+        query.close();
+    }
+
+    @Test
+    public void testByRequestedProcedureID() throws Exception {
+        query.findScheduledProcedureSteps(
+                null,
+                attrs(Tag.RequestedProcedureID, VR.SH, "P-9934"),
+                QUERY_PARAM, STORE_PARAM);
+        assertSetEquals(spsids(), "9934.1", "9934.2");
+        query.close();
+    }
+
+    @Test
+    public void testByScheduledProcedureID() throws Exception {
+        query.findScheduledProcedureSteps(
+                null,
+                sps(Tag.ScheduledProcedureStepID, VR.SH, "9934.2"),
+                QUERY_PARAM, STORE_PARAM);
+        assertSetEquals(spsids(), "9934.2");
+        query.close();
+    }
+
+    @Test
     public void testByStatus() throws Exception {
         query.findScheduledProcedureSteps(
-                pids("MWL_TEST"),
+                null,
                 sps(Tag.ScheduledProcedureStepStatus, VR.CS, 
                         ScheduledProcedureStep.ARRIVED, ScheduledProcedureStep.READY),
                 QUERY_PARAM, STORE_PARAM);
@@ -128,7 +168,7 @@ public class ModalityWorklistQueryTest {
     @Test
     public void testByAET1() throws Exception {
         query.findScheduledProcedureSteps(
-                pids("MWL_TEST"),
+                null,
                 sps(Tag.ScheduledStationAETitle, VR.AE, "AET_MR1"),
                 QUERY_PARAM, STORE_PARAM);
         assertSetEquals(spsids(), "9934.1");
@@ -138,7 +178,7 @@ public class ModalityWorklistQueryTest {
     @Test
     public void testByAET2() throws Exception {
         query.findScheduledProcedureSteps(
-                pids("MWL_TEST"),
+                null,
                 sps(Tag.ScheduledStationAETitle, VR.AE, "AET_MR2"),
                 QUERY_PARAM, STORE_PARAM);
         assertSetEquals(spsids(), "9934.1", "9934.2");
@@ -148,8 +188,9 @@ public class ModalityWorklistQueryTest {
     @Test
     public void testByPerformingPhysican() throws Exception {
         query.findScheduledProcedureSteps(
-                pids("MWL_TEST"),
-                sps(Tag.ScheduledStationAETitle, VR.PN, "ScheduledPerformingPhysicianName3"),
+                null,
+                sps(Tag.ScheduledPerformingPhysicianName, VR.PN,
+                        "ScheduledPerformingPhysicianName3"),
                 QUERY_PARAM, STORE_PARAM);
         assertSetEquals(spsids(), "9934.2");
         query.close();
@@ -158,7 +199,7 @@ public class ModalityWorklistQueryTest {
     @Test
     public void testByStartDate() throws Exception {
         query.findScheduledProcedureSteps(
-                pids("MWL_TEST"),
+                null,
                 sps(Tag.ScheduledProcedureStepStartDate, VR.DA, "20111025"),
                 QUERY_PARAM, STORE_PARAM);
         assertSetEquals(spsids(), "9934.1", "9934.2");
@@ -168,11 +209,17 @@ public class ModalityWorklistQueryTest {
     @Test
     public void testByStartDateTime() throws Exception {
         query.findScheduledProcedureSteps(
-                pids("MWL_TEST"),
+                null,
                 spsStartDateTime("20111025", "14-15"),
                 QUERY_PARAM, STORE_PARAM);
         assertSetEquals(spsids(), "9934.1");
         query.close();
+    }
+
+    private Attributes attrs(int tag, VR vr, String value) {
+        Attributes attrs = new Attributes(1);
+        attrs.setString(tag, vr, value);
+        return attrs;
     }
 
     private static Attributes sps(int tag, VR vr, String... values) {

@@ -109,8 +109,11 @@ public class ModalityWorklistQueryBean implements ModalityWorklistQuery {
             QueryParam queryParam, StoreParam storeParam) {
         BooleanBuilder builder = new BooleanBuilder();
         Builder.addPatientLevelPredicates(builder, pids, keys, queryParam, storeParam);
-        Builder.addScheduledProcedureStepPredicates(builder, 
-                keys.getNestedDataset(Tag.ScheduledProcedureStepSequence), queryParam, storeParam);
+        Builder.addServiceRequestPredicates(builder, keys, queryParam, storeParam);
+        Builder.addRequestedProcedurePredicates(builder, keys, queryParam, storeParam);
+        Attributes spsItem = keys.getNestedDataset(Tag.ScheduledProcedureStepSequence);
+        Builder.addScheduledProcedureStepPredicates(builder, spsItem, queryParam, storeParam);
+        Builder.addScheduledProcedureStepStatusPredicates(builder, spsItem);
         results = new HibernateQuery(session)
             .from(QScheduledProcedureStep.scheduledProcedureStep)
             .innerJoin(QScheduledProcedureStep.scheduledProcedureStep.requestedProcedure,
@@ -126,6 +129,7 @@ public class ModalityWorklistQueryBean implements ModalityWorklistQuery {
                     QServiceRequest.serviceRequest.encodedAttributes,
                     QVisit.visit.encodedAttributes,
                     QPatient.patient.encodedAttributes);
+        hasNext = results.next();
     }
 
     @Override
@@ -151,11 +155,11 @@ public class ModalityWorklistQueryBean implements ModalityWorklistQuery {
     }
 
     private Attributes toAttributes(ScrollableResults results2) {
-        byte[] spsAttributes = results.getBinary(1);
-        byte[] reqProcAttributes = results.getBinary(2);
-        byte[] requestAttributes = results.getBinary(3);
-        byte[] visitAttributes = results.getBinary(4);
-        byte[] patientAttributes = results.getBinary(5);
+        byte[] spsAttributes = results.getBinary(0);
+        byte[] reqProcAttributes = results.getBinary(1);
+        byte[] requestAttributes = results.getBinary(2);
+        byte[] visitAttributes = results.getBinary(3);
+        byte[] patientAttributes = results.getBinary(4);
         Attributes attrs = new Attributes();
         Utils.decodeAttributes(attrs, patientAttributes);
         Utils.decodeAttributes(attrs, visitAttributes);
