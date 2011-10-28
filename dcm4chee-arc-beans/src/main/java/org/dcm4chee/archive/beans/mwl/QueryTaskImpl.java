@@ -36,41 +36,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.qrscp;
+package org.dcm4chee.archive.beans.mwl;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4che.data.Tag;
-import org.dcm4che.data.VR;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicQueryTask;
 import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4chee.archive.ejb.query.CompositeQuery;
+import org.dcm4chee.archive.ejb.query.ModalityWorklistQuery;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 class QueryTaskImpl extends BasicQueryTask {
 
-    private final CompositeQuery query;
+    private final ModalityWorklistQuery query;
 
     public QueryTaskImpl(Association as, PresentationContext pc, Attributes rq,
-            Attributes keys, CompositeQuery query) throws DicomServiceException {
+            Attributes keys, ModalityWorklistQuery query) throws DicomServiceException {
         super(as, pc, rq, keys);
         this.query = query;
     }
-
-    @Override
-    protected Attributes adjust(Attributes match, Attributes keys, Association as) {
-        Attributes filtered = new Attributes(match.size());
-        filtered.setString(Tag.QueryRetrieveLevel, VR.CS,
-                keys.getString(Tag.QueryRetrieveLevel, null));
-        filtered.addSelected(match, Tag.SpecificCharacterSet,
-                Tag.RetrieveAETitle, Tag.InstanceAvailability);
-        filtered.addSelected(match, keys);
-        return filtered;
-     }
 
     @Override
     protected void close() {

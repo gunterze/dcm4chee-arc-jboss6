@@ -388,4 +388,13 @@
     </constructor>
   </bean>
 
+  <!-- Modality Worklist C-FIND SCP -->
+  <bean name="ModalityWorklistCFindSCP" class="org.dcm4chee.archive.beans.mwl.CFindSCPImpl">
+    <constructor>
+      <parameter><inject bean="Device" /></parameter>
+      <parameter>1.2.840.10008.5.1.4.31</parameter>
+   </constructor>
+  </bean>
+
+
 </deployment>
