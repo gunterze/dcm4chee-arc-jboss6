@@ -101,25 +101,21 @@ public class InstanceStoreBean implements InstanceStore {
             switch (storeDuplicate) {
             case IGNORE:
             case STORE:
-                coerceAttributes(data, inst, modified);
-                data.updateAttributes(inst.getAttributes(), modified);
-                modified.remove(Tag.OriginalAttributesSequence);
-                if (storeDuplicate == StoreDuplicate.IGNORE)
+                coerceInstanceAttributes(data, inst, modified);
+                if (storeDuplicate == StoreDuplicate.IGNORE
+                        || hasFileWithFileSystemGroupID(inst, fs.getGroupID()))
                     return false;
-                for (FileRef fileRef2 : inst.getFileRefs())
-                    if (fileRef2.getFileSystem().getGroupID().equals(fs.getGroupID()))
-                        return false;
                 break;
             case REPLACE:
                 inst.setReplaced(true);
                 inst = newInstance(sourceAET, data, fs.getAvailability(), storeParam);
-                coerceAttributes(data, inst, modified);
+                coerceSeriesAttributes(data, inst, modified);
                 storeOriginalAttributes(sourceAET, data, modified, inst, storeParam);
                 break;
             }
         } catch (NoResultException e) {
             inst = newInstance(sourceAET, data, fs.getAvailability(), storeParam);
-            coerceAttributes(data, inst, modified);
+            coerceSeriesAttributes(data, inst, modified);
             storeOriginalAttributes(sourceAET, data, modified, inst, storeParam);
         }
         fileRef.setInstance(inst);
@@ -127,7 +123,23 @@ public class InstanceStoreBean implements InstanceStore {
         return true;
     }
 
-    private static void coerceAttributes(Attributes data, Instance inst, Attributes modified) {
+    private static boolean hasFileWithFileSystemGroupID(Instance inst, String groupID) {
+        for (FileRef fileRef2 : inst.getFileRefs())
+            if (fileRef2.getFileSystem().getGroupID().equals(groupID))
+                return true;
+
+        return false;
+    }
+
+    private static void coerceInstanceAttributes(Attributes data, Instance inst,
+            Attributes modified) {
+        coerceSeriesAttributes(data, inst, modified);
+        data.updateAttributes(inst.getAttributes(), modified);
+        modified.remove(Tag.OriginalAttributesSequence);
+    }
+
+    private static void coerceSeriesAttributes(Attributes data, Instance inst,
+            Attributes modified) {
         Series series = inst.getSeries();
         Study study = series.getStudy();
         Patient patient = study.getPatient();
