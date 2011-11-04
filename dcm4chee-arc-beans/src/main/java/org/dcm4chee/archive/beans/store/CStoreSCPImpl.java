@@ -55,6 +55,7 @@ import org.dcm4che.io.SAXWriter;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Status;
+import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCStoreSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.AttributesFormat;
@@ -140,8 +141,9 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
     }
 
     @Override
-    protected File process(Association as, Attributes rq, String tsuid, Attributes rsp,
-            Object storage, File file, MessageDigest digest) throws DicomServiceException {
+    protected File process(Association as, PresentationContext pc, Attributes rq,
+            Attributes rsp, Object storage, File file, MessageDigest digest)
+            throws DicomServiceException {
         FileSystem fs = (FileSystem) storage;
         Attributes ds = readDataset(as, rq, file);
         if (ds.bigEndian())
@@ -170,8 +172,8 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
         try {
             if (store.addFileRef(sourceAET, ds, modified,
-                    new FileRef(fs, filePath, tsuid, dst.length(), digest(digest)),
-                    storeParam))
+                    new FileRef(fs, filePath, pc.getTransferSyntax(), dst.length(),
+                            digest(digest)), storeParam))
                 dst = null;
             warningCoercionOfDataElements(modified, rsp, storeParam);
         } catch (Exception e) {
