@@ -404,7 +404,7 @@
               <bean class="org.dcm4che.net.Connection">
                 <property name="hostname">localhost</property>
                 <property name="port">2762</property>
-                <property name="tlsCipherSuite">
+                <property name="tlsCipherSuites">
                   <array>
                     <value>SSL_RSA_WITH_NULL_SHA</value>
                     <value>TLS_RSA_WITH_AES_128_CBC_SHA</value>
