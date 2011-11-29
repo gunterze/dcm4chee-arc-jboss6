@@ -153,7 +153,10 @@ public class InstanceStoreBean implements InstanceStore {
         if (!modified.isEmpty() && storeParam.isStoreOriginalAttributes()) {
             Attributes instAttrs = inst.getAttributes();
             Attributes item = new Attributes(4);
-            instAttrs.ensureSequence(Tag.OriginalAttributesSequence, 1).add(item);
+            Sequence origAttrsSeq = instAttrs.getSequence(Tag.OriginalAttributesSequence);
+            if (origAttrsSeq == null)
+                origAttrsSeq = instAttrs.newSequence(Tag.OriginalAttributesSequence, 1);
+            origAttrsSeq.add(item);
             item.setDate(Tag.AttributeModificationDateTime, VR.DT, new Date());
             item.setString(Tag.ModifyingSystem, VR.LO, storeParam.getModifyingSystem());
             item.setString(Tag.SourceOfPreviousValues, VR.LO, sourceAET);
