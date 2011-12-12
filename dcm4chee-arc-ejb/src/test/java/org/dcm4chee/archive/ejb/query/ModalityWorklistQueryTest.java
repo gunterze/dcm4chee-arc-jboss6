@@ -38,7 +38,7 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,9 +51,10 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.soundex.ESoundex;
+import org.dcm4chee.archive.ejb.store.Entity;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
-import org.dcm4chee.archive.persistence.StoreParam;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -67,10 +68,111 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class ModalityWorklistQueryTest {
 
-    private static final QueryParam QUERY_PARAM =
-            new QueryParam().setCombinedDatetimeMatching(true);
-    private static final StoreParam STORE_PARAM = new StoreParam();
-    static { STORE_PARAM.setFuzzyStr(new ESoundex()); }
+    private static final QueryParam QUERY_PARAM = new QueryParam();
+    private static final AttributeFilter[] ATTR_FILTERS = {
+        new AttributeFilter(   // Patient
+            Tag.SpecificCharacterSet,
+            Tag.PatientName,
+            Tag.PatientID,
+            Tag.IssuerOfPatientID,
+            Tag.OtherPatientIDsSequence,
+            Tag.PatientBirthDate,
+            Tag.PatientSex,
+            Tag.PatientComments
+        ),
+        new AttributeFilter(   // Study
+            Tag.SpecificCharacterSet,
+            Tag.StudyDate,
+            Tag.StudyTime,
+            Tag.AccessionNumber,
+            Tag.IssuerOfAccessionNumberSequence,
+            Tag.ReferringPhysicianName,
+            Tag.StudyDescription,
+            Tag.ProcedureCodeSequence,
+            Tag.StudyInstanceUID,
+            Tag.StudyID
+        ),
+        new AttributeFilter(   // Series
+            Tag.SpecificCharacterSet,
+            Tag.Modality,
+            Tag.Manufacturer,
+            Tag.InstitutionName,
+            Tag.InstitutionCodeSequence,
+            Tag.StationName,
+            Tag.SeriesDescription,
+            Tag.InstitutionalDepartmentName,
+            Tag.PerformingPhysicianName,
+            Tag.ManufacturerModelName,
+            Tag.ReferencedPerformedProcedureStepSequence,
+            Tag.SeriesInstanceUID,
+            Tag.SeriesNumber,
+            Tag.Laterality,
+            Tag.PerformedProcedureStepID,
+            Tag.PerformedProcedureStepStartTime,
+            Tag.RequestAttributesSequence
+        ),
+        new AttributeFilter(   // Instance
+            Tag.SpecificCharacterSet,
+            Tag.ImageType,
+            Tag.SOPClassUID,
+            Tag.SOPInstanceUID,
+            Tag.AcquisitionDate,
+            Tag.ContentDate,
+            Tag.AcquisitionDateTime,
+            Tag.AcquisitionTime,
+            Tag.ContentTime,
+            Tag.ReferencedSeriesSequence,
+            Tag.InstanceNumber,
+            Tag.PhotometricInterpretation,
+            Tag.NumberOfFrames,
+            Tag.Rows,
+            Tag.Columns,
+            Tag.BitsAllocated,
+            Tag.ObservationDateTime,
+            Tag.ConceptNameCodeSequence,
+            Tag.VerifyingObserverSequence,
+            Tag.ReferencedRequestSequence,
+            Tag.CurrentRequestedProcedureEvidenceSequence,
+            Tag.PertinentOtherEvidenceSequence,
+            Tag.CompletionFlag,
+            Tag.VerificationFlag,
+            Tag.IdenticalDocumentsSequence,
+            Tag.DocumentTitle,
+            Tag.MIMETypeOfEncapsulatedDocument,
+            Tag.ContentLabel,
+            Tag.ContentDescription,
+            Tag.PresentationCreationDate,
+            Tag.PresentationCreationTime,
+            Tag.ContentCreatorName,
+            Tag.OriginalAttributesSequence
+        ),
+        new AttributeFilter(   // Visit
+            Tag.AdmissionID,
+            Tag.IssuerOfAdmissionIDSequence
+        ),
+        new AttributeFilter(   // Service Request
+            Tag.AccessionNumber,
+            Tag.IssuerOfAccessionNumberSequence,
+            Tag.RequestingPhysician,
+            Tag.RequestingService
+        ),
+        new AttributeFilter(   // Requested Procedure
+            Tag.StudyInstanceUID,
+            Tag.RequestedProcedureID
+        ),
+        new AttributeFilter(   // Scheduled Procedure Step
+            Tag.Modality,
+            Tag.ScheduledStationAETitle,
+            Tag.ScheduledProcedureStepStartDate,
+            Tag.ScheduledProcedureStepStartTime,
+            Tag.ScheduledPerformingPhysicianName,
+            Tag.ScheduledProcedureStepID,
+            Tag.ScheduledProcedureStepStatus
+        )};
+    static { 
+        QUERY_PARAM.setAttributeFilters(ATTR_FILTERS);
+        QUERY_PARAM.setFuzzyStr(new ESoundex());
+    }
     private static final Issuer ISSUER = new Issuer("DCM4CHEE_TESTDATA", "*", "*");
 
     private static IDWithIssuer[] pids(String id) {
@@ -81,6 +183,7 @@ public class ModalityWorklistQueryTest {
     public static WebArchive createDeployment() {
         return ShrinkWrap.create(WebArchive.class, "test.war")
                 .addClasses(
+                        Entity.class,
                         QueryParam.class,
                         IDWithIssuer.class,
                         ModalityWorklistQuery.class,
@@ -99,7 +202,7 @@ public class ModalityWorklistQueryTest {
         query.findScheduledProcedureSteps(
                 pids("MWL_TEST"),
                 new Attributes(),
-                QUERY_PARAM, STORE_PARAM);
+                QUERY_PARAM);
         assertSetEquals(spsids(), "9933.1", "9934.1", "9934.2");
         query.close();
     }
@@ -109,7 +212,7 @@ public class ModalityWorklistQueryTest {
         query.findScheduledProcedureSteps(
                 null,
                 sps(Tag.Modality, VR.CS, "CT"),
-                QUERY_PARAM, STORE_PARAM);
+                QUERY_PARAM);
         assertSetEquals(spsids(), "9933.1");
         query.close();
     }
@@ -119,7 +222,7 @@ public class ModalityWorklistQueryTest {
         query.findScheduledProcedureSteps(
                 null,
                 attrs(Tag.AccessionNumber, VR.SH, "MWL_TEST"),
-                QUERY_PARAM, STORE_PARAM);
+                QUERY_PARAM);
         assertSetEquals(spsids(), "9933.1", "9934.1", "9934.2");
         query.close();
     }
@@ -129,7 +232,7 @@ public class ModalityWorklistQueryTest {
         query.findScheduledProcedureSteps(
                 null,
                 attrs(Tag.StudyInstanceUID, VR.UI, "1.2.40.0.13.1.1.99.33"),
-                QUERY_PARAM, STORE_PARAM);
+                QUERY_PARAM);
         assertSetEquals(spsids(), "9933.1");
         query.close();
     }
@@ -139,7 +242,7 @@ public class ModalityWorklistQueryTest {
         query.findScheduledProcedureSteps(
                 null,
                 attrs(Tag.RequestedProcedureID, VR.SH, "P-9934"),
-                QUERY_PARAM, STORE_PARAM);
+                QUERY_PARAM);
         assertSetEquals(spsids(), "9934.1", "9934.2");
         query.close();
     }
@@ -149,7 +252,7 @@ public class ModalityWorklistQueryTest {
         query.findScheduledProcedureSteps(
                 null,
                 sps(Tag.ScheduledProcedureStepID, VR.SH, "9934.2"),
-                QUERY_PARAM, STORE_PARAM);
+                QUERY_PARAM);
         assertSetEquals(spsids(), "9934.2");
         query.close();
     }
@@ -160,7 +263,7 @@ public class ModalityWorklistQueryTest {
                 null,
                 sps(Tag.ScheduledProcedureStepStatus, VR.CS, 
                         ScheduledProcedureStep.ARRIVED, ScheduledProcedureStep.READY),
-                QUERY_PARAM, STORE_PARAM);
+                QUERY_PARAM);
         assertSetEquals(spsids(), "9934.1");
         query.close();
     }
@@ -170,7 +273,7 @@ public class ModalityWorklistQueryTest {
         query.findScheduledProcedureSteps(
                 null,
                 sps(Tag.ScheduledStationAETitle, VR.AE, "AET_MR1"),
-                QUERY_PARAM, STORE_PARAM);
+                QUERY_PARAM);
         assertSetEquals(spsids(), "9934.1");
         query.close();
     }
@@ -180,7 +283,7 @@ public class ModalityWorklistQueryTest {
         query.findScheduledProcedureSteps(
                 null,
                 sps(Tag.ScheduledStationAETitle, VR.AE, "AET_MR2"),
-                QUERY_PARAM, STORE_PARAM);
+                QUERY_PARAM);
         assertSetEquals(spsids(), "9934.1", "9934.2");
         query.close();
     }
@@ -191,7 +294,7 @@ public class ModalityWorklistQueryTest {
                 null,
                 sps(Tag.ScheduledPerformingPhysicianName, VR.PN,
                         "ScheduledPerformingPhysicianName3"),
-                QUERY_PARAM, STORE_PARAM);
+                QUERY_PARAM);
         assertSetEquals(spsids(), "9934.2");
         query.close();
     }
@@ -201,7 +304,7 @@ public class ModalityWorklistQueryTest {
         query.findScheduledProcedureSteps(
                 null,
                 sps(Tag.ScheduledProcedureStepStartDate, VR.DA, "20111025"),
-                QUERY_PARAM, STORE_PARAM);
+                QUERY_PARAM);
         assertSetEquals(spsids(), "9934.1", "9934.2");
         query.close();
     }
@@ -211,7 +314,7 @@ public class ModalityWorklistQueryTest {
         query.findScheduledProcedureSteps(
                 null,
                 spsStartDateTime("20111025", "1400-1500"),
-                QUERY_PARAM, STORE_PARAM);
+                QUERY_PARAM);
         assertSetEquals(spsids(), "9934.1");
         query.close();
     }

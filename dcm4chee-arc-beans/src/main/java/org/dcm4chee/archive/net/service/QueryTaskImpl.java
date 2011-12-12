@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.qrscp;
+package org.dcm4chee.archive.net.service;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;

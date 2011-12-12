@@ -36,45 +36,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.ejb.query;
+package org.dcm4chee.archive.net;
 
-import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.persistence.QPatient;
-import org.dcm4chee.archive.persistence.Utils;
-import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
-import org.hibernate.StatelessSession;
+import java.util.HashMap;
 
-import com.mysema.query.BooleanBuilder;
-import com.mysema.query.jpa.hibernate.HibernateQuery;
+import javax.xml.transform.Templates;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.stream.StreamSource;
+
+import org.dcm4che.io.SAXTransformer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-class PatientQueryImpl extends CompositeQueryImpl {
+public class TemplatesCache {
 
-    public PatientQueryImpl(StatelessSession session, IDWithIssuer[] pids, Attributes keys,
-            QueryParam queryParam) {
-        super(query(session, pids, keys, queryParam), false);
+    private final HashMap<String, Templates> map = new HashMap<String, Templates>();
+
+    public void clear() {
+        map.clear();
     }
 
-    private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,
-            Attributes keys, QueryParam queryParam) {
-        BooleanBuilder builder = new BooleanBuilder();
-        Builder.addPatientLevelPredicates(builder, pids, keys, queryParam);
-        return new HibernateQuery(session)
-            .from(QPatient.patient)
-            .where(builder)
-            .scroll(ScrollMode.FORWARD_ONLY,
-                QPatient.patient.pk,
-                QPatient.patient.encodedAttributes);
+    public Templates get(String uri) throws TransformerConfigurationException {
+        Templates tpl = map.get(uri);
+        if (tpl == null)
+            map.put(uri, tpl = SAXTransformer.newTemplates(new StreamSource(uri)));
+        return tpl;
     }
-
-    @Override
-    protected Attributes toAttributes(ScrollableResults results) {
-        Attributes attrs = new Attributes();
-        Utils.decodeAttributes(attrs, results.getBinary(1));
-        return attrs;
-    }
-
 }

@@ -36,45 +36,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.ejb.query;
+package org.dcm4chee.archive.net;
 
-import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.persistence.QPatient;
-import org.dcm4chee.archive.persistence.Utils;
-import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
-import org.hibernate.StatelessSession;
-
-import com.mysema.query.BooleanBuilder;
-import com.mysema.query.jpa.hibernate.HibernateQuery;
+import org.dcm4che.net.TransferCapability.Role;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-class PatientQueryImpl extends CompositeQueryImpl {
+public class AttributeCoercion {
 
-    public PatientQueryImpl(StatelessSession session, IDWithIssuer[] pids, Attributes keys,
-            QueryParam queryParam) {
-        super(query(session, pids, keys, queryParam), false);
+    public enum DIMSE { C_STORE_RQ, C_FIND_RQ, C_FIND_RSP }
+
+    private final String sopClass;
+    private final DIMSE dimse;
+    private final Role role;
+    private final String aeTitle;
+    private final String uri;
+
+    public AttributeCoercion(String sopClass, DIMSE dimse, Role role, String aeTitle, String uri) {
+        this.sopClass = sopClass;
+        this.dimse = dimse;
+        this.role = role;
+        this.aeTitle = aeTitle;
+        this.uri = uri;
     }
 
-    private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,
-            Attributes keys, QueryParam queryParam) {
-        BooleanBuilder builder = new BooleanBuilder();
-        Builder.addPatientLevelPredicates(builder, pids, keys, queryParam);
-        return new HibernateQuery(session)
-            .from(QPatient.patient)
-            .where(builder)
-            .scroll(ScrollMode.FORWARD_ONLY,
-                QPatient.patient.pk,
-                QPatient.patient.encodedAttributes);
+    public final String getSopClass() {
+        return sopClass;
     }
 
-    @Override
-    protected Attributes toAttributes(ScrollableResults results) {
-        Attributes attrs = new Attributes();
-        Utils.decodeAttributes(attrs, results.getBinary(1));
-        return attrs;
+    public final DIMSE getDimse() {
+        return dimse;
     }
 
+    public final Role getRole() {
+        return role;
+    }
+
+    public final String getAETitle() {
+        return aeTitle;
+    }
+
+    public final String getURI() {
+        return uri;
+    }
 }

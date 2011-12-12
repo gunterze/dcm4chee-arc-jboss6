@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.qrscp;
+package org.dcm4chee.archive.net.service;
 
 import java.io.IOException;
 import java.util.List;
@@ -47,14 +47,16 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.io.SAXTransformer;
-import org.dcm4che.io.SAXWriter;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.DataWriter;
 import org.dcm4che.net.DataWriterAdapter;
+import org.dcm4che.net.TransferCapability.Role;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicRetrieveTask;
 import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.util.SafeClose;
+import org.dcm4chee.archive.net.ArchiveApplicationEntity;
+import org.dcm4chee.archive.net.AttributeCoercion.DIMSE;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -62,13 +64,11 @@ import org.dcm4che.util.SafeClose;
 class RetrieveTaskImpl extends BasicRetrieveTask {
 
     private final boolean withoutBulkData;
-    private final Templates templates;
 
     public RetrieveTaskImpl(Association as, PresentationContext pc, Attributes rq,
-            List<InstanceLocator> matches, boolean withoutBulkData, Templates templates) {
+            List<InstanceLocator> matches, boolean withoutBulkData) {
         super(as, pc, rq, matches);
         this.withoutBulkData = withoutBulkData;
-        this.templates = templates;
     }
 
     @Override
@@ -88,16 +88,14 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
             SafeClose.close(in);
         }
         attrs.addAll((Attributes) inst.getObject());
-        if (templates != null) {
-            Attributes modify = new Attributes();
-            try {
-                SAXWriter w = SAXTransformer.getSAXWriter(templates, modify);
-                w.setIncludeKeyword(false);
-                w.write(attrs);
-            } catch (Exception e) {
-                new IOException(e);
-            }
-            attrs.addAll(modify);
+        ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+        try {
+            Templates tpl = ae.getAttributeCoercionTemplates(
+                    inst.cuid, DIMSE.C_STORE_RQ, Role.SCU, as.getRemoteAET());
+            if (tpl != null)
+                attrs.updateAttributes(SAXTransformer.transform(attrs, tpl, false, false), null);
+        } catch (Exception e) {
+            throw new IOException(e);
         }
         return new DataWriterAdapter(attrs);
     }

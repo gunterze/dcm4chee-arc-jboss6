@@ -48,13 +48,13 @@ import javax.persistence.TypedQuery;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.RequestedProcedure;
 import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
 import org.dcm4chee.archive.persistence.ScheduledStationAETitle;
 import org.dcm4chee.archive.persistence.ServiceRequest;
-import org.dcm4chee.archive.persistence.StoreParam;
 import org.dcm4chee.archive.persistence.Visit;
 
 /**
@@ -62,8 +62,8 @@ import org.dcm4chee.archive.persistence.Visit;
  */
 public abstract class RequestFactory {
 
-    public static ScheduledProcedureStep findOrCreateScheduledProcedureStep(EntityManager em,
-            Attributes attrs, Patient patient, StoreParam storeParam) {
+    public static ScheduledProcedureStep findOrCreateScheduledProcedureStep(
+            EntityManager em, Attributes attrs, Patient patient, StoreParam storeParam) {
         String spsid = attrs.getString(Tag.ScheduledProcedureStepID);
         String rpid = attrs.getString(Tag.RequestedProcedureID);
         String accno = attrs.getString(Tag.AccessionNumber);
@@ -125,7 +125,8 @@ public abstract class RequestFactory {
         sps.setRequestedProcedure(rp);
         sps.setScheduledStationAETs(
                 createScheduledStationAETs(attrs.getStrings(Tag.ScheduledStationAETitle)));
-        sps.setAttributes(attrs, storeParam);
+        sps.setAttributes(attrs, storeParam.getAttributeFilter(Entity.ScheduledProcedureStep),
+                storeParam.getFuzzyStr());
         em.persist(sps);
         return sps;
     }
@@ -162,25 +163,27 @@ public abstract class RequestFactory {
         String admissionID = attrs.getString(Tag.AdmissionID);
         Issuer issuerOfAdmissionID = IssuerFactory.getIssuer(em,
                 attrs.getNestedDataset(Tag.IssuerOfAdmissionIDSequence));
+        AttributeFilter filter = storeParam.getAttributeFilter(Entity.Visit);
 
-        if (admissionID == null)
-            return newVisit(em, attrs, patient, issuerOfAdmissionID, storeParam);
+        if (admissionID == null) {
+            return newVisit(em, attrs, patient, issuerOfAdmissionID, filter);
+        }
 
         try {
             Visit visit = findVisit(em, admissionID, issuerOfAdmissionID);
             PatientMismatchException.check(visit, patient, visit.getPatient());
             return visit;
         } catch (NoResultException e) {
-            return newVisit(em, attrs, patient, issuerOfAdmissionID, storeParam);
+            return newVisit(em, attrs, patient, issuerOfAdmissionID, filter);
         }
     }
 
     private static Visit newVisit(EntityManager em, Attributes attrs,
-            Patient patient, Issuer issuerOfAdmissionID, StoreParam storeParam) {
+            Patient patient, Issuer issuerOfAdmissionID, AttributeFilter filter) {
         Visit visit = new Visit();
         visit.setPatient(patient);
         visit.setIssuerOfAdmissionID(issuerOfAdmissionID);
-        visit.setAttributes(attrs, storeParam);
+        visit.setAttributes(attrs, filter);
         em.persist(visit);
         return visit;
     }
@@ -210,7 +213,7 @@ public abstract class RequestFactory {
                     accno, issuerOfAccNo);
             RequestedProcedure rp = new RequestedProcedure();
             rp.setServiceRequest(rq);
-            rp.setAttributes(attrs, storeParam);
+            rp.setAttributes(attrs, storeParam.getAttributeFilter(Entity.RequestedProcedure));
             em.persist(rp);
             return rp;
         }
@@ -243,7 +246,8 @@ public abstract class RequestFactory {
             Visit visit = getVisit(em, attrs, patient, storeParam);
             request.setVisit(visit);
             request.setIssuerOfAccessionNumber(issuerOfAccNo);
-            request.setAttributes(attrs, storeParam);
+            request.setAttributes(attrs, storeParam.getAttributeFilter(Entity.ServiceRequest),
+                    storeParam.getFuzzyStr());
             em.persist(request);
             return request;
         }

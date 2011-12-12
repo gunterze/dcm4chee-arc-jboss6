@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.store;
+package org.dcm4chee.archive.net.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,22 +51,21 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.io.SAXTransformer;
-import org.dcm4che.io.SAXWriter;
-import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Status;
+import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCStoreSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.TagUtils;
-import org.dcm4chee.archive.beans.util.Configuration;
-import org.dcm4chee.archive.beans.util.JNDIUtils;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
+import org.dcm4chee.archive.ejb.store.StoreParam;
+import org.dcm4chee.archive.net.ArchiveApplicationEntity;
+import org.dcm4chee.archive.net.AttributeCoercion.DIMSE;
 import org.dcm4chee.archive.persistence.FileRef;
 import org.dcm4chee.archive.persistence.FileSystem;
-import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -82,8 +81,8 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
     @Override
     protected Object selectStorage(Association as, Attributes rq) throws DicomServiceException {
         try {
-            StoreParam storeParam = Configuration.storeParamFor(as.getApplicationEntity());
-            String fsGroupID = storeParam.getFileSystemGroupID();
+            ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+            String fsGroupID = ae.getEffectiveFileSystemGroupID();
             InstanceStore store = initInstanceStore(as);
             if (initFileSystem) {
                 store.initFileSystem(fsGroupID);
@@ -111,11 +110,10 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         try {
             FileSystem fs = (FileSystem) storage;
             String iuid = rq.getString(Tag.AffectedSOPInstanceUID);
-            ApplicationEntity ae = as.getApplicationEntity();
-            StoreParam storeParam = Configuration.storeParamFor(ae);
+            ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
             File file = new File(
-                    new File(fs.getDirectory(), storeParam.getDirectoryPath()), 
-                    storeParam.getRenameFilePathFormat() == null
+                    new File(fs.getDirectory(), ae.getEffectiveReceivingDirectoryPath()), 
+                    ae.getEffectiveStorageFilePathFormat() == null
                             ? iuid.replace('.', '/')
                             : iuid);
             File dir = file.getParentFile();
@@ -131,8 +129,8 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
 
     @Override
     protected MessageDigest getMessageDigest(Association as) {
-        StoreParam storeParam = Configuration.storeParamFor(as.getApplicationEntity());
-        String algorithm = storeParam.getDigestAlgorithm();
+        ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+        String algorithm = ae.getEffectiveDigestAlgorithm();
         try {
             return algorithm != null ? MessageDigest.getInstance(algorithm) : null;
         } catch (NoSuchAlgorithmException e) {
@@ -149,45 +147,34 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         if (ds.bigEndian())
             ds = new Attributes(ds, false);
         String sourceAET = as.getRemoteAET();
-        Attributes modified = new Attributes();
-        ApplicationEntity ae = as.getApplicationEntity();
-        StoreParam storeParam = Configuration.storeParamFor(ae);
-        Templates templates = storeParam.getIncomingAttributeCoercionFor(sourceAET);
-        if (templates != null) {
-            Attributes modify = new Attributes();
-            try {
-                SAXWriter w = SAXTransformer.getSAXWriter(templates, modify);
-                w.setIncludeKeyword(false);
-                w.write(ds);
-            } catch (Exception e) {
-                new IOException(e);
-            }
-            ds.updateAttributes(modify, modified);
-        }
-        AttributesFormat filePathFormatFor = storeParam.getRenameFilePathFormat();
-        File dst = filePathFormatFor != null
-                ? rename(as, rq, fs, file, filePathFormatFor.format(ds))
-                : file;
-        String filePath = dst.toURI().toString().substring(fs.getURI().length());
-        InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
+        String cuid = rq.getString(Tag.AffectedSOPClassUID);
+        ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
         try {
+            Attributes modified = new Attributes();
+            Templates tpl = ae.getAttributeCoercionTemplates(cuid, DIMSE.C_STORE_RQ,
+                    TransferCapability.Role.SCP, sourceAET);
+            if (tpl != null)
+                ds.updateAttributes(SAXTransformer.transform(ds, tpl, false, false), modified);
+            AttributesFormat filePathFormatFor = ae.getEffectiveStorageFilePathFormat();
+            File dst = filePathFormatFor != null
+                    ? rename(as, rq, fs, file, filePathFormatFor.format(ds))
+                    : file;
+            String filePath = dst.toURI().toString().substring(fs.getURI().length());
+            InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
+            StoreParam storeParam = ae.getStoreParam();
             if (store.addFileRef(sourceAET, ds, modified,
                     new FileRef(fs, filePath, pc.getTransferSyntax(), dst.length(),
                             digest(digest)), storeParam))
                 dst = null;
-            warningCoercionOfDataElements(modified, rsp, storeParam);
+            if (!modified.isEmpty()
+                    && !ae.isSuppressWarningCoercionOfDataElements()) {
+                rsp.setInt(Tag.Status, VR.US, Status.CoercionOfDataElements);
+                rsp.setInt(Tag.OffendingElement, VR.AT, modified.tags());
+            }
+            return dst;
         } catch (Exception e) {
             throw new DicomServiceException(Status.ProcessingFailure,
                     DicomServiceException.initialCauseOf(e));
-        }
-        return dst;
-    }
-
-    private static void warningCoercionOfDataElements(Attributes modified, Attributes rsp,
-            StoreParam storeParam) {
-        if (!modified.isEmpty() && !storeParam.isSuppressWarningCoercionOfDataElements()) {
-            rsp.setInt(Tag.Status, VR.US, Status.CoercionOfDataElements);
-            rsp.setInt(Tag.OffendingElement, VR.AT, modified.tags());
         }
     }
 

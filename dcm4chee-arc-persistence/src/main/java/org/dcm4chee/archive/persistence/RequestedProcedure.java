@@ -156,13 +156,12 @@ public class RequestedProcedure implements Serializable {
         return cachedAttributes;
     }
 
-    public void setAttributes(Attributes attrs, StoreParam storeParam) {
+    public void setAttributes(Attributes attrs, AttributeFilter filter) {
         requestedProcedureID = attrs.getString(Tag.RequestedProcedureID);
         studyInstanceUID = attrs.getString(Tag.StudyInstanceUID);
 
         encodedAttributes = Utils.encodeAttributes(
-                cachedAttributes = new Attributes(attrs, 
-                        storeParam.getRequestedProcedureAttributes()));
+                cachedAttributes = new Attributes(attrs, filter.getSelection()));
     }
 
 }

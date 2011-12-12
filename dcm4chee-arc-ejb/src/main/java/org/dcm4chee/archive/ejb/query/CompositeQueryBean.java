@@ -52,7 +52,6 @@ import javax.persistence.PersistenceUnit;
 import javax.sql.DataSource;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.persistence.StoreParam;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
@@ -89,23 +88,23 @@ public class CompositeQueryBean implements CompositeQuery {
 
 
     @Override
-    public void findPatients(IDWithIssuer[] pids, Attributes keys, QueryParam queryParam, StoreParam storeParam) {
-        query = new PatientQueryImpl(session, pids, keys, queryParam, storeParam);
+    public void findPatients(IDWithIssuer[] pids, Attributes keys, QueryParam queryParam) {
+        query = new PatientQueryImpl(session, pids, keys, queryParam);
     }
 
     @Override
-    public void findStudies(IDWithIssuer[] pids, Attributes keys, QueryParam queryParam, StoreParam storeParam) {
-        query = new StudyQueryImpl(session, pids, keys, queryParam, storeParam);
+    public void findStudies(IDWithIssuer[] pids, Attributes keys, QueryParam queryParam) {
+        query = new StudyQueryImpl(session, pids, keys, queryParam);
     }
 
     @Override
-    public void findSeries(IDWithIssuer[] pids, Attributes keys, QueryParam queryParam, StoreParam storeParam) {
-        query = new SeriesQueryImpl(session, pids, keys, queryParam, storeParam);
+    public void findSeries(IDWithIssuer[] pids, Attributes keys, QueryParam queryParam) {
+        query = new SeriesQueryImpl(session, pids, keys, queryParam);
     }
 
     @Override
-    public void findInstances(IDWithIssuer[] pids, Attributes keys, QueryParam queryParam, StoreParam storeParam) {
-        query = new InstanceQueryImpl(session, pids, keys, queryParam, storeParam);
+    public void findInstances(IDWithIssuer[] pids, Attributes keys, QueryParam queryParam) {
+        query = new InstanceQueryImpl(session, pids, keys, queryParam);
     }
 
     @Override

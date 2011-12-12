@@ -36,39 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.util;
+package org.dcm4chee.archive.ejb.store;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class QueryRetrieveParam {
-
-    private boolean matchUnknown;
-    private boolean sendPendingCGet;
-    private long sendPendingCMoveInterval;
-
-    public final boolean isMatchUnknown() {
-        return matchUnknown;
-    }
-
-    public final void setMatchUnknown(boolean matchUnknown) {
-        this.matchUnknown = matchUnknown;
-    }
-
-    public final boolean isSendPendingCGet() {
-        return sendPendingCGet;
-    }
-
-    public final void setSendPendingCGet(boolean sendPendingCGet) {
-        this.sendPendingCGet = sendPendingCGet;
-    }
-
-    public final long getSendPendingCMoveInterval() {
-        return sendPendingCMoveInterval;
-    }
-
-    public final void setSendPendingCMoveInterval(long sendPendingCMoveInterval) {
-        this.sendPendingCMoveInterval = sendPendingCMoveInterval;
-    }
-
+public enum Entity {
+    Patient,
+    Study,
+    Series,
+    Instance,
+    Visit,
+    ServiceRequest,
+    RequestedProcedure,
+    ScheduledProcedureStep
 }

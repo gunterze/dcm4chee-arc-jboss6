@@ -61,6 +61,7 @@ import javax.persistence.Transient;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.DateUtils;
 import org.dcm4che.util.StringUtils;
 
@@ -353,7 +354,7 @@ public class Instance implements Serializable {
         this.series = series;
     }
 
-    public void setAttributes(Attributes attrs, StoreParam storeParam) {
+    public void setAttributes(Attributes attrs, AttributeFilter filter, FuzzyStr fuzzyStr) {
         sopInstanceUID = attrs.getString(Tag.SOPInstanceUID);
         sopClassUID = attrs.getString(Tag.SOPClassUID);
         instanceNumber = attrs.getString(Tag.InstanceNumber, "*");
@@ -371,14 +372,14 @@ public class Instance implements Serializable {
         completionFlag = attrs.getString(Tag.CompletionFlag, "*").toUpperCase();
         verificationFlag = attrs.getString(Tag.VerificationFlag, "*").toUpperCase();
 
-        instanceCustomAttribute1 = StoreParam.selectStringValue(attrs,
-                storeParam.getInstanceCustomAttribute1(), "*");
-        instanceCustomAttribute2 = StoreParam.selectStringValue(attrs,
-                storeParam.getInstanceCustomAttribute2(), "*");
-        instanceCustomAttribute3 = StoreParam.selectStringValue(attrs,
-                storeParam.getInstanceCustomAttribute3(), "*");
+        instanceCustomAttribute1 = 
+                AttributeFilter.selectStringValue(attrs, filter.getCustomAttribute1(), "*");
+        instanceCustomAttribute2 =
+                AttributeFilter.selectStringValue(attrs, filter.getCustomAttribute2(), "*");
+        instanceCustomAttribute3 =
+                AttributeFilter.selectStringValue(attrs, filter.getCustomAttribute3(), "*");
 
         encodedAttributes = Utils.encodeAttributes(
-                cachedAttributes = new Attributes(attrs, storeParam.getInstanceAttributes()));
+                cachedAttributes = new Attributes(attrs, filter.getSelection()));
     }
 }

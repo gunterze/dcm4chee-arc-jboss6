@@ -152,11 +152,10 @@ public class Visit implements Serializable {
         return cachedAttributes;
     }
 
-    public void setAttributes(Attributes attrs, StoreParam storeParam) {
+    public void setAttributes(Attributes attrs, AttributeFilter filter) {
         admissionID = attrs.getString(Tag.AdmissionID, "*");
 
         encodedAttributes = Utils.encodeAttributes(
-                cachedAttributes = new Attributes(attrs, 
-                        storeParam.getServiceRequestAttributes()));
+                cachedAttributes = new Attributes(attrs, filter.getSelection()));
     }
 }

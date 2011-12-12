@@ -151,11 +151,10 @@ public class PerformedProcedureStep implements Serializable {
         return cachedAttributes;
     }
 
-    public void setAttributes(Attributes attrs, StoreParam storeParam) {
+    public void setAttributes(Attributes attrs, AttributeFilter filter) {
         sopInstanceUID = attrs.getString(Tag.SOPInstanceUID);
 
         encodedAttributes = Utils.encodeAttributes(
-                cachedAttributes = new Attributes(attrs, 
-                        storeParam.getPerformedProcedureStepAttributes()));
+                cachedAttributes = new Attributes(attrs, filter.getSelection()));
     }
 }

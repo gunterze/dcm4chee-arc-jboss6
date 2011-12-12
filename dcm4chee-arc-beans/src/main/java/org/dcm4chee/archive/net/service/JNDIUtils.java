@@ -36,54 +36,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.mwl;
+package org.dcm4chee.archive.net.service;
 
-import org.dcm4che.data.Attributes;
-import org.dcm4che.net.Association;
-import org.dcm4che.net.Status;
-import org.dcm4che.net.pdu.PresentationContext;
-import org.dcm4che.net.service.BasicQueryTask;
-import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4chee.archive.ejb.query.ModalityWorklistQuery;
+import javax.ejb.EJBException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-class QueryTaskImpl extends BasicQueryTask {
+public class JNDIUtils {
 
-    private final ModalityWorklistQuery query;
-
-    public QueryTaskImpl(Association as, PresentationContext pc, Attributes rq,
-            Attributes keys, ModalityWorklistQuery query) throws DicomServiceException {
-        super(as, pc, rq, keys);
-        this.query = query;
-    }
-
-    @Override
-    protected void close() {
-         query.close();
-    }
-
-    @Override
-    protected boolean hasMoreMatches() throws DicomServiceException {
+    public static Object lookup(String name) {
+        InitialContext ctx = null;
         try {
-            return query.hasMoreMatches();
-        }  catch (Exception e) {
-            throw wrapException(Status.UnableToProcess, e);
+            ctx = new InitialContext();
+            return ctx.lookup(name);
+        } catch (NamingException e) {
+            throw new EJBException(e);
+        } finally {
+            if (ctx != null)
+                try {
+                    ctx.close();
+                } catch (NamingException e) {}
         }
     }
 
-    @Override
-    protected Attributes nextMatch() throws DicomServiceException {
-        try {
-            return query.nextMatch();
-        }  catch (Exception e) {
-            throw wrapException(Status.UnableToProcess, e);
-        }
-    }
-
-    @Override
-    protected boolean optionalKeyNotSupported(Attributes match, Attributes keys) {
-        return query.optionalKeyNotSupported();
-    }
 }

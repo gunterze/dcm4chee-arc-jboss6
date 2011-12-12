@@ -51,7 +51,9 @@ import javax.persistence.Table;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
+import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.DateUtils;
+import org.dcm4che.util.StringUtils;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
@@ -95,7 +97,7 @@ public class VerifyingObserver implements Serializable {
 
     public VerifyingObserver() {}
 
-    public VerifyingObserver(Attributes attrs, StoreParam storeParam) {
+    public VerifyingObserver(Attributes attrs, FuzzyStr fuzzyStr) {
         Date dt = attrs.getDate(Tag.VerificationDateTime);
         verificationDateTime = DateUtils.formatDT(null, dt);
         PersonName pn = new PersonName(attrs.getString(Tag.VerifyingObserverName), true);
@@ -105,10 +107,10 @@ public class VerifyingObserver implements Serializable {
                 ? pn.toString(PersonName.Group.Ideographic, false) : "*";
         verifyingObserverPhoneticName = pn.contains(PersonName.Group.Phonetic)
                 ? pn.toString(PersonName.Group.Phonetic, false) : "*";
-        verifyingObserverFamilyNameSoundex = storeParam.toFuzzy(
-                pn.get(PersonName.Component.FamilyName), "*");
-        verifyingObserverGivenNameSoundex = storeParam.toFuzzy(
-                pn.get(PersonName.Component.GivenName), "*");
+        verifyingObserverFamilyNameSoundex = StringUtils.maskEmpty(
+                fuzzyStr.toFuzzy(pn.get(PersonName.Component.FamilyName)), "*");
+        verifyingObserverGivenNameSoundex = StringUtils.maskEmpty(
+                fuzzyStr.toFuzzy(pn.get(PersonName.Component.GivenName)), "*");
     }
 
     public long getPk() {

@@ -67,6 +67,8 @@ public class Utils {
     }
 
     public static Attributes decodeAttributes(byte[] b) {
+        if (b == null || b.length == 0)
+            return new Attributes(0);
         ByteArrayInputStream is = new ByteArrayInputStream(b);
         try {
             DicomInputStream dis = new DicomInputStream(is);
@@ -77,6 +79,8 @@ public class Utils {
     }
 
     public static void decodeAttributes(Attributes attrs, byte[] b) {
+        if (b == null || b.length == 0)
+            return;
         ByteArrayInputStream is = new ByteArrayInputStream(b);
         try {
             DicomInputStream dis = new DicomInputStream(is);

@@ -36,69 +36,80 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.ejb.query;
+package org.dcm4chee.archive.ejb.store;
 
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 
+
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class QueryParam {
+public class StoreParam {
+
+    public enum StoreDuplicate { IGNORE, STORE, REPLACE };
 
     private FuzzyStr fuzzyStr;
     private AttributeFilter[] attributeFilters;
-    private boolean combinedDatetimeMatching;
-    private boolean fuzzySemanticMatching;
-    private boolean matchUnknown;
-    private String[] roles;
+    private boolean storeOriginalAttributes;
+    private String modifyingSystem;
+    private String[] retrieveAETs;
+    private String externalRetrieveAET;
+    private StoreDuplicate storeDuplicate;
 
-    public final boolean isCombinedDatetimeMatching() {
-        return combinedDatetimeMatching;
+    public final boolean isStoreOriginalAttributes() {
+        return storeOriginalAttributes;
     }
 
-    public final void setCombinedDatetimeMatching(boolean combinedDatetimeMatching) {
-        this.combinedDatetimeMatching = combinedDatetimeMatching;
+    public final void setStoreOriginalAttributes(boolean storeOriginalAttributes) {
+        this.storeOriginalAttributes = storeOriginalAttributes;
     }
 
-    public final boolean isFuzzySemanticMatching() {
-        return fuzzySemanticMatching;
+    public final String getModifyingSystem() {
+        return modifyingSystem;
     }
 
-    public final void setFuzzySemanticMatching(boolean fuzzySemanticMatching) {
-        this.fuzzySemanticMatching = fuzzySemanticMatching;
+    public final void setModifyingSystem(String modifyingSystem) {
+        this.modifyingSystem = modifyingSystem;
     }
 
-    public final boolean isMatchUnknown() {
-        return matchUnknown;
+    public final StoreDuplicate getStoreDuplicate() {
+        return storeDuplicate;
     }
 
-    public final void setMatchUnknown(boolean matchUnknown) {
-        this.matchUnknown = matchUnknown;
+    public final void setStoreDuplicate(StoreDuplicate storeDuplicate) {
+        this.storeDuplicate = storeDuplicate;
     }
 
-    public final String[] getRoles() {
-        return roles != null ? roles.clone() : null;
+    public final String[] getRetrieveAETs() {
+        return retrieveAETs;
     }
 
-    public final void setRoles(String... roles) {
-        this.roles = roles != null ? roles.clone() : null;
+    public final void setRetrieveAETs(String... retrieveAETs) {
+        this.retrieveAETs = retrieveAETs;
     }
 
-    public void setFuzzyStr(FuzzyStr fuzzyStr) {
+    public final String getExternalRetrieveAET() {
+        return externalRetrieveAET;
+    }
+
+    public final void setExternalRetrieveAET(String externalRetrieveAET) {
+        this.externalRetrieveAET = externalRetrieveAET;
+    }
+
+    public final void setFuzzyStr(FuzzyStr fuzzyStr) {
         this.fuzzyStr = fuzzyStr;
     }
 
-    public FuzzyStr getFuzzyStr() {
+    public final FuzzyStr getFuzzyStr() {
         return fuzzyStr;
     }
 
-    public void setAttributeFilters(AttributeFilter[] attributeFilters) {
+    public final void setAttributeFilters(AttributeFilter[] attributeFilters) {
         this.attributeFilters = attributeFilters;
     }
 
-    public AttributeFilter[] getAttributeFilters() {
-        return attributeFilters;
+    public AttributeFilter getAttributeFilter(Entity entity) {
+        return attributeFilters[entity.ordinal()];
     }
-
 }

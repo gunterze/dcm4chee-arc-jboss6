@@ -60,6 +60,7 @@ import javax.persistence.Transient;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
+import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.DateUtils;
 
 /**
@@ -243,7 +244,7 @@ public class ScheduledProcedureStep implements Serializable {
         return cachedAttributes;
     }
 
-    public void setAttributes(Attributes attrs, StoreParam storeParam) {
+    public void setAttributes(Attributes attrs, AttributeFilter filter, FuzzyStr fuzzyStr) {
         scheduledProcedureStepID = attrs.getString(Tag.ScheduledProcedureStepID);
         modality = attrs.getString(Tag.Modality, "*").toUpperCase();
         Date dt = attrs.getDate(Tag.ScheduledProcedureStepStartDateAndTime);
@@ -263,15 +264,14 @@ public class ScheduledProcedureStep implements Serializable {
                 ? pn.toString(PersonName.Group.Ideographic, false) : "*";
         scheduledPerformingPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
                 ? pn.toString(PersonName.Group.Phonetic, false) : "*";
-        scheduledPerformingPhysicianFamilyNameSoundex = storeParam.toFuzzy(
-                pn.get(PersonName.Component.FamilyName), "*");
-        scheduledPerformingPhysicianGivenNameSoundex = storeParam.toFuzzy(
-                pn.get(PersonName.Component.GivenName), "*");
+        scheduledPerformingPhysicianFamilyNameSoundex = fuzzyStr.toFuzzy(
+                pn.get(PersonName.Component.FamilyName));
+        scheduledPerformingPhysicianGivenNameSoundex = fuzzyStr.toFuzzy(
+                pn.get(PersonName.Component.GivenName));
         status = attrs.getString(Tag.ScheduledProcedureStepStatus, "*");
 
         encodedAttributes = Utils.encodeAttributes(
-                cachedAttributes = new Attributes(attrs, 
-                        storeParam.getScheduledProcedureStepAttributes()));
+                cachedAttributes = new Attributes(attrs, filter.getSelection()));
     }
 
 }

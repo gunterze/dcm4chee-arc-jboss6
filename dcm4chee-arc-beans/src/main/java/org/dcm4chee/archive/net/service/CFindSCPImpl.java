@@ -36,14 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.mwl;
+package org.dcm4chee.archive.net.service;
 
 
 import java.util.EnumSet;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
-import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.QueryOption;
@@ -52,40 +51,71 @@ import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCFindSCP;
 import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.QueryTask;
-import org.dcm4chee.archive.beans.util.Configuration;
-import org.dcm4chee.archive.beans.util.JNDIUtils;
+import org.dcm4che.util.AttributesValidator;
+import org.dcm4chee.archive.ejb.query.CompositeQuery;
 import org.dcm4chee.archive.ejb.query.IDWithIssuer;
-import org.dcm4chee.archive.ejb.query.ModalityWorklistQuery;
 import org.dcm4chee.archive.ejb.query.QueryParam;
+import org.dcm4chee.archive.net.ArchiveApplicationEntity;
+import org.dcm4chee.archive.net.ArchiveDevice;
 import org.dcm4chee.archive.persistence.Issuer;
-import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 public class CFindSCPImpl extends BasicCFindSCP {
 
-    public CFindSCPImpl(Device device, String sopClass) {
+    private final String[] qrLevels;
+    private final QueryRetrieveLevel rootLevel;
+
+    public CFindSCPImpl(Device device, String sopClass,
+            String... qrLevels) {
         super(device, sopClass);
+        this.qrLevels = qrLevels;
+        this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
+    }
+
+    private final ArchiveDevice getArchiveDevice() {
+        return (ArchiveDevice) device;
     }
 
     @Override
     protected QueryTask calculateMatches(Association as, PresentationContext pc,
             Attributes rq, Attributes keys) throws DicomServiceException {
+        AttributesValidator validator = new AttributesValidator(keys);
+        QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(validator, qrLevels);
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
+        boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
+        level.validateQueryKeys(validator, rootLevel, relational);
         IDWithIssuer[] pids = pids(keys);
-        ApplicationEntity ae = as.getApplicationEntity();
-        StoreParam storeParam = Configuration.storeParamFor(ae);
+        ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+        ArchiveDevice dev = getArchiveDevice();
         EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
         QueryParam queryParam = new QueryParam();
-        queryParam.setCombinedDatetimeMatching(true);
+        queryParam.setCombinedDatetimeMatching(queryOpts.contains(QueryOption.DATETIME));
         queryParam.setFuzzySemanticMatching(queryOpts.contains(QueryOption.FUZZY));
+        queryParam.setMatchUnknown(ae.isMatchUnknown());
+        queryParam.setFuzzyStr(dev.getFuzzyStr());
+        queryParam.setAttributeFilters(dev.getAttributeFilters());
+        queryParam.setRoles(roles());
         try {
-            ModalityWorklistQuery query = (ModalityWorklistQuery)
-                    JNDIUtils.lookup(ModalityWorklistQuery.JNDI_NAME);
-            query.findScheduledProcedureSteps(pids, keys, queryParam, storeParam);
+            CompositeQuery query = (CompositeQuery) JNDIUtils.lookup(CompositeQuery.JNDI_NAME);
+            switch (level) {
+            case PATIENT:
+                query.findPatients(pids, keys, queryParam);
+                break;
+            case STUDY:
+                query.findStudies(pids, keys, queryParam);
+                break;
+            case SERIES:
+                query.findSeries(pids, keys, queryParam);
+                break;
+            default: // case IMAGE:
+                query.findInstances(pids, keys, queryParam);
+                break;
+            }
             return new QueryTaskImpl(as, pc, rq, keys, query);
         } catch (Exception e) {
             throw new DicomServiceException(Status.UnableToProcess, e);
@@ -111,5 +141,10 @@ public class CFindSCPImpl extends BasicCFindSCP {
                      ? null
                      : new Issuer(entityID, entityUID, entityUIDType);
         return new IDWithIssuer[] { new IDWithIssuer(id, issuer) };
+    }
+
+    private String[] roles() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

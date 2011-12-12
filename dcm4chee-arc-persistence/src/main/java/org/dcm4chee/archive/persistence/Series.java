@@ -63,6 +63,7 @@ import javax.persistence.Transient;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
+import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.DateUtils;
 import org.dcm4che.util.StringUtils;
 
@@ -478,7 +479,7 @@ public class Series implements Serializable {
         return instances;
     }
 
-    public void setAttributes(Attributes attrs, StoreParam storeParam) {
+    public void setAttributes(Attributes attrs, AttributeFilter filter, FuzzyStr fuzzyStr) {
         seriesInstanceUID = attrs.getString(Tag.SeriesInstanceUID);
         seriesNumber = attrs.getString(Tag.SeriesNumber, "*");
         seriesDescription = attrs.getString(Tag.SeriesDescription, "*");
@@ -518,19 +519,19 @@ public class Series implements Serializable {
             performingPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
                     ? pn.toString(PersonName.Group.Phonetic, false) : "*";
             performingPhysicianFamilyNameSoundex =
-                    storeParam.toFuzzy(pn.get(PersonName.Component.FamilyName), "*");
+                fuzzyStr.toFuzzy(pn.get(PersonName.Component.FamilyName));
             performingPhysicianGivenNameSoundex =
-                    storeParam.toFuzzy(pn.get(PersonName.Component.GivenName), "*");
+                fuzzyStr.toFuzzy(pn.get(PersonName.Component.GivenName));
         }
-        seriesCustomAttribute1 = StoreParam.selectStringValue(attrs,
-                storeParam.getSeriesCustomAttribute1(), "*");
-        seriesCustomAttribute2 = StoreParam.selectStringValue(attrs,
-                storeParam.getSeriesCustomAttribute2(), "*");
-        seriesCustomAttribute3 = StoreParam.selectStringValue(attrs,
-                storeParam.getSeriesCustomAttribute3(), "*");
+        seriesCustomAttribute1 = 
+            AttributeFilter.selectStringValue(attrs, filter.getCustomAttribute1(), "*");
+        seriesCustomAttribute2 =
+            AttributeFilter.selectStringValue(attrs, filter.getCustomAttribute2(), "*");
+        seriesCustomAttribute3 =
+            AttributeFilter.selectStringValue(attrs, filter.getCustomAttribute3(), "*");
 
         encodedAttributes = Utils.encodeAttributes(
-                cachedAttributes = new Attributes(attrs, storeParam.getSeriesAttributes()));
+                cachedAttributes = new Attributes(attrs, filter.getSelection()));
         
     }
 }

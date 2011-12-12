@@ -41,12 +41,62 @@
   xsi:schemaLocation="urn:jboss:bean-deployer bean-deployer_2_0.xsd"
   xmlns="urn:jboss:bean-deployer:2.0">
 
+  <bean name="Executer" class="java.util.concurrent.Executor">
+    <constructor factoryClass="java.util.concurrent.Executors"
+      factoryMethod="newCachedThreadPool" />
+  </bean>
+
+  <bean name="ScheduledExecutorService" class="java.util.concurrent.ScheduledExecutorService">
+    <constructor factoryClass="java.util.concurrent.Executors"
+      factoryMethod="newSingleThreadScheduledExecutor" />
+  </bean>
+
+  <!-- The Archive Configuration -->
+  <bean name="ArchiveConfiguration" class="org.dcm4chee.archive.conf.ldap.LdapArchiveConfiguration">
+    <constructor>
+      <parameter>
+        <javabean xmlns="urn:jboss:javabean:1.0" class="org.dcm4che.conf.ldap.LdapEnv">
+          <property name="url">ldap://localhost:389</property>
+          <property name="userDN">cn=admin,dc=nodomain</property>
+          <property name="password">admin</property>
+        </javabean>
+      </parameter>
+      <parameter>dc=nodomain</parameter>
+    </constructor>
+  </bean>
+
+  <!-- The DICOM Device -->
+  <bean name="Device" class="org.dcm4che.net.Device">
+    <constructor factoryMethod="findDevice">
+      <factory bean="ArchiveConfiguration"/>
+      <parameter>DCM4CHEE Archive</parameter>
+    </constructor>
+    <property name="executor">
+      <inject bean="Executer" />
+    </property>
+    <property name="scheduledExecutor">
+      <inject bean="ScheduledExecutorService" />
+    </property>
+    <property name="dimseRQHandler">
+      <inject bean="DicomServiceRegistry" />
+    </property>
+    <start method="activate" />
+    <stop method="deactivate" />
+    <demand>Class:org.dcm4chee.archive.ejb.store.InstanceStore</demand>
+    <demand>Class:org.dcm4chee.archive.ejb.query.CompositeQuery</demand>
+    <demand>Class:org.dcm4chee.archive.ejb.query.LocateInstances</demand>
+  </bean>
+
+  <!-- Service Registry -->
+  <bean name="DicomServiceRegistry" class="org.dcm4che.net.service.DicomServiceRegistry">
+    <incallback method="addDicomService" />
+  </bean>
 
   <!-- CEchoSCP -->
   <bean name="CEchoSCP" class="org.dcm4che.net.service.BasicCEchoSCP"/>
 
   <!-- CStoreSCP -->
-  <bean name="CStoreSCP" class="org.dcm4chee.archive.beans.store.CStoreSCPImpl">
+  <bean name="CStoreSCP" class="org.dcm4chee.archive.net.service.CStoreSCPImpl">
     <constructor>
       <parameter>
         <array>
@@ -244,7 +294,7 @@
   </bean>
 
   <!-- Patient Root C-FIND SCP -->
-  <bean name="PatientRootCFindSCP" class="org.dcm4chee.archive.beans.qrscp.CFindSCPImpl">
+  <bean name="PatientRootCFindSCP" class="org.dcm4chee.archive.net.service.CFindSCPImpl">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.1.1</parameter>
@@ -261,7 +311,7 @@
 
 
   <!-- Study Root C-FIND SCP -->
-  <bean name="StudyRootCFindSCP" class="org.dcm4chee.archive.beans.qrscp.CFindSCPImpl">
+  <bean name="StudyRootCFindSCP" class="org.dcm4chee.archive.net.service.CFindSCPImpl">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.2.1</parameter>
@@ -276,7 +326,7 @@
   </bean>
 
   <!-- Patient/Study Only C-FIND SCP -->
-  <bean name="PatientStudyOnlyCFindSCP" class="org.dcm4chee.archive.beans.qrscp.CFindSCPImpl">
+  <bean name="PatientStudyOnlyCFindSCP" class="org.dcm4chee.archive.net.service.CFindSCPImpl">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.3.1</parameter>
@@ -290,7 +340,7 @@
   </bean>
 
   <!-- Patient Root C-MOVE SCP -->
-  <bean name="PatientRootCMoveSCP" class="org.dcm4chee.archive.beans.qrscp.CMoveSCPImpl" access-mode="ALL">
+  <bean name="PatientRootCMoveSCP" class="org.dcm4chee.archive.net.service.CMoveSCPImpl" access-mode="ALL">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.1.2</parameter>
@@ -303,10 +353,13 @@
         </array>
       </parameter>
     </constructor>
+    <property name="dicomConfiguration">
+        <inject bean="ArchiveConfiguration" />
+    </property>
   </bean>
 
   <!-- Study Root C-MOVE SCP -->
-  <bean name="StudyRootCMoveSCP" class="org.dcm4chee.archive.beans.qrscp.CMoveSCPImpl" access-mode="ALL">
+  <bean name="StudyRootCMoveSCP" class="org.dcm4chee.archive.net.service.CMoveSCPImpl" access-mode="ALL">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.2.2</parameter>
@@ -318,10 +371,13 @@
         </array>
       </parameter>
     </constructor>
+    <property name="dicomConfiguration">
+        <inject bean="ArchiveConfiguration" />
+    </property>
   </bean>
 
   <!-- Patient/Study Only C-MOVE SCP -->
-  <bean name="PatientStudyOnlyCMoveSCP" class="org.dcm4chee.archive.beans.qrscp.CMoveSCPImpl" access-mode="ALL">
+  <bean name="PatientStudyOnlyCMoveSCP" class="org.dcm4chee.archive.net.service.CMoveSCPImpl" access-mode="ALL">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.3.2</parameter>
@@ -332,10 +388,13 @@
         </array>
       </parameter>
     </constructor>
+    <property name="dicomConfiguration">
+        <inject bean="ArchiveConfiguration" />
+    </property>
   </bean>
 
   <!-- Patient Root C-GET SCP -->
-  <bean name="PatientRootCGetSCP" class="org.dcm4chee.archive.beans.qrscp.CGetSCPImpl" access-mode="ALL">
+  <bean name="PatientRootCGetSCP" class="org.dcm4chee.archive.net.service.CGetSCPImpl" access-mode="ALL">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.1.3</parameter>
@@ -351,7 +410,7 @@
   </bean>
 
   <!-- Study Root C-GET SCP -->
-  <bean name="StudyRootCGetSCP" class="org.dcm4chee.archive.beans.qrscp.CGetSCPImpl" access-mode="ALL">
+  <bean name="StudyRootCGetSCP" class="org.dcm4chee.archive.net.service.CGetSCPImpl" access-mode="ALL">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.2.3</parameter>
@@ -366,7 +425,7 @@
   </bean>
 
   <!-- Patient/Study Only C-GET SCP -->
-  <bean name="PatientStudyOnlyCGetSCP" class="org.dcm4chee.archive.beans.qrscp.CGetSCPImpl" access-mode="ALL">
+  <bean name="PatientStudyOnlyCGetSCP" class="org.dcm4chee.archive.net.service.CGetSCPImpl" access-mode="ALL">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.3.3</parameter>
@@ -380,7 +439,7 @@
   </bean>
 
   <!-- Composite Instance Retrieve Without Bulk Data C-GET SCP -->
-  <bean name="WithoutBulkDataCGetSCP" class="org.dcm4chee.archive.beans.qrscp.CGetSCPImpl" access-mode="ALL">
+  <bean name="WithoutBulkDataCGetSCP" class="org.dcm4chee.archive.net.service.CGetSCPImpl" access-mode="ALL">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.1.2.5.3</parameter>
@@ -389,7 +448,7 @@
   </bean>
 
   <!-- Modality Worklist C-FIND SCP -->
-  <bean name="ModalityWorklistCFindSCP" class="org.dcm4chee.archive.beans.mwl.CFindSCPImpl">
+  <bean name="ModalityWorklistCFindSCP" class="org.dcm4chee.archive.net.service.MWLCFindSCPImpl">
     <constructor>
       <parameter><inject bean="Device" /></parameter>
       <parameter>1.2.840.10008.5.1.4.31</parameter>

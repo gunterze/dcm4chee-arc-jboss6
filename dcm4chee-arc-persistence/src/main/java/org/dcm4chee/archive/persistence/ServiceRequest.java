@@ -58,6 +58,7 @@ import javax.persistence.Transient;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
+import org.dcm4che.soundex.FuzzyStr;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -202,7 +203,7 @@ public class ServiceRequest implements Serializable {
         return cachedAttributes;
     }
 
-    public void setAttributes(Attributes attrs, StoreParam storeParam) {
+    public void setAttributes(Attributes attrs, AttributeFilter filter, FuzzyStr fuzzyStr) {
         accessionNumber = attrs.getString(Tag.AccessionNumber);
         requestingService = attrs.getString(Tag.RequestingService, "*");
         PersonName pn = new PersonName(attrs.getString(Tag.RequestingPhysician), true);
@@ -213,12 +214,11 @@ public class ServiceRequest implements Serializable {
         requestingPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
                 ? pn.toString(PersonName.Group.Phonetic, false) : "*";
         requestingPhysicianFamilyNameSoundex =
-                storeParam.toFuzzy(pn.get(PersonName.Component.FamilyName), "*");
+            fuzzyStr.toFuzzy(pn.get(PersonName.Component.FamilyName));
         requestingPhysicianGivenNameSoundex =
-                storeParam.toFuzzy(pn.get(PersonName.Component.GivenName), "*");
+            fuzzyStr.toFuzzy(pn.get(PersonName.Component.GivenName));
 
         encodedAttributes = Utils.encodeAttributes(
-                cachedAttributes = new Attributes(attrs, 
-                        storeParam.getServiceRequestAttributes()));
+                cachedAttributes = new Attributes(attrs, filter.getSelection()));
     }
 }

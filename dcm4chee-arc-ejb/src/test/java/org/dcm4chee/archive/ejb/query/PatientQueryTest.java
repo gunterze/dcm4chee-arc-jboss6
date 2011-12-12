@@ -51,8 +51,9 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.soundex.ESoundex;
+import org.dcm4chee.archive.ejb.store.Entity;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Issuer;
-import org.dcm4chee.archive.persistence.StoreParam;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -67,14 +68,28 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class PatientQueryTest {
 
-    private static final QueryParam QUERY_PARAM = new QueryParam();
-    private static final QueryParam MATCH_UNKNOWN = new QueryParam().setMatchUnknown(true);
-    private static final QueryParam FUZZY_MATCH = new QueryParam().setFuzzySemanticMatching(true);
-    private static final QueryParam FUZZY_MATCH_UNKNOWN =
-            new QueryParam().setFuzzySemanticMatching(true).setMatchUnknown(true);
-    private static final StoreParam STORE_PARAM = new StoreParam();
-    static { STORE_PARAM.setFuzzyStr(new ESoundex()); }
     private static final Issuer ISSUER = new Issuer("DCM4CHEE_TESTDATA", "*", "*");
+    private static final AttributeFilter[] ATTR_FILTERS = {
+        new AttributeFilter(),
+        new AttributeFilter(),
+        new AttributeFilter(),
+        new AttributeFilter()
+    };
+
+    private static QueryParam queryParam(boolean matchUnknown, boolean fuzzy) {
+        QueryParam queryParam = new QueryParam();
+        queryParam.setMatchUnknown(matchUnknown);
+        queryParam.setFuzzySemanticMatching(fuzzy);
+        queryParam.setAttributeFilters(ATTR_FILTERS);
+        queryParam.setFuzzyStr(new ESoundex());
+        return queryParam ;
+    }
+
+    private static final QueryParam QUERY_PARAM = queryParam(false, false);
+    private static final QueryParam MATCH_UNKNOWN = queryParam(true, false);
+    private static final QueryParam FUZZY = queryParam(false, true);
+    private static final QueryParam FUZZY_MATCH_UNKNOWN = queryParam(true, true);
+
     private static IDWithIssuer[] pids(String id) {
         return new IDWithIssuer[] { new IDWithIssuer(id, ISSUER) };
     }
@@ -83,6 +98,7 @@ public class PatientQueryTest {
     public static WebArchive createDeployment() {
         return ShrinkWrap.create(WebArchive.class, "test.war")
                 .addClasses(
+                        Entity.class,
                         QueryParam.class,
                         IDWithIssuer.class,
                         CompositeQuery.class,
@@ -103,7 +119,7 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientID() throws Exception {
-        query.findPatients(pids("DOB*"), null, QUERY_PARAM, STORE_PARAM);
+        query.findPatients(pids("DOB*"), null, QUERY_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_20020202", "DOB_NONE" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -113,19 +129,19 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientName() throws Exception {
-        query.findPatients(null, patientName("大宮^省吾", true), QUERY_PARAM, STORE_PARAM);
+        query.findPatients(null, patientName("大宮^省吾", true), QUERY_PARAM);
         assertTrue(query.hasMoreMatches());
         query.nextMatch();
         assertFalse(query.hasMoreMatches());
         query.findPatients(pids("FUZZY*"), patientName("LUCAS^GEORGE=", false),
-                QUERY_PARAM, STORE_PARAM);
+                QUERY_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_GEORGE" };
         Collection<String> col = Arrays.asList(patIDs);
         assertTrue(equals(result, col));
         query.findPatients(null, 
                 patientName("OOMIYA^SHOUGO=大宮^省吾=オオミヤ^ショウゴ",  true),
-                QUERY_PARAM, STORE_PARAM);
+                QUERY_PARAM);
         result = patientIDResultList(query);
         patIDs = new String[]{ "PERSON_NAME" };
         col = Arrays.asList(patIDs);
@@ -135,7 +151,7 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientBirthDate() throws Exception {
-        query.findPatients(pids("DOB*"), patientBirthDate("20010101"), QUERY_PARAM, STORE_PARAM);
+        query.findPatients(pids("DOB*"), patientBirthDate("20010101"), QUERY_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -146,7 +162,7 @@ public class PatientQueryTest {
     @Test
     public void testByPatientBirthDateRange() throws Exception {
         query.findPatients(pids("DOB*"), patientBirthDate("20010101-20020202"),
-                QUERY_PARAM, STORE_PARAM);
+                QUERY_PARAM);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_20020202" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -157,7 +173,7 @@ public class PatientQueryTest {
     @Test
     public void testByPatientBirthDateMatchUnknown() throws Exception {
         query.findPatients(pids("DOB*"), patientBirthDate("20010101"),
-                MATCH_UNKNOWN, STORE_PARAM);
+                MATCH_UNKNOWN);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_NONE" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -167,8 +183,7 @@ public class PatientQueryTest {
 
     @Test
     public void testByPatientBirthDateRangeMatchUnknown() throws Exception {
-        query.findPatients(pids("DOB*"), patientBirthDate("20010101-20020202"),
-                MATCH_UNKNOWN, STORE_PARAM);
+        query.findPatients(pids("DOB*"), patientBirthDate("20010101-20020202"), MATCH_UNKNOWN);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "DOB_20010101", "DOB_20020202", "DOB_NONE" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -179,7 +194,7 @@ public class PatientQueryTest {
     @Test
     public void testByPatientNameSoundex1() throws Exception {
         query.findPatients(pids("FUZZY*"), patientName("LUCAS^GEORGE", false),
-                FUZZY_MATCH, STORE_PARAM);
+                FUZZY);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_GEORGE", "FUZZY_JOERG" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -190,7 +205,7 @@ public class PatientQueryTest {
     @Test
     public void testByPatientNameSoundex2() throws Exception {
         query.findPatients(pids("FUZZY*"), patientName("LUKAS^JÖRG", false),
-                FUZZY_MATCH, STORE_PARAM);
+                FUZZY);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_GEORGE", "FUZZY_JOERG" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -201,7 +216,7 @@ public class PatientQueryTest {
     @Test
     public void testByPatientNameSoundex3() throws Exception {
         query.findPatients(pids("FUZZY*"), patientName("LUKE", false),
-                FUZZY_MATCH, STORE_PARAM);
+                FUZZY);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_LUKE" };
         Collection<String> col = Arrays.asList(patIDs);
@@ -211,8 +226,7 @@ public class PatientQueryTest {
     
     @Test
     public void testByPatientNameSoundex4() throws Exception {
-        query.findPatients(pids("FUZZY*"), patientName("LU*", false),
-                FUZZY_MATCH, STORE_PARAM);
+        query.findPatients(pids("FUZZY*"), patientName("LU*", false), FUZZY);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_LUKE" , "FUZZY_JOERG", "FUZZY_GEORGE"};
         Collection<String> col = Arrays.asList(patIDs);
@@ -222,8 +236,7 @@ public class PatientQueryTest {
     
     @Test
     public void testByPatientNameSoundex5() throws Exception {
-        query.findPatients(pids("FUZZY*"), patientName("LU*", false),
-                FUZZY_MATCH_UNKNOWN, STORE_PARAM);
+        query.findPatients(pids("FUZZY*"), patientName("LU*", false), FUZZY_MATCH_UNKNOWN);
         ArrayList<String> result = patientIDResultList(query);
         String patIDs[] = { "FUZZY_LUKE", "FUZZY_JOERG", "FUZZY_GEORGE", "FUZZY_NONE"};
         Collection<String> col = Arrays.asList(patIDs);

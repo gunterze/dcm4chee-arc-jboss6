@@ -36,32 +36,54 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.util;
+package org.dcm4chee.archive.net.service;
 
-import java.util.Map;
-
-import org.dcm4che.net.ApplicationEntity;
-import org.dcm4che.net.Connection;
-import org.dcm4chee.archive.persistence.StoreParam;
+import org.dcm4che.data.Attributes;
+import org.dcm4che.net.Association;
+import org.dcm4che.net.Status;
+import org.dcm4che.net.pdu.PresentationContext;
+import org.dcm4che.net.service.BasicQueryTask;
+import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4chee.archive.ejb.query.ModalityWorklistQuery;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class Configuration {
+class MWLQueryTaskImpl extends BasicQueryTask {
 
-    public static StoreParam storeParamFor(ApplicationEntity ae) {
-        return (StoreParam) ae.getProperty("StoreParam");
+    private final ModalityWorklistQuery query;
+
+    public MWLQueryTaskImpl(Association as, PresentationContext pc, Attributes rq,
+            Attributes keys, ModalityWorklistQuery query) throws DicomServiceException {
+        super(as, pc, rq, keys);
+        this.query = query;
     }
 
-    public static QueryRetrieveParam queryRetrieveParamFor(ApplicationEntity ae) {
-        return (QueryRetrieveParam) ae.getProperty("QueryRetrieveParam");
+    @Override
+    protected void close() {
+         query.close();
     }
 
-    @SuppressWarnings("unchecked")
-    public static Connection getConnectionTo(ApplicationEntity ae, String aet) {
-        Map<String, Connection> map = (Map<String, Connection>)
-                ae.getProperty("Retrieve.connections");
-        return map.get(aet);
+    @Override
+    protected boolean hasMoreMatches() throws DicomServiceException {
+        try {
+            return query.hasMoreMatches();
+        }  catch (Exception e) {
+            throw wrapException(Status.UnableToProcess, e);
+        }
     }
 
+    @Override
+    protected Attributes nextMatch() throws DicomServiceException {
+        try {
+            return query.nextMatch();
+        }  catch (Exception e) {
+            throw wrapException(Status.UnableToProcess, e);
+        }
+    }
+
+    @Override
+    protected boolean optionalKeyNotSupported(Attributes match, Attributes keys) {
+        return query.optionalKeyNotSupported();
+    }
 }

@@ -39,7 +39,6 @@
 package org.dcm4chee.archive.ejb.query;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -49,7 +48,7 @@ public interface ModalityWorklistQuery {
     public static final String JNDI_NAME = "ModalityWorklistQueryBean/local";
 
     void findScheduledProcedureSteps(IDWithIssuer[] pids, Attributes keys,
-            QueryParam queryParam, StoreParam storeParam);
+            QueryParam queryParam);
 
     boolean optionalKeyNotSupported();
 

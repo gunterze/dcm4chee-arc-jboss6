@@ -42,7 +42,6 @@ import org.dcm4che.data.Attributes;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.QPatient;
 import org.dcm4chee.archive.persistence.QStudy;
-import org.dcm4chee.archive.persistence.StoreParam;
 import org.dcm4chee.archive.persistence.Utils;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -57,15 +56,15 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
 public class StudyQueryImpl extends CompositeQueryImpl {
 
     public StudyQueryImpl(StatelessSession session, IDWithIssuer[] pids, Attributes keys,
-            QueryParam queryParam, StoreParam storeParam) {
-        super(query(session, pids, keys, queryParam, storeParam), false);
+            QueryParam queryParam) {
+        super(query(session, pids, keys, queryParam), false);
     }
 
     private static ScrollableResults query(StatelessSession session, IDWithIssuer[] pids,
-            Attributes keys, QueryParam queryParam, StoreParam storeParam) {
+            Attributes keys, QueryParam queryParam) {
         BooleanBuilder builder = new BooleanBuilder();
-        Builder.addPatientLevelPredicates(builder, pids, keys, queryParam, storeParam);
-        Builder.addStudyLevelPredicates(builder, keys, queryParam, storeParam);
+        Builder.addPatientLevelPredicates(builder, pids, keys, queryParam);
+        Builder.addStudyLevelPredicates(builder, keys, queryParam);
         return new HibernateQuery(session)
             .from(QStudy.study)
             .innerJoin(QStudy.study.patient, QPatient.patient)

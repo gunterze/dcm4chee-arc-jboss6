@@ -59,14 +59,14 @@ class MatchPersonName {
             StringPath familyNameSoundex,
             StringPath givenNameSoundex, 
             String value,
-            QueryParam queryParam, FuzzyStr fuzzyStr) {
+            QueryParam queryParam) {
         if (value.equals("*"))
             return null;
 
         PersonName pn = new PersonName(value);
         
         return  queryParam.isFuzzySemanticMatching()
-            ? fuzzyMatch(familyNameSoundex, givenNameSoundex, pn, queryParam, fuzzyStr)
+            ? fuzzyMatch(familyNameSoundex, givenNameSoundex, pn, queryParam)
             : literalMatch(alphabethicName, ideographicName, phoneticName, pn, queryParam);
     }
 
@@ -108,20 +108,21 @@ class MatchPersonName {
     }
 
     private static Predicate fuzzyMatch(StringPath familyNameSoundex, StringPath givenNameSoundex,
-            PersonName pn, QueryParam param, FuzzyStr fuzzyStr) {
+            PersonName pn, QueryParam param) {
         String familyName = pn.get(PersonName.Component.FamilyName);
         String givenName = pn.get(PersonName.Component.GivenName);
         return familyName != null
             ? givenName != null
-                    ? fuzzyMatch(familyNameSoundex, givenNameSoundex, familyName, givenName, param, fuzzyStr)
-                    : fuzzyMatch(familyNameSoundex, givenNameSoundex, familyName, param, fuzzyStr)
+                    ? fuzzyMatch(familyNameSoundex, givenNameSoundex, familyName, givenName, param)
+                    : fuzzyMatch(familyNameSoundex, givenNameSoundex, familyName, param)
             : givenName != null
-                    ? fuzzyMatch(familyNameSoundex, givenNameSoundex, givenName, param, fuzzyStr)
+                    ? fuzzyMatch(familyNameSoundex, givenNameSoundex, givenName, param)
                     : null;
     }
 
     private static Predicate fuzzyMatch(StringPath familyNameSoundex, StringPath givenNameSoundex,
-            String value, QueryParam param, FuzzyStr fuzzyStr) {
+            String value, QueryParam param) {
+        FuzzyStr fuzzyStr = param.getFuzzyStr();
         String fuzzyName = fuzzyStr.toFuzzy(value);
         BooleanBuilder builder = new BooleanBuilder()
             .or(fuzzyWildCard(familyNameSoundex, value, fuzzyName))
@@ -134,7 +135,8 @@ class MatchPersonName {
     }
 
     private static Predicate fuzzyMatch(StringPath familyNameSoundex, StringPath givenNameSoundex,
-            String familyName, String givenName, QueryParam param, FuzzyStr fuzzyStr) {
+            String familyName, String givenName, QueryParam param) {
+        FuzzyStr fuzzyStr = param.getFuzzyStr();
         String fuzzyFamilyName = fuzzyStr.toFuzzy(familyName);
         String fuzzyGivenName = fuzzyStr.toFuzzy(givenName);
         Predicate names = ExpressionUtils.and(

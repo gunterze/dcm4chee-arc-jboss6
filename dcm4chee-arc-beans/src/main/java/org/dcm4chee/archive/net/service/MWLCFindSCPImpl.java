@@ -36,11 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.qrscp;
+package org.dcm4chee.archive.net.service;
 
-import java.util.List;
 
-import javax.ejb.EJB;
+import java.util.EnumSet;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
@@ -50,62 +49,68 @@ import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.pdu.PresentationContext;
-import org.dcm4che.net.service.BasicCGetSCP;
+import org.dcm4che.net.service.BasicCFindSCP;
 import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4che.net.service.InstanceLocator;
-import org.dcm4che.net.service.QueryRetrieveLevel;
-import org.dcm4che.net.service.RetrieveTask;
-import org.dcm4che.util.AttributesValidator;
-import org.dcm4chee.archive.beans.util.Configuration;
-import org.dcm4chee.archive.ejb.query.LocateInstances;
+import org.dcm4che.net.service.QueryTask;
+import org.dcm4chee.archive.ejb.query.IDWithIssuer;
+import org.dcm4chee.archive.ejb.query.ModalityWorklistQuery;
+import org.dcm4chee.archive.ejb.query.QueryParam;
+import org.dcm4chee.archive.net.ArchiveDevice;
+import org.dcm4chee.archive.persistence.Issuer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class CGetSCPImpl extends BasicCGetSCP {
+public class MWLCFindSCPImpl extends BasicCFindSCP {
 
-    private final String[] qrLevels;
-    private final QueryRetrieveLevel rootLevel;
-    private final boolean withoutBulkData;
-
-    @EJB
-    private LocateInstances calculateMatches;
-
-    public CGetSCPImpl(Device device, String[] sopClasses, String... qrLevels) {
-        super(device, sopClasses);
-        this.qrLevels = qrLevels;
-        this.withoutBulkData = qrLevels.length == 0;
-        this.rootLevel = withoutBulkData
-                ? QueryRetrieveLevel.IMAGE
-                : QueryRetrieveLevel.valueOf(qrLevels[0]);
-   }
-
-    @Override
-    protected RetrieveTask calculateMatches(Association as, PresentationContext pc,
-            Attributes rq, Attributes keys) throws DicomServiceException {
-        AttributesValidator validator = new AttributesValidator(keys);
-        QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(validator, qrLevels);
-        String cuid = rq.getString(Tag.AffectedSOPClassUID);
-        ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
-        level.validateRetrieveKeys(validator, rootLevel, relational);
-        List<InstanceLocator> matches  = calculateMatches(rq, keys);
-        Configuration.storeParamFor(as.getApplicationEntity());
-        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches, withoutBulkData,
-                Configuration.storeParamFor(as.getApplicationEntity())
-                    .getOutgoingAttributeCoercionFor(as.getRemoteAET()));
-        retrieveTask.setSendPendingRSP(
-                Configuration.queryRetrieveParamFor(as.getApplicationEntity())
-                    .isSendPendingCGet());
-        return retrieveTask;
+    public MWLCFindSCPImpl(Device device, String sopClass) {
+        super(device, sopClass);
     }
 
-    private List<InstanceLocator> calculateMatches(Attributes rq, Attributes keys)
-            throws DicomServiceException {
+    private final ArchiveDevice getArchiveDevice() {
+        return (ArchiveDevice) device;
+    }
+
+    @Override
+    protected QueryTask calculateMatches(Association as, PresentationContext pc,
+            Attributes rq, Attributes keys) throws DicomServiceException {
+        String cuid = rq.getString(Tag.AffectedSOPClassUID);
+        ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
+        IDWithIssuer[] pids = pids(keys);
+        ArchiveDevice dev = getArchiveDevice(); 
+        EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
+        QueryParam queryParam = new QueryParam();
+        queryParam.setCombinedDatetimeMatching(true);
+        queryParam.setFuzzySemanticMatching(queryOpts.contains(QueryOption.FUZZY));
+        queryParam.setFuzzyStr(dev.getFuzzyStr());
         try {
-            return calculateMatches.find(CFindSCPImpl.pids(keys), keys);
-        }  catch (Exception e) {
-            throw new DicomServiceException(Status.UnableToCalculateNumberOfMatches, e);
+            ModalityWorklistQuery query = (ModalityWorklistQuery)
+                    JNDIUtils.lookup(ModalityWorklistQuery.JNDI_NAME);
+            query.findScheduledProcedureSteps(pids, keys, queryParam);
+            return new MWLQueryTaskImpl(as, pc, rq, keys, query);
+        } catch (Exception e) {
+            throw new DicomServiceException(Status.UnableToProcess, e);
         }
+    }
+
+    static IDWithIssuer[] pids(Attributes keys) {
+        String id = keys.getString(Tag.PatientID, "*");
+        if (id.equals("*"))
+            return null;
+
+        String entityID = keys.getString(Tag.IssuerOfPatientID, "*");
+        Attributes issuerItem = keys.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence);
+        String entityUID = issuerItem != null
+                ? issuerItem.getString(Tag.UniversalEntityID, "*")
+                : "*";
+        String entityUIDType = issuerItem != null
+                ? issuerItem.getString(Tag.UniversalEntityIDType, "*")
+                : "*";
+        Issuer issuer = entityID.equals("*")
+                     && entityUID.equals("*")
+                     && entityUIDType.equals("*")
+                     ? null
+                     : new Issuer(entityID, entityUID, entityUIDType);
+        return new IDWithIssuer[] { new IDWithIssuer(id, issuer) };
     }
 }

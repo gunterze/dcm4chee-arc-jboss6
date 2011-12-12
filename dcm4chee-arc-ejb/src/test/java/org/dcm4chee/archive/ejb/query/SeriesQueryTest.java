@@ -46,8 +46,9 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.soundex.ESoundex;
+import org.dcm4chee.archive.ejb.store.Entity;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Issuer;
-import org.dcm4chee.archive.persistence.StoreParam;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -62,11 +63,21 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class SeriesQueryTest {
     
-    private static final QueryParam QUERY_PARAM = new QueryParam();
-    private static final QueryParam MATCH_UNKNOWN = new QueryParam().setMatchUnknown(true);
-    private static final StoreParam STORE_PARAM = new StoreParam();
-    static { STORE_PARAM.setFuzzyStr(new ESoundex()); }
     private static final Issuer ISSUER = new Issuer("DCM4CHEE_TESTDATA", "*", "*");
+    private static final AttributeFilter[] ATTR_FILTERS = {
+        new AttributeFilter(),
+        new AttributeFilter(),
+        new AttributeFilter(),
+        new AttributeFilter()
+    };
+
+    private static QueryParam queryParam(boolean matchUnknown) {
+        QueryParam queryParam = new QueryParam();
+        queryParam.setMatchUnknown(matchUnknown);
+        queryParam.setAttributeFilters(ATTR_FILTERS);
+        queryParam.setFuzzyStr(new ESoundex());
+        return queryParam ;
+    }
 
     private static IDWithIssuer[] pids(String id) {
         return new IDWithIssuer[] { new IDWithIssuer(id, ISSUER) };
@@ -76,6 +87,7 @@ public class SeriesQueryTest {
     public static WebArchive createDeployment() {
         return ShrinkWrap.create(WebArchive.class, "test.war")
                 .addClasses(
+                        Entity.class,
                         QueryParam.class,
                         IDWithIssuer.class,
                         CompositeQuery.class,
@@ -96,35 +108,35 @@ public class SeriesQueryTest {
 
     @Test
     public void testByModality() throws Exception {
-        query.findSeries(pids("MODS_IN_STUDY"), modality("PR"), QUERY_PARAM, STORE_PARAM);
+        query.findSeries(pids("MODS_IN_STUDY"), modality("PR"), queryParam(false));
         assertTrue(countMatches(query, 2));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyPR() throws Exception {
-        query.findSeries(pids("MODS_IN_STUDY"), modalitiesInStudy("PR"), QUERY_PARAM, STORE_PARAM);
+        query.findSeries(pids("MODS_IN_STUDY"), modalitiesInStudy("PR"), queryParam(false));
         assertTrue(countMatches(query,4));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyMatchUnknownPR() throws Exception {
-        query.findSeries(pids("MODS_IN_STUDY"), modalitiesInStudy("PR"), MATCH_UNKNOWN, STORE_PARAM);
+        query.findSeries(pids("MODS_IN_STUDY"), modalitiesInStudy("PR"), queryParam(true));
         assertTrue(countMatches(query, 5));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyCT() throws Exception {
-        query.findSeries(pids("MODS_IN_STUDY"), modalitiesInStudy("CT"), QUERY_PARAM, STORE_PARAM);
+        query.findSeries(pids("MODS_IN_STUDY"), modalitiesInStudy("CT"), queryParam(false));
         assertTrue(countMatches(query, 2));
         query.close();
     }
 
     @Test
     public void testByModalitiesInStudyMatchUnknownCT() throws Exception {
-        query.findSeries(pids("MODS_IN_STUDY"), modalitiesInStudy("CT"), MATCH_UNKNOWN, STORE_PARAM);
+        query.findSeries(pids("MODS_IN_STUDY"), modalitiesInStudy("CT"), queryParam(true));
         assertTrue(countMatches(query, 3));
         query.close();
     }
@@ -146,7 +158,7 @@ public class SeriesQueryTest {
         issuer.setNull(Tag.UniversalEntityID, VR.UT);
         issuer.setNull(Tag.UniversalEntityIDType, VR.CS);
         
-        query.findSeries(pids("REQ_ATTRS_SEQ"), keys, QUERY_PARAM, STORE_PARAM);
+        query.findSeries(pids("REQ_ATTRS_SEQ"), keys, queryParam(false));
         assertTrue(countMatches(query, 1));
         query.close();
     }

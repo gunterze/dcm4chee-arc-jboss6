@@ -45,9 +45,9 @@ import javax.persistence.TypedQuery;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Issuer;
 import org.dcm4chee.archive.persistence.Patient;
-import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -78,21 +78,23 @@ public abstract class PatientFactory {
             StoreParam storeParam) {
         Patient patient = new Patient();
         patient.setIssuerOfPatientID(issuer);
-        patient.setAttributes(attrs, storeParam);
+        patient.setAttributes(attrs, storeParam.getAttributeFilter(Entity.Patient),
+                storeParam.getFuzzyStr());
         em.persist(patient);
         return patient;
     }
 
     public static Patient findUniqueOrCreatePatient(EntityManager em, Attributes data,
             StoreParam storeParam) {
+        AttributeFilter filter = storeParam.getAttributeFilter(Entity.Patient);
         String pid = data.getString(Tag.PatientID);
         Issuer issuer = IssuerFactory.getIssuerOfPatientID(em, data);
         Patient patient;
         try {
             patient = followMergedWith(findPatient(em, pid, issuer, storeParam));
             Attributes patientAttrs = patient.getAttributes();
-            if (patientAttrs.mergeSelected(data, storeParam.getPatientAttributes()))
-                patient.setAttributes(patientAttrs, storeParam);
+            if (patientAttrs.mergeSelected(data, filter.getSelection()))
+                patient.setAttributes(patientAttrs, filter, storeParam.getFuzzyStr());
         } catch (NonUniqueResultException e) {
             patient = createNewPatient(em, data, issuer, storeParam);
         } catch (NoResultException e) {
@@ -109,6 +111,7 @@ public abstract class PatientFactory {
 
     public static Patient updateOrCreatePatient(EntityManager em, Attributes data,
             StoreParam storeParam) {
+        AttributeFilter filter = storeParam.getAttributeFilter(Entity.Patient);
         String pid = data.getString(Tag.PatientID);
         Issuer issuer = IssuerFactory.getIssuerOfPatientID(em, data);
         Patient patient;
@@ -119,9 +122,8 @@ public abstract class PatientFactory {
                 throw new PatientMergedException("" + patient + " merged with " + mergedWith);
             Attributes patientAttrs = patient.getAttributes();
             Attributes modified = new Attributes();
-            if (patientAttrs.updateSelectedAttributes(data, modified,
-                    storeParam.getPatientAttributes())) {
-                patient.setAttributes(patientAttrs, storeParam);
+            if (patientAttrs.updateSelectedAttributes(data, modified, filter.getSelection())) {
+                patient.setAttributes(patientAttrs, filter, storeParam.getFuzzyStr());
             }
         } catch (NonUniqueResultException e) {
             throw new NonUniquePatientException(pid, issuer);

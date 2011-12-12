@@ -61,6 +61,7 @@ import javax.persistence.Transient;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
+import org.dcm4che.soundex.FuzzyStr;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
@@ -290,7 +291,7 @@ public class Patient implements Serializable {
         return cachedAttributes;
     }
 
-    public void setAttributes(Attributes attrs, StoreParam storeParam) {
+    public void setAttributes(Attributes attrs, AttributeFilter filter, FuzzyStr fuzzyStr) {
         patientID = attrs.getString(Tag.PatientID, "*");
         PersonName pn = new PersonName(attrs.getString(Tag.PatientName), true);
         patientName = pn.contains(PersonName.Group.Alphabetic) 
@@ -299,21 +300,21 @@ public class Patient implements Serializable {
                 ? pn.toString(PersonName.Group.Ideographic, false) : "*";
         patientPhoneticName = pn.contains(PersonName.Group.Phonetic)
                 ? pn.toString(PersonName.Group.Phonetic, false) : "*";
-        patientFamilyNameSoundex = storeParam.toFuzzy(
-                pn.get(PersonName.Component.FamilyName), "*");
-        patientGivenNameSoundex = storeParam.toFuzzy(
-                pn.get(PersonName.Component.GivenName), "*");
+        patientFamilyNameSoundex = fuzzyStr.toFuzzy(
+                pn.get(PersonName.Component.FamilyName));
+        patientGivenNameSoundex = fuzzyStr.toFuzzy(
+                pn.get(PersonName.Component.GivenName));
         patientBirthDate = attrs.getString(Tag.PatientBirthDate, "*");
         patientSex = attrs.getString(Tag.PatientSex, "*").toUpperCase();
 
-        patientCustomAttribute1 = StoreParam.selectStringValue(attrs,
-                storeParam.getPatientCustomAttribute1(), "*");
-        patientCustomAttribute2 = StoreParam.selectStringValue(attrs,
-                storeParam.getPatientCustomAttribute2(), "*");
-        patientCustomAttribute3 = StoreParam.selectStringValue(attrs,
-                storeParam.getPatientCustomAttribute3(), "*");
+        patientCustomAttribute1 = 
+            AttributeFilter.selectStringValue(attrs, filter.getCustomAttribute1(), "*");
+        patientCustomAttribute2 =
+            AttributeFilter.selectStringValue(attrs, filter.getCustomAttribute2(), "*");
+        patientCustomAttribute3 =
+            AttributeFilter.selectStringValue(attrs, filter.getCustomAttribute3(), "*");
 
         encodedAttributes = Utils.encodeAttributes(
-                cachedAttributes = new Attributes(attrs, storeParam.getPatientAttributes()));
+                cachedAttributes = new Attributes(attrs, filter.getSelection()));
     }
 }

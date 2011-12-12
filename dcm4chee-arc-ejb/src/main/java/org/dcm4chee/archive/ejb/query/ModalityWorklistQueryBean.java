@@ -59,7 +59,6 @@ import org.dcm4chee.archive.persistence.QRequestedProcedure;
 import org.dcm4chee.archive.persistence.QScheduledProcedureStep;
 import org.dcm4chee.archive.persistence.QServiceRequest;
 import org.dcm4chee.archive.persistence.QVisit;
-import org.dcm4chee.archive.persistence.StoreParam;
 import org.dcm4chee.archive.persistence.Utils;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -106,13 +105,13 @@ public class ModalityWorklistQueryBean implements ModalityWorklistQuery {
 
     @Override
     public void findScheduledProcedureSteps(IDWithIssuer[] pids, Attributes keys,
-            QueryParam queryParam, StoreParam storeParam) {
+            QueryParam queryParam) {
         BooleanBuilder builder = new BooleanBuilder();
-        Builder.addPatientLevelPredicates(builder, pids, keys, queryParam, storeParam);
-        Builder.addServiceRequestPredicates(builder, keys, queryParam, storeParam);
-        Builder.addRequestedProcedurePredicates(builder, keys, queryParam, storeParam);
+        Builder.addPatientLevelPredicates(builder, pids, keys, queryParam);
+        Builder.addServiceRequestPredicates(builder, keys, queryParam);
+        Builder.addRequestedProcedurePredicates(builder, keys, queryParam);
         Attributes spsItem = keys.getNestedDataset(Tag.ScheduledProcedureStepSequence);
-        Builder.addScheduledProcedureStepPredicates(builder, spsItem, queryParam, storeParam);
+        Builder.addScheduledProcedureStepPredicates(builder, spsItem, queryParam);
         results = new HibernateQuery(session)
             .from(QScheduledProcedureStep.scheduledProcedureStep)
             .innerJoin(QScheduledProcedureStep.scheduledProcedureStep.requestedProcedure,

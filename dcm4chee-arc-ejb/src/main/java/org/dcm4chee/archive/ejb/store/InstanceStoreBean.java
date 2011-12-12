@@ -58,6 +58,7 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.ContentItem;
@@ -68,10 +69,9 @@ import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
 import org.dcm4chee.archive.persistence.Series;
-import org.dcm4chee.archive.persistence.StoreParam;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Study;
 import org.dcm4chee.archive.persistence.VerifyingObserver;
-import org.dcm4chee.archive.persistence.StoreParam.StoreDuplicate;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -97,13 +97,13 @@ public class InstanceStoreBean implements InstanceStore {
         Instance inst;
         try {
             inst = findInstance(data.getString(Tag.SOPInstanceUID, null));
-            StoreDuplicate storeDuplicate = storeParam.getStoreDuplicate();
-            switch (storeDuplicate) {
+            switch (storeParam.getStoreDuplicate()) {
             case IGNORE:
+                coerceInstanceAttributes(data, inst, modified);
+                return false;
             case STORE:
                 coerceInstanceAttributes(data, inst, modified);
-                if (storeDuplicate == StoreDuplicate.IGNORE
-                        || hasFileWithFileSystemGroupID(inst, fs.getGroupID()))
+                if (hasFileWithFileSystemGroupID(inst, fs.getGroupID()))
                     return false;
                 break;
             case REPLACE:
@@ -161,27 +161,28 @@ public class InstanceStoreBean implements InstanceStore {
             item.setString(Tag.ModifyingSystem, VR.LO, storeParam.getModifyingSystem());
             item.setString(Tag.SourceOfPreviousValues, VR.LO, sourceAET);
             item.newSequence(Tag.ModifiedAttributesSequence, 1).add(modified);
-            inst.setAttributes(instAttrs, storeParam);
+            inst.setAttributes(instAttrs, storeParam.getAttributeFilter(Entity.Instance),
+                    storeParam.getFuzzyStr());
         }
     }
 
     @Override
-    public Instance newInstance(String sourceAET, Attributes data, Availability availability,
-            StoreParam storeParam) {
+    public Instance newInstance(String sourceAET, Attributes data,
+            Availability availability, StoreParam storeParam) {
         em.joinTransaction();
+        AttributeFilter instFilter = storeParam.getAttributeFilter(Entity.Instance);
         Instance inst = new Instance();
         Series series = getSeries(sourceAET, data, availability, storeParam);
         inst.setSeries(series);
         inst.setConceptNameCode(
                 CodeFactory.getCode(em, data.getNestedDataset(Tag.ConceptNameCodeSequence)));
         inst.setVerifyingObservers(createVerifyingObservers(
-                data.getSequence(Tag.VerifyingObserverSequence), storeParam));
-        inst.setContentItems(createContentItems(
-                data.getSequence(Tag.ContentSequence), storeParam));
+                data.getSequence(Tag.VerifyingObserverSequence), storeParam.getFuzzyStr()));
+        inst.setContentItems(createContentItems(data.getSequence(Tag.ContentSequence)));
         inst.setRetrieveAETs(storeParam.getRetrieveAETs());
         inst.setExternalRetrieveAET(storeParam.getExternalRetrieveAET());
         inst.setAvailability(availability);
-        inst.setAttributes(data, storeParam);
+        inst.setAttributes(data, instFilter, storeParam.getFuzzyStr());
         em.persist(inst);
         setDirty(series);
         em.flush();
@@ -203,6 +204,7 @@ public class InstanceStoreBean implements InstanceStore {
                 .getSingleResult() > 0)
             return false;
 
+        em.joinTransaction();
         FileSystem fs = new FileSystem();
         fs.setGroupID(groupID);
         fs.setURI(new File(System.getProperty("jboss.server.data.dir")).toURI().toString());
@@ -338,18 +340,18 @@ public class InstanceStoreBean implements InstanceStore {
         return common;
     }
 
-    private List<VerifyingObserver> createVerifyingObservers(Sequence seq, StoreParam storeParam) {
+    private List<VerifyingObserver> createVerifyingObservers(Sequence seq, FuzzyStr fuzzyStr) {
         if (seq == null || seq.isEmpty())
             return null;
 
         ArrayList<VerifyingObserver> list =
                 new ArrayList<VerifyingObserver>(seq.size());
         for (Attributes item : seq)
-            list.add(new VerifyingObserver(item, storeParam));
+            list.add(new VerifyingObserver(item, fuzzyStr));
         return list;
     }
 
-    private Collection<ContentItem> createContentItems(Sequence seq, StoreParam storeParam) {
+    private Collection<ContentItem> createContentItems(Sequence seq) {
         if (seq == null || seq.isEmpty())
             return null;
 
@@ -381,6 +383,7 @@ public class InstanceStoreBean implements InstanceStore {
             StoreParam storeParam) {
         String seriesIUID = data.getString(Tag.SeriesInstanceUID, null);
         Series series = cachedSeries;
+        AttributeFilter seriesFilter = storeParam.getAttributeFilter(Entity.Series);
         if (series == null || !series.getSeriesInstanceUID().equals(seriesIUID)) {
             updateCachedSeries();
             try {
@@ -399,14 +402,14 @@ public class InstanceStoreBean implements InstanceStore {
                 series.setRetrieveAETs(storeParam.getRetrieveAETs());
                 series.setExternalRetrieveAET(storeParam.getExternalRetrieveAET());
                 series.setAvailability(availability);
-                series.setAttributes(data, storeParam);
+                series.setAttributes(data, seriesFilter, storeParam.getFuzzyStr());
                 em.persist(series);
                 return series;
             }
         }
         Attributes seriesAttrs = series.getAttributes();
-        if (seriesAttrs.mergeSelected(data, storeParam.getSeriesAttributes())) {
-            series.setAttributes(seriesAttrs, storeParam);
+        if (seriesAttrs.mergeSelected(data, seriesFilter.getSelection())) {
+            series.setAttributes(seriesAttrs, seriesFilter, storeParam.getFuzzyStr());
         }
         return series;
     }
@@ -471,11 +474,12 @@ public class InstanceStoreBean implements InstanceStore {
 
     private Study getStudy(Attributes data, Availability availability, StoreParam storeParam) {
         Study study;
+        AttributeFilter studyFilter = storeParam.getAttributeFilter(Entity.Study);
         try {
             study = findStudy(data.getString(Tag.StudyInstanceUID, null));
             Attributes studyAttrs = study.getAttributes();
-            if (studyAttrs.mergeSelected(data, storeParam.getStudyAttributes())) {
-                study.setAttributes(studyAttrs, storeParam);
+            if (studyAttrs.mergeSelected(data, studyFilter.getSelection())) {
+                study.setAttributes(studyAttrs, studyFilter, storeParam.getFuzzyStr());
             }
         } catch (NoResultException e) {
             study = new Study();
@@ -491,7 +495,7 @@ public class InstanceStoreBean implements InstanceStore {
             study.setRetrieveAETs(storeParam.getRetrieveAETs());
             study.setExternalRetrieveAET(storeParam.getExternalRetrieveAET());
             study.setAvailability(availability);
-            study.setAttributes(data, storeParam);
+            study.setAttributes(data, studyFilter, storeParam.getFuzzyStr());
             em.persist(study);
         }
         return study;

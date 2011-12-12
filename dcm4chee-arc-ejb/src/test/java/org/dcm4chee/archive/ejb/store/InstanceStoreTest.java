@@ -49,10 +49,10 @@ import javax.ejb.EJB;
 import org.dcm4che.data.Tag;
 import org.dcm4che.io.SAXReader;
 import org.dcm4che.soundex.ESoundex;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.Series;
-import org.dcm4chee.archive.persistence.StoreParam;
 import org.dcm4chee.archive.persistence.Study;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -73,7 +73,10 @@ public class InstanceStoreTest {
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
-                .addClasses(InstanceStore.class,
+                .addClasses(
+                        Entity.class,
+                        StoreParam.class,
+                        InstanceStore.class,
                         InstanceStoreBean.class,
                         CodeFactory.class,
                         IssuerFactory.class,
@@ -99,116 +102,124 @@ public class InstanceStoreTest {
         removePatient.removePatient("TEST-20110607", "DCM4CHEE_TESTDATA");
     }
 
-    private static final StoreParam STORE_PARAM = new StoreParam();
-    static { 
-        STORE_PARAM.setPatientAttributes(
-                Tag.SpecificCharacterSet,
-                Tag.PatientName,
-                Tag.PatientID,
-                Tag.IssuerOfPatientID,
-                Tag.OtherPatientIDsSequence,
-                Tag.PatientBirthDate,
-                Tag.PatientSex,
-                Tag.PatientComments);
-        STORE_PARAM.setStudyAttributes(
-                Tag.SpecificCharacterSet,
-                Tag.StudyDate,
-                Tag.StudyTime,
-                Tag.AccessionNumber,
-                Tag.IssuerOfAccessionNumberSequence,
-                Tag.ReferringPhysicianName,
-                Tag.StudyDescription,
-                Tag.ProcedureCodeSequence,
-                Tag.StudyInstanceUID,
-                Tag.StudyID);
-        STORE_PARAM.setSeriesAttributes(
-                Tag.SpecificCharacterSet,
-                Tag.Modality,
-                Tag.Manufacturer,
-                Tag.InstitutionName,
-                Tag.InstitutionCodeSequence,
-                Tag.StationName,
-                Tag.SeriesDescription,
-                Tag.InstitutionalDepartmentName,
-                Tag.PerformingPhysicianName,
-                Tag.ManufacturerModelName,
-                Tag.ReferencedPerformedProcedureStepSequence,
-                Tag.SeriesInstanceUID,
-                Tag.SeriesNumber,
-                Tag.Laterality,
-                Tag.PerformedProcedureStepID,
-                Tag.PerformedProcedureStepStartTime,
-                Tag.RequestAttributesSequence);
-        STORE_PARAM.setInstanceAttributes(
-                Tag.SpecificCharacterSet,
-                Tag.ImageType,
-                Tag.SOPClassUID,
-                Tag.SOPInstanceUID,
-                Tag.AcquisitionDate,
-                Tag.ContentDate,
-                Tag.AcquisitionDateTime,
-                Tag.AcquisitionTime,
-                Tag.ContentTime,
-                Tag.ReferencedSeriesSequence,
-                Tag.InstanceNumber,
-                Tag.PhotometricInterpretation,
-                Tag.NumberOfFrames,
-                Tag.Rows,
-                Tag.Columns,
-                Tag.BitsAllocated,
-                Tag.ObservationDateTime,
-                Tag.ConceptNameCodeSequence,
-                Tag.VerifyingObserverSequence,
-                Tag.ReferencedRequestSequence,
-                Tag.CurrentRequestedProcedureEvidenceSequence,
-                Tag.PertinentOtherEvidenceSequence,
-                Tag.CompletionFlag,
-                Tag.VerificationFlag,
-                Tag.IdenticalDocumentsSequence,
-                Tag.DocumentTitle,
-                Tag.MIMETypeOfEncapsulatedDocument,
-                Tag.ContentLabel,
-                Tag.ContentDescription,
-                Tag.PresentationCreationDate,
-                Tag.PresentationCreationTime,
-                Tag.ContentCreatorName,
-                Tag.OriginalAttributesSequence);
-        STORE_PARAM.setVisitAttributes(
-                Tag.AdmissionID,
-                Tag.IssuerOfAdmissionIDSequence);
-        STORE_PARAM.setServiceRequestAttributes(
-                Tag.AccessionNumber,
-                Tag.IssuerOfAccessionNumberSequence,
-                Tag.RequestingPhysician,
-                Tag.RequestingService);
-        STORE_PARAM.setRequestedProcedureAttributes(
-                Tag.StudyInstanceUID,
-                Tag.RequestedProcedureID);
-        STORE_PARAM.setScheduledProcedureStepAttributes(
-                Tag.Modality,
-                Tag.ScheduledStationAETitle,
-                Tag.ScheduledProcedureStepStartDate,
-                Tag.ScheduledProcedureStepStartTime,
-                Tag.ScheduledPerformingPhysicianName,
-                Tag.ScheduledProcedureStepID,
-                Tag.ScheduledProcedureStepStatus);
-        STORE_PARAM.setFuzzyStr(new ESoundex());
-    }
+    private static final AttributeFilter[] ATTR_FILTERS = {
+        new AttributeFilter(   // Patient
+            Tag.SpecificCharacterSet,
+            Tag.PatientName,
+            Tag.PatientID,
+            Tag.IssuerOfPatientID,
+            Tag.OtherPatientIDsSequence,
+            Tag.PatientBirthDate,
+            Tag.PatientSex,
+            Tag.PatientComments
+        ),
+        new AttributeFilter(   // Study
+            Tag.SpecificCharacterSet,
+            Tag.StudyDate,
+            Tag.StudyTime,
+            Tag.AccessionNumber,
+            Tag.IssuerOfAccessionNumberSequence,
+            Tag.ReferringPhysicianName,
+            Tag.StudyDescription,
+            Tag.ProcedureCodeSequence,
+            Tag.StudyInstanceUID,
+            Tag.StudyID
+        ),
+        new AttributeFilter(   // Series
+            Tag.SpecificCharacterSet,
+            Tag.Modality,
+            Tag.Manufacturer,
+            Tag.InstitutionName,
+            Tag.InstitutionCodeSequence,
+            Tag.StationName,
+            Tag.SeriesDescription,
+            Tag.InstitutionalDepartmentName,
+            Tag.PerformingPhysicianName,
+            Tag.ManufacturerModelName,
+            Tag.ReferencedPerformedProcedureStepSequence,
+            Tag.SeriesInstanceUID,
+            Tag.SeriesNumber,
+            Tag.Laterality,
+            Tag.PerformedProcedureStepID,
+            Tag.PerformedProcedureStepStartTime,
+            Tag.RequestAttributesSequence
+        ),
+        new AttributeFilter(   // Instance
+            Tag.SpecificCharacterSet,
+            Tag.ImageType,
+            Tag.SOPClassUID,
+            Tag.SOPInstanceUID,
+            Tag.AcquisitionDate,
+            Tag.ContentDate,
+            Tag.AcquisitionDateTime,
+            Tag.AcquisitionTime,
+            Tag.ContentTime,
+            Tag.ReferencedSeriesSequence,
+            Tag.InstanceNumber,
+            Tag.PhotometricInterpretation,
+            Tag.NumberOfFrames,
+            Tag.Rows,
+            Tag.Columns,
+            Tag.BitsAllocated,
+            Tag.ObservationDateTime,
+            Tag.ConceptNameCodeSequence,
+            Tag.VerifyingObserverSequence,
+            Tag.ReferencedRequestSequence,
+            Tag.CurrentRequestedProcedureEvidenceSequence,
+            Tag.PertinentOtherEvidenceSequence,
+            Tag.CompletionFlag,
+            Tag.VerificationFlag,
+            Tag.IdenticalDocumentsSequence,
+            Tag.DocumentTitle,
+            Tag.MIMETypeOfEncapsulatedDocument,
+            Tag.ContentLabel,
+            Tag.ContentDescription,
+            Tag.PresentationCreationDate,
+            Tag.PresentationCreationTime,
+            Tag.ContentCreatorName,
+            Tag.OriginalAttributesSequence
+        ),
+        new AttributeFilter(   // Visit
+            Tag.AdmissionID,
+            Tag.IssuerOfAdmissionIDSequence
+        ),
+        new AttributeFilter(   // Service Request
+            Tag.AccessionNumber,
+            Tag.IssuerOfAccessionNumberSequence,
+            Tag.RequestingPhysician,
+            Tag.RequestingService
+        ),
+        new AttributeFilter(   // Requested Procedure
+            Tag.StudyInstanceUID,
+            Tag.RequestedProcedureID
+        ),
+        new AttributeFilter(   // Scheduled Procedure Step
+            Tag.Modality,
+            Tag.ScheduledStationAETitle,
+            Tag.ScheduledProcedureStepStartDate,
+            Tag.ScheduledProcedureStepStartTime,
+            Tag.ScheduledPerformingPhysicianName,
+            Tag.ScheduledProcedureStepID,
+            Tag.ScheduledProcedureStepStatus
+        )};
 
     @Test
     public void storeTest() throws Exception {
-        STORE_PARAM.setRetrieveAETs("AET_1","AET_2");
-        STORE_PARAM.setExternalRetrieveAET("AET_3");
+        StoreParam storeParam = new StoreParam();
+        storeParam.setAttributeFilters(ATTR_FILTERS);
+        storeParam.setFuzzyStr(new ESoundex());
+        storeParam.setRetrieveAETs("AET_1","AET_2");
+        storeParam.setExternalRetrieveAET("AET_3");
         Instance ct1 = instanceStore.newInstance(SOURCE_AET,
-                SAXReader.parse("resource:ct-1.xml"), Availability.ONLINE, STORE_PARAM);
-        STORE_PARAM.setRetrieveAETs("AET_2");
-        STORE_PARAM.setExternalRetrieveAET("AET_3");
+                SAXReader.parse("resource:ct-1.xml"), Availability.ONLINE, storeParam);
+        storeParam.setRetrieveAETs("AET_2");
+        storeParam.setExternalRetrieveAET("AET_3");
         Instance ct2 = instanceStore.newInstance(SOURCE_AET,
-                SAXReader.parse("resource:ct-2.xml"), Availability.NEARLINE, STORE_PARAM);
-        STORE_PARAM.setRetrieveAETs("AET_1","AET_2");
-        STORE_PARAM.setExternalRetrieveAET("AET_4");
+                SAXReader.parse("resource:ct-2.xml"), Availability.NEARLINE, storeParam);
+        storeParam.setRetrieveAETs("AET_1","AET_2");
+        storeParam.setExternalRetrieveAET("AET_4");
         Instance pr1 = instanceStore.newInstance(SOURCE_AET,
-                SAXReader.parse("resource:pr-1.xml"), Availability.ONLINE, STORE_PARAM);
+                SAXReader.parse("resource:pr-1.xml"), Availability.ONLINE, storeParam);
         instanceStore.close();
         Series ctSeries = ct1.getSeries();
         Series prSeries = pr1.getSeries();

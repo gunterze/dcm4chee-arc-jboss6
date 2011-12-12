@@ -45,6 +45,7 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.io.SAXReader;
 import org.dcm4che.soundex.ESoundex;
 import org.dcm4chee.archive.ejb.store.CodeFactory;
+import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.ejb.store.EntityAlreadyExistsException;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.ejb.store.InstanceStoreBean;
@@ -56,8 +57,9 @@ import org.dcm4chee.archive.ejb.store.PatientFactory;
 import org.dcm4chee.archive.ejb.store.PatientMergedException;
 import org.dcm4chee.archive.ejb.store.PatientMismatchException;
 import org.dcm4chee.archive.ejb.store.RequestFactory;
+import org.dcm4chee.archive.ejb.store.StoreParam;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
-import org.dcm4chee.archive.persistence.StoreParam;
 import org.jboss.arquillian.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -74,6 +76,8 @@ public class InitTestData {
     private static final String SOURCE_AET = "SOURCE_AET";
     private static final String RETRIEVE_AETS = "RETRIEVE_AET";
     private static final Class<?>[] CLASSES = {
+        StoreParam.class,
+        Entity.class,
         InstanceStore.class,
         InstanceStoreBean.class,
         ModalityWorklistManager.class,
@@ -134,106 +138,106 @@ public class InitTestData {
         "mwl-mr-2.xml",
     };
 
-    private static final StoreParam STORE_PARAM = new StoreParam();
-    static { 
-        STORE_PARAM.setPatientAttributes(
-                Tag.SpecificCharacterSet,
-                Tag.PatientName,
-                Tag.PatientID,
-                Tag.IssuerOfPatientID,
-                Tag.OtherPatientIDsSequence,
-                Tag.PatientBirthDate,
-                Tag.PatientSex,
-                Tag.PatientComments);
-        STORE_PARAM.setStudyAttributes(
-                Tag.SpecificCharacterSet,
-                Tag.StudyDate,
-                Tag.StudyTime,
-                Tag.AccessionNumber,
-                Tag.IssuerOfAccessionNumberSequence,
-                Tag.ReferringPhysicianName,
-                Tag.StudyDescription,
-                Tag.ProcedureCodeSequence,
-                Tag.StudyInstanceUID,
-                Tag.StudyID);
-        STORE_PARAM.setSeriesAttributes(
-                Tag.SpecificCharacterSet,
-                Tag.Modality,
-                Tag.Manufacturer,
-                Tag.InstitutionName,
-                Tag.InstitutionCodeSequence,
-                Tag.StationName,
-                Tag.SeriesDescription,
-                Tag.InstitutionalDepartmentName,
-                Tag.PerformingPhysicianName,
-                Tag.ManufacturerModelName,
-                Tag.ReferencedPerformedProcedureStepSequence,
-                Tag.SeriesInstanceUID,
-                Tag.SeriesNumber,
-                Tag.Laterality,
-                Tag.PerformedProcedureStepID,
-                Tag.PerformedProcedureStepStartTime,
-                Tag.RequestAttributesSequence);
-        STORE_PARAM.setInstanceAttributes(
-                Tag.SpecificCharacterSet,
-                Tag.ImageType,
-                Tag.SOPClassUID,
-                Tag.SOPInstanceUID,
-                Tag.AcquisitionDate,
-                Tag.ContentDate,
-                Tag.AcquisitionDateTime,
-                Tag.AcquisitionTime,
-                Tag.ContentTime,
-                Tag.ReferencedSeriesSequence,
-                Tag.InstanceNumber,
-                Tag.PhotometricInterpretation,
-                Tag.NumberOfFrames,
-                Tag.Rows,
-                Tag.Columns,
-                Tag.BitsAllocated,
-                Tag.ObservationDateTime,
-                Tag.ConceptNameCodeSequence,
-                Tag.VerifyingObserverSequence,
-                Tag.ReferencedRequestSequence,
-                Tag.CurrentRequestedProcedureEvidenceSequence,
-                Tag.PertinentOtherEvidenceSequence,
-                Tag.CompletionFlag,
-                Tag.VerificationFlag,
-                Tag.IdenticalDocumentsSequence,
-                Tag.DocumentTitle,
-                Tag.MIMETypeOfEncapsulatedDocument,
-                Tag.ContentLabel,
-                Tag.ContentDescription,
-                Tag.PresentationCreationDate,
-                Tag.PresentationCreationTime,
-                Tag.ContentCreatorName,
-                Tag.OriginalAttributesSequence);
-        STORE_PARAM.setVisitAttributes(
-                Tag.AdmissionID,
-                Tag.IssuerOfAdmissionIDSequence
-                );
-        STORE_PARAM.setServiceRequestAttributes(
-                Tag.AccessionNumber,
-                Tag.IssuerOfAccessionNumberSequence,
-                Tag.RequestingPhysician,
-                Tag.RequestingService
-                );
-        STORE_PARAM.setRequestedProcedureAttributes(
-                Tag.StudyInstanceUID,
-                Tag.RequestedProcedureID
-                );
-        STORE_PARAM.setScheduledProcedureStepAttributes(
-                Tag.Modality,
-                Tag.ScheduledStationAETitle,
-                Tag.ScheduledProcedureStepStartDate,
-                Tag.ScheduledProcedureStepStartTime,
-                Tag.ScheduledPerformingPhysicianName,
-                Tag.ScheduledProcedureStepID,
-                Tag.ScheduledProcedureStepStatus
-                );
-        STORE_PARAM.setFuzzyStr(new ESoundex());
-        STORE_PARAM.setRetrieveAETs(RETRIEVE_AETS);
-    }
+    private static final AttributeFilter[] ATTR_FILTERS = {
+        new AttributeFilter(   // Patient
+            Tag.SpecificCharacterSet,
+            Tag.PatientName,
+            Tag.PatientID,
+            Tag.IssuerOfPatientID,
+            Tag.OtherPatientIDsSequence,
+            Tag.PatientBirthDate,
+            Tag.PatientSex,
+            Tag.PatientComments
+        ),
+        new AttributeFilter(   // Study
+            Tag.SpecificCharacterSet,
+            Tag.StudyDate,
+            Tag.StudyTime,
+            Tag.AccessionNumber,
+            Tag.IssuerOfAccessionNumberSequence,
+            Tag.ReferringPhysicianName,
+            Tag.StudyDescription,
+            Tag.ProcedureCodeSequence,
+            Tag.StudyInstanceUID,
+            Tag.StudyID
+        ),
+        new AttributeFilter(   // Series
+            Tag.SpecificCharacterSet,
+            Tag.Modality,
+            Tag.Manufacturer,
+            Tag.InstitutionName,
+            Tag.InstitutionCodeSequence,
+            Tag.StationName,
+            Tag.SeriesDescription,
+            Tag.InstitutionalDepartmentName,
+            Tag.PerformingPhysicianName,
+            Tag.ManufacturerModelName,
+            Tag.ReferencedPerformedProcedureStepSequence,
+            Tag.SeriesInstanceUID,
+            Tag.SeriesNumber,
+            Tag.Laterality,
+            Tag.PerformedProcedureStepID,
+            Tag.PerformedProcedureStepStartTime,
+            Tag.RequestAttributesSequence
+        ),
+        new AttributeFilter(   // Instance
+            Tag.SpecificCharacterSet,
+            Tag.ImageType,
+            Tag.SOPClassUID,
+            Tag.SOPInstanceUID,
+            Tag.AcquisitionDate,
+            Tag.ContentDate,
+            Tag.AcquisitionDateTime,
+            Tag.AcquisitionTime,
+            Tag.ContentTime,
+            Tag.ReferencedSeriesSequence,
+            Tag.InstanceNumber,
+            Tag.PhotometricInterpretation,
+            Tag.NumberOfFrames,
+            Tag.Rows,
+            Tag.Columns,
+            Tag.BitsAllocated,
+            Tag.ObservationDateTime,
+            Tag.ConceptNameCodeSequence,
+            Tag.VerifyingObserverSequence,
+            Tag.ReferencedRequestSequence,
+            Tag.CurrentRequestedProcedureEvidenceSequence,
+            Tag.PertinentOtherEvidenceSequence,
+            Tag.CompletionFlag,
+            Tag.VerificationFlag,
+            Tag.IdenticalDocumentsSequence,
+            Tag.DocumentTitle,
+            Tag.MIMETypeOfEncapsulatedDocument,
+            Tag.ContentLabel,
+            Tag.ContentDescription,
+            Tag.PresentationCreationDate,
+            Tag.PresentationCreationTime,
+            Tag.ContentCreatorName,
+            Tag.OriginalAttributesSequence
+        ),
+        new AttributeFilter(   // Visit
+            Tag.AdmissionID,
+            Tag.IssuerOfAdmissionIDSequence
+        ),
+        new AttributeFilter(   // Service Request
+            Tag.AccessionNumber,
+            Tag.IssuerOfAccessionNumberSequence,
+            Tag.RequestingPhysician,
+            Tag.RequestingService
+        ),
+        new AttributeFilter(   // Requested Procedure
+            Tag.StudyInstanceUID,
+            Tag.RequestedProcedureID
+        ),
+        new AttributeFilter(   // Scheduled Procedure Step
+            Tag.Modality,
+            Tag.ScheduledStationAETitle,
+            Tag.ScheduledProcedureStepStartDate,
+            Tag.ScheduledProcedureStepStartTime,
+            Tag.ScheduledPerformingPhysicianName,
+            Tag.ScheduledProcedureStepID,
+            Tag.ScheduledProcedureStepStatus
+        )};
 
     @Deployment
     public static JavaArchive createDeployment() {
@@ -255,14 +259,18 @@ public class InitTestData {
 
     @Test
     public void storeTestData() throws Exception {
+        StoreParam storeParam = new StoreParam();
+        storeParam.setAttributeFilters(ATTR_FILTERS);
+        storeParam.setRetrieveAETs(RETRIEVE_AETS);
+        storeParam.setFuzzyStr(new ESoundex());
         for (String res : INSTANCES) {
             Attributes ds = SAXReader.parse("resource:" + res, null);
-            instanceStore.newInstance(SOURCE_AET, ds, Availability.ONLINE, STORE_PARAM);
+            instanceStore.newInstance(SOURCE_AET, ds, Availability.ONLINE, storeParam );
         }
         instanceStore.close();
         for (String res : MWL_ITEMS) {
             Attributes ds = SAXReader.parse("resource:" + res, null);
-            mwlManager.createScheduledProcedureStep(ds, STORE_PARAM);
+            mwlManager.createScheduledProcedureStep(ds, storeParam);
         }
     }
 

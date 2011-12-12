@@ -45,7 +45,6 @@ import javax.persistence.PersistenceContext;
 import org.dcm4che.data.Attributes;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
-import org.dcm4chee.archive.persistence.StoreParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>

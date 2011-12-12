@@ -36,17 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.beans.qrscp;
+package org.dcm4chee.archive.net.service;
 
 import java.io.IOException;
 import java.util.List;
 
 import javax.ejb.EJB;
 
+import org.dcm4che.conf.api.ConfigurationException;
+import org.dcm4che.conf.api.ConfigurationNotFoundException;
+import org.dcm4che.conf.api.DicomConfiguration;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
-import org.dcm4che.net.Connection;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.IncompatibleConnectionException;
 import org.dcm4che.net.QueryOption;
@@ -59,8 +62,8 @@ import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4che.util.AttributesValidator;
-import org.dcm4chee.archive.beans.util.Configuration;
 import org.dcm4chee.archive.ejb.query.LocateInstances;
+import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -68,7 +71,8 @@ import org.dcm4chee.archive.ejb.query.LocateInstances;
 public class CMoveSCPImpl extends BasicCMoveSCP {
 
     private final String[] qrLevels;
-    private QueryRetrieveLevel rootLevel;
+    private final QueryRetrieveLevel rootLevel;
+    private DicomConfiguration dicomConfiguration;
 
     @EJB
     private LocateInstances calculateMatches;
@@ -77,6 +81,14 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         super(device, sopClasses);
         this.qrLevels = qrLevels;
         this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
+    }
+
+    public final DicomConfiguration getDicomConfiguration() {
+        return dicomConfiguration;
+    }
+
+    public final void setDicomConfiguration(DicomConfiguration dicomConfiguration) {
+        this.dicomConfiguration = dicomConfiguration;
     }
 
     @Override
@@ -89,20 +101,22 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
         level.validateRetrieveKeys(validator, rootLevel, relational);
         String dest = rq.getString(Tag.MoveDestination);
-        final Connection remote = Configuration.getConnectionTo(as.getApplicationEntity(), dest);
-        if (remote == null)
+        final ApplicationEntity destAE;
+        try {
+            destAE = dicomConfiguration.findApplicationEntity(dest);
+        } catch (ConfigurationNotFoundException e) {
             throw new DicomServiceException(Status.MoveDestinationUnknown,
-                    "Move Destination: " + dest + " unknown");
+                    "Unknown Move Destination: " + dest);
+        } catch (ConfigurationException e) {
+            throw new DicomServiceException(Status.UnableToProcess, e);
+        }
         List<InstanceLocator> matches = calculateMatches(rq, keys);
-        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches, false,
-                Configuration.storeParamFor(as.getApplicationEntity())
-                    .getOutgoingAttributeCoercionFor(dest)) {
+        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches, false) {
 
             @Override
             protected Association getStoreAssociation() throws DicomServiceException {
                 try {
-                    return as.getApplicationEntity()
-                            .connect(as.getConnection(), remote, makeAAssociateRQ());
+                    return as.getApplicationEntity().connect(destAE, makeAAssociateRQ());
                 } catch (IOException e) {
                     throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
                 } catch (InterruptedException e) {
@@ -113,9 +127,8 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
             }
 
         };
-        retrieveTask.setSendPendingRSPInterval(
-                Configuration.queryRetrieveParamFor(as.getApplicationEntity())
-                    .getSendPendingCMoveInterval());
+        ArchiveApplicationEntity localAE = (ArchiveApplicationEntity) as.getApplicationEntity();
+        retrieveTask.setSendPendingRSPInterval(localAE.getSendPendingCMoveInterval());
         return retrieveTask;
     }
 

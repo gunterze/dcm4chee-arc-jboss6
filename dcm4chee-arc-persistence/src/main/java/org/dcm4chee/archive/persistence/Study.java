@@ -63,6 +63,7 @@ import javax.persistence.Transient;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
+import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.DateUtils;
 import org.dcm4che.util.StringUtils;
 
@@ -415,7 +416,7 @@ public class Study implements Serializable {
         return series;
     }
 
-    public void setAttributes(Attributes attrs, StoreParam storeParam) {
+    public void setAttributes(Attributes attrs, AttributeFilter filter, FuzzyStr fuzzyStr) {
         studyInstanceUID = attrs.getString(Tag.StudyInstanceUID);
         studyID = attrs.getString(Tag.StudyID, "*");
         studyDescription = attrs.getString(Tag.StudyDescription, "*");
@@ -437,18 +438,18 @@ public class Study implements Serializable {
                 ? pn.toString(PersonName.Group.Ideographic, false) : "*";
         referringPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
                 ? pn.toString(PersonName.Group.Phonetic, false) : "*";
-        referringPhysicianFamilyNameSoundex =
-                storeParam.toFuzzy(pn.get(PersonName.Component.FamilyName), "*");
-        referringPhysicianGivenNameSoundex =
-                storeParam.toFuzzy(pn.get(PersonName.Component.GivenName), "*");
-        studyCustomAttribute1 = StoreParam.selectStringValue(attrs,
-                storeParam.getStudyCustomAttribute1(), "*");
-        studyCustomAttribute2 = StoreParam.selectStringValue(attrs,
-                storeParam.getStudyCustomAttribute2(), "*");
-        studyCustomAttribute3 = StoreParam.selectStringValue(attrs,
-                storeParam.getStudyCustomAttribute3(), "*");
+        referringPhysicianFamilyNameSoundex = StringUtils.maskEmpty(
+                fuzzyStr.toFuzzy(pn.get(PersonName.Component.FamilyName)), "*");
+        referringPhysicianGivenNameSoundex =StringUtils.maskEmpty(
+                fuzzyStr.toFuzzy(pn.get(PersonName.Component.GivenName)), "*");
+        studyCustomAttribute1 = 
+            AttributeFilter.selectStringValue(attrs, filter.getCustomAttribute1(), "*");
+        studyCustomAttribute2 =
+            AttributeFilter.selectStringValue(attrs, filter.getCustomAttribute2(), "*");
+        studyCustomAttribute3 =
+            AttributeFilter.selectStringValue(attrs, filter.getCustomAttribute3(), "*");
 
         encodedAttributes = Utils.encodeAttributes(
-                cachedAttributes = new Attributes(attrs, storeParam.getStudyAttributes()));
+                cachedAttributes = new Attributes(attrs, filter.getSelection()));
     }
 }
