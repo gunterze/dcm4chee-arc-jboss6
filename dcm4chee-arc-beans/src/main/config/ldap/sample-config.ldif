@@ -3950,21 +3950,14 @@ dicomInstalled: TRUE
 dn: cn=dicom,dicomDeviceName=STORE_SCP,cn=Devices,cn=DICOM Configuration,dc=
  nodomain
 objectClass: dicomNetworkConnection
-objectClass: dcmNetworkConnection
 cn: dicom
-dcmTCPNoDelay: TRUE
 dicomHostname: localhost
 dicomPort: 11113
 
 dn: cn=dicom-tls,dicomDeviceName=STORE_SCP,cn=Devices,cn=DICOM Configuration
  ,dc=nodomain
 objectClass: dicomNetworkConnection
-objectClass: dcmNetworkConnection
 cn: dicom-tls
-dcmTCPNoDelay: TRUE
-dcmTLSNeedClientAuth: TRUE
-dcmTLSProtocol: TLSv1
-dcmTLSProtocol: SSLv3
 dicomHostname: localhost
 dicomInstalled: FALSE
 dicomPort: 2763
@@ -3974,9 +3967,6 @@ dicomTLSCipherSuite: SSL_RSA_WITH_3DES_EDE_CBC_SHA
 dn: dicomAETitle=STORE_SCP,dicomDeviceName=STORE_SCP,cn=Devices,cn=DICOM Con
  figuration,dc=nodomain
 objectClass: dicomNetworkAE
-objectClass: dcmNetworkAE
-dcmAcceptOnlyPreferredCallingAETitle: FALSE
-dcmPackPDV: TRUE
 dicomAETitle: STORE_SCP
 dicomAssociationAcceptor: TRUE
 dicomAssociationInitiator: FALSE
