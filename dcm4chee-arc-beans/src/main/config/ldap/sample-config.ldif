@@ -12,6 +12,16 @@ dn: cn=Unique AE Titles Registry,cn=DICOM Configuration,dc=nodomain
 objectClass: dicomUniqueAETitlesRegistryRoot
 cn: Unique AE Titles Registry
 
+dn: dicomAETitle=DCM4CHEE,cn=Unique AE Titles Registry,cn=DICOM Configuratio
+ n,dc=nodomain
+objectClass: dicomUniqueAETitle
+dicomAETitle: DCM4CHEE
+
+dn: dicomAETitle=STORESCP,cn=Unique AE Titles Registry,cn=DICOM Configuratio
+ n,dc=nodomain
+objectClass: dicomUniqueAETitle
+dicomAETitle: STORESCP
+
 dn: dicomDeviceName=DCM4CHEE Archive,cn=Devices,cn=DICOM Configuration,dc=no
  domain
 objectClass: dicomDevice
@@ -3942,36 +3952,47 @@ dcmTag: 00400020
 dcmTag: 00400400
 dcmTag: 00400500
 
-dn: dicomDeviceName=STORE_SCP,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dn: dicomDeviceName=STORESCP Device,cn=Devices,cn=DICOM Configuration,dc=nod
+ omain
 objectClass: dicomDevice
-dicomDeviceName: STORE_SCP
+dicomDeviceName: STORESCP Device
 dicomInstalled: TRUE
 
-dn: cn=dicom,dicomDeviceName=STORE_SCP,cn=Devices,cn=DICOM Configuration,dc=
- nodomain
+dn: cn=dicom,dicomDeviceName=STORESCP Device,cn=Devices,cn=DICOM Configurati
+ on,dc=nodomain
 objectClass: dicomNetworkConnection
+objectClass: dcmNetworkConnection
 cn: dicom
+dcmTCPNoDelay: TRUE
 dicomHostname: localhost
 dicomPort: 11113
 
-dn: cn=dicom-tls,dicomDeviceName=STORE_SCP,cn=Devices,cn=DICOM Configuration
- ,dc=nodomain
+dn: cn=dicom-tls,dicomDeviceName=STORESCP Device,cn=Devices,cn=DICOM Configu
+ ration,dc=nodomain
 objectClass: dicomNetworkConnection
+objectClass: dcmNetworkConnection
 cn: dicom-tls
+dcmTCPNoDelay: TRUE
+dcmTLSNeedClientAuth: TRUE
+dcmTLSProtocol: TLSv1
+dcmTLSProtocol: SSLv3
 dicomHostname: localhost
 dicomInstalled: FALSE
 dicomPort: 2763
 dicomTLSCipherSuite: TLS_RSA_WITH_AES_128_CBC_SHA
 dicomTLSCipherSuite: SSL_RSA_WITH_3DES_EDE_CBC_SHA
 
-dn: dicomAETitle=STORE_SCP,dicomDeviceName=STORE_SCP,cn=Devices,cn=DICOM Con
- figuration,dc=nodomain
+dn: dicomAETitle=STORESCP,dicomDeviceName=STORESCP Device,cn=Devices,cn=DICO
+ M Configuration,dc=nodomain
 objectClass: dicomNetworkAE
-dicomAETitle: STORE_SCP
+objectClass: dcmNetworkAE
+dcmAcceptOnlyPreferredCallingAETitle: FALSE
+dcmPackPDV: TRUE
+dicomAETitle: STORESCP
 dicomAssociationAcceptor: TRUE
 dicomAssociationInitiator: FALSE
-dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=STORE_SCP,cn=Devic
- es,cn=DICOM Configuration,dc=nodomain
-dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=STORE_SCP,cn=D
- evices,cn=DICOM Configuration,dc=nodomain
+dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=STORESCP Device,cn
+ =Devices,cn=DICOM Configuration,dc=nodomain
+dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=STORESCP Devic
+ e,cn=Devices,cn=DICOM Configuration,dc=nodomain
 
