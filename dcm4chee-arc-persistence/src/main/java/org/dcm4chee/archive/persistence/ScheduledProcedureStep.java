@@ -264,9 +264,9 @@ public class ScheduledProcedureStep implements Serializable {
                 ? pn.toString(PersonName.Group.Ideographic, false) : "*";
         scheduledPerformingPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
                 ? pn.toString(PersonName.Group.Phonetic, false) : "*";
-        scheduledPerformingPhysicianFamilyNameSoundex = fuzzyStr.toFuzzy(
+        scheduledPerformingPhysicianFamilyNameSoundex = Utils.toFuzzy(fuzzyStr,
                 pn.get(PersonName.Component.FamilyName));
-        scheduledPerformingPhysicianGivenNameSoundex = fuzzyStr.toFuzzy(
+        scheduledPerformingPhysicianGivenNameSoundex = Utils.toFuzzy(fuzzyStr,
                 pn.get(PersonName.Component.GivenName));
         status = attrs.getString(Tag.ScheduledProcedureStepStatus, "*");
 

@@ -213,10 +213,10 @@ public class ServiceRequest implements Serializable {
                 ? pn.toString(PersonName.Group.Ideographic, false) : "*";
         requestingPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
                 ? pn.toString(PersonName.Group.Phonetic, false) : "*";
-        requestingPhysicianFamilyNameSoundex =
-            fuzzyStr.toFuzzy(pn.get(PersonName.Component.FamilyName));
-        requestingPhysicianGivenNameSoundex =
-            fuzzyStr.toFuzzy(pn.get(PersonName.Component.GivenName));
+        requestingPhysicianFamilyNameSoundex = Utils.toFuzzy(fuzzyStr,
+                pn.get(PersonName.Component.FamilyName));
+        requestingPhysicianGivenNameSoundex = Utils.toFuzzy(fuzzyStr,
+                pn.get(PersonName.Component.GivenName));
 
         encodedAttributes = Utils.encodeAttributes(
                 cachedAttributes = new Attributes(attrs, filter.getSelection()));

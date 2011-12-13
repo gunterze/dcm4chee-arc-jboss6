@@ -300,9 +300,9 @@ public class Patient implements Serializable {
                 ? pn.toString(PersonName.Group.Ideographic, false) : "*";
         patientPhoneticName = pn.contains(PersonName.Group.Phonetic)
                 ? pn.toString(PersonName.Group.Phonetic, false) : "*";
-        patientFamilyNameSoundex = fuzzyStr.toFuzzy(
+        patientFamilyNameSoundex = Utils.toFuzzy(fuzzyStr,
                 pn.get(PersonName.Component.FamilyName));
-        patientGivenNameSoundex = fuzzyStr.toFuzzy(
+        patientGivenNameSoundex =  Utils.toFuzzy(fuzzyStr,
                 pn.get(PersonName.Component.GivenName));
         patientBirthDate = attrs.getString(Tag.PatientBirthDate, "*");
         patientSex = attrs.getString(Tag.PatientSex, "*").toUpperCase();

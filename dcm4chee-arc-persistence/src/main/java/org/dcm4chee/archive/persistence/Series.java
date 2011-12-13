@@ -518,10 +518,10 @@ public class Series implements Serializable {
                     ? pn.toString(PersonName.Group.Ideographic, false) : "*";
             performingPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
                     ? pn.toString(PersonName.Group.Phonetic, false) : "*";
-            performingPhysicianFamilyNameSoundex =
-                fuzzyStr.toFuzzy(pn.get(PersonName.Component.FamilyName));
-            performingPhysicianGivenNameSoundex =
-                fuzzyStr.toFuzzy(pn.get(PersonName.Component.GivenName));
+            performingPhysicianFamilyNameSoundex = Utils.toFuzzy(fuzzyStr,
+                    pn.get(PersonName.Component.FamilyName));
+            performingPhysicianGivenNameSoundex = Utils.toFuzzy(fuzzyStr,
+                    pn.get(PersonName.Component.GivenName));
         }
         seriesCustomAttribute1 = 
             AttributeFilter.selectStringValue(attrs, filter.getCustomAttribute1(), "*");

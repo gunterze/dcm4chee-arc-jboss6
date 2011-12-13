@@ -48,6 +48,7 @@ import org.dcm4che.data.UID;
 import org.dcm4che.data.VR;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.io.DicomOutputStream;
+import org.dcm4che.soundex.FuzzyStr;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -132,4 +133,7 @@ public class Utils {
         attrs.setString(Tag.InstanceAvailability, VR.CS, availability.toString());
     }
 
+    public static String toFuzzy(FuzzyStr fuzzyStr, String s) {
+        return s != null ? fuzzyStr.toFuzzy(s) : "*";
+    }
 }

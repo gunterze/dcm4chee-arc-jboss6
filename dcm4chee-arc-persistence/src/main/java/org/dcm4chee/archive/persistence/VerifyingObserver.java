@@ -53,7 +53,6 @@ import org.dcm4che.data.PersonName;
 import org.dcm4che.data.Tag;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.DateUtils;
-import org.dcm4che.util.StringUtils;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
@@ -107,10 +106,10 @@ public class VerifyingObserver implements Serializable {
                 ? pn.toString(PersonName.Group.Ideographic, false) : "*";
         verifyingObserverPhoneticName = pn.contains(PersonName.Group.Phonetic)
                 ? pn.toString(PersonName.Group.Phonetic, false) : "*";
-        verifyingObserverFamilyNameSoundex = StringUtils.maskEmpty(
-                fuzzyStr.toFuzzy(pn.get(PersonName.Component.FamilyName)), "*");
-        verifyingObserverGivenNameSoundex = StringUtils.maskEmpty(
-                fuzzyStr.toFuzzy(pn.get(PersonName.Component.GivenName)), "*");
+        verifyingObserverFamilyNameSoundex = Utils.toFuzzy(fuzzyStr,
+                pn.get(PersonName.Component.FamilyName));
+        verifyingObserverGivenNameSoundex = Utils.toFuzzy(fuzzyStr,
+                pn.get(PersonName.Component.GivenName));
     }
 
     public long getPk() {

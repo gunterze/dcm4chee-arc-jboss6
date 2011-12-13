@@ -438,10 +438,10 @@ public class Study implements Serializable {
                 ? pn.toString(PersonName.Group.Ideographic, false) : "*";
         referringPhysicianPhoneticName = pn.contains(PersonName.Group.Phonetic)
                 ? pn.toString(PersonName.Group.Phonetic, false) : "*";
-        referringPhysicianFamilyNameSoundex = StringUtils.maskEmpty(
-                fuzzyStr.toFuzzy(pn.get(PersonName.Component.FamilyName)), "*");
-        referringPhysicianGivenNameSoundex =StringUtils.maskEmpty(
-                fuzzyStr.toFuzzy(pn.get(PersonName.Component.GivenName)), "*");
+        referringPhysicianFamilyNameSoundex = Utils.toFuzzy(fuzzyStr,
+                pn.get(PersonName.Component.FamilyName));
+        referringPhysicianGivenNameSoundex = Utils.toFuzzy(fuzzyStr,
+                pn.get(PersonName.Component.GivenName));
         studyCustomAttribute1 = 
             AttributeFilter.selectStringValue(attrs, filter.getCustomAttribute1(), "*");
         studyCustomAttribute2 =
