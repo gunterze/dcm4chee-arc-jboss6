@@ -41,6 +41,9 @@ package org.dcm4chee.archive.net;
 import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerConfigurationException;
 
+import org.dcm4che.conf.api.AttributeCoercion;
+import org.dcm4che.conf.api.AttributeCoercions;
+import org.dcm4che.io.TemplatesCache;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.TransferCapability.Role;
 import org.dcm4che.soundex.FuzzyStr;

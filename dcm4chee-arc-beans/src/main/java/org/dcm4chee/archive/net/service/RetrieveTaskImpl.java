@@ -43,6 +43,7 @@ import java.util.List;
 
 import javax.xml.transform.Templates;
 
+import org.dcm4che.conf.api.AttributeCoercion.DIMSE;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.io.DicomInputStream;
@@ -56,7 +57,6 @@ import org.dcm4che.net.service.BasicRetrieveTask;
 import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.util.SafeClose;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
-import org.dcm4chee.archive.net.AttributeCoercion.DIMSE;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>

@@ -41,6 +41,8 @@ package org.dcm4chee.archive.net;
 import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerConfigurationException;
 
+import org.dcm4che.conf.api.AttributeCoercion;
+import org.dcm4che.conf.api.AttributeCoercions;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.util.AttributesFormat;

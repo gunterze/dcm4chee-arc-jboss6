@@ -54,7 +54,6 @@ import org.dcm4che.conf.ldap.ExtendedLdapDicomConfiguration;
 import org.dcm4che.data.ValueSelector;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Device;
-import org.dcm4che.net.TransferCapability;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
@@ -62,8 +61,6 @@ import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 import org.dcm4chee.archive.net.ArchiveDevice;
-import org.dcm4chee.archive.net.AttributeCoercion;
-import org.dcm4chee.archive.net.AttributeCoercions;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 
 /**
@@ -138,8 +135,7 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         if (!(device instanceof ArchiveDevice))
             return;
         ArchiveDevice arcDev = (ArchiveDevice) device;
-        for (AttributeCoercion ac : arcDev.getAttributeCoercions().getAll())
-            createSubcontext(dnOf(ac, deviceDN), storeTo(ac, new BasicAttributes(true)));
+        store(arcDev.getAttributeCoercions().getAll(), deviceDN);
         for (Entity entity : Entity.values())
             createSubcontext(dnOf("dcmEntity", entity.toString(), deviceDN),
                     storeTo(arcDev.getAttributeFilter(entity), entity, new BasicAttributes(true)));
@@ -151,35 +147,12 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         if (!(ae instanceof ArchiveApplicationEntity))
             return;
         ArchiveApplicationEntity arcAE = (ArchiveApplicationEntity) ae;
-        for (AttributeCoercion ac : arcAE.getAttributeCoercions().getAll())
-            createSubcontext(dnOf(ac, aeDN), storeTo(ac, new BasicAttributes(true)));
-    }
-
-    private static String dnOf(AttributeCoercion ac, String parentDN) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("dcmDIMSE=").append(ac.getDimse());
-        sb.append("+dicomTransferRole=").append(ac.getRole());
-        if (ac.getAETitle() != null)
-            sb.append("+dicomAETitle=").append(ac.getAETitle());
-        if (ac.getSopClass() != null)
-            sb.append("+dicomSOPClass=").append(ac.getSopClass());
-        sb.append(',').append(parentDN);
-       return sb.toString();
-    }
-
-    private static Attributes storeTo(AttributeCoercion ac, BasicAttributes attrs) {
-        attrs.put("objectclass", "dcmAttributeCoercion");
-        storeNotNull(attrs, "dcmDIMSE", ac.getDimse());
-        storeNotNull(attrs, "dicomTransferRole", ac.getRole());
-        storeNotNull(attrs, "dicomAETitle", ac.getAETitle());
-        storeNotNull(attrs, "dicomSOPClass", ac.getSopClass());
-        storeNotNull(attrs, "labeledURI", ac.getURI());
-        return attrs;
+        store(arcAE.getAttributeCoercions().getAll(), aeDN);
     }
 
     private static Attributes storeTo(AttributeFilter filter, Entity entity, BasicAttributes attrs) {
         attrs.put("objectclass", "dcmAttributeFilter");
-        attrs.put("dcmEntity", entity.toString());
+        attrs.put("dcmEntity", entity.name());
         storeTags(attrs, "dcmTag", filter.getSelection());
         storeNotNull(attrs, "dcmCustomAttribute1", filter.getCustomAttribute1());
         storeNotNull(attrs, "dcmCustomAttribute2", filter.getCustomAttribute2());
@@ -252,27 +225,6 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         load(arcdev.getAttributeCoercions(), deviceDN);
         loadAttributeFilters(arcdev, deviceDN);
         
-    }
-
-    private void load(AttributeCoercions acs, String dn)
-            throws NamingException {
-        NamingEnumeration<SearchResult> ne = search(dn, "(objectclass=dcmAttributeCoercion)");
-        try {
-            while (ne.hasMore()) {
-                SearchResult sr = ne.next();
-                Attributes attrs = sr.getAttributes();
-                acs.add(new AttributeCoercion(
-                        stringValue(attrs.get("dicomSOPClass")),
-                        AttributeCoercion.DIMSE.valueOf(
-                                stringValue(attrs.get("dcmDIMSE"))),
-                        TransferCapability.Role.valueOf(
-                                stringValue(attrs.get("dicomTransferRole"))),
-                        stringValue(attrs.get("dicomAETitle")),
-                        stringValue(attrs.get("labeledURI"))));
-            }
-        } finally {
-           safeClose(ne);
-        }
     }
 
     private void loadAttributeFilters(ArchiveDevice device, String deviceDN)

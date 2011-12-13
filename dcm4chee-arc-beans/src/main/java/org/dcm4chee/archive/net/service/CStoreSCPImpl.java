@@ -46,6 +46,7 @@ import java.security.SecureRandom;
 
 import javax.xml.transform.Templates;
 
+import org.dcm4che.conf.api.AttributeCoercion.DIMSE;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
@@ -63,7 +64,6 @@ import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.ejb.store.StoreParam;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
-import org.dcm4chee.archive.net.AttributeCoercion.DIMSE;
 import org.dcm4chee.archive.persistence.FileRef;
 import org.dcm4chee.archive.persistence.FileSystem;
 
