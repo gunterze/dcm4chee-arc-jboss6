@@ -101,7 +101,7 @@
       <parameter>
         <javabean xmlns="urn:jboss:javabean:2.0" class="[Ljava.lang.String;">
           <constructor factoryClass="org.dcm4che.util.UIDUtils" factoryMethod="findUIDs">
-            <property name="regex">.*Storage(Retired)?</property>
+            <property name="regex">.*Storage((Retired)|(SOPClass)|(ForPresentation)|(ForProcessing))?</property>
           </constructor>
         </javabean>
       </parameter>
