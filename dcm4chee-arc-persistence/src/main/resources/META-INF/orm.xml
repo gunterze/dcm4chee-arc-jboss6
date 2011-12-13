@@ -238,7 +238,7 @@
         <column name="pk" />
         <generated-value strategy="${generated-value-strategy}" generator="seq" />
       </id>
-      <basic name="encodedAttributes" optional="false">
+      <basic name="encodedAttributes">
         <column name="visit_attrs" column-definition="${blob}" />
       </basic>
     </attributes>
