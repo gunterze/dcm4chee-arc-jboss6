@@ -135,7 +135,7 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         if (!(device instanceof ArchiveDevice))
             return;
         ArchiveDevice arcDev = (ArchiveDevice) device;
-        store(arcDev.getAttributeCoercions().getAll(), deviceDN);
+        store(arcDev.getAttributeCoercions(), deviceDN);
         for (Entity entity : Entity.values())
             createSubcontext(dnOf("dcmEntity", entity.toString(), deviceDN),
                     storeTo(arcDev.getAttributeFilter(entity), entity, new BasicAttributes(true)));
@@ -147,7 +147,7 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         if (!(ae instanceof ArchiveApplicationEntity))
             return;
         ArchiveApplicationEntity arcAE = (ArchiveApplicationEntity) ae;
-        store(arcAE.getAttributeCoercions().getAll(), aeDN);
+        store(arcAE.getAttributeCoercions(), aeDN);
     }
 
     private static Attributes storeTo(AttributeFilter filter, Entity entity, BasicAttributes attrs) {
@@ -247,11 +247,11 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         }
     }
 
-    private ValueSelector valueSelector(Attribute attr) throws NamingException {
+    private static ValueSelector valueSelector(Attribute attr) throws NamingException {
         return attr != null ? ValueSelector.valueOf((String) attr.get()) : null;
    }
 
-    private FuzzyStr fuzzyStr(Attribute attr) throws NamingException {
+    private static FuzzyStr fuzzyStr(Attribute attr) throws NamingException {
         try {
             return (FuzzyStr) Class.forName((String) attr.get()).newInstance();
         } catch (NamingException ne) {
@@ -261,11 +261,11 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         }
     }
 
-    private StoreDuplicate storeDuplicate(Attribute attr) throws NamingException {
+    private static StoreDuplicate storeDuplicate(Attribute attr) throws NamingException {
         return attr != null ? StoreDuplicate.valueOf((String) attr.get()) : null;
     }
 
-    private AttributesFormat attributesFormat(Attribute attr) throws NamingException {
+    private  static AttributesFormat attributesFormat(Attribute attr) throws NamingException {
         return attr != null ? new AttributesFormat((String) attr.get()) : null;
     }
 

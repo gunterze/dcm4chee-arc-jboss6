@@ -36,15 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.conf.ldap;
+package org.dcm4chee.archive.conf.prefs;
 
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.EnumSet;
+import java.util.prefs.Preferences;
 
 import org.dcm4che.conf.api.AttributeCoercion;
 import org.dcm4che.conf.api.ConfigurationNotFoundException;
-import org.dcm4che.conf.ldap.ExtendedLdapDicomConfiguration;
-import org.dcm4che.conf.ldap.LdapDicomConfiguration;
-import org.dcm4che.conf.ldap.LdapEnv;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
@@ -53,6 +53,7 @@ import org.dcm4che.net.Device;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.soundex.ESoundex;
+import org.dcm4che.util.SafeClose;
 import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
@@ -66,7 +67,7 @@ import org.junit.Test;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class ArchiveLdapDicomConfigurationTest {
+public class PreferencesArchiveConfigurationTest {
 
     private static final String DCM4CHEE_ARCHIVE = "DCM4CHEE Archive";
     private static final String STORESCP_DEVICE = "STORESCP Device";
@@ -351,7 +352,6 @@ public class ArchiveLdapDicomConfigurationTest {
         UID.VLPhotographicImageStorage,
         UID.OphthalmicPhotography8BitImageStorage,
         UID.OphthalmicPhotography16BitImageStorage,
-        UID.StereometricRelationshipStorage,
         UID.OphthalmicTomographyImageStorage,
         UID.VLWholeSlideMicroscopyImageStorage,
         UID.PositronEmissionTomographyImageStorage,
@@ -391,6 +391,7 @@ public class ArchiveLdapDicomConfigurationTest {
         UID.SegmentationStorage,
         UID.SurfaceSegmentationStorage,
         UID.RealWorldValueMappingStorage,
+        UID.StereometricRelationshipStorage,
         UID.LensometryMeasurementsStorage,
         UID.AutorefractionMeasurementsStorage,
         UID.KeratometryMeasurementsStorage,
@@ -438,20 +439,16 @@ public class ArchiveLdapDicomConfigurationTest {
         UID.CompositeInstanceRetrieveWithoutBulkDataGET
     };
 
-    private LdapArchiveConfiguration config;
+    private PreferencesArchiveConfiguration config;
 
     @Before
     public void setUp() throws Exception {
-        LdapEnv env = new LdapEnv();
-        env.setUrl("ldap://localhost:389");
-        env.setUserDN("cn=admin,dc=nodomain");
-        env.setPassword("admin");
-        config = new LdapArchiveConfiguration(env, "dc=nodomain");
+        config = new PreferencesArchiveConfiguration(Preferences.userRoot());
     }
 
     @After
     public void tearDown() throws Exception {
-        config.close();
+//        config.purgeConfiguration();
     }
 
     @Test
@@ -468,12 +465,23 @@ public class ArchiveLdapDicomConfigurationTest {
         config.registerAETitle("STORESCP");
         config.persist(createArchiveDevice(DCM4CHEE_ARCHIVE));
         config.persist(createStoreSCP(STORESCP_DEVICE));
+//        export();
         ApplicationEntity ae = config.findApplicationEntity("DCM4CHEE");
         config.removeDevice(DCM4CHEE_ARCHIVE);
         config.removeDevice(STORESCP_DEVICE);
         config.unregisterAETitle("DCM4CHEE");
         config.unregisterAETitle("STORESCP");
     }
+
+//    private void export() throws Exception {
+//        OutputStream os = new FileOutputStream(
+//                "/home/gunter/dcm4chee-arc/dcm4chee-arc-beans/src/main/config/prefs/sample-config.xml");
+//        try {
+//            Preferences.userRoot().node("dicomConfigurationRoot").exportSubtree(os);
+//        } finally {
+//            SafeClose.close(os);
+//        }
+//    }
 
     private Device createStoreSCP(String name) throws Exception {
         Device device = new Device(name);
