@@ -448,7 +448,7 @@ public class PreferencesArchiveConfigurationTest {
 
     @After
     public void tearDown() throws Exception {
-//        config.purgeConfiguration();
+        config.purgeConfiguration();
     }
 
     @Test
@@ -465,7 +465,7 @@ public class PreferencesArchiveConfigurationTest {
         config.registerAETitle("STORESCP");
         config.persist(createArchiveDevice(DCM4CHEE_ARCHIVE));
         config.persist(createStoreSCP(STORESCP_DEVICE));
-//        export();
+        export();
         ApplicationEntity ae = config.findApplicationEntity("DCM4CHEE");
         config.removeDevice(DCM4CHEE_ARCHIVE);
         config.removeDevice(STORESCP_DEVICE);
@@ -473,15 +473,15 @@ public class PreferencesArchiveConfigurationTest {
         config.unregisterAETitle("STORESCP");
     }
 
-//    private void export() throws Exception {
-//        OutputStream os = new FileOutputStream(
-//                "/home/gunter/dcm4chee-arc/dcm4chee-arc-beans/src/main/config/prefs/sample-config.xml");
-//        try {
-//            Preferences.userRoot().node("dicomConfigurationRoot").exportSubtree(os);
-//        } finally {
-//            SafeClose.close(os);
-//        }
-//    }
+    private void export() throws Exception {
+        OutputStream os = new FileOutputStream(
+                "/home/gunter/dcm4chee-arc/dcm4chee-arc-beans/src/main/config/prefs/sample-config.xml");
+        try {
+            Preferences.userRoot().node("org/dcm4chee/archive").exportSubtree(os);
+        } finally {
+            SafeClose.close(os);
+        }
+    }
 
     private Device createStoreSCP(String name) throws Exception {
         Device device = new Device(name);

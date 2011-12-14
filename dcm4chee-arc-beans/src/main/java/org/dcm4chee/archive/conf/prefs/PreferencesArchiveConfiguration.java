@@ -61,6 +61,11 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
  */
 public class PreferencesArchiveConfiguration extends PreferencesDicomConfiguration {
 
+    public PreferencesArchiveConfiguration(Preferences rootPrefs) {
+        super(rootPrefs);
+        setConfigurationRoot("org/dcm4chee/archive");
+    }
+
     @Override
     protected void storeTo(Device device, Preferences prefs) {
         super.storeTo(device, prefs);
@@ -288,11 +293,6 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
     protected void storeDiffs(Preferences prefs, Device a, Device b) {
         // TODO Auto-generated method stub
         super.storeDiffs(prefs, a, b);
-    }
-
-    public PreferencesArchiveConfiguration(Preferences rootPrefs) {
-        super(rootPrefs);
-        // TODO Auto-generated constructor stub
     }
 
 }

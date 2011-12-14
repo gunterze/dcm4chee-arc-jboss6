@@ -51,7 +51,7 @@
       factoryMethod="newSingleThreadScheduledExecutor" />
   </bean>
 
-  <!-- LDAP Archive Configuration -->
+  <!-- LDAP Archive Configuration
   <bean name="ArchiveConfiguration" class="org.dcm4chee.archive.conf.ldap.LdapArchiveConfiguration">
     <constructor>
       <parameter>
@@ -64,9 +64,10 @@
       <parameter>dc=nodomain</parameter>
     </constructor>
   </bean>
+  -->
 
-  <!-- Preferences Archive Configuration
-  <bean name="ArchiveConfiguration" class="org.dcm4chee.archive.conf.pref.PreferencesArchiveConfiguration">
+  <!-- Preferences Archive Configuration -->
+  <bean name="ArchiveConfiguration" class="org.dcm4chee.archive.conf.prefs.PreferencesArchiveConfiguration">
     <constructor>
       <parameter>
         <javabean xmlns="urn:jboss:javabean:2.0" class="java.util.prefs.Preferences">
@@ -75,7 +76,6 @@
       </parameter> 
     </constructor>
   </bean>
-  -->
 
   <!-- The DICOM Device -->
   <bean name="Device" class="org.dcm4che.net.Device">
