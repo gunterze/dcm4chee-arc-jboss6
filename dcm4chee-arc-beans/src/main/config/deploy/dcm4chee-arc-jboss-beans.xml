@@ -97,6 +97,7 @@
     <demand>Class:org.dcm4chee.archive.ejb.store.InstanceStore</demand>
     <demand>Class:org.dcm4chee.archive.ejb.query.CompositeQuery</demand>
     <demand>Class:org.dcm4chee.archive.ejb.query.LocateInstances</demand>
+    <demand>Class:org.dcm4chee.archive.ejb.query.ModalityWorklistQuery</demand>
   </bean>
 
   <!-- Service Registry -->
@@ -111,11 +112,9 @@
   <bean name="CStoreSCP" class="org.dcm4chee.archive.net.service.CStoreSCPImpl">
     <constructor>
       <parameter>
-        <javabean xmlns="urn:jboss:javabean:2.0" class="[Ljava.lang.String;">
-          <constructor factoryClass="org.dcm4che.util.UIDUtils" factoryMethod="findUIDs">
-            <property name="regex">.*Storage((Retired)|(SOPClass)|(ForPresentation)|(ForProcessing))?</property>
-          </constructor>
-        </javabean>
+        <array>
+          <value>*</value>
+        </array>
       </parameter>
     </constructor>
   </bean>
