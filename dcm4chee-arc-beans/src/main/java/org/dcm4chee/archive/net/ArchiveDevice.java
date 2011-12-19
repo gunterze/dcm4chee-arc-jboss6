@@ -93,9 +93,14 @@ public class ArchiveDevice extends Device {
         return tmp.get(uri);
     }
 
-    public AttributeCoercion getAttributeCoercion(String aeTitle, String sopClass,
-            Role role, AttributeCoercion.DIMSE cmd) {
+    public AttributeCoercion getAttributeCoercion(String sopClass,
+            AttributeCoercion.DIMSE cmd, Role role, String aeTitle) {
         return attributeCoercions.get(sopClass, cmd, role, aeTitle);
+    }
+
+    public AttributeCoercion removeAttributeCoercion(String sopClass,
+            AttributeCoercion.DIMSE cmd, Role role, String aeTitle) {
+        return attributeCoercions.remove(sopClass, cmd, role, aeTitle);
     }
 
     public AttributeCoercions getAttributeCoercions() {
@@ -221,6 +226,10 @@ public class ArchiveDevice extends Device {
 
     public FuzzyStr getFuzzyStr() {
         return fuzzyStr;
+    }
+
+    public String getFuzzyAlgorithmClass() {
+        return fuzzyStr.getClass().getName();
     }
 
     public void setAttributeFilter(Entity entity, AttributeFilter filter) {

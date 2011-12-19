@@ -38,8 +38,10 @@
 
 package org.dcm4chee.archive.conf.ldap;
 
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.List;
 
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -47,6 +49,7 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.BasicAttributes;
+import javax.naming.directory.DirContext;
 import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SearchResult;
 
@@ -125,7 +128,7 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
                 arcDev.isStoreOriginalAttributes());
         storeNotNull(attrs, "dcmModifyingSystem", arcDev.getModifyingSystem());
         storeNotNull(attrs, "dcmFuzzyAlgorithmClass",
-                arcDev.getFuzzyStr().getClass().getName());
+                arcDev.getFuzzyAlgorithmClass());
         return attrs;
     }
 
@@ -153,18 +156,18 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
     private static Attributes storeTo(AttributeFilter filter, Entity entity, BasicAttributes attrs) {
         attrs.put("objectclass", "dcmAttributeFilter");
         attrs.put("dcmEntity", entity.name());
-        storeTags(attrs, "dcmTag", filter.getSelection());
+        attrs.put(tagsAttr("dcmTag", filter.getSelection()));
         storeNotNull(attrs, "dcmCustomAttribute1", filter.getCustomAttribute1());
         storeNotNull(attrs, "dcmCustomAttribute2", filter.getCustomAttribute2());
         storeNotNull(attrs, "dcmCustomAttribute3", filter.getCustomAttribute3());
         return attrs;
     }
 
-    private static void storeTags(BasicAttributes attrs, String attrID, int[] tags) {
+    private static Attribute tagsAttr(String attrID, int[] tags) {
         Attribute attr = new BasicAttribute(attrID);
         for (int tag : tags)
             attr.add(TagUtils.toHexString(tag));
-        attrs.put(attr);
+        return attr;
     }
 
     @Override
@@ -311,16 +314,162 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
     }
 
     @Override
-    protected void storeDiffs(Collection<ModificationItem> mods,
-            ApplicationEntity a, ApplicationEntity b, String deviceDN) {
-        // TODO Auto-generated method stub
-        super.storeDiffs(mods, a, b, deviceDN);
+    protected List<ModificationItem> storeDiffs(Device a, Device b,
+            List<ModificationItem> mods) {
+        super.storeDiffs(a, b, mods);
+        if (!(a instanceof ArchiveDevice && b instanceof ArchiveDevice))
+            return mods;
+        
+        ArchiveDevice aa = (ArchiveDevice) a;
+        ArchiveDevice bb = (ArchiveDevice) b;
+        storeDiff(mods, "dcmFileSystemGroupID",
+                aa.getFileSystemGroupID(),
+                bb.getFileSystemGroupID());
+        storeDiff(mods, "dcmReceivingDirectoryPath",
+                aa.getReceivingDirectoryPath(),
+                bb.getReceivingDirectoryPath());
+        storeDiff(mods, "dcmStorageFilePathFormat",
+                aa.getStorageFilePathFormat(),
+                bb.getStorageFilePathFormat());
+        storeDiff(mods, "dcmDigestAlgorithm",
+                aa.getDigestAlgorithm(),
+                bb.getDigestAlgorithm());
+        storeDiff(mods, "dcmStoreDuplicate",
+                aa.getStoreDuplicate(),
+                bb.getStoreDuplicate());
+        storeDiff(mods, "dcmExternalRetrieveAET",
+                aa.getExternalRetrieveAET(),
+                bb.getExternalRetrieveAET());
+        storeDiff(mods, "dcmRetrieveAET",
+                aa.getRetrieveAETs(),
+                bb.getRetrieveAETs());
+        storeDiff(mods, "dcmMatchUnknown",
+                aa.isMatchUnknown(),
+                bb.isMatchUnknown());
+        storeDiff(mods, "dcmSendPendingCGet",
+                aa.isSendPendingCGet(),
+                bb.isSendPendingCGet());
+        storeDiff(mods, "dcmSendPendingCMoveInterval",
+                aa.getSendPendingCMoveInterval(),
+                bb.getSendPendingCMoveInterval());
+        storeDiff(mods, "dcmSuppressWarningCoercionOfDataElements",
+                aa.isSuppressWarningCoercionOfDataElements(),
+                bb.isSuppressWarningCoercionOfDataElements());
+        storeDiff(mods, "dcmStoreOriginalAttributes",
+                aa.isStoreOriginalAttributes(),
+                bb.isStoreOriginalAttributes());
+        storeDiff(mods, "dcmModifyingSystem",
+                aa.getModifyingSystem(),
+                bb.getModifyingSystem());
+        storeDiff(mods, "dcmFuzzyAlgorithmClass",
+                aa.getFuzzyAlgorithmClass(),
+                bb.getFuzzyAlgorithmClass());
+        return mods;
     }
 
     @Override
-    protected void storeDiffs(Collection<ModificationItem> mods, Device a, Device b) {
-        // TODO Auto-generated method stub
-        super.storeDiffs(mods, a, b);
+    protected List<ModificationItem> storeDiffs(ApplicationEntity a,
+            ApplicationEntity b, String deviceDN, List<ModificationItem> mods) {
+        super.storeDiffs(a, b, deviceDN, mods);
+        if (!(a instanceof ArchiveApplicationEntity 
+           && b instanceof ArchiveApplicationEntity))
+            return mods;
+        
+        ArchiveApplicationEntity aa = (ArchiveApplicationEntity) a;
+        ArchiveApplicationEntity bb = (ArchiveApplicationEntity) b;
+        storeDiff(mods, "dcmFileSystemGroupID",
+                aa.getFileSystemGroupID(),
+                bb.getFileSystemGroupID());
+        storeDiff(mods, "dcmReceivingDirectoryPath",
+                aa.getReceivingDirectoryPath(),
+                bb.getReceivingDirectoryPath());
+        storeDiff(mods, "dcmStorageFilePathFormat",
+                aa.getStorageFilePathFormat(),
+                bb.getStorageFilePathFormat());
+        storeDiff(mods, "dcmDigestAlgorithm",
+                aa.getDigestAlgorithm(),
+                bb.getDigestAlgorithm());
+        storeDiff(mods, "dcmStoreDuplicate",
+                aa.getStoreDuplicate(),
+                bb.getStoreDuplicate());
+        storeDiff(mods, "dcmExternalRetrieveAET",
+                aa.getExternalRetrieveAET(),
+                bb.getExternalRetrieveAET());
+        storeDiff(mods, "dcmRetrieveAET",
+                aa.getRetrieveAETs(),
+                bb.getRetrieveAETs());
+        storeDiff(mods, "dcmMatchUnknown",
+                aa.isMatchUnknown(),
+                bb.isMatchUnknown());
+        storeDiff(mods, "dcmSendPendingCGet",
+                aa.isSendPendingCGet(),
+                bb.isSendPendingCGet());
+        storeDiff(mods, "dcmSendPendingCMoveInterval",
+                aa.getSendPendingCMoveInterval(),
+                bb.getSendPendingCMoveInterval());
+        storeDiff(mods, "dcmSuppressWarningCoercionOfDataElements",
+                aa.isSuppressWarningCoercionOfDataElements(),
+                bb.isSuppressWarningCoercionOfDataElements());
+        storeDiff(mods, "dcmStoreOriginalAttributes",
+                aa.isStoreOriginalAttributes(),
+                bb.isStoreOriginalAttributes());
+        storeDiff(mods, "dcmModifyingSystem",
+                aa.getModifyingSystem(),
+                bb.getModifyingSystem());
+        return mods;
+    }
+
+    @Override
+    protected void mergeChilds(Device prev, Device device, String deviceDN)
+            throws NamingException {
+        super.mergeChilds(prev, device, deviceDN);
+        if (!(prev instanceof ArchiveDevice && device instanceof ArchiveDevice))
+            return;
+        
+        ArchiveDevice aa = (ArchiveDevice) prev;
+        ArchiveDevice bb = (ArchiveDevice) device;
+        merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), deviceDN);
+        for (Entity entity : Entity.values())
+            modifyAttributes(dnOf("dcmEntity", entity.toString(), deviceDN),
+                    storeDiffs(aa.getAttributeFilter(entity), bb.getAttributeFilter(entity),
+                            new ArrayList<ModificationItem>()));
+    }
+
+    @Override
+    protected void mergeChilds(ApplicationEntity prev, ApplicationEntity ae, String aeDN)
+            throws NamingException {
+        super.mergeChilds(prev, ae, aeDN);
+        if (!(prev instanceof ArchiveApplicationEntity 
+             && ae instanceof ArchiveApplicationEntity))
+            return;
+
+        ArchiveApplicationEntity aa = (ArchiveApplicationEntity) prev;
+        ArchiveApplicationEntity bb = (ArchiveApplicationEntity) ae;
+        merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), aeDN);
+    }
+
+    private List<ModificationItem> storeDiffs(AttributeFilter prev,
+            AttributeFilter filter, List<ModificationItem> mods) {
+        storeDiffTags(mods, "dcmTag", 
+                prev.getSelection(),
+                filter.getSelection());
+        storeDiff(mods, "dcmCustomAttribute1",
+                prev.getCustomAttribute1(),
+                filter.getCustomAttribute1());
+        storeDiff(mods, "dcmCustomAttribute2",
+                prev.getCustomAttribute2(),
+                filter.getCustomAttribute2());
+        storeDiff(mods, "dcmCustomAttribute3",
+                prev.getCustomAttribute3(),
+                filter.getCustomAttribute3());
+        return mods;
+    }
+
+    private void storeDiffTags(List<ModificationItem> mods, String attrId,
+            int[] prevs, int[] vals) {
+        if (!Arrays.equals(prevs, vals))
+            mods.add(new ModificationItem(DirContext.REPLACE_ATTRIBUTE,
+                    tagsAttr(attrId, vals)));
     }
 
 }

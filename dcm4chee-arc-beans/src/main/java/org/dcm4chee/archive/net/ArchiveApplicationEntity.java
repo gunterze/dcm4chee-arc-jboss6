@@ -255,7 +255,10 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
 
     public AttributeCoercion getAttributeCoercion(String sopClass, AttributeCoercion.DIMSE cmd,
             TransferCapability.Role role, String aeTitle) {
-        return attributeCoercions.get(sopClass, cmd, role, aeTitle);
+        AttributeCoercion ac = attributeCoercions.get(sopClass, cmd, role, aeTitle);
+        return ac != null
+                ? ac
+                : getArchiveDevice().getAttributeCoercion(sopClass, cmd, role, aeTitle);
     }
 
     public AttributeCoercions getAttributeCoercions() {

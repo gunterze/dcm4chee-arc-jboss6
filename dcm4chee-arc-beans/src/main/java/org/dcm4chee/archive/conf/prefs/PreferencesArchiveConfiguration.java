@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.conf.prefs;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
@@ -103,7 +104,7 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
         store(arcDev.getAttributeCoercions(), deviceNode);
         Preferences afsNode = deviceNode.node("dcmAttributeFilter");
         for (Entity entity : Entity.values())
-            storeTo(arcDev.getAttributeFilter(entity), entity, afsNode.node(entity.name()));
+            storeTo(arcDev.getAttributeFilter(entity), afsNode.node(entity.name()));
     }
 
     @Override
@@ -115,7 +116,7 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
         store(arcAE.getAttributeCoercions(), aeNode);
     }
 
-    private static void storeTo(AttributeFilter filter, Entity entity, Preferences prefs) {
+    private static void storeTo(AttributeFilter filter, Preferences prefs) {
         storeTags(prefs, "dcmTag", filter.getSelection());
         storeNotNull(prefs, "dcmCustomAttribute1", filter.getCustomAttribute1());
         storeNotNull(prefs, "dcmCustomAttribute2", filter.getCustomAttribute2());
@@ -283,16 +284,158 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
     }
 
     @Override
-    protected void storeDiffs(Preferences prefs, ApplicationEntity a,
-            ApplicationEntity b) {
-        // TODO Auto-generated method stub
-        super.storeDiffs(prefs, a, b);
+    protected void storeDiffs(Preferences mods, Device a, Device b) {
+        super.storeDiffs(mods, a, b);
+        if (!(a instanceof ArchiveDevice && b instanceof ArchiveDevice))
+            return;
+
+        ArchiveDevice aa = (ArchiveDevice) a;
+        ArchiveDevice bb = (ArchiveDevice) b;
+        storeDiff(mods, "dcmFileSystemGroupID",
+                aa.getFileSystemGroupID(),
+                bb.getFileSystemGroupID());
+        storeDiff(mods, "dcmReceivingDirectoryPath",
+                aa.getReceivingDirectoryPath(),
+                bb.getReceivingDirectoryPath());
+        storeDiff(mods, "dcmStorageFilePathFormat",
+                aa.getStorageFilePathFormat(),
+                bb.getStorageFilePathFormat());
+        storeDiff(mods, "dcmDigestAlgorithm",
+                aa.getDigestAlgorithm(),
+                bb.getDigestAlgorithm());
+        storeDiff(mods, "dcmStoreDuplicate",
+                aa.getStoreDuplicate(),
+                bb.getStoreDuplicate());
+        storeDiff(mods, "dcmExternalRetrieveAET",
+                aa.getExternalRetrieveAET(),
+                bb.getExternalRetrieveAET());
+        storeDiff(mods, "dcmRetrieveAET",
+                aa.getRetrieveAETs(),
+                bb.getRetrieveAETs());
+        storeDiff(mods, "dcmMatchUnknown",
+                aa.isMatchUnknown(),
+                bb.isMatchUnknown());
+        storeDiff(mods, "dcmSendPendingCGet",
+                aa.isSendPendingCGet(),
+                bb.isSendPendingCGet());
+        storeDiff(mods, "dcmSendPendingCMoveInterval",
+                aa.getSendPendingCMoveInterval(),
+                bb.getSendPendingCMoveInterval());
+        storeDiff(mods, "dcmSuppressWarningCoercionOfDataElements",
+                aa.isSuppressWarningCoercionOfDataElements(),
+                bb.isSuppressWarningCoercionOfDataElements());
+        storeDiff(mods, "dcmStoreOriginalAttributes",
+                aa.isStoreOriginalAttributes(),
+                bb.isStoreOriginalAttributes());
+        storeDiff(mods, "dcmModifyingSystem",
+                aa.getModifyingSystem(),
+                bb.getModifyingSystem());
+        storeDiff(mods, "dcmFuzzyAlgorithmClass",
+                aa.getFuzzyAlgorithmClass(),
+                bb.getFuzzyAlgorithmClass());
     }
 
     @Override
-    protected void storeDiffs(Preferences prefs, Device a, Device b) {
-        // TODO Auto-generated method stub
+    protected void storeDiffs(Preferences prefs, ApplicationEntity a,
+            ApplicationEntity b) {
         super.storeDiffs(prefs, a, b);
+        if (!(a instanceof ArchiveApplicationEntity 
+           && b instanceof ArchiveApplicationEntity))
+                 return;
+
+         ArchiveApplicationEntity aa = (ArchiveApplicationEntity) a;
+         ArchiveApplicationEntity bb = (ArchiveApplicationEntity) b;
+         storeDiff(prefs, "dcmFileSystemGroupID",
+                 aa.getFileSystemGroupID(),
+                 bb.getFileSystemGroupID());
+         storeDiff(prefs, "dcmReceivingDirectoryPath",
+                 aa.getReceivingDirectoryPath(),
+                 bb.getReceivingDirectoryPath());
+         storeDiff(prefs, "dcmStorageFilePathFormat",
+                 aa.getStorageFilePathFormat(),
+                 bb.getStorageFilePathFormat());
+         storeDiff(prefs, "dcmDigestAlgorithm",
+                 aa.getDigestAlgorithm(),
+                 bb.getDigestAlgorithm());
+         storeDiff(prefs, "dcmStoreDuplicate",
+                 aa.getStoreDuplicate(),
+                 bb.getStoreDuplicate());
+         storeDiff(prefs, "dcmExternalRetrieveAET",
+                 aa.getExternalRetrieveAET(),
+                 bb.getExternalRetrieveAET());
+         storeDiff(prefs, "dcmRetrieveAET",
+                 aa.getRetrieveAETs(),
+                 bb.getRetrieveAETs());
+         storeDiff(prefs, "dcmMatchUnknown",
+                 aa.isMatchUnknown(),
+                 bb.isMatchUnknown());
+         storeDiff(prefs, "dcmSendPendingCGet",
+                 aa.isSendPendingCGet(),
+                 bb.isSendPendingCGet());
+         storeDiff(prefs, "dcmSendPendingCMoveInterval",
+                 aa.getSendPendingCMoveInterval(),
+                 bb.getSendPendingCMoveInterval());
+         storeDiff(prefs, "dcmSuppressWarningCoercionOfDataElements",
+                 aa.isSuppressWarningCoercionOfDataElements(),
+                 bb.isSuppressWarningCoercionOfDataElements());
+         storeDiff(prefs, "dcmStoreOriginalAttributes",
+                 aa.isStoreOriginalAttributes(),
+                 bb.isStoreOriginalAttributes());
+         storeDiff(prefs, "dcmModifyingSystem",
+                 aa.getModifyingSystem(),
+                 bb.getModifyingSystem());
+    }
+
+    @Override
+    protected void mergeChilds(Device prev, Device device,
+            Preferences deviceNode) throws BackingStoreException {
+        super.mergeChilds(prev, device, deviceNode);
+        if (!(prev instanceof ArchiveDevice && device instanceof ArchiveDevice))
+            return;
+        
+        ArchiveDevice aa = (ArchiveDevice) prev;
+        ArchiveDevice bb = (ArchiveDevice) device;
+        merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), deviceNode);
+        Preferences afsNode = deviceNode.node("dcmAttributeFilter");
+        for (Entity entity : Entity.values())
+            storeDiffs(afsNode.node(entity.name()), aa.getAttributeFilter(entity),
+                    bb.getAttributeFilter(entity));
+    }
+
+    private void storeDiffs(Preferences prefs, AttributeFilter prev, AttributeFilter filter) {
+        storeTags(prefs, "dcmTag", filter.getSelection());
+        storeDiffTags(prefs, "dcmTag", 
+                prev.getSelection(),
+                filter.getSelection());
+        storeDiff(prefs, "dcmCustomAttribute1",
+                prev.getCustomAttribute1(),
+                filter.getCustomAttribute1());
+        storeDiff(prefs, "dcmCustomAttribute2",
+                prev.getCustomAttribute2(),
+                filter.getCustomAttribute2());
+        storeDiff(prefs, "dcmCustomAttribute3",
+                prev.getCustomAttribute3(),
+                filter.getCustomAttribute3());
+    }
+
+    private void storeDiffTags(Preferences prefs, String key, int[] prevs, int[] vals) {
+        if (!Arrays.equals(prevs, vals)) {
+            removeKeys(prefs, key, vals.length, prevs.length);
+            storeTags(prefs, key, vals);
+        }
+    }
+
+    @Override
+    protected void mergeChilds(ApplicationEntity prev, ApplicationEntity ae,
+            Preferences aePrefs) throws BackingStoreException {
+        super.mergeChilds(prev, ae, aePrefs);
+        if (!(prev instanceof ApplicationEntity
+             && ae instanceof ApplicationEntity))
+            return;
+        
+        ArchiveApplicationEntity aa = (ArchiveApplicationEntity) prev;
+        ArchiveApplicationEntity bb = (ArchiveApplicationEntity) ae;
+        merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), aePrefs);
     }
 
 }
