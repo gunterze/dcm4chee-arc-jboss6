@@ -25,7 +25,6 @@
                 <entry key="dcmSendPendingCMoveInterval" value="5000"/>
                 <entry key="dcmStoreDuplicate" value="STORE"/>
                 <entry key="dcmStoreOriginalAttributes" value="true"/>
-                <entry key="dcmSuppressWarningCoercionOfDataElements" value="false"/>
                 <entry key="dicomInstalled" value="true"/>
               </map>
               <node name="dcmAttributeCoercion">
@@ -291,11 +290,9 @@
                 <map/>
                 <node name="DCM4CHEE">
                   <map>
-                    <entry key="dcmAcceptOnlyPreferredCallingAETitle" value="false"/>
                     <entry key="dcmArchiveNetworkAE" value="true"/>
                     <entry key="dcmMaxOpsInvoked" value="0"/>
                     <entry key="dcmMaxOpsPerformed" value="0"/>
-                    <entry key="dcmPackPDV" value="true"/>
                     <entry key="dicomAssociationAcceptor" value="true"/>
                     <entry key="dicomAssociationInitiator" value="true"/>
                     <entry key="dicomNetworkConnectionReference.#" value="2"/>
@@ -310,10 +307,6 @@
                     <node name="1">
                       <map>
                         <entry key="cn" value="Composite Instance Retrieve Without Bulk Data - GET SCP"/>
-                        <entry key="dcmCombinedDateTimeMatching" value="true"/>
-                        <entry key="dcmFuzzySemanticMatching" value="true"/>
-                        <entry key="dcmRelationalQueries" value="true"/>
-                        <entry key="dcmTimezoneQueryAdjustment" value="true"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.2.5.3"/>
                         <entry key="dicomTransferRole" value="SCP"/>
                         <entry key="dicomTransferSyntax.#" value="1"/>
@@ -3017,10 +3010,7 @@
                     <node name="5">
                       <map>
                         <entry key="cn" value="Patient Study Only Query Retrieve Information Model - GET (Retired) SCP"/>
-                        <entry key="dcmCombinedDateTimeMatching" value="true"/>
-                        <entry key="dcmFuzzySemanticMatching" value="true"/>
                         <entry key="dcmRelationalQueries" value="true"/>
-                        <entry key="dcmTimezoneQueryAdjustment" value="true"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.2.3.3"/>
                         <entry key="dicomTransferRole" value="SCP"/>
                         <entry key="dicomTransferSyntax.#" value="1"/>
@@ -3203,10 +3193,7 @@
                     <node name="6">
                       <map>
                         <entry key="cn" value="Patient Study Only Query Retrieve Information Model - MOVE (Retired) SCP"/>
-                        <entry key="dcmCombinedDateTimeMatching" value="true"/>
-                        <entry key="dcmFuzzySemanticMatching" value="true"/>
                         <entry key="dcmRelationalQueries" value="true"/>
-                        <entry key="dcmTimezoneQueryAdjustment" value="true"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.2.3.2"/>
                         <entry key="dicomTransferRole" value="SCP"/>
                         <entry key="dicomTransferSyntax.#" value="1"/>
@@ -3228,10 +3215,7 @@
                     <node name="61">
                       <map>
                         <entry key="cn" value="Patient Root Query Retrieve Information Model - GET SCP"/>
-                        <entry key="dcmCombinedDateTimeMatching" value="true"/>
-                        <entry key="dcmFuzzySemanticMatching" value="true"/>
                         <entry key="dcmRelationalQueries" value="true"/>
-                        <entry key="dcmTimezoneQueryAdjustment" value="true"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.2.1.3"/>
                         <entry key="dicomTransferRole" value="SCP"/>
                         <entry key="dicomTransferSyntax.#" value="1"/>
@@ -3241,10 +3225,7 @@
                     <node name="62">
                       <map>
                         <entry key="cn" value="Patient Root Query Retrieve Information Model - MOVE SCP"/>
-                        <entry key="dcmCombinedDateTimeMatching" value="true"/>
-                        <entry key="dcmFuzzySemanticMatching" value="true"/>
                         <entry key="dcmRelationalQueries" value="true"/>
-                        <entry key="dcmTimezoneQueryAdjustment" value="true"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.2.1.2"/>
                         <entry key="dicomTransferRole" value="SCP"/>
                         <entry key="dicomTransferSyntax.#" value="1"/>
@@ -3507,10 +3488,7 @@
                     <node name="8">
                       <map>
                         <entry key="cn" value="Study Root Query Retrieve Information Model - GET SCP"/>
-                        <entry key="dcmCombinedDateTimeMatching" value="true"/>
-                        <entry key="dcmFuzzySemanticMatching" value="true"/>
                         <entry key="dcmRelationalQueries" value="true"/>
-                        <entry key="dcmTimezoneQueryAdjustment" value="true"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.2.2.3"/>
                         <entry key="dicomTransferRole" value="SCP"/>
                         <entry key="dicomTransferSyntax.#" value="1"/>
@@ -3659,10 +3637,7 @@
                     <node name="9">
                       <map>
                         <entry key="cn" value="Study Root Query Retrieve Information Model - MOVE SCP"/>
-                        <entry key="dcmCombinedDateTimeMatching" value="true"/>
-                        <entry key="dcmFuzzySemanticMatching" value="true"/>
                         <entry key="dcmRelationalQueries" value="true"/>
-                        <entry key="dcmTimezoneQueryAdjustment" value="true"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.2.2.2"/>
                         <entry key="dicomTransferRole" value="SCP"/>
                         <entry key="dicomTransferSyntax.#" value="1"/>
@@ -3842,8 +3817,6 @@
                 <node name="1">
                   <map>
                     <entry key="cn" value="dicom"/>
-                    <entry key="dcmTCPNoDelay" value="true"/>
-                    <entry key="dcmTLSNeedClientAuth" value="true"/>
                     <entry key="dcmTLSProtocol.#" value="2"/>
                     <entry key="dcmTLSProtocol.1" value="TLSv1"/>
                     <entry key="dcmTLSProtocol.2" value="SSLv3"/>
@@ -3854,8 +3827,6 @@
                 <node name="2">
                   <map>
                     <entry key="cn" value="dicom-tls"/>
-                    <entry key="dcmTCPNoDelay" value="true"/>
-                    <entry key="dcmTLSNeedClientAuth" value="true"/>
                     <entry key="dcmTLSProtocol.#" value="2"/>
                     <entry key="dcmTLSProtocol.1" value="TLSv1"/>
                     <entry key="dcmTLSProtocol.2" value="SSLv3"/>
@@ -3877,8 +3848,6 @@
                 <map/>
                 <node name="STORESCP">
                   <map>
-                    <entry key="dcmAcceptOnlyPreferredCallingAETitle" value="false"/>
-                    <entry key="dcmPackPDV" value="true"/>
                     <entry key="dicomAssociationAcceptor" value="true"/>
                     <entry key="dicomAssociationInitiator" value="false"/>
                     <entry key="dicomNetworkConnectionReference.#" value="2"/>
@@ -3895,8 +3864,6 @@
                 <node name="1">
                   <map>
                     <entry key="cn" value="dicom"/>
-                    <entry key="dcmTCPNoDelay" value="true"/>
-                    <entry key="dcmTLSNeedClientAuth" value="true"/>
                     <entry key="dcmTLSProtocol.#" value="2"/>
                     <entry key="dcmTLSProtocol.1" value="TLSv1"/>
                     <entry key="dcmTLSProtocol.2" value="SSLv3"/>
@@ -3907,8 +3874,6 @@
                 <node name="2">
                   <map>
                     <entry key="cn" value="dicom-tls"/>
-                    <entry key="dcmTCPNoDelay" value="true"/>
-                    <entry key="dcmTLSNeedClientAuth" value="true"/>
                     <entry key="dcmTLSProtocol.#" value="2"/>
                     <entry key="dcmTLSProtocol.1" value="TLSv1"/>
                     <entry key="dcmTLSProtocol.2" value="SSLv3"/>

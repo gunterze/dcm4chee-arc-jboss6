@@ -85,10 +85,10 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
         storeBoolean(prefs, "dcmMatchUnknown", arcDev.isMatchUnknown());
         storeBoolean(prefs, "dcmSendPendingCGet", arcDev.isSendPendingCGet());
         storeInt(prefs, "dcmSendPendingCMoveInterval", arcDev.getSendPendingCMoveInterval());
-        storeBoolean(prefs, "dcmSuppressWarningCoercionOfDataElements",
-                arcDev.isSuppressWarningCoercionOfDataElements());
-        storeBoolean(prefs, "dcmStoreOriginalAttributes",
-                arcDev.isStoreOriginalAttributes());
+        storeNotDef(prefs, "dcmSuppressWarningCoercionOfDataElements",
+                arcDev.isSuppressWarningCoercionOfDataElements(), false);
+        storeNotDef(prefs, "dcmStoreOriginalAttributes",
+                arcDev.isStoreOriginalAttributes(), false);
         storeNotNull(prefs, "dcmModifyingSystem", arcDev.getModifyingSystem());
         storeNotNull(prefs, "dcmFuzzyAlgorithmClass",
                 arcDev.getFuzzyStr().getClass().getName());

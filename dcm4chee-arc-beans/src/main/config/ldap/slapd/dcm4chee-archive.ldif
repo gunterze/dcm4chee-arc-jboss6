@@ -106,15 +106,15 @@ olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.4 NAME 'dcmArchiveDevice'
     dcmStoreDuplicate $
     dcmRetrieveAET $
     dcmMatchUnknown $
-    dcmSendPendingCGet $
-    dcmSendPendingCMoveInterval $
-    dcmSuppressWarningCoercionOfDataElements $
-    dcmStoreOriginalAttributes $
     dcmFuzzyAlgorithmClass )
   MAY (
     dcmStorageFilePathFormat $
     dcmDigestAlgorithm $
     dcmExternalRetrieveAET $
+    dcmSendPendingCGet $
+    dcmSendPendingCMoveInterval $
+    dcmSuppressWarningCoercionOfDataElements $
+    dcmStoreOriginalAttributes $
     dcmModifyingSystem ) )
 olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.5 NAME 'dcmArchiveNetworkAE'
   DESC 'DICOM Archive Network AE related information'

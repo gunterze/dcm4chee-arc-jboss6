@@ -119,13 +119,13 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         storeNotNull(attrs, "dcmStoreDuplicate", arcDev.getStoreDuplicate());
         storeNotNull(attrs, "dcmExternalRetrieveAET", arcDev.getExternalRetrieveAET());
         storeNotEmpty(attrs, "dcmRetrieveAET", arcDev.getRetrieveAETs());
-        storeBoolean(attrs, "dcmMatchUnknown", arcDev.isMatchUnknown());
-        storeBoolean(attrs, "dcmSendPendingCGet", arcDev.isSendPendingCGet());
-        storeInt(attrs, "dcmSendPendingCMoveInterval", arcDev.getSendPendingCMoveInterval());
-        storeBoolean(attrs, "dcmSuppressWarningCoercionOfDataElements",
-                arcDev.isSuppressWarningCoercionOfDataElements());
-        storeBoolean(attrs, "dcmStoreOriginalAttributes",
-                arcDev.isStoreOriginalAttributes());
+        storeNotDef(attrs, "dcmMatchUnknown", arcDev.isMatchUnknown(), true);
+        storeNotDef(attrs, "dcmSendPendingCGet", arcDev.isSendPendingCGet(), false);
+        storeNotDef(attrs, "dcmSendPendingCMoveInterval", arcDev.getSendPendingCMoveInterval(), 0);
+        storeNotDef(attrs, "dcmSuppressWarningCoercionOfDataElements",
+                arcDev.isSuppressWarningCoercionOfDataElements(), false);
+        storeNotDef(attrs, "dcmStoreOriginalAttributes",
+                arcDev.isStoreOriginalAttributes(), true);
         storeNotNull(attrs, "dcmModifyingSystem", arcDev.getModifyingSystem());
         storeNotNull(attrs, "dcmFuzzyAlgorithmClass",
                 arcDev.getFuzzyAlgorithmClass());

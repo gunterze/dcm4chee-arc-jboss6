@@ -42,8 +42,6 @@ import java.util.EnumSet;
 
 import org.dcm4che.conf.api.AttributeCoercion;
 import org.dcm4che.conf.api.ConfigurationNotFoundException;
-import org.dcm4che.conf.ldap.ExtendedLdapDicomConfiguration;
-import org.dcm4che.conf.ldap.LdapDicomConfiguration;
 import org.dcm4che.conf.ldap.LdapEnv;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
@@ -424,18 +422,20 @@ public class LdapArchiveConfigurationTest {
         UID.RTIonPlanStorage,
         UID.RTIonBeamsTreatmentRecordStorage,
     };
-    private static final String[] QR_CUIDS = {
+    private static final String[] QUERY_CUIDS = {
         UID.PatientRootQueryRetrieveInformationModelFIND,
         UID.StudyRootQueryRetrieveInformationModelFIND,
         UID.PatientStudyOnlyQueryRetrieveInformationModelFINDRetired,
-        UID.ModalityWorklistInformationModelFIND,
+        UID.ModalityWorklistInformationModelFIND
+    };
+
+    private static final String[] RETRIEVE_CUIDS = {
         UID.PatientRootQueryRetrieveInformationModelGET,
         UID.PatientRootQueryRetrieveInformationModelMOVE,
         UID.StudyRootQueryRetrieveInformationModelGET,
         UID.StudyRootQueryRetrieveInformationModelMOVE,
         UID.PatientStudyOnlyQueryRetrieveInformationModelGETRetired,
-        UID.PatientStudyOnlyQueryRetrieveInformationModelMOVERetired,
-        UID.CompositeInstanceRetrieveWithoutBulkDataGET
+        UID.PatientStudyOnlyQueryRetrieveInformationModelMOVERetired
     };
 
     private LdapArchiveConfiguration config;
@@ -443,8 +443,8 @@ public class LdapArchiveConfigurationTest {
     @Before
     public void setUp() throws Exception {
         LdapEnv env = new LdapEnv();
-        env.setUrl("ldap://localhost:389");
-        env.setUserDN("cn=admin,dc=nodomain");
+        env.setUrl("ldap://localhost:1389");
+        env.setUserDN("cn=Directory Manager");
         env.setPassword("admin");
         config = new LdapArchiveConfiguration(env, "dc=nodomain");
     }
@@ -533,7 +533,9 @@ public class LdapArchiveConfigurationTest {
         addStorageTransferCapabilities(ae, IMAGE_CUIDS, IMAGE_TSUIDS);
         addStorageTransferCapabilities(ae, VIDEO_CUIDS, VIDEO_TSUIDS);
         addStorageTransferCapabilities(ae, OTHER_CUIDS, OTHER_TSUIDS);
-        addQRTransferCapabilities(ae, QR_CUIDS);
+        addSCPs(ae, QUERY_CUIDS, EnumSet.allOf(QueryOption.class));
+        addSCPs(ae, RETRIEVE_CUIDS, EnumSet.of(QueryOption.RELATIONAL));
+        addSCP(ae, UID.CompositeInstanceRetrieveWithoutBulkDataGET, null);
         device.addApplicationEntity(ae);
         Connection dicom = new Connection("dicom", "localhost", 11112);
         device.addConnection(dicom);
@@ -561,14 +563,19 @@ public class LdapArchiveConfigurationTest {
         
     }
 
-    private void addQRTransferCapabilities(ArchiveApplicationEntity ae, String[] cuids) {
-        for (String cuid : cuids) {
-            String name = UID.nameOf(cuid).replace('/', ' ');
-            TransferCapability tc = new TransferCapability(name + " SCP", cuid,
-                    TransferCapability.Role.SCP, UID.ImplicitVRLittleEndian);
-            tc.setQueryOptions(EnumSet.allOf(QueryOption.class));
-            ae.addTransferCapability(tc);
-        }
+    private void addSCPs(ArchiveApplicationEntity ae, String[] cuids,
+            EnumSet<QueryOption> queryOpts) {
+        for (String cuid : cuids)
+            addSCP(ae, cuid, queryOpts);
+    }
+
+    private void addSCP(ArchiveApplicationEntity ae, String cuid,
+            EnumSet<QueryOption> queryOpts) {
+        String name = UID.nameOf(cuid).replace('/', ' ');
+        TransferCapability tc = new TransferCapability(name + " SCP", cuid,
+                TransferCapability.Role.SCP, UID.ImplicitVRLittleEndian);
+        tc.setQueryOptions(queryOpts);
+        ae.addTransferCapability(tc);
     }
 
     private void addStorageTransferCapabilities(ArchiveApplicationEntity ae,

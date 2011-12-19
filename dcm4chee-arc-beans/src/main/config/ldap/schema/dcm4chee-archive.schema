@@ -122,16 +122,16 @@ objectclass ( 1.2.40.0.13.1.1.15.0.4.4 NAME 'dcmArchiveDevice'
   dcmReceivingDirectoryPath $
   dcmStoreDuplicate $
   dcmRetrieveAET $
-  dcmMatchUnknown $
-  dcmSendPendingCGet $
-  dcmSendPendingCMoveInterval $
-  dcmSuppressWarningCoercionOfDataElements $
-  dcmStoreOriginalAttributes $
   dcmFuzzyAlgorithmClass )
  MAY (
   dcmStorageFilePathFormat $
   dcmDigestAlgorithm $
   dcmExternalRetrieveAET $
+  dcmMatchUnknown $
+  dcmSendPendingCGet $
+  dcmSendPendingCMoveInterval $
+  dcmSuppressWarningCoercionOfDataElements $
+  dcmStoreOriginalAttributes $
   dcmModifyingSystem ) )
 
 objectclass ( 1.2.40.0.13.1.1.15.0.4.5 NAME 'dcmArchiveNetworkAE'

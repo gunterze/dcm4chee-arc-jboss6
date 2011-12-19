@@ -425,18 +425,20 @@ public class PreferencesArchiveConfigurationTest {
         UID.RTIonPlanStorage,
         UID.RTIonBeamsTreatmentRecordStorage,
     };
-    private static final String[] QR_CUIDS = {
+    private static final String[] QUERY_CUIDS = {
         UID.PatientRootQueryRetrieveInformationModelFIND,
         UID.StudyRootQueryRetrieveInformationModelFIND,
         UID.PatientStudyOnlyQueryRetrieveInformationModelFINDRetired,
-        UID.ModalityWorklistInformationModelFIND,
+        UID.ModalityWorklistInformationModelFIND
+    };
+
+    private static final String[] RETRIEVE_CUIDS = {
         UID.PatientRootQueryRetrieveInformationModelGET,
         UID.PatientRootQueryRetrieveInformationModelMOVE,
         UID.StudyRootQueryRetrieveInformationModelGET,
         UID.StudyRootQueryRetrieveInformationModelMOVE,
         UID.PatientStudyOnlyQueryRetrieveInformationModelGETRetired,
-        UID.PatientStudyOnlyQueryRetrieveInformationModelMOVERetired,
-        UID.CompositeInstanceRetrieveWithoutBulkDataGET
+        UID.PatientStudyOnlyQueryRetrieveInformationModelMOVERetired
     };
 
     private PreferencesArchiveConfiguration config;
@@ -541,7 +543,9 @@ public class PreferencesArchiveConfigurationTest {
         addStorageTransferCapabilities(ae, IMAGE_CUIDS, IMAGE_TSUIDS);
         addStorageTransferCapabilities(ae, VIDEO_CUIDS, VIDEO_TSUIDS);
         addStorageTransferCapabilities(ae, OTHER_CUIDS, OTHER_TSUIDS);
-        addQRTransferCapabilities(ae, QR_CUIDS);
+        addQRTransferCapabilities(ae, QUERY_CUIDS, EnumSet.allOf(QueryOption.class));
+        addQRTransferCapabilities(ae, RETRIEVE_CUIDS, EnumSet.of(QueryOption.RELATIONAL));
+        addSCP(ae, UID.CompositeInstanceRetrieveWithoutBulkDataGET, null);
         device.addApplicationEntity(ae);
         Connection dicom = new Connection("dicom", "localhost", 11112);
         device.addConnection(dicom);
@@ -569,14 +573,19 @@ public class PreferencesArchiveConfigurationTest {
         
     }
 
-    private void addQRTransferCapabilities(ArchiveApplicationEntity ae, String[] cuids) {
-        for (String cuid : cuids) {
-            String name = UID.nameOf(cuid).replace('/', ' ');
-            TransferCapability tc = new TransferCapability(name + " SCP", cuid,
-                    TransferCapability.Role.SCP, UID.ImplicitVRLittleEndian);
-            tc.setQueryOptions(EnumSet.allOf(QueryOption.class));
-            ae.addTransferCapability(tc);
-        }
+    private void addQRTransferCapabilities(ArchiveApplicationEntity ae, String[] cuids,
+            EnumSet<QueryOption> queryOpts) {
+        for (String cuid : cuids)
+            addSCP(ae, cuid, queryOpts);
+    }
+
+    private void addSCP(ArchiveApplicationEntity ae, String cuid,
+            EnumSet<QueryOption> queryOpts) {
+        String name = UID.nameOf(cuid).replace('/', ' ');
+        TransferCapability tc = new TransferCapability(name + " SCP", cuid,
+                TransferCapability.Role.SCP, UID.ImplicitVRLittleEndian);
+        tc.setQueryOptions(queryOpts);
+        ae.addTransferCapability(tc);
     }
 
     private void addStorageTransferCapabilities(ArchiveApplicationEntity ae,
