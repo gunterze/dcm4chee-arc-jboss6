@@ -3840,60 +3840,10 @@
                 </node>
               </node>
             </node>
-            <node name="STORESCP Device">
-              <map>
-                <entry key="dicomInstalled" value="true"/>
-              </map>
-              <node name="dcmNetworkAE">
-                <map/>
-                <node name="STORESCP">
-                  <map>
-                    <entry key="dicomAssociationAcceptor" value="true"/>
-                    <entry key="dicomAssociationInitiator" value="false"/>
-                    <entry key="dicomNetworkConnectionReference.#" value="2"/>
-                    <entry key="dicomNetworkConnectionReference.1" value="1"/>
-                    <entry key="dicomNetworkConnectionReference.2" value="2"/>
-                  </map>
-                  <node name="dicomTransferCapability">
-                    <map/>
-                  </node>
-                </node>
-              </node>
-              <node name="dcmNetworkConnection">
-                <map/>
-                <node name="1">
-                  <map>
-                    <entry key="cn" value="dicom"/>
-                    <entry key="dcmTLSProtocol.#" value="2"/>
-                    <entry key="dcmTLSProtocol.1" value="TLSv1"/>
-                    <entry key="dcmTLSProtocol.2" value="SSLv3"/>
-                    <entry key="dicomHostname" value="localhost"/>
-                    <entry key="dicomPort" value="11113"/>
-                  </map>
-                </node>
-                <node name="2">
-                  <map>
-                    <entry key="cn" value="dicom-tls"/>
-                    <entry key="dcmTLSProtocol.#" value="2"/>
-                    <entry key="dcmTLSProtocol.1" value="TLSv1"/>
-                    <entry key="dcmTLSProtocol.2" value="SSLv3"/>
-                    <entry key="dicomHostname" value="localhost"/>
-                    <entry key="dicomInstalled" value="false"/>
-                    <entry key="dicomPort" value="2763"/>
-                    <entry key="dicomTLSCipherSuite.#" value="2"/>
-                    <entry key="dicomTLSCipherSuite.1" value="TLS_RSA_WITH_AES_128_CBC_SHA"/>
-                    <entry key="dicomTLSCipherSuite.2" value="SSL_RSA_WITH_3DES_EDE_CBC_SHA"/>
-                  </map>
-                </node>
-              </node>
-            </node>
           </node>
           <node name="dicomUniqueAETitlesRegistryRoot">
             <map/>
             <node name="DCM4CHEE">
-              <map/>
-            </node>
-            <node name="STORESCP">
               <map/>
             </node>
           </node>
