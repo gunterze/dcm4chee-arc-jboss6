@@ -193,7 +193,7 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
 
 
     public void setSuppressWarningCoercionOfDataElements(
-            boolean suppressWarningCoercionOfDataElements) {
+            Boolean suppressWarningCoercionOfDataElements) {
         this.suppressWarningCoercionOfDataElements = suppressWarningCoercionOfDataElements;
     }
 

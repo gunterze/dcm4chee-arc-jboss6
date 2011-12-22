@@ -291,8 +291,6 @@
                 <node name="DCM4CHEE">
                   <map>
                     <entry key="dcmArchiveNetworkAE" value="true"/>
-                    <entry key="dcmMaxOpsInvoked" value="0"/>
-                    <entry key="dcmMaxOpsPerformed" value="0"/>
                     <entry key="dicomAssociationAcceptor" value="true"/>
                     <entry key="dicomAssociationInitiator" value="true"/>
                     <entry key="dicomNetworkConnectionReference.#" value="2"/>
@@ -3817,9 +3815,8 @@
                 <node name="1">
                   <map>
                     <entry key="cn" value="dicom"/>
-                    <entry key="dcmTLSProtocol.#" value="2"/>
-                    <entry key="dcmTLSProtocol.1" value="TLSv1"/>
-                    <entry key="dcmTLSProtocol.2" value="SSLv3"/>
+                    <entry key="dcmMaxOpsInvoked" value="0"/>
+                    <entry key="dcmMaxOpsPerformed" value="0"/>
                     <entry key="dicomHostname" value="localhost"/>
                     <entry key="dicomPort" value="11112"/>
                   </map>
@@ -3827,6 +3824,8 @@
                 <node name="2">
                   <map>
                     <entry key="cn" value="dicom-tls"/>
+                    <entry key="dcmMaxOpsInvoked" value="0"/>
+                    <entry key="dcmMaxOpsPerformed" value="0"/>
                     <entry key="dcmTLSProtocol.#" value="2"/>
                     <entry key="dcmTLSProtocol.1" value="TLSv1"/>
                     <entry key="dcmTLSProtocol.2" value="SSLv3"/>

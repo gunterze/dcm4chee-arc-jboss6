@@ -22,6 +22,8 @@ objectClass: dicomNetworkConnection
 objectClass: dcmNetworkConnection
 objectClass: top
 cn: dicom
+dcmMaxOpsInvoked: 0
+dcmMaxOpsPerformed: 0
 dicomHostname: localhost
 dicomPort: 11112
 
@@ -31,6 +33,8 @@ objectClass: dicomNetworkConnection
 objectClass: dcmNetworkConnection
 objectClass: top
 cn: dicom-tls
+dcmMaxOpsInvoked: 0
+dcmMaxOpsPerformed: 0
 dcmTLSProtocol: TLSv1
 dcmTLSProtocol: SSLv3
 dicomHostname: localhost
@@ -45,8 +49,6 @@ objectClass: dcmNetworkAE
 objectClass: dicomNetworkAE
 objectClass: dcmArchiveNetworkAE
 objectClass: top
-dcmMaxOpsInvoked: 0
-dcmMaxOpsPerformed: 0
 dicomAETitle: DCM4CHEE
 dicomAssociationAcceptor: TRUE
 dicomAssociationInitiator: TRUE
@@ -4123,3 +4125,8 @@ dcmTag: 00400020
 dcmTag: 00400400
 dcmTag: 00400500
 
+dn: dicomAETitle=DCM4CHEE,cn=Unique AE Titles Registry,cn=DICOM Configuratio
+ n,dc=nodomain
+objectClass: dicomUniqueAETitle
+objectClass: top
+dicomAETitle: DCM4CHEE

@@ -68,7 +68,7 @@ public class ArchiveDevice extends Device {
     private AttributesFormat storageFilePathFormat;
     private boolean storeOriginalAttributes;
     private boolean suppressWarningCoercionOfDataElements;
-    private boolean matchUnknown = true;
+    private boolean matchUnknown;
     private boolean sendPendingCGet;
     private int sendPendingCMoveInterval;
     private FuzzyStr fuzzyStr;

@@ -10,7 +10,6 @@ dicomInstalled: TRUE
 dn: cn=dicom,dicomDeviceName=STORESCP Device,cn=Devices,cn=DICOM Configurati
  on,dc=nodomain
 objectClass: dicomNetworkConnection
-objectClass: dcmNetworkConnection
 objectClass: top
 cn: dicom
 dicomHostname: localhost
@@ -19,11 +18,8 @@ dicomPort: 11113
 dn: cn=dicom-tls,dicomDeviceName=STORESCP Device,cn=Devices,cn=DICOM Configu
  ration,dc=nodomain
 objectClass: dicomNetworkConnection
-objectClass: dcmNetworkConnection
 objectClass: top
 cn: dicom-tls
-dcmTLSProtocol: TLSv1
-dcmTLSProtocol: SSLv3
 dicomHostname: localhost
 dicomInstalled: FALSE
 dicomPort: 2763
@@ -32,7 +28,6 @@ dicomTLSCipherSuite: SSL_RSA_WITH_3DES_EDE_CBC_SHA
 
 dn: dicomAETitle=STORESCP,dicomDeviceName=STORESCP Device,cn=Devices,cn=DICO
  M Configuration,dc=nodomain
-objectClass: dcmNetworkAE
 objectClass: dicomNetworkAE
 objectClass: top
 dicomAETitle: STORESCP
@@ -42,4 +37,10 @@ dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=STORESCP Device,cn
  =Devices,cn=DICOM Configuration,dc=nodomain
 dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=STORESCP Devic
  e,cn=Devices,cn=DICOM Configuration,dc=nodomain
+
+dn: dicomAETitle=STORESCP,cn=Unique AE Titles Registry,cn=DICOM Configuratio
+ n,dc=nodomain
+objectClass: dicomUniqueAETitle
+objectClass: top
+dicomAETitle: STORESCP
 

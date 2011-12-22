@@ -71,8 +71,8 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
  */
 public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
 
-    public LdapArchiveConfiguration(Hashtable<String, Object> env,
-            String baseDN) throws NamingException {
+    public LdapArchiveConfiguration(Hashtable<String, Object> env, String baseDN)
+            throws NamingException {
         super(env, baseDN);
     }
 
@@ -119,13 +119,13 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         storeNotNull(attrs, "dcmStoreDuplicate", arcDev.getStoreDuplicate());
         storeNotNull(attrs, "dcmExternalRetrieveAET", arcDev.getExternalRetrieveAET());
         storeNotEmpty(attrs, "dcmRetrieveAET", arcDev.getRetrieveAETs());
-        storeNotDef(attrs, "dcmMatchUnknown", arcDev.isMatchUnknown(), true);
+        storeNotDef(attrs, "dcmMatchUnknown", arcDev.isMatchUnknown(), false);
         storeNotDef(attrs, "dcmSendPendingCGet", arcDev.isSendPendingCGet(), false);
         storeNotDef(attrs, "dcmSendPendingCMoveInterval", arcDev.getSendPendingCMoveInterval(), 0);
         storeNotDef(attrs, "dcmSuppressWarningCoercionOfDataElements",
                 arcDev.isSuppressWarningCoercionOfDataElements(), false);
         storeNotDef(attrs, "dcmStoreOriginalAttributes",
-                arcDev.isStoreOriginalAttributes(), true);
+                arcDev.isStoreOriginalAttributes(), false);
         storeNotNull(attrs, "dcmModifyingSystem", arcDev.getModifyingSystem());
         storeNotNull(attrs, "dcmFuzzyAlgorithmClass",
                 arcDev.getFuzzyAlgorithmClass());
@@ -208,13 +208,13 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         arcdev.setStoreDuplicate(storeDuplicate(attrs.get("dcmStoreDuplicate")));
         arcdev.setExternalRetrieveAET(stringValue(attrs.get("dcmExternalRetrieveAET")));
         arcdev.setRetrieveAETs(stringArray(attrs.get("dcmRetrieveAET")));
-        arcdev.setMatchUnknown(booleanValue(attrs.get("dcmMatchUnknown"), Boolean.TRUE));
-        arcdev.setSendPendingCGet(booleanValue(attrs.get("dcmSendPendingCGet"), Boolean.FALSE));
+        arcdev.setMatchUnknown(booleanValue(attrs.get("dcmMatchUnknown"), false));
+        arcdev.setSendPendingCGet(booleanValue(attrs.get("dcmSendPendingCGet"), false));
         arcdev.setSendPendingCMoveInterval(intValue(attrs.get("dcmSendPendingCMoveInterval"), 0));
         arcdev.setSuppressWarningCoercionOfDataElements(
-                booleanValue(attrs.get("dcmSuppressWarningCoercionOfDataElements"), Boolean.FALSE));
+                booleanValue(attrs.get("dcmSuppressWarningCoercionOfDataElements"), false));
         arcdev.setStoreOriginalAttributes(
-                booleanValue(attrs.get("dcmStoreOriginalAttributes"), Boolean.FALSE));
+                booleanValue(attrs.get("dcmStoreOriginalAttributes"), false));
         arcdev.setModifyingSystem(stringValue(attrs.get("dcmModifyingSystem")));
         arcdev.setFuzzyStr(fuzzyStr(attrs.get("dcmFuzzyAlgorithmClass")));
     }
@@ -294,13 +294,13 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
        arcse.setStoreDuplicate(storeDuplicate(attrs.get("dcmStoreDuplicate")));
        arcse.setExternalRetrieveAET(stringValue(attrs.get("dcmExternalRetrieveAET")));
        arcse.setRetrieveAETs(stringArray(attrs.get("dcmRetrieveAET")));
-       arcse.setMatchUnknown(booleanValue(attrs.get("dcmMatchUnknown"), Boolean.TRUE));
-       arcse.setSendPendingCGet(booleanValue(attrs.get("dcmSendPendingCGet"), Boolean.FALSE));
-       arcse.setSendPendingCMoveInterval(intValue(attrs.get("dcmSendPendingCMoveInterval"), 0));
+       arcse.setMatchUnknown(booleanValue(attrs.get("dcmMatchUnknown"), null));
+       arcse.setSendPendingCGet(booleanValue(attrs.get("dcmSendPendingCGet"), null));
+       arcse.setSendPendingCMoveInterval(intValue(attrs.get("dcmSendPendingCMoveInterval"), null));
        arcse.setSuppressWarningCoercionOfDataElements(
-               booleanValue(attrs.get("dcmSuppressWarningCoercionOfDataElements"), Boolean.FALSE));
+               booleanValue(attrs.get("dcmSuppressWarningCoercionOfDataElements"), null));
        arcse.setStoreOriginalAttributes(
-               booleanValue(attrs.get("dcmStoreOriginalAttributes"), Boolean.FALSE));
+               booleanValue(attrs.get("dcmStoreOriginalAttributes"), null));
        arcse.setModifyingSystem(stringValue(attrs.get("dcmModifyingSystem")));
     }
 
@@ -345,19 +345,24 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
                 bb.getRetrieveAETs());
         storeDiff(mods, "dcmMatchUnknown",
                 aa.isMatchUnknown(),
-                bb.isMatchUnknown());
+                bb.isMatchUnknown(),
+                false);
         storeDiff(mods, "dcmSendPendingCGet",
                 aa.isSendPendingCGet(),
-                bb.isSendPendingCGet());
+                bb.isSendPendingCGet(),
+                false);
         storeDiff(mods, "dcmSendPendingCMoveInterval",
                 aa.getSendPendingCMoveInterval(),
-                bb.getSendPendingCMoveInterval());
+                bb.getSendPendingCMoveInterval(),
+                0);
         storeDiff(mods, "dcmSuppressWarningCoercionOfDataElements",
                 aa.isSuppressWarningCoercionOfDataElements(),
-                bb.isSuppressWarningCoercionOfDataElements());
+                bb.isSuppressWarningCoercionOfDataElements(),
+                false);
         storeDiff(mods, "dcmStoreOriginalAttributes",
                 aa.isStoreOriginalAttributes(),
-                bb.isStoreOriginalAttributes());
+                bb.isStoreOriginalAttributes(),
+                false);
         storeDiff(mods, "dcmModifyingSystem",
                 aa.getModifyingSystem(),
                 bb.getModifyingSystem());
@@ -399,20 +404,20 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
                 aa.getRetrieveAETs(),
                 bb.getRetrieveAETs());
         storeDiff(mods, "dcmMatchUnknown",
-                aa.isMatchUnknown(),
-                bb.isMatchUnknown());
+                aa.getMatchUnknown(),
+                bb.getMatchUnknown());
         storeDiff(mods, "dcmSendPendingCGet",
-                aa.isSendPendingCGet(),
-                bb.isSendPendingCGet());
+                aa.getSendPendingCGet(),
+                bb.getSendPendingCGet());
         storeDiff(mods, "dcmSendPendingCMoveInterval",
-                aa.getSendPendingCMoveInterval(),
-                bb.getSendPendingCMoveInterval());
+                aa.getSendPendingCMoveIntervalOrNull(),
+                bb.getSendPendingCMoveIntervalOrNull());
         storeDiff(mods, "dcmSuppressWarningCoercionOfDataElements",
-                aa.isSuppressWarningCoercionOfDataElements(),
-                bb.isSuppressWarningCoercionOfDataElements());
+                aa.getSuppressWarningCoercionOfDataElements(),
+                bb.getSuppressWarningCoercionOfDataElements());
         storeDiff(mods, "dcmStoreOriginalAttributes",
-                aa.isStoreOriginalAttributes(),
-                bb.isStoreOriginalAttributes());
+                aa.getStoreOriginalAttributes(),
+                bb.getStoreOriginalAttributes());
         storeDiff(mods, "dcmModifyingSystem",
                 aa.getModifyingSystem(),
                 bb.getModifyingSystem());

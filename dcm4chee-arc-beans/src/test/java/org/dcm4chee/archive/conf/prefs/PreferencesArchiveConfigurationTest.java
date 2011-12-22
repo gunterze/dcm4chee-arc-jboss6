@@ -468,7 +468,7 @@ public class PreferencesArchiveConfigurationTest {
         config.persist(createArchiveDevice(DCM4CHEE_ARCHIVE));
         config.persist(createStoreSCP(STORESCP_DEVICE));
 //        export();
-        ApplicationEntity ae = config.findApplicationEntity("DCM4CHEE");
+        config.findApplicationEntity("DCM4CHEE");
         config.removeDevice(DCM4CHEE_ARCHIVE);
         config.removeDevice(STORESCP_DEVICE);
         config.unregisterAETitle("DCM4CHEE");
@@ -537,8 +537,6 @@ public class PreferencesArchiveConfigurationTest {
         ArchiveApplicationEntity ae = new ArchiveApplicationEntity("DCM4CHEE");
         ae.setAssociationAcceptor(true);
         ae.setAssociationInitiator(true);
-        ae.setMaxOpsInvoked(0);
-        ae.setMaxOpsPerformed(0);
         addVerificationStorageTransferCapabilities(ae);
         addStorageTransferCapabilities(ae, IMAGE_CUIDS, IMAGE_TSUIDS);
         addStorageTransferCapabilities(ae, VIDEO_CUIDS, VIDEO_TSUIDS);
@@ -548,9 +546,13 @@ public class PreferencesArchiveConfigurationTest {
         addSCP(ae, UID.CompositeInstanceRetrieveWithoutBulkDataGET, null);
         device.addApplicationEntity(ae);
         Connection dicom = new Connection("dicom", "localhost", 11112);
+        dicom.setMaxOpsInvoked(0);
+        dicom.setMaxOpsPerformed(0);
         device.addConnection(dicom);
         ae.addConnection(dicom);
         Connection dicomTLS = new Connection("dicom-tls", "localhost", 2762);
+        dicomTLS.setMaxOpsInvoked(0);
+        dicomTLS.setMaxOpsPerformed(0);
         dicomTLS.setTlsCipherSuites(
                 Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
                 Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
