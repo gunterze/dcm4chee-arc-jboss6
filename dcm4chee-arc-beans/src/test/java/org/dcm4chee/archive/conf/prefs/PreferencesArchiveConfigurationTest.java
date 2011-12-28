@@ -39,7 +39,9 @@
 package org.dcm4chee.archive.conf.prefs;
 
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.KeyStore;
 import java.util.EnumSet;
 import java.util.prefs.Preferences;
 
@@ -69,8 +71,8 @@ import org.junit.Test;
  */
 public class PreferencesArchiveConfigurationTest {
 
-    private static final String DCM4CHEE_ARCHIVE = "DCM4CHEE Archive";
-    private static final String STORESCP_DEVICE = "STORESCP Device";
+    private static final String DCM4CHEE_ARCHIVE = "dcm4chee-arc";
+    private static final String STORESCP_DEVICE = "storescp";
     private static final int[] PATIENT_ATTRS = {
         Tag.SpecificCharacterSet,
         Tag.PatientName,
@@ -455,6 +457,14 @@ public class PreferencesArchiveConfigurationTest {
 
     @Test
     public void testPersist() throws Exception {
+        KeyStore ks = KeyStore.getInstance("JKS");
+        InputStream in = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream("cacerts.jks");
+        try {
+            ks.load(in, new char[] {'s', 'e', 'c', 'r', 'e', 't' });
+        } finally {
+            SafeClose.close(in);
+        }
         try {
             config.removeDevice(DCM4CHEE_ARCHIVE);
         }  catch (ConfigurationNotFoundException e) {}
@@ -466,7 +476,13 @@ public class PreferencesArchiveConfigurationTest {
         config.registerAETitle("DCM4CHEE");
         config.registerAETitle("STORESCP");
         config.persist(createArchiveDevice(DCM4CHEE_ARCHIVE));
+        config.persistCertificates(config.deviceDN(DCM4CHEE_ARCHIVE),
+                ks.getCertificate(DCM4CHEE_ARCHIVE));
         config.persist(createStoreSCP(STORESCP_DEVICE));
+        config.persistCertificates(config.deviceDN(STORESCP_DEVICE),
+                ks.getCertificate(STORESCP_DEVICE));
+        ApplicationEntity ae = config.findApplicationEntity("DCM4CHEE");
+        config.initTrustManager(ae.getDevice());
 //        export();
         config.findApplicationEntity("DCM4CHEE");
         config.removeDevice(DCM4CHEE_ARCHIVE);
@@ -497,9 +513,9 @@ public class PreferencesArchiveConfigurationTest {
         dicomTLS.setTlsCipherSuites(
                 Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
                 Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
-        dicomTLS.setInstalled(false);
         device.addConnection(dicomTLS);
         ae.addConnection(dicomTLS);
+        device.setThisNodeCertificateRefs(config.deviceDN(name));
         return device;
     }
 
@@ -556,9 +572,10 @@ public class PreferencesArchiveConfigurationTest {
         dicomTLS.setTlsCipherSuites(
                 Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
                 Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
-        dicomTLS.setInstalled(false);
         device.addConnection(dicomTLS);
         ae.addConnection(dicomTLS);
+        device.setThisNodeCertificateRefs(config.deviceDN(name));
+        device.setAuthorizedNodeCertificateRefs(config.deviceDN(STORESCP_DEVICE));
         return device;
     }
 

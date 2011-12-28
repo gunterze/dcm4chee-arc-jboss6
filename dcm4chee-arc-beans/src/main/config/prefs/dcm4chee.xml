@@ -11,7 +11,7 @@
           <map/>
           <node name="dicomDevicesRoot">
             <map/>
-            <node name="DCM4CHEE Archive">
+            <node name="dcm4chee-arc">
               <map>
                 <entry key="dcmArchiveDevice" value="true"/>
                 <entry key="dcmDigestAlgorithm" value="MD5"/>
@@ -25,7 +25,13 @@
                 <entry key="dcmSendPendingCMoveInterval" value="5000"/>
                 <entry key="dcmStoreDuplicate" value="STORE"/>
                 <entry key="dcmStoreOriginalAttributes" value="true"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.#" value="1"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/storescp"/>
                 <entry key="dicomInstalled" value="true"/>
+                <entry key="dicomThisNodeCertificateReference.#" value="1"/>
+                <entry key="dicomThisNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/dcm4chee-arc"/>
+                <entry key="userCertificate.#" value="1"/>
+                <entry key="userCertificate.1" value="MIICTTCCAbagAwIBAgIETvRlSTANBgkqhkiG9w0BAQUFADBrMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxETAPBgNVBAsTCGRjbTRjaGVlMRUwEwYDVQQDEwxkY200Y2hlZS1hcmMwHhcNMTExMjIzMTEyNjAxWhcNMTIxMjIyMTEyNjAxWjBrMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxETAPBgNVBAsTCGRjbTRjaGVlMRUwEwYDVQQDEwxkY200Y2hlZS1hcmMwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAIpyZpH077XTZAvXt/TXSlqU/523X01Va4rzw9BOLITD1Yqo3gOQ4TFIO9WjHQaV1cwsAL5emi65ssd/YjrJHWA6QBRHYDBGNldQlSzKduYS5BqaW3yhCBMw9lZLVN1Gh7QUgWknFNHpSH0uV65esBf598KFzRl8eh8l4/njH9wNAgMBAAEwDQYJKoZIhvcNAQEFBQADgYEAeFaW8IJ3aitQDDL9chQ5k5YNFtZwNDdnVnnsvGgYINYd2VYW6ql2BvXiH49qG5UPJZhqEIDD9VZd2GiJfI/16/YNZBE+0SgUQXsqED9NmqjZRNz0hO6Qddc9+wlBNmlGKyA+ftzNw0Uq1WqXh2IcrxTBMsDKKZLbqbAK7tiECPo="/>
               </map>
               <node name="dcmAttributeCoercion">
                 <map/>
@@ -3830,7 +3836,6 @@
                     <entry key="dcmTLSProtocol.1" value="TLSv1"/>
                     <entry key="dcmTLSProtocol.2" value="SSLv3"/>
                     <entry key="dicomHostname" value="localhost"/>
-                    <entry key="dicomInstalled" value="false"/>
                     <entry key="dicomPort" value="2762"/>
                     <entry key="dicomTLSCipherSuite.#" value="2"/>
                     <entry key="dicomTLSCipherSuite.1" value="TLS_RSA_WITH_AES_128_CBC_SHA"/>

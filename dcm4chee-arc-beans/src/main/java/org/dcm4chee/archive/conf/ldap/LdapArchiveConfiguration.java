@@ -140,7 +140,7 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         ArchiveDevice arcDev = (ArchiveDevice) device;
         store(arcDev.getAttributeCoercions(), deviceDN);
         for (Entity entity : Entity.values())
-            createSubcontext(dnOf("dcmEntity", entity.toString(), deviceDN),
+            createSubcontext(dnOf("cn", entity.toString(), deviceDN),
                     storeTo(arcDev.getAttributeFilter(entity), entity, new BasicAttributes(true)));
     }
 
@@ -155,7 +155,7 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
 
     private static Attributes storeTo(AttributeFilter filter, Entity entity, BasicAttributes attrs) {
         attrs.put("objectclass", "dcmAttributeFilter");
-        attrs.put("dcmEntity", entity.name());
+        attrs.put("cn", entity.name());
         attrs.put(tagsAttr("dcmTag", filter.getSelection()));
         storeNotNull(attrs, "dcmCustomAttribute1", filter.getCustomAttribute1());
         storeNotNull(attrs, "dcmCustomAttribute2", filter.getCustomAttribute2());
@@ -243,7 +243,7 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
                 filter.setCustomAttribute2(valueSelector(attrs.get("dcmCustomAttribute2")));
                 filter.setCustomAttribute3(valueSelector(attrs.get("dcmCustomAttribute3")));
                 device.setAttributeFilter(
-                        Entity.valueOf(stringValue(attrs.get("dcmEntity"))), filter);
+                        Entity.valueOf(stringValue(attrs.get("cn"))), filter);
             }
         } finally {
            safeClose(ne);
@@ -435,7 +435,7 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         ArchiveDevice bb = (ArchiveDevice) device;
         merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), deviceDN);
         for (Entity entity : Entity.values())
-            modifyAttributes(dnOf("dcmEntity", entity.toString(), deviceDN),
+            modifyAttributes(dnOf("cn", entity.toString(), deviceDN),
                     storeDiffs(aa.getAttributeFilter(entity), bb.getAttributeFilter(entity),
                             new ArrayList<ModificationItem>()));
     }

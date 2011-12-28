@@ -38,6 +38,8 @@
 
 package org.dcm4chee.archive.conf.ldap;
 
+import java.io.InputStream;
+import java.security.KeyStore;
 import java.util.EnumSet;
 
 import org.dcm4che.conf.api.AttributeCoercion;
@@ -51,6 +53,7 @@ import org.dcm4che.net.Device;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.soundex.ESoundex;
+import org.dcm4che.util.SafeClose;
 import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
@@ -66,8 +69,8 @@ import org.junit.Test;
  */
 public class LdapArchiveConfigurationTest {
 
-    private static final String DCM4CHEE_ARCHIVE = "DCM4CHEE Archive";
-    private static final String STORESCP_DEVICE = "STORESCP Device";
+    private static final String DCM4CHEE_ARCHIVE = "dcm4chee-arc";
+    private static final String STORESCP_DEVICE = "storescp";
     private static final int[] PATIENT_ATTRS = {
         Tag.SpecificCharacterSet,
         Tag.PatientName,
@@ -443,10 +446,17 @@ public class LdapArchiveConfigurationTest {
     @Before
     public void setUp() throws Exception {
         LdapEnv env = new LdapEnv();
+//        env.setUrl("ldap://localhost:389");
+//        env.setUserDN("cn=admin,dc=nodomain");
+//        env.setPassword("admin");
+//        env.setUrl("ldap://localhost:1389");
+//        env.setUserDN("cn=Directory Manager");
+//        env.setPassword("admin");
         env.setUrl("ldap://localhost:10389");
         env.setUserDN("uid=admin,ou=system");
         env.setPassword("secret");
         config = new LdapArchiveConfiguration(env, "dc=nodomain");
+        config.setUserCertificate("userCertificate");
     }
 
     @After
@@ -456,6 +466,14 @@ public class LdapArchiveConfigurationTest {
 
     @Test
     public void testPersist() throws Exception {
+        KeyStore ks = KeyStore.getInstance("JKS");
+        InputStream in = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream("cacerts.jks");
+        try {
+            ks.load(in, new char[] {'s', 'e', 'c', 'r', 'e', 't' });
+        } finally {
+            SafeClose.close(in);
+        }
         try {
             config.removeDevice(DCM4CHEE_ARCHIVE);
         }  catch (ConfigurationNotFoundException e) {}
@@ -467,8 +485,13 @@ public class LdapArchiveConfigurationTest {
         config.registerAETitle("DCM4CHEE");
         config.registerAETitle("STORESCP");
         config.persist(createArchiveDevice(DCM4CHEE_ARCHIVE));
+        config.persistCertificates(config.deviceDN(DCM4CHEE_ARCHIVE),
+                ks.getCertificate(DCM4CHEE_ARCHIVE));
         config.persist(createStoreSCP(STORESCP_DEVICE));
-        config.findApplicationEntity("DCM4CHEE");
+        config.persistCertificates(config.deviceDN(STORESCP_DEVICE),
+                ks.getCertificate(STORESCP_DEVICE));
+        ApplicationEntity ae = config.findApplicationEntity("DCM4CHEE");
+        config.initTrustManager(ae.getDevice());
         config.removeDevice(DCM4CHEE_ARCHIVE);
         config.removeDevice(STORESCP_DEVICE);
         config.unregisterAETitle("DCM4CHEE");
@@ -487,9 +510,9 @@ public class LdapArchiveConfigurationTest {
         dicomTLS.setTlsCipherSuites(
                 Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
                 Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
-        dicomTLS.setInstalled(false);
         device.addConnection(dicomTLS);
         ae.addConnection(dicomTLS);
+        device.setThisNodeCertificateRefs(config.deviceDN(name));
         return device;
     }
 
@@ -546,9 +569,10 @@ public class LdapArchiveConfigurationTest {
         dicomTLS.setTlsCipherSuites(
                 Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
                 Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
-        dicomTLS.setInstalled(false);
         device.addConnection(dicomTLS);
         ae.addConnection(dicomTLS);
+        device.setThisNodeCertificateRefs(config.deviceDN(name));
+        device.setAuthorizedNodeCertificateRefs(config.deviceDN(STORESCP_DEVICE));
         return device;
     }
 

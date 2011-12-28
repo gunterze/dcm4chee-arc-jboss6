@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.net.service;
 
 import java.io.IOException;
+import java.security.KeyManagementException;
 import java.util.List;
 
 import javax.ejb.EJB;
@@ -122,6 +123,8 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
                 } catch (InterruptedException e) {
                     throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
                 } catch (IncompatibleConnectionException e) {
+                    throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
+                } catch (KeyManagementException e) {
                     throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
                 }
             }
