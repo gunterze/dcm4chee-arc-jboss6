@@ -38,10 +38,13 @@
 
 package org.dcm4chee.archive.conf.prefs;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.KeyStore;
+import java.security.cert.Certificate;
 import java.util.EnumSet;
 import java.util.prefs.Preferences;
 
@@ -479,10 +482,13 @@ public class PreferencesArchiveConfigurationTest {
         config.persistCertificates(config.deviceDN(DCM4CHEE_ARCHIVE),
                 ks.getCertificate(DCM4CHEE_ARCHIVE));
         config.persist(createStoreSCP(STORESCP_DEVICE));
-        config.persistCertificates(config.deviceDN(STORESCP_DEVICE),
-                ks.getCertificate(STORESCP_DEVICE));
+        Certificate storeScpCert = ks.getCertificate(STORESCP_DEVICE);
+        config.persistCertificates(config.deviceDN(STORESCP_DEVICE), storeScpCert);
         ApplicationEntity ae = config.findApplicationEntity("DCM4CHEE");
-        config.initTrustManager(ae.getDevice());
+        Certificate[] certs = config.findCertificates(
+                ae.getDevice().getAuthorizedNodeCertificateRefs());
+        assertEquals(1, certs.length);
+        assertEquals(storeScpCert, certs[0]);
 //        export();
         config.findApplicationEntity("DCM4CHEE");
         config.removeDevice(DCM4CHEE_ARCHIVE);

@@ -38,8 +38,11 @@
 
 package org.dcm4chee.archive.conf.ldap;
 
+import static org.junit.Assert.*;
+
 import java.io.InputStream;
 import java.security.KeyStore;
+import java.security.cert.Certificate;
 import java.util.EnumSet;
 
 import org.dcm4che.conf.api.AttributeCoercion;
@@ -446,17 +449,17 @@ public class LdapArchiveConfigurationTest {
     @Before
     public void setUp() throws Exception {
         LdapEnv env = new LdapEnv();
-//        env.setUrl("ldap://localhost:389");
-//        env.setUserDN("cn=admin,dc=nodomain");
-//        env.setPassword("admin");
+        env.setUrl("ldap://localhost:389");
+        env.setUserDN("cn=admin,dc=nodomain");
+        env.setPassword("admin");
 //        env.setUrl("ldap://localhost:1389");
 //        env.setUserDN("cn=Directory Manager");
 //        env.setPassword("admin");
-        env.setUrl("ldap://localhost:10389");
-        env.setUserDN("uid=admin,ou=system");
-        env.setPassword("secret");
+//        env.setUrl("ldap://localhost:10389");
+//        env.setUserDN("uid=admin,ou=system");
+//        env.setPassword("secret");
         config = new LdapArchiveConfiguration(env, "dc=nodomain");
-        config.setUserCertificate("userCertificate");
+//        config.setUserCertificate("userCertificate");
     }
 
     @After
@@ -488,10 +491,13 @@ public class LdapArchiveConfigurationTest {
         config.persistCertificates(config.deviceDN(DCM4CHEE_ARCHIVE),
                 ks.getCertificate(DCM4CHEE_ARCHIVE));
         config.persist(createStoreSCP(STORESCP_DEVICE));
-        config.persistCertificates(config.deviceDN(STORESCP_DEVICE),
-                ks.getCertificate(STORESCP_DEVICE));
+        Certificate storeScpCert = ks.getCertificate(STORESCP_DEVICE);
+        config.persistCertificates(config.deviceDN(STORESCP_DEVICE), storeScpCert);
         ApplicationEntity ae = config.findApplicationEntity("DCM4CHEE");
-        config.initTrustManager(ae.getDevice());
+        Certificate[] certs = config.findCertificates(
+                ae.getDevice().getAuthorizedNodeCertificateRefs());
+        assertEquals(1, certs.length);
+        assertEquals(storeScpCert, certs[0]);
         config.removeDevice(DCM4CHEE_ARCHIVE);
         config.removeDevice(STORESCP_DEVICE);
         config.unregisterAETitle("DCM4CHEE");
