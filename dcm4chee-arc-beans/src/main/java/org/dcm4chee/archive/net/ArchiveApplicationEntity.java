@@ -45,6 +45,7 @@ import org.dcm4che.conf.api.AttributeCoercion;
 import org.dcm4che.conf.api.AttributeCoercions;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.TransferCapability;
+import org.dcm4che.net.TransferCapability.Role;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4chee.archive.ejb.store.StoreParam;
 import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
@@ -62,11 +63,11 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     private String digestAlgorithm;
     private String receivingDirectoryPath;
     private AttributesFormat storageFilePathFormat;
-    private Boolean storeOriginalAttributes;
-    private Boolean suppressWarningCoercionOfDataElements;
-    private Boolean matchUnknown;
-    private Boolean sendPendingCGet;
-    private Integer sendPendingCMoveInterval;
+    private boolean storeOriginalAttributes;
+    private boolean suppressWarningCoercionOfDataElements;
+    private boolean matchUnknown;
+    private boolean sendPendingCGet;
+    private int sendPendingCMoveInterval;
     private final AttributeCoercions attributeCoercions = new AttributeCoercions();
 
     public ArchiveApplicationEntity(String aeTitle) {
@@ -81,98 +82,92 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         return matchUnknown;
     }
 
-    public boolean isMatchUnknown() {
-        return matchUnknown != null
-                ? matchUnknown
-                : getArchiveDevice().isMatchUnknown();
+    public AttributeCoercion getAttributeCoercion(String sopClass,
+            AttributeCoercion.DIMSE cmd, Role role, String aeTitle) {
+        return attributeCoercions.get(sopClass, cmd, role, aeTitle);
     }
 
-    public void setMatchUnknown(Boolean matchUnknown) {
-        this.matchUnknown = matchUnknown;
+    public AttributeCoercion removeAttributeCoercion(String sopClass,
+            AttributeCoercion.DIMSE cmd, Role role, String aeTitle) {
+        return attributeCoercions.remove(sopClass, cmd, role, aeTitle);
     }
 
-    public Boolean getSendPendingCGet() {
-        return sendPendingCGet;
+    public AttributeCoercions getAttributeCoercions() {
+        return attributeCoercions;
     }
 
-    public boolean isSendPendingCGet() {
-        return sendPendingCGet != null
-                ? sendPendingCGet
-                : getArchiveDevice().isSendPendingCGet();
+    public AttributeCoercion addAttributeCoercion(AttributeCoercion ac) {
+        return attributeCoercions.add(ac);
     }
 
-    public void setSendPendingCGet(Boolean sendPendingCGet) {
-        this.sendPendingCGet = sendPendingCGet;
+    public StoreDuplicate getStoreDuplicate() {
+        return storeDuplicate;
     }
 
-    public Integer getSendPendingCMoveIntervalOrNull() {
-        return sendPendingCMoveInterval;
+    public void setStoreDuplicate(StoreDuplicate storeDuplicate) {
+        this.storeDuplicate = storeDuplicate;
     }
 
-    public int getSendPendingCMoveInterval() {
-        return sendPendingCMoveInterval != null
-                ? sendPendingCMoveInterval
-                : getArchiveDevice().getSendPendingCMoveInterval();
+    public String getModifyingSystem() {
+        return modifyingSystem;
     }
 
-    public void setSendPendingCMoveInterval(Integer sendPendingCMoveInterval) {
-        this.sendPendingCMoveInterval = sendPendingCMoveInterval;
+    public String getEffectiveModifyingSystem() {
+        return modifyingSystem != null 
+                ? modifyingSystem
+                : getDevice().getDeviceName();
     }
 
-    public void setFileSystemGroupID(String fileSystemGroupID) {
-        this.fileSystemGroupID = fileSystemGroupID;
+    public void setModifyingSystem(String modifyingSystem) {
+        this.modifyingSystem = modifyingSystem;
+    }
+
+    public String[] getRetrieveAETs() {
+        return retrieveAETs;
+    }
+
+    public void setRetrieveAETs(String... retrieveAETs) {
+        this.retrieveAETs = retrieveAETs;
+    }
+
+    public String getExternalRetrieveAET() {
+        return externalRetrieveAET;
+    }
+
+    public void setExternalRetrieveAET(String externalRetrieveAET) {
+        this.externalRetrieveAET = externalRetrieveAET;
     }
 
     public String getFileSystemGroupID() {
         return fileSystemGroupID;
     }
 
-    public String getEffectiveFileSystemGroupID() {
-        return fileSystemGroupID != null
-                ? fileSystemGroupID
-                : getArchiveDevice().getFileSystemGroupID();
-    }
-
-    public void setDigestAlgorithm(String digestAlgorithm) {
-        this.digestAlgorithm = digestAlgorithm;
+    public void setFileSystemGroupID(String fileSystemGroupID) {
+        this.fileSystemGroupID = fileSystemGroupID;
     }
 
     public String getDigestAlgorithm() {
         return digestAlgorithm;
     }
 
-    public String getEffectiveDigestAlgorithm() {
-        return digestAlgorithm != null
-                ? digestAlgorithm
-                : getArchiveDevice().getDigestAlgorithm();
-    }
-
-    public void setReceivingDirectoryPath(String receivingDirectoryPath) {
-        this.receivingDirectoryPath = receivingDirectoryPath;
+    public void setDigestAlgorithm(String digestAlgorithm) {
+        this.digestAlgorithm = digestAlgorithm;
     }
 
     public String getReceivingDirectoryPath() {
         return receivingDirectoryPath;
     }
 
-    public String getEffectiveReceivingDirectoryPath() {
-        return receivingDirectoryPath != null
-                ? receivingDirectoryPath
-                : getArchiveDevice().getReceivingDirectoryPath();
-    }
-
-    public void setStorageFilePathFormat(AttributesFormat storageFilePathFormat) {
-        this.storageFilePathFormat = storageFilePathFormat;
+    public void setReceivingDirectoryPath(String receivingDirectoryPath) {
+        this.receivingDirectoryPath = receivingDirectoryPath;
     }
 
     public AttributesFormat getStorageFilePathFormat() {
         return storageFilePathFormat;
     }
 
-    public AttributesFormat getEffectiveStorageFilePathFormat() {
-        return storageFilePathFormat != null
-                ? storageFilePathFormat
-                : getArchiveDevice().getStorageFilePathFormat();
+    public void setStorageFilePathFormat(AttributesFormat storageFilePathFormat) {
+        this.storageFilePathFormat = storageFilePathFormat;
     }
 
     public Templates getAttributeCoercionTemplates(String cuid, AttributeCoercion.DIMSE cmd,
@@ -181,102 +176,45 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         return ac != null ? getArchiveDevice().getTemplates(ac.getURI()) : null;
     }
 
-    public Boolean getSuppressWarningCoercionOfDataElements() {
-        return suppressWarningCoercionOfDataElements;
-    }
-
-    public boolean isSuppressWarningCoercionOfDataElements() {
-        return suppressWarningCoercionOfDataElements != null
-                ? suppressWarningCoercionOfDataElements
-                : getArchiveDevice().isSuppressWarningCoercionOfDataElements();
-    }
-
-
-    public void setSuppressWarningCoercionOfDataElements(
-            Boolean suppressWarningCoercionOfDataElements) {
-        this.suppressWarningCoercionOfDataElements = suppressWarningCoercionOfDataElements;
-    }
-
-    public void setStoreOriginalAttributes(Boolean storeOriginalAttributes) {
-        this.storeOriginalAttributes = storeOriginalAttributes;
-    }
-
-    public Boolean getStoreOriginalAttributes() {
+    public boolean isStoreOriginalAttributes() {
         return storeOriginalAttributes;
     }
 
-    public boolean isStoreOriginalAttributes() {
-        return storeOriginalAttributes != null
-                ? storeOriginalAttributes
-                : getArchiveDevice().isStoreOriginalAttributes();
+    public void setStoreOriginalAttributes(boolean storeOriginalAttributes) {
+        this.storeOriginalAttributes = storeOriginalAttributes;
     }
 
-    public void setExternalRetrieveAET(String externalRetrieveAET) {
-        this.externalRetrieveAET = externalRetrieveAET;
+    public boolean isSuppressWarningCoercionOfDataElements() {
+        return suppressWarningCoercionOfDataElements;
     }
 
-    public String getExternalRetrieveAET() {
-        return externalRetrieveAET;
+    public void setSuppressWarningCoercionOfDataElements(
+            boolean suppressWarningCoercionOfDataElements) {
+        this.suppressWarningCoercionOfDataElements = suppressWarningCoercionOfDataElements;
     }
 
-    public String getEffectiveExternalRetrieveAET() {
-        return externalRetrieveAET != null
-                ? externalRetrieveAET
-                : getArchiveDevice().getExternalRetrieveAET();
+    public boolean isMatchUnknown() {
+        return matchUnknown;
     }
 
-    public void setRetrieveAETs(String... retrieveAETs) {
-        this.retrieveAETs = retrieveAETs;
+    public void setMatchUnknown(boolean matchUnknown) {
+        this.matchUnknown = matchUnknown;
     }
 
-    public String[] getRetrieveAETs() {
-        return retrieveAETs;
+    public boolean isSendPendingCGet() {
+        return sendPendingCGet;
     }
 
-    public String[] getEffectiveRetrieveAETs() {
-        return retrieveAETs != null
-                ? retrieveAETs
-                : getArchiveDevice().getRetrieveAETs();
+    public void setSendPendingCGet(boolean sendPendingCGet) {
+        this.sendPendingCGet = sendPendingCGet;
     }
 
-    public void setModifyingSystem(String modifyingSystem) {
-        this.modifyingSystem = modifyingSystem;
+    public int getSendPendingCMoveInterval() {
+        return sendPendingCMoveInterval;
     }
 
-    public String getModifyingSystem() {
-        return modifyingSystem;
-    }
-
-    public String getEffectiveModifyingSystem() {
-        return modifyingSystem != null
-                ? modifyingSystem
-                : getArchiveDevice().getEffectiveModifyingSystem();
-    }
-
-    public AttributeCoercion getAttributeCoercion(String sopClass, AttributeCoercion.DIMSE cmd,
-            TransferCapability.Role role, String aeTitle) {
-        AttributeCoercion ac = attributeCoercions.get(sopClass, cmd, role, aeTitle);
-        return ac != null
-                ? ac
-                : getArchiveDevice().getAttributeCoercion(sopClass, cmd, role, aeTitle);
-    }
-
-    public AttributeCoercions getAttributeCoercions() {
-        return attributeCoercions;
-    }
-
-    public void setStoreDuplicate(StoreDuplicate storeDuplicate) {
-        this.storeDuplicate = storeDuplicate;
-    }
-
-    public StoreDuplicate getStoreDuplicate() {
-        return storeDuplicate;
-    }
-
-    public StoreDuplicate getEffectiveStoreDuplicate() {
-        return storeDuplicate != null
-                ? storeDuplicate
-                : getArchiveDevice().getStoreDuplicate();
+    public void setSendPendingCMoveInterval(int sendPendingCMoveInterval) {
+        this.sendPendingCMoveInterval = sendPendingCMoveInterval;
     }
 
     public StoreParam getStoreParam() {
@@ -284,10 +222,11 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         StoreParam storeParam = new StoreParam();
         storeParam.setFuzzyStr(dev.getFuzzyStr());
         storeParam.setAttributeFilters(dev.getAttributeFilters());
+        storeParam.setStoreOriginalAttributes(isStoreOriginalAttributes());
         storeParam.setModifyingSystem(getEffectiveModifyingSystem());
-        storeParam.setRetrieveAETs(getEffectiveRetrieveAETs());
-        storeParam.setExternalRetrieveAET(getEffectiveExternalRetrieveAET());
-        storeParam.setStoreDuplicate(getEffectiveStoreDuplicate());
+        storeParam.setRetrieveAETs(getRetrieveAETs());
+        storeParam.setExternalRetrieveAET(getExternalRetrieveAET());
+        storeParam.setStoreDuplicate(getStoreDuplicate());
         return storeParam;
     }
 }

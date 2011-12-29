@@ -449,15 +449,15 @@ public class LdapArchiveConfigurationTest {
     @Before
     public void setUp() throws Exception {
         LdapEnv env = new LdapEnv();
-        env.setUrl("ldap://localhost:389");
-        env.setUserDN("cn=admin,dc=nodomain");
-        env.setPassword("admin");
+//        env.setUrl("ldap://localhost:389");
+//        env.setUserDN("cn=admin,dc=nodomain");
+//        env.setPassword("admin");
 //        env.setUrl("ldap://localhost:1389");
 //        env.setUserDN("cn=Directory Manager");
 //        env.setPassword("admin");
-//        env.setUrl("ldap://localhost:10389");
-//        env.setUserDN("uid=admin,ou=system");
-//        env.setPassword("secret");
+        env.setUrl("ldap://localhost:10389");
+        env.setUserDN("uid=admin,ou=system");
+        env.setPassword("secret");
         config = new LdapArchiveConfiguration(env, "dc=nodomain");
 //        config.setUserCertificate("userCertificate");
     }
@@ -524,17 +524,7 @@ public class LdapArchiveConfigurationTest {
 
     private ArchiveDevice createArchiveDevice(String name) throws Exception {
         ArchiveDevice device = new ArchiveDevice(name);
-        device.setFileSystemGroupID("DEFAULT");
-        device.setReceivingDirectoryPath("incoming");
-        device.setDigestAlgorithm("MD5");
-        device.setRetrieveAETs("DCM4CHEE");
-        device.setStoreOriginalAttributes(true);
-        device.setSuppressWarningCoercionOfDataElements(false);
-        device.setStoreDuplicate(StoreDuplicate.STORE);
         device.setFuzzyStr(new ESoundex());
-        device.setMatchUnknown(true);
-        device.setSendPendingCGet(true);
-        device.setSendPendingCMoveInterval(5000);
         device.setAttributeFilter(Entity.Patient, new AttributeFilter(PATIENT_ATTRS));
         device.setAttributeFilter(Entity.Study, new AttributeFilter(STUDY_ATTRS));
         device.setAttributeFilter(Entity.Series, new AttributeFilter(SERIES_ATTRS));
@@ -543,19 +533,29 @@ public class LdapArchiveConfigurationTest {
         device.setAttributeFilter(Entity.ServiceRequest, new AttributeFilter(SERVICE_REQUEST_ATTRS));
         device.setAttributeFilter(Entity.RequestedProcedure, new AttributeFilter(REQUESTED_PROCEDURE_ATTRS));
         device.setAttributeFilter(Entity.ScheduledProcedureStep, new AttributeFilter(SPS_ATTRS));
-        device.addAttributeCoercion(new AttributeCoercion(null, 
+        ArchiveApplicationEntity ae = new ArchiveApplicationEntity("DCM4CHEE");
+        ae.setAssociationAcceptor(true);
+        ae.setAssociationInitiator(true);
+        ae.setFileSystemGroupID("DEFAULT");
+        ae.setReceivingDirectoryPath("incoming");
+        ae.setDigestAlgorithm("MD5");
+        ae.setRetrieveAETs("DCM4CHEE");
+        ae.setStoreOriginalAttributes(true);
+        ae.setSuppressWarningCoercionOfDataElements(false);
+        ae.setStoreDuplicate(StoreDuplicate.STORE);
+        ae.setMatchUnknown(true);
+        ae.setSendPendingCGet(true);
+        ae.setSendPendingCMoveInterval(5000);
+        ae.addAttributeCoercion(new AttributeCoercion(null, 
                 AttributeCoercion.DIMSE.C_STORE_RQ, 
                 TransferCapability.Role.SCP,
                 "ENSURE_PID",
                 "resource:dcm4chee-arc-ensure-pid.xsl"));
-        device.addAttributeCoercion(new AttributeCoercion(null, 
+        ae.addAttributeCoercion(new AttributeCoercion(null, 
                 AttributeCoercion.DIMSE.C_STORE_RQ, 
                 TransferCapability.Role.SCU,
                 "WITHOUT_PN",
                 "resource:dcm4chee-arc-nullify-pn.xsl"));
-        ArchiveApplicationEntity ae = new ArchiveApplicationEntity("DCM4CHEE");
-        ae.setAssociationAcceptor(true);
-        ae.setAssociationInitiator(true);
         addVerificationStorageTransferCapabilities(ae);
         addStorageTransferCapabilities(ae, IMAGE_CUIDS, IMAGE_TSUIDS);
         addStorageTransferCapabilities(ae, VIDEO_CUIDS, VIDEO_TSUIDS);

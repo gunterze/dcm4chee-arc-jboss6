@@ -14,17 +14,7 @@
             <node name="dcm4chee-arc">
               <map>
                 <entry key="dcmArchiveDevice" value="true"/>
-                <entry key="dcmDigestAlgorithm" value="MD5"/>
-                <entry key="dcmFileSystemGroupID" value="DEFAULT"/>
                 <entry key="dcmFuzzyAlgorithmClass" value="org.dcm4che.soundex.ESoundex"/>
-                <entry key="dcmMatchUnknown" value="true"/>
-                <entry key="dcmReceivingDirectoryPath" value="incoming"/>
-                <entry key="dcmRetrieveAET.#" value="1"/>
-                <entry key="dcmRetrieveAET.1" value="DCM4CHEE"/>
-                <entry key="dcmSendPendingCGet" value="true"/>
-                <entry key="dcmSendPendingCMoveInterval" value="5000"/>
-                <entry key="dcmStoreDuplicate" value="STORE"/>
-                <entry key="dcmStoreOriginalAttributes" value="true"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.#" value="1"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/storescp"/>
                 <entry key="dicomInstalled" value="true"/>
@@ -33,25 +23,6 @@
                 <entry key="userCertificate.#" value="1"/>
                 <entry key="userCertificate.1" value="MIICTTCCAbagAwIBAgIETvRlSTANBgkqhkiG9w0BAQUFADBrMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxETAPBgNVBAsTCGRjbTRjaGVlMRUwEwYDVQQDEwxkY200Y2hlZS1hcmMwHhcNMTExMjIzMTEyNjAxWhcNMTIxMjIyMTEyNjAxWjBrMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxETAPBgNVBAsTCGRjbTRjaGVlMRUwEwYDVQQDEwxkY200Y2hlZS1hcmMwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAIpyZpH077XTZAvXt/TXSlqU/523X01Va4rzw9BOLITD1Yqo3gOQ4TFIO9WjHQaV1cwsAL5emi65ssd/YjrJHWA6QBRHYDBGNldQlSzKduYS5BqaW3yhCBMw9lZLVN1Gh7QUgWknFNHpSH0uV65esBf598KFzRl8eh8l4/njH9wNAgMBAAEwDQYJKoZIhvcNAQEFBQADgYEAeFaW8IJ3aitQDDL9chQ5k5YNFtZwNDdnVnnsvGgYINYd2VYW6ql2BvXiH49qG5UPJZhqEIDD9VZd2GiJfI/16/YNZBE+0SgUQXsqED9NmqjZRNz0hO6Qddc9+wlBNmlGKyA+ftzNw0Uq1WqXh2IcrxTBMsDKKZLbqbAK7tiECPo="/>
               </map>
-              <node name="dcmAttributeCoercion">
-                <map/>
-                <node name="1">
-                  <map>
-                    <entry key="dcmDIMSE" value="C_STORE_RQ"/>
-                    <entry key="dicomAETitle" value="WITHOUT_PN"/>
-                    <entry key="dicomTransferRole" value="SCU"/>
-                    <entry key="labeledURI" value="resource:dcm4chee-arc-nullify-pn.xsl"/>
-                  </map>
-                </node>
-                <node name="2">
-                  <map>
-                    <entry key="dcmDIMSE" value="C_STORE_RQ"/>
-                    <entry key="dicomAETitle" value="ENSURE_PID"/>
-                    <entry key="dicomTransferRole" value="SCP"/>
-                    <entry key="labeledURI" value="resource:dcm4chee-arc-ensure-pid.xsl"/>
-                  </map>
-                </node>
-              </node>
               <node name="dcmAttributeFilter">
                 <map/>
                 <node name="Instance">
@@ -297,6 +268,16 @@
                 <node name="DCM4CHEE">
                   <map>
                     <entry key="dcmArchiveNetworkAE" value="true"/>
+                    <entry key="dcmDigestAlgorithm" value="MD5"/>
+                    <entry key="dcmFileSystemGroupID" value="DEFAULT"/>
+                    <entry key="dcmMatchUnknown" value="true"/>
+                    <entry key="dcmReceivingDirectoryPath" value="incoming"/>
+                    <entry key="dcmRetrieveAET.#" value="1"/>
+                    <entry key="dcmRetrieveAET.1" value="DCM4CHEE"/>
+                    <entry key="dcmSendPendingCGet" value="true"/>
+                    <entry key="dcmSendPendingCMoveInterval" value="5000"/>
+                    <entry key="dcmStoreDuplicate" value="STORE"/>
+                    <entry key="dcmStoreOriginalAttributes" value="true"/>
                     <entry key="dicomAssociationAcceptor" value="true"/>
                     <entry key="dicomAssociationInitiator" value="true"/>
                     <entry key="dicomNetworkConnectionReference.#" value="2"/>
@@ -305,6 +286,22 @@
                   </map>
                   <node name="dcmAttributeCoercion">
                     <map/>
+                    <node name="1">
+                      <map>
+                        <entry key="dcmDIMSE" value="C_STORE_RQ"/>
+                        <entry key="dicomAETitle" value="WITHOUT_PN"/>
+                        <entry key="dicomTransferRole" value="SCU"/>
+                        <entry key="labeledURI" value="resource:dcm4chee-arc-nullify-pn.xsl"/>
+                      </map>
+                    </node>
+                    <node name="2">
+                      <map>
+                        <entry key="dcmDIMSE" value="C_STORE_RQ"/>
+                        <entry key="dicomAETitle" value="ENSURE_PID"/>
+                        <entry key="dicomTransferRole" value="SCP"/>
+                        <entry key="labeledURI" value="resource:dcm4chee-arc-ensure-pid.xsl"/>
+                      </map>
+                    </node>
                   </node>
                   <node name="dicomTransferCapability">
                     <map/>

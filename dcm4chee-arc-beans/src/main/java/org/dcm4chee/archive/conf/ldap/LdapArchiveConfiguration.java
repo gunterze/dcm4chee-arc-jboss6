@@ -112,21 +112,6 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         if (!(device instanceof ArchiveDevice))
             return attrs;
         ArchiveDevice arcDev = (ArchiveDevice) device;
-        storeNotNull(attrs, "dcmFileSystemGroupID", arcDev.getFileSystemGroupID());
-        storeNotNull(attrs, "dcmReceivingDirectoryPath", arcDev.getReceivingDirectoryPath());
-        storeNotNull(attrs, "dcmStorageFilePathFormat", arcDev.getStorageFilePathFormat());
-        storeNotNull(attrs, "dcmDigestAlgorithm", arcDev.getDigestAlgorithm());
-        storeNotNull(attrs, "dcmStoreDuplicate", arcDev.getStoreDuplicate());
-        storeNotNull(attrs, "dcmExternalRetrieveAET", arcDev.getExternalRetrieveAET());
-        storeNotEmpty(attrs, "dcmRetrieveAET", arcDev.getRetrieveAETs());
-        storeNotDef(attrs, "dcmMatchUnknown", arcDev.isMatchUnknown(), false);
-        storeNotDef(attrs, "dcmSendPendingCGet", arcDev.isSendPendingCGet(), false);
-        storeNotDef(attrs, "dcmSendPendingCMoveInterval", arcDev.getSendPendingCMoveInterval(), 0);
-        storeNotDef(attrs, "dcmSuppressWarningCoercionOfDataElements",
-                arcDev.isSuppressWarningCoercionOfDataElements(), false);
-        storeNotDef(attrs, "dcmStoreOriginalAttributes",
-                arcDev.isStoreOriginalAttributes(), false);
-        storeNotNull(attrs, "dcmModifyingSystem", arcDev.getModifyingSystem());
         storeNotNull(attrs, "dcmFuzzyAlgorithmClass",
                 arcDev.getFuzzyAlgorithmClass());
         return attrs;
@@ -138,7 +123,6 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         if (!(device instanceof ArchiveDevice))
             return;
         ArchiveDevice arcDev = (ArchiveDevice) device;
-        store(arcDev.getAttributeCoercions(), deviceDN);
         for (Entity entity : Entity.values())
             createSubcontext(dnOf("cn", entity.toString(), deviceDN),
                     storeTo(arcDev.getAttributeFilter(entity), entity, new BasicAttributes(true)));
@@ -183,14 +167,13 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         storeNotNull(attrs, "dcmStoreDuplicate", arcAE.getStoreDuplicate());
         storeNotNull(attrs, "dcmExternalRetrieveAET", arcAE.getExternalRetrieveAET());
         storeNotEmpty(attrs, "dcmRetrieveAET", arcAE.getRetrieveAETs());
-        storeNotNull(attrs, "dcmMatchUnknown", arcAE.getMatchUnknown());
-        storeNotNull(attrs, "dcmSendPendingCGet", arcAE.getSendPendingCGet());
-        storeNotNull(attrs, "dcmSendPendingCMoveInterval",
-                arcAE.getSendPendingCMoveIntervalOrNull());
-        storeNotNull(attrs, "dcmSuppressWarningCoercionOfDataElements",
-                arcAE.getSuppressWarningCoercionOfDataElements());
-        storeNotNull(attrs, "dcmStoreOriginalAttributes",
-                arcAE.getStoreOriginalAttributes());
+        storeNotDef(attrs, "dcmMatchUnknown", arcAE.isMatchUnknown(), false);
+        storeNotDef(attrs, "dcmSendPendingCGet", arcAE.isSendPendingCGet(), false);
+        storeNotDef(attrs, "dcmSendPendingCMoveInterval", arcAE.getSendPendingCMoveInterval(), 0);
+        storeNotDef(attrs, "dcmSuppressWarningCoercionOfDataElements",
+                arcAE.isSuppressWarningCoercionOfDataElements(), false);
+        storeNotDef(attrs, "dcmStoreOriginalAttributes",
+                arcAE.isStoreOriginalAttributes(), false);
         storeNotNull(attrs, "dcmModifyingSystem", arcAE.getModifyingSystem());
         return attrs;
     }
@@ -201,21 +184,6 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         if (!(device instanceof ArchiveDevice))
             return;
         ArchiveDevice arcdev = (ArchiveDevice) device;
-        arcdev.setFileSystemGroupID(stringValue(attrs.get("dcmFileSystemGroupID")));
-        arcdev.setReceivingDirectoryPath(stringValue(attrs.get("dcmReceivingDirectoryPath")));
-        arcdev.setStorageFilePathFormat(attributesFormat(attrs.get("dcmStorageFilePathFormat")));
-        arcdev.setDigestAlgorithm(stringValue(attrs.get("dcmDigestAlgorithm")));
-        arcdev.setStoreDuplicate(storeDuplicate(attrs.get("dcmStoreDuplicate")));
-        arcdev.setExternalRetrieveAET(stringValue(attrs.get("dcmExternalRetrieveAET")));
-        arcdev.setRetrieveAETs(stringArray(attrs.get("dcmRetrieveAET")));
-        arcdev.setMatchUnknown(booleanValue(attrs.get("dcmMatchUnknown"), false));
-        arcdev.setSendPendingCGet(booleanValue(attrs.get("dcmSendPendingCGet"), false));
-        arcdev.setSendPendingCMoveInterval(intValue(attrs.get("dcmSendPendingCMoveInterval"), 0));
-        arcdev.setSuppressWarningCoercionOfDataElements(
-                booleanValue(attrs.get("dcmSuppressWarningCoercionOfDataElements"), false));
-        arcdev.setStoreOriginalAttributes(
-                booleanValue(attrs.get("dcmStoreOriginalAttributes"), false));
-        arcdev.setModifyingSystem(stringValue(attrs.get("dcmModifyingSystem")));
         arcdev.setFuzzyStr(fuzzyStr(attrs.get("dcmFuzzyAlgorithmClass")));
     }
 
@@ -225,7 +193,6 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         if (!(device instanceof ArchiveDevice))
             return;
         ArchiveDevice arcdev = (ArchiveDevice) device;
-        load(arcdev.getAttributeCoercions(), deviceDN);
         loadAttributeFilters(arcdev, deviceDN);
         
     }
@@ -286,22 +253,22 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
        super.loadFrom(ae, attrs);
        if (!(ae instanceof ArchiveApplicationEntity))
            return;
-       ArchiveApplicationEntity arcse = (ArchiveApplicationEntity) ae;
-       arcse.setFileSystemGroupID(stringValue(attrs.get("dcmFileSystemGroupID")));
-       arcse.setReceivingDirectoryPath(stringValue(attrs.get("dcmReceivingDirectoryPath")));
-       arcse.setStorageFilePathFormat(attributesFormat(attrs.get("dcmStorageFilePathFormat")));
-       arcse.setDigestAlgorithm(stringValue(attrs.get("dcmDigestAlgorithm")));
-       arcse.setStoreDuplicate(storeDuplicate(attrs.get("dcmStoreDuplicate")));
-       arcse.setExternalRetrieveAET(stringValue(attrs.get("dcmExternalRetrieveAET")));
-       arcse.setRetrieveAETs(stringArray(attrs.get("dcmRetrieveAET")));
-       arcse.setMatchUnknown(booleanValue(attrs.get("dcmMatchUnknown"), null));
-       arcse.setSendPendingCGet(booleanValue(attrs.get("dcmSendPendingCGet"), null));
-       arcse.setSendPendingCMoveInterval(intValue(attrs.get("dcmSendPendingCMoveInterval"), null));
-       arcse.setSuppressWarningCoercionOfDataElements(
-               booleanValue(attrs.get("dcmSuppressWarningCoercionOfDataElements"), null));
-       arcse.setStoreOriginalAttributes(
-               booleanValue(attrs.get("dcmStoreOriginalAttributes"), null));
-       arcse.setModifyingSystem(stringValue(attrs.get("dcmModifyingSystem")));
+       ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
+       arcae.setFileSystemGroupID(stringValue(attrs.get("dcmFileSystemGroupID")));
+       arcae.setReceivingDirectoryPath(stringValue(attrs.get("dcmReceivingDirectoryPath")));
+       arcae.setStorageFilePathFormat(attributesFormat(attrs.get("dcmStorageFilePathFormat")));
+       arcae.setDigestAlgorithm(stringValue(attrs.get("dcmDigestAlgorithm")));
+       arcae.setStoreDuplicate(storeDuplicate(attrs.get("dcmStoreDuplicate")));
+       arcae.setExternalRetrieveAET(stringValue(attrs.get("dcmExternalRetrieveAET")));
+       arcae.setRetrieveAETs(stringArray(attrs.get("dcmRetrieveAET")));
+       arcae.setMatchUnknown(booleanValue(attrs.get("dcmMatchUnknown"), false));
+       arcae.setSendPendingCGet(booleanValue(attrs.get("dcmSendPendingCGet"), false));
+       arcae.setSendPendingCMoveInterval(intValue(attrs.get("dcmSendPendingCMoveInterval"), 0));
+       arcae.setSuppressWarningCoercionOfDataElements(
+               booleanValue(attrs.get("dcmSuppressWarningCoercionOfDataElements"), false));
+       arcae.setStoreOriginalAttributes(
+               booleanValue(attrs.get("dcmStoreOriginalAttributes"), false));
+       arcae.setModifyingSystem(stringValue(attrs.get("dcmModifyingSystem")));
     }
 
     @Override
@@ -322,6 +289,22 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         
         ArchiveDevice aa = (ArchiveDevice) a;
         ArchiveDevice bb = (ArchiveDevice) b;
+        storeDiff(mods, "dcmFuzzyAlgorithmClass",
+                aa.getFuzzyAlgorithmClass(),
+                bb.getFuzzyAlgorithmClass());
+        return mods;
+    }
+
+    @Override
+    protected List<ModificationItem> storeDiffs(ApplicationEntity a,
+            ApplicationEntity b, String deviceDN, List<ModificationItem> mods) {
+        super.storeDiffs(a, b, deviceDN, mods);
+        if (!(a instanceof ArchiveApplicationEntity 
+           && b instanceof ArchiveApplicationEntity))
+            return mods;
+        
+        ArchiveApplicationEntity aa = (ArchiveApplicationEntity) a;
+        ArchiveApplicationEntity bb = (ArchiveApplicationEntity) b;
         storeDiff(mods, "dcmFileSystemGroupID",
                 aa.getFileSystemGroupID(),
                 bb.getFileSystemGroupID());
@@ -366,61 +349,6 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         storeDiff(mods, "dcmModifyingSystem",
                 aa.getModifyingSystem(),
                 bb.getModifyingSystem());
-        storeDiff(mods, "dcmFuzzyAlgorithmClass",
-                aa.getFuzzyAlgorithmClass(),
-                bb.getFuzzyAlgorithmClass());
-        return mods;
-    }
-
-    @Override
-    protected List<ModificationItem> storeDiffs(ApplicationEntity a,
-            ApplicationEntity b, String deviceDN, List<ModificationItem> mods) {
-        super.storeDiffs(a, b, deviceDN, mods);
-        if (!(a instanceof ArchiveApplicationEntity 
-           && b instanceof ArchiveApplicationEntity))
-            return mods;
-        
-        ArchiveApplicationEntity aa = (ArchiveApplicationEntity) a;
-        ArchiveApplicationEntity bb = (ArchiveApplicationEntity) b;
-        storeDiff(mods, "dcmFileSystemGroupID",
-                aa.getFileSystemGroupID(),
-                bb.getFileSystemGroupID());
-        storeDiff(mods, "dcmReceivingDirectoryPath",
-                aa.getReceivingDirectoryPath(),
-                bb.getReceivingDirectoryPath());
-        storeDiff(mods, "dcmStorageFilePathFormat",
-                aa.getStorageFilePathFormat(),
-                bb.getStorageFilePathFormat());
-        storeDiff(mods, "dcmDigestAlgorithm",
-                aa.getDigestAlgorithm(),
-                bb.getDigestAlgorithm());
-        storeDiff(mods, "dcmStoreDuplicate",
-                aa.getStoreDuplicate(),
-                bb.getStoreDuplicate());
-        storeDiff(mods, "dcmExternalRetrieveAET",
-                aa.getExternalRetrieveAET(),
-                bb.getExternalRetrieveAET());
-        storeDiff(mods, "dcmRetrieveAET",
-                aa.getRetrieveAETs(),
-                bb.getRetrieveAETs());
-        storeDiff(mods, "dcmMatchUnknown",
-                aa.getMatchUnknown(),
-                bb.getMatchUnknown());
-        storeDiff(mods, "dcmSendPendingCGet",
-                aa.getSendPendingCGet(),
-                bb.getSendPendingCGet());
-        storeDiff(mods, "dcmSendPendingCMoveInterval",
-                aa.getSendPendingCMoveIntervalOrNull(),
-                bb.getSendPendingCMoveIntervalOrNull());
-        storeDiff(mods, "dcmSuppressWarningCoercionOfDataElements",
-                aa.getSuppressWarningCoercionOfDataElements(),
-                bb.getSuppressWarningCoercionOfDataElements());
-        storeDiff(mods, "dcmStoreOriginalAttributes",
-                aa.getStoreOriginalAttributes(),
-                bb.getStoreOriginalAttributes());
-        storeDiff(mods, "dcmModifyingSystem",
-                aa.getModifyingSystem(),
-                bb.getModifyingSystem());
         return mods;
     }
 
@@ -433,7 +361,6 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         
         ArchiveDevice aa = (ArchiveDevice) prev;
         ArchiveDevice bb = (ArchiveDevice) device;
-        merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), deviceDN);
         for (Entity entity : Entity.values())
             modifyAttributes(dnOf("cn", entity.toString(), deviceDN),
                     storeDiffs(aa.getAttributeFilter(entity), bb.getAttributeFilter(entity),

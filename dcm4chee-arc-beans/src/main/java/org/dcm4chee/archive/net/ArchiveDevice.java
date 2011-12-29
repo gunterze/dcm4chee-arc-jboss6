@@ -41,15 +41,10 @@ package org.dcm4chee.archive.net;
 import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerConfigurationException;
 
-import org.dcm4che.conf.api.AttributeCoercion;
-import org.dcm4che.conf.api.AttributeCoercions;
 import org.dcm4che.io.TemplatesCache;
 import org.dcm4che.net.Device;
-import org.dcm4che.net.TransferCapability.Role;
 import org.dcm4che.soundex.FuzzyStr;
-import org.dcm4che.util.AttributesFormat;
 import org.dcm4chee.archive.ejb.store.Entity;
-import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 
 
@@ -58,22 +53,8 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
  */
 public class ArchiveDevice extends Device {
 
-    private StoreDuplicate storeDuplicate;
-    private String modifyingSystem;
-    private String[] retrieveAETs;
-    private String externalRetrieveAET;
-    private String fileSystemGroupID;
-    private String digestAlgorithm;
-    private String receivingDirectoryPath;
-    private AttributesFormat storageFilePathFormat;
-    private boolean storeOriginalAttributes;
-    private boolean suppressWarningCoercionOfDataElements;
-    private boolean matchUnknown;
-    private boolean sendPendingCGet;
-    private int sendPendingCMoveInterval;
     private FuzzyStr fuzzyStr;
     private final AttributeFilter[] attributeFilters = new AttributeFilter[Entity.values().length];
-    private final AttributeCoercions attributeCoercions = new AttributeCoercions();
     private TemplatesCache templatesCache;
 
     public ArchiveDevice(String name) {
@@ -91,133 +72,6 @@ public class ArchiveDevice extends Device {
         if (tmp == null)
             templatesCache = tmp = new TemplatesCache();
         return tmp.get(uri);
-    }
-
-    public AttributeCoercion getAttributeCoercion(String sopClass,
-            AttributeCoercion.DIMSE cmd, Role role, String aeTitle) {
-        return attributeCoercions.get(sopClass, cmd, role, aeTitle);
-    }
-
-    public AttributeCoercion removeAttributeCoercion(String sopClass,
-            AttributeCoercion.DIMSE cmd, Role role, String aeTitle) {
-        return attributeCoercions.remove(sopClass, cmd, role, aeTitle);
-    }
-
-    public AttributeCoercions getAttributeCoercions() {
-        return attributeCoercions;
-    }
-
-    public AttributeCoercion addAttributeCoercion(AttributeCoercion ac) {
-        return attributeCoercions.add(ac);
-    }
-
-    public StoreDuplicate getStoreDuplicate() {
-        return storeDuplicate;
-    }
-
-    public void setStoreDuplicate(StoreDuplicate storeDuplicate) {
-        this.storeDuplicate = storeDuplicate;
-    }
-
-    public String getModifyingSystem() {
-        return modifyingSystem;
-    }
-
-    public String getEffectiveModifyingSystem() {
-        return modifyingSystem != null ? modifyingSystem : getDeviceName();
-    }
-
-    public void setModifyingSystem(String modifyingSystem) {
-        this.modifyingSystem = modifyingSystem;
-    }
-
-    public String[] getRetrieveAETs() {
-        return retrieveAETs;
-    }
-
-    public void setRetrieveAETs(String... retrieveAETs) {
-        this.retrieveAETs = retrieveAETs;
-    }
-
-    public String getExternalRetrieveAET() {
-        return externalRetrieveAET;
-    }
-
-    public void setExternalRetrieveAET(String externalRetrieveAET) {
-        this.externalRetrieveAET = externalRetrieveAET;
-    }
-
-    public String getFileSystemGroupID() {
-        return fileSystemGroupID;
-    }
-
-    public void setFileSystemGroupID(String fileSystemGroupID) {
-        this.fileSystemGroupID = fileSystemGroupID;
-    }
-
-    public String getDigestAlgorithm() {
-        return digestAlgorithm;
-    }
-
-    public void setDigestAlgorithm(String digestAlgorithm) {
-        this.digestAlgorithm = digestAlgorithm;
-    }
-
-    public String getReceivingDirectoryPath() {
-        return receivingDirectoryPath;
-    }
-
-    public void setReceivingDirectoryPath(String receivingDirectoryPath) {
-        this.receivingDirectoryPath = receivingDirectoryPath;
-    }
-
-    public AttributesFormat getStorageFilePathFormat() {
-        return storageFilePathFormat;
-    }
-
-    public void setStorageFilePathFormat(AttributesFormat storageFilePathFormat) {
-        this.storageFilePathFormat = storageFilePathFormat;
-    }
-
-    public boolean isStoreOriginalAttributes() {
-        return storeOriginalAttributes;
-    }
-
-    public void setStoreOriginalAttributes(boolean storeOriginalAttributes) {
-        this.storeOriginalAttributes = storeOriginalAttributes;
-    }
-
-    public boolean isSuppressWarningCoercionOfDataElements() {
-        return suppressWarningCoercionOfDataElements;
-    }
-
-    public void setSuppressWarningCoercionOfDataElements(
-            boolean suppressWarningCoercionOfDataElements) {
-        this.suppressWarningCoercionOfDataElements = suppressWarningCoercionOfDataElements;
-    }
-
-    public boolean isMatchUnknown() {
-        return matchUnknown;
-    }
-
-    public void setMatchUnknown(boolean matchUnknown) {
-        this.matchUnknown = matchUnknown;
-    }
-
-    public boolean isSendPendingCGet() {
-        return sendPendingCGet;
-    }
-
-    public void setSendPendingCGet(boolean sendPendingCGet) {
-        this.sendPendingCGet = sendPendingCGet;
-    }
-
-    public int getSendPendingCMoveInterval() {
-        return sendPendingCMoveInterval;
-    }
-
-    public void setSendPendingCMoveInterval(int sendPendingCMoveInterval) {
-        this.sendPendingCMoveInterval = sendPendingCMoveInterval;
     }
 
     public void setFuzzyStr(FuzzyStr fuzzyStr) {

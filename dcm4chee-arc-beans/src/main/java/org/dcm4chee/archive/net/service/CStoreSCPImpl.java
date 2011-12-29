@@ -82,7 +82,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
     protected Object selectStorage(Association as, Attributes rq) throws DicomServiceException {
         try {
             ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-            String fsGroupID = ae.getEffectiveFileSystemGroupID();
+            String fsGroupID = ae.getFileSystemGroupID();
             InstanceStore store = initInstanceStore(as);
             if (initFileSystem) {
                 store.initFileSystem(fsGroupID);
@@ -112,8 +112,8 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             String iuid = rq.getString(Tag.AffectedSOPInstanceUID);
             ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
             File file = new File(
-                    new File(fs.getDirectory(), ae.getEffectiveReceivingDirectoryPath()), 
-                    ae.getEffectiveStorageFilePathFormat() == null
+                    new File(fs.getDirectory(), ae.getReceivingDirectoryPath()), 
+                    ae.getStorageFilePathFormat() == null
                             ? iuid.replace('.', '/')
                             : iuid);
             File dir = file.getParentFile();
@@ -130,7 +130,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
     @Override
     protected MessageDigest getMessageDigest(Association as) {
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-        String algorithm = ae.getEffectiveDigestAlgorithm();
+        String algorithm = ae.getDigestAlgorithm();
         try {
             return algorithm != null ? MessageDigest.getInstance(algorithm) : null;
         } catch (NoSuchAlgorithmException e) {
@@ -155,7 +155,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
                     TransferCapability.Role.SCP, sourceAET);
             if (tpl != null)
                 ds.updateAttributes(SAXTransformer.transform(ds, tpl, false, false), modified);
-            AttributesFormat filePathFormatFor = ae.getEffectiveStorageFilePathFormat();
+            AttributesFormat filePathFormatFor = ae.getStorageFilePathFormat();
             File dst = filePathFormatFor != null
                     ? rename(as, rq, fs, file, filePathFormatFor.format(ds))
                     : file;

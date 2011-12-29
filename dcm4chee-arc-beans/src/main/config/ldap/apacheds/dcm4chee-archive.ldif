@@ -307,20 +307,7 @@ m-name: dcmArchiveDevice
 m-description: DICOM Archive Device related information
 m-supObjectClass: top
 m-typeObjectClass: AUXILIARY
-m-must: dcmFileSystemGroupID
-m-must: dcmReceivingDirectoryPath
-m-must: dcmStoreDuplicate
-m-must: dcmRetrieveAET
 m-must: dcmFuzzyAlgorithmClass
-m-may: dcmStorageFilePathFormat
-m-may: dcmDigestAlgorithm
-m-may: dcmExternalRetrieveAET
-m-may: dcmMatchUnknown
-m-may: dcmSendPendingCGet
-m-may: dcmSendPendingCMoveInterval
-m-may: dcmSuppressWarningCoercionOfDataElements
-m-may: dcmStoreOriginalAttributes
-m-may: dcmModifyingSystem
 
 dn: m-oid=1.2.40.0.13.1.1.15.0.4.5, ou=objectClasses, cn=dcm4chee-archive, ou=sc
  hema
@@ -332,13 +319,13 @@ m-name: dcmArchiveNetworkAE
 m-description: DICOM Archive Network AE related information
 m-supObjectClass: top
 m-typeObjectClass: AUXILIARY
-m-may: dcmFileSystemGroupID
-m-may: dcmReceivingDirectoryPath
+m-must: dcmFileSystemGroupID
+m-must: dcmReceivingDirectoryPath
+m-must: dcmStoreDuplicate
+m-must: dcmRetrieveAET
 m-may: dcmStorageFilePathFormat
 m-may: dcmDigestAlgorithm
-m-may: dcmStoreDuplicate
 m-may: dcmExternalRetrieveAET
-m-may: dcmRetrieveAET
 m-may: dcmMatchUnknown
 m-may: dcmSendPendingCGet
 m-may: dcmSendPendingCMoveInterval

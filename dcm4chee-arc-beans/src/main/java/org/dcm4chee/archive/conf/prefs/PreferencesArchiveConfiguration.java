@@ -75,21 +75,6 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
 
         ArchiveDevice arcDev = (ArchiveDevice) device;
         prefs.putBoolean("dcmArchiveDevice", true);
-        storeNotNull(prefs, "dcmFileSystemGroupID", arcDev.getFileSystemGroupID());
-        storeNotNull(prefs, "dcmReceivingDirectoryPath", arcDev.getReceivingDirectoryPath());
-        storeNotNull(prefs, "dcmStorageFilePathFormat", arcDev.getStorageFilePathFormat());
-        storeNotNull(prefs, "dcmDigestAlgorithm", arcDev.getDigestAlgorithm());
-        storeNotNull(prefs, "dcmStoreDuplicate", arcDev.getStoreDuplicate());
-        storeNotNull(prefs, "dcmExternalRetrieveAET", arcDev.getExternalRetrieveAET());
-        storeNotEmpty(prefs, "dcmRetrieveAET", arcDev.getRetrieveAETs());
-        storeNotDef(prefs, "dcmMatchUnknown", arcDev.isMatchUnknown(), false);
-        storeNotDef(prefs, "dcmSendPendingCGet", arcDev.isSendPendingCGet(), false);
-        storeNotDef(prefs, "dcmSendPendingCMoveInterval", arcDev.getSendPendingCMoveInterval(), 0);
-        storeNotDef(prefs, "dcmSuppressWarningCoercionOfDataElements",
-                arcDev.isSuppressWarningCoercionOfDataElements(), false);
-        storeNotDef(prefs, "dcmStoreOriginalAttributes",
-                arcDev.isStoreOriginalAttributes(), false);
-        storeNotNull(prefs, "dcmModifyingSystem", arcDev.getModifyingSystem());
         storeNotNull(prefs, "dcmFuzzyAlgorithmClass",
                 arcDev.getFuzzyStr().getClass().getName());
     }
@@ -101,7 +86,6 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
             return;
 
         ArchiveDevice arcDev = (ArchiveDevice) device;
-        store(arcDev.getAttributeCoercions(), deviceNode);
         Preferences afsNode = deviceNode.node("dcmAttributeFilter");
         for (Entity entity : Entity.values())
             storeTo(arcDev.getAttributeFilter(entity), afsNode.node(entity.name()));
@@ -148,14 +132,13 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
         storeNotNull(prefs, "dcmStoreDuplicate", arcAE.getStoreDuplicate());
         storeNotNull(prefs, "dcmExternalRetrieveAET", arcAE.getExternalRetrieveAET());
         storeNotEmpty(prefs, "dcmRetrieveAET", arcAE.getRetrieveAETs());
-        storeNotNull(prefs, "dcmMatchUnknown", arcAE.getMatchUnknown());
-        storeNotNull(prefs, "dcmSendPendingCGet", arcAE.getSendPendingCGet());
-        storeNotNull(prefs, "dcmSendPendingCMoveInterval",
-                arcAE.getSendPendingCMoveIntervalOrNull());
-        storeNotNull(prefs, "dcmSuppressWarningCoercionOfDataElements",
-                arcAE.getSuppressWarningCoercionOfDataElements());
-        storeNotNull(prefs, "dcmStoreOriginalAttributes",
-                arcAE.getStoreOriginalAttributes());
+        storeNotDef(prefs, "dcmMatchUnknown", arcAE.isMatchUnknown(), false);
+        storeNotDef(prefs, "dcmSendPendingCGet", arcAE.isSendPendingCGet(), false);
+        storeNotDef(prefs, "dcmSendPendingCMoveInterval", arcAE.getSendPendingCMoveInterval(), 0);
+        storeNotDef(prefs, "dcmSuppressWarningCoercionOfDataElements",
+                arcAE.isSuppressWarningCoercionOfDataElements(), false);
+        storeNotDef(prefs, "dcmStoreOriginalAttributes",
+                arcAE.isStoreOriginalAttributes(), false);
         storeNotNull(prefs, "dcmModifyingSystem", arcAE.getModifyingSystem());
     }
 
@@ -182,22 +165,6 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
             return;
 
         ArchiveDevice arcdev = (ArchiveDevice) device;
-        arcdev.setFileSystemGroupID(prefs.get("dcmFileSystemGroupID", null));
-        arcdev.setReceivingDirectoryPath(prefs.get("dcmReceivingDirectoryPath", null));
-        arcdev.setStorageFilePathFormat(
-                AttributesFormat.valueOf(prefs.get("dcmStorageFilePathFormat", null)));
-        arcdev.setDigestAlgorithm(prefs.get("dcmDigestAlgorithm", null));
-        arcdev.setStoreDuplicate(storeDuplicate(prefs.get("dcmStoreDuplicate", null)));
-        arcdev.setExternalRetrieveAET(prefs.get("dcmExternalRetrieveAET", null));
-        arcdev.setRetrieveAETs(stringArray(prefs, "dcmRetrieveAET"));
-        arcdev.setMatchUnknown(prefs.getBoolean("dcmMatchUnknown", false));
-        arcdev.setSendPendingCGet(prefs.getBoolean("dcmSendPendingCGet", false));
-        arcdev.setSendPendingCMoveInterval(prefs.getInt("dcmSendPendingCMoveInterval", 0));
-        arcdev.setSuppressWarningCoercionOfDataElements(
-                prefs.getBoolean("dcmSuppressWarningCoercionOfDataElements", false));
-        arcdev.setStoreOriginalAttributes(
-                prefs.getBoolean("dcmStoreOriginalAttributes", false));
-        arcdev.setModifyingSystem(prefs.get("dcmModifyingSystem", null));
         arcdev.setFuzzyStr(fuzzyStr(prefs.get("dcmFuzzyAlgorithmClass", null)));
     }
 
@@ -208,7 +175,6 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
         if (!(device instanceof ArchiveDevice))
             return;
         ArchiveDevice arcdev = (ArchiveDevice) device;
-        load(arcdev.getAttributeCoercions(), deviceNode);
         loadAttributeFilters(arcdev, deviceNode);
     }
 
@@ -226,13 +192,13 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
         arcae.setStoreDuplicate(storeDuplicate(prefs.get("dcmStoreDuplicate", null)));
         arcae.setExternalRetrieveAET(prefs.get("dcmExternalRetrieveAET", null));
         arcae.setRetrieveAETs(stringArray(prefs, "dcmRetrieveAET"));
-        arcae.setMatchUnknown(booleanValue(prefs.get("dcmMatchUnknown", null)));
-        arcae.setSendPendingCGet(booleanValue(prefs.get("dcmSendPendingCGet", null)));
-        arcae.setSendPendingCMoveInterval(intValue(prefs.get("dcmSendPendingCMoveInterval", null)));
+        arcae.setMatchUnknown(prefs.getBoolean("dcmMatchUnknown", false));
+        arcae.setSendPendingCGet(prefs.getBoolean("dcmSendPendingCGet", false));
+        arcae.setSendPendingCMoveInterval(prefs.getInt("dcmSendPendingCMoveInterval", 0));
         arcae.setSuppressWarningCoercionOfDataElements(
-                booleanValue(prefs.get("dcmSuppressWarningCoercionOfDataElements", null)));
+                prefs.getBoolean("dcmSuppressWarningCoercionOfDataElements", false));
         arcae.setStoreOriginalAttributes(
-                booleanValue(prefs.get("dcmStoreOriginalAttributes", null)));
+                prefs.getBoolean("dcmStoreOriginalAttributes", false));
         arcae.setModifyingSystem(prefs.get("dcmModifyingSystem", null));
     }
 
@@ -284,58 +250,14 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
     }
 
     @Override
-    protected void storeDiffs(Preferences mods, Device a, Device b) {
-        super.storeDiffs(mods, a, b);
+    protected void storeDiffs(Preferences prefs, Device a, Device b) {
+        super.storeDiffs(prefs, a, b);
         if (!(a instanceof ArchiveDevice && b instanceof ArchiveDevice))
             return;
 
         ArchiveDevice aa = (ArchiveDevice) a;
         ArchiveDevice bb = (ArchiveDevice) b;
-        storeDiff(mods, "dcmFileSystemGroupID",
-                aa.getFileSystemGroupID(),
-                bb.getFileSystemGroupID());
-        storeDiff(mods, "dcmReceivingDirectoryPath",
-                aa.getReceivingDirectoryPath(),
-                bb.getReceivingDirectoryPath());
-        storeDiff(mods, "dcmStorageFilePathFormat",
-                aa.getStorageFilePathFormat(),
-                bb.getStorageFilePathFormat());
-        storeDiff(mods, "dcmDigestAlgorithm",
-                aa.getDigestAlgorithm(),
-                bb.getDigestAlgorithm());
-        storeDiff(mods, "dcmStoreDuplicate",
-                aa.getStoreDuplicate(),
-                bb.getStoreDuplicate());
-        storeDiff(mods, "dcmExternalRetrieveAET",
-                aa.getExternalRetrieveAET(),
-                bb.getExternalRetrieveAET());
-        storeDiff(mods, "dcmRetrieveAET",
-                aa.getRetrieveAETs(),
-                bb.getRetrieveAETs());
-        storeDiff(mods, "dcmMatchUnknown",
-                aa.isMatchUnknown(),
-                bb.isMatchUnknown(),
-                false);
-        storeDiff(mods, "dcmSendPendingCGet",
-                aa.isSendPendingCGet(),
-                bb.isSendPendingCGet(),
-                false);
-        storeDiff(mods, "dcmSendPendingCMoveInterval",
-                aa.getSendPendingCMoveInterval(),
-                bb.getSendPendingCMoveInterval(),
-                0);
-        storeDiff(mods, "dcmSuppressWarningCoercionOfDataElements",
-                aa.isSuppressWarningCoercionOfDataElements(),
-                bb.isSuppressWarningCoercionOfDataElements(),
-                false);
-        storeDiff(mods, "dcmStoreOriginalAttributes",
-                aa.isStoreOriginalAttributes(),
-                bb.isStoreOriginalAttributes(),
-                false);
-        storeDiff(mods, "dcmModifyingSystem",
-                aa.getModifyingSystem(),
-                bb.getModifyingSystem());
-        storeDiff(mods, "dcmFuzzyAlgorithmClass",
+        storeDiff(prefs, "dcmFuzzyAlgorithmClass",
                 aa.getFuzzyAlgorithmClass(),
                 bb.getFuzzyAlgorithmClass());
     }
@@ -372,20 +294,25 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
                  aa.getRetrieveAETs(),
                  bb.getRetrieveAETs());
          storeDiff(prefs, "dcmMatchUnknown",
-                 aa.getMatchUnknown(),
-                 bb.getMatchUnknown());
+                 aa.isMatchUnknown(),
+                 bb.isMatchUnknown(),
+                 false);
          storeDiff(prefs, "dcmSendPendingCGet",
-                 aa.getSendPendingCGet(),
-                 bb.getSendPendingCGet());
+                 aa.isSendPendingCGet(),
+                 bb.isSendPendingCGet(),
+                 false);
          storeDiff(prefs, "dcmSendPendingCMoveInterval",
-                 aa.getSendPendingCMoveIntervalOrNull(),
-                 bb.getSendPendingCMoveIntervalOrNull());
+                 aa.getSendPendingCMoveInterval(),
+                 bb.getSendPendingCMoveInterval(),
+                 0);
          storeDiff(prefs, "dcmSuppressWarningCoercionOfDataElements",
-                 aa.getSuppressWarningCoercionOfDataElements(),
-                 bb.getSuppressWarningCoercionOfDataElements());
+                 aa.isSuppressWarningCoercionOfDataElements(),
+                 bb.isSuppressWarningCoercionOfDataElements(),
+                 false);
          storeDiff(prefs, "dcmStoreOriginalAttributes",
-                 aa.getStoreOriginalAttributes(),
-                 bb.getStoreOriginalAttributes());
+                 aa.isStoreOriginalAttributes(),
+                 bb.isStoreOriginalAttributes(),
+                 false);
          storeDiff(prefs, "dcmModifyingSystem",
                  aa.getModifyingSystem(),
                  bb.getModifyingSystem());
@@ -400,7 +327,6 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
         
         ArchiveDevice aa = (ArchiveDevice) prev;
         ArchiveDevice bb = (ArchiveDevice) device;
-        merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), deviceNode);
         Preferences afsNode = deviceNode.node("dcmAttributeFilter");
         for (Entity entity : Entity.values())
             storeDiffs(afsNode.node(entity.name()), aa.getAttributeFilter(entity),

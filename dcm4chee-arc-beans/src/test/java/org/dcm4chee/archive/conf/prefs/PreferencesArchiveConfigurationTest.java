@@ -489,7 +489,7 @@ public class PreferencesArchiveConfigurationTest {
                 ae.getDevice().getAuthorizedNodeCertificateRefs());
         assertEquals(1, certs.length);
         assertEquals(storeScpCert, certs[0]);
-//        export();
+        export();
         config.findApplicationEntity("DCM4CHEE");
         config.removeDevice(DCM4CHEE_ARCHIVE);
         config.removeDevice(STORESCP_DEVICE);
@@ -497,15 +497,15 @@ public class PreferencesArchiveConfigurationTest {
         config.unregisterAETitle("STORESCP");
     }
 
-//    private void export() throws Exception {
-//        OutputStream os = new FileOutputStream(
-//                "/home/gunter/dcm4chee-arc/dcm4chee-arc-beans/src/main/config/prefs/sample-config.xml");
-//        try {
-//            Preferences.userRoot().node("org/dcm4chee/archive").exportSubtree(os);
-//        } finally {
-//            SafeClose.close(os);
-//        }
-//    }
+    private void export() throws Exception {
+        OutputStream os = new FileOutputStream(
+                "/home/gunter/dcm4chee-arc/dcm4chee-arc-beans/src/main/config/prefs/sample-config.xml");
+        try {
+            Preferences.userRoot().node("org/dcm4chee/archive").exportSubtree(os);
+        } finally {
+            SafeClose.close(os);
+        }
+    }
 
     private Device createStoreSCP(String name) throws Exception {
         Device device = new Device(name);
@@ -527,17 +527,7 @@ public class PreferencesArchiveConfigurationTest {
 
     private ArchiveDevice createArchiveDevice(String name) throws Exception {
         ArchiveDevice device = new ArchiveDevice(name);
-        device.setFileSystemGroupID("DEFAULT");
-        device.setReceivingDirectoryPath("incoming");
-        device.setDigestAlgorithm("MD5");
-        device.setRetrieveAETs("DCM4CHEE");
-        device.setStoreOriginalAttributes(true);
-        device.setSuppressWarningCoercionOfDataElements(false);
-        device.setStoreDuplicate(StoreDuplicate.STORE);
         device.setFuzzyStr(new ESoundex());
-        device.setMatchUnknown(true);
-        device.setSendPendingCGet(true);
-        device.setSendPendingCMoveInterval(5000);
         device.setAttributeFilter(Entity.Patient, new AttributeFilter(PATIENT_ATTRS));
         device.setAttributeFilter(Entity.Study, new AttributeFilter(STUDY_ATTRS));
         device.setAttributeFilter(Entity.Series, new AttributeFilter(SERIES_ATTRS));
@@ -546,25 +536,35 @@ public class PreferencesArchiveConfigurationTest {
         device.setAttributeFilter(Entity.ServiceRequest, new AttributeFilter(SERVICE_REQUEST_ATTRS));
         device.setAttributeFilter(Entity.RequestedProcedure, new AttributeFilter(REQUESTED_PROCEDURE_ATTRS));
         device.setAttributeFilter(Entity.ScheduledProcedureStep, new AttributeFilter(SPS_ATTRS));
-        device.addAttributeCoercion(new AttributeCoercion(null, 
+        ArchiveApplicationEntity ae = new ArchiveApplicationEntity("DCM4CHEE");
+        ae.setAssociationAcceptor(true);
+        ae.setAssociationInitiator(true);
+        ae.setFileSystemGroupID("DEFAULT");
+        ae.setReceivingDirectoryPath("incoming");
+        ae.setDigestAlgorithm("MD5");
+        ae.setRetrieveAETs("DCM4CHEE");
+        ae.setStoreOriginalAttributes(true);
+        ae.setSuppressWarningCoercionOfDataElements(false);
+        ae.setStoreDuplicate(StoreDuplicate.STORE);
+        ae.setMatchUnknown(true);
+        ae.setSendPendingCGet(true);
+        ae.setSendPendingCMoveInterval(5000);
+        ae.addAttributeCoercion(new AttributeCoercion(null, 
                 AttributeCoercion.DIMSE.C_STORE_RQ, 
                 TransferCapability.Role.SCP,
                 "ENSURE_PID",
                 "resource:dcm4chee-arc-ensure-pid.xsl"));
-        device.addAttributeCoercion(new AttributeCoercion(null, 
+        ae.addAttributeCoercion(new AttributeCoercion(null, 
                 AttributeCoercion.DIMSE.C_STORE_RQ, 
                 TransferCapability.Role.SCU,
                 "WITHOUT_PN",
                 "resource:dcm4chee-arc-nullify-pn.xsl"));
-        ArchiveApplicationEntity ae = new ArchiveApplicationEntity("DCM4CHEE");
-        ae.setAssociationAcceptor(true);
-        ae.setAssociationInitiator(true);
         addVerificationStorageTransferCapabilities(ae);
         addStorageTransferCapabilities(ae, IMAGE_CUIDS, IMAGE_TSUIDS);
         addStorageTransferCapabilities(ae, VIDEO_CUIDS, VIDEO_TSUIDS);
         addStorageTransferCapabilities(ae, OTHER_CUIDS, OTHER_TSUIDS);
-        addQRTransferCapabilities(ae, QUERY_CUIDS, EnumSet.allOf(QueryOption.class));
-        addQRTransferCapabilities(ae, RETRIEVE_CUIDS, EnumSet.of(QueryOption.RELATIONAL));
+        addSCPs(ae, QUERY_CUIDS, EnumSet.allOf(QueryOption.class));
+        addSCPs(ae, RETRIEVE_CUIDS, EnumSet.of(QueryOption.RELATIONAL));
         addSCP(ae, UID.CompositeInstanceRetrieveWithoutBulkDataGET, null);
         device.addApplicationEntity(ae);
         Connection dicom = new Connection("dicom", "localhost", 11112);
@@ -598,7 +598,7 @@ public class PreferencesArchiveConfigurationTest {
         
     }
 
-    private void addQRTransferCapabilities(ArchiveApplicationEntity ae, String[] cuids,
+    private void addSCPs(ArchiveApplicationEntity ae, String[] cuids,
             EnumSet<QueryOption> queryOpts) {
         for (String cuid : cuids)
             addSCP(ae, cuid, queryOpts);
