@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.conf.prefs;
 
+import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.prefs.BackingStoreException;
@@ -159,7 +160,8 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
     }
 
     @Override
-    protected void loadFrom(Device device, Preferences prefs) {
+    protected void loadFrom(Device device, Preferences prefs)
+            throws CertificateException {
         super.loadFrom(device, prefs);
         if (!(device instanceof ArchiveDevice))
             return;

@@ -38,13 +38,10 @@
 
 package org.dcm4chee.archive.conf.prefs;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.KeyStore;
-import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.EnumSet;
 import java.util.prefs.Preferences;
 
@@ -56,6 +53,7 @@ import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Connection;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.QueryOption;
+import org.dcm4che.net.SSLManagerFactory;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.soundex.ESoundex;
 import org.dcm4che.util.SafeClose;
@@ -74,8 +72,6 @@ import org.junit.Test;
  */
 public class PreferencesArchiveConfigurationTest {
 
-    private static final String DCM4CHEE_ARCHIVE = "dcm4chee-arc";
-    private static final String STORESCP_DEVICE = "storescp";
     private static final int[] PATIENT_ATTRS = {
         Tag.SpecificCharacterSet,
         Tag.PatientName,
@@ -445,6 +441,14 @@ public class PreferencesArchiveConfigurationTest {
         UID.PatientStudyOnlyQueryRetrieveInformationModelGETRetired,
         UID.PatientStudyOnlyQueryRetrieveInformationModelMOVERetired
     };
+    private static final KeyStore KEYSTORE = loadKeyStore();
+    private static KeyStore loadKeyStore() {
+        try {
+            return SSLManagerFactory.loadKeyStore("JKS", "resource:cacerts.jks", "secret");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private PreferencesArchiveConfiguration config;
 
@@ -460,73 +464,107 @@ public class PreferencesArchiveConfigurationTest {
 
     @Test
     public void testPersist() throws Exception {
-        KeyStore ks = KeyStore.getInstance("JKS");
-        InputStream in = Thread.currentThread().getContextClassLoader()
-                .getResourceAsStream("cacerts.jks");
         try {
-            ks.load(in, new char[] {'s', 'e', 'c', 'r', 'e', 't' });
-        } finally {
-            SafeClose.close(in);
-        }
-        try {
-            config.removeDevice(DCM4CHEE_ARCHIVE);
+            config.removeDevice("storescp");
         }  catch (ConfigurationNotFoundException e) {}
         try {
-            config.removeDevice(STORESCP_DEVICE);
+            config.removeDevice("storescu");
         }  catch (ConfigurationNotFoundException e) {}
-        config.unregisterAETitle("DCM4CHEE");
+        try {
+            config.removeDevice("findscu");
+        }  catch (ConfigurationNotFoundException e) {}
+        try {
+            config.removeDevice("getscu");
+        }  catch (ConfigurationNotFoundException e) {}
+        try {
+            config.removeDevice("movescu");
+        }  catch (ConfigurationNotFoundException e) {}
+        try {
+            config.removeDevice("dcmqrscp");
+        }  catch (ConfigurationNotFoundException e) {}
+        try {
+            config.removeDevice("dcm4chee-arc");
+        }  catch (ConfigurationNotFoundException e) {}
         config.unregisterAETitle("STORESCP");
-        config.registerAETitle("DCM4CHEE");
+        config.unregisterAETitle("DCMQRSCP");
+        config.unregisterAETitle("DCM4CHEE");
         config.registerAETitle("STORESCP");
-        config.persist(createArchiveDevice(DCM4CHEE_ARCHIVE));
-        config.persistCertificates(config.deviceDN(DCM4CHEE_ARCHIVE),
-                ks.getCertificate(DCM4CHEE_ARCHIVE));
-        config.persist(createStoreSCP(STORESCP_DEVICE));
-        Certificate storeScpCert = ks.getCertificate(STORESCP_DEVICE);
-        config.persistCertificates(config.deviceDN(STORESCP_DEVICE), storeScpCert);
-        ApplicationEntity ae = config.findApplicationEntity("DCM4CHEE");
-        Certificate[] certs = config.findCertificates(
-                ae.getDevice().getAuthorizedNodeCertificateRefs());
-        assertEquals(1, certs.length);
-        assertEquals(storeScpCert, certs[0]);
-        export();
+        config.registerAETitle("DCMQRSCP");
+        config.registerAETitle("DCM4CHEE");
+        config.persist(createDevice("storescu"));
+        config.persist(createDevice("findscu"));
+        config.persist(createDevice("movescu"));
+        config.persist(createDevice("getscu"));
+        config.persist(createOtherSCP("storescp", "STORESCP", 
+                "localhost",11113, 2763));
+        config.persist(createOtherSCP("dcmqrscp", "DCMQRSCP",
+                "localhost", 11113, 2763));
+        config.persist(createArchiveDevice("dcm4chee-arc"));
         config.findApplicationEntity("DCM4CHEE");
-        config.removeDevice(DCM4CHEE_ARCHIVE);
-        config.removeDevice(STORESCP_DEVICE);
-        config.unregisterAETitle("DCM4CHEE");
+        config.removeDevice("storescp");
+//        export();
+        config.removeDevice("storescu");
+        config.removeDevice("findscu");
+        config.removeDevice("getscu");
+        config.removeDevice("movescu");
+        config.removeDevice("dcmqrscp");
+        config.removeDevice("dcm4chee-arc");
         config.unregisterAETitle("STORESCP");
+        config.unregisterAETitle("DCMQRSCP");
+        config.unregisterAETitle("DCM4CHEE");
     }
 
-    private void export() throws Exception {
-        OutputStream os = new FileOutputStream(
-                "/home/gunter/dcm4chee-arc/dcm4chee-arc-beans/src/main/config/prefs/sample-config.xml");
-        try {
-            Preferences.userRoot().node("org/dcm4chee/archive").exportSubtree(os);
-        } finally {
-            SafeClose.close(os);
-        }
-    }
+//    private void export() throws Exception {
+//        OutputStream os = new FileOutputStream(
+//                "/home/gunter/dcm4chee-arc/dcm4chee-arc-beans/src/main/config/prefs/sample-config.xml");
+//        try {
+//            Preferences.userRoot().node("org/dcm4chee/archive").exportSubtree(os);
+//        } finally {
+//            SafeClose.close(os);
+//        }
+//    }
 
-    private Device createStoreSCP(String name) throws Exception {
+    private Device createDevice(String name) throws Exception {
         Device device = new Device(name);
-        ApplicationEntity ae = new ApplicationEntity("STORESCP");
+        device.setThisNodeCertificates(config.deviceRef(name),
+                (X509Certificate) KEYSTORE.getCertificate(name));
+        return device;
+    }
+
+    private Device createOtherSCP(String name, String aet,
+           String host, int port, int tlsPort) throws Exception {
+        Device device = createDevice(name);
+        ApplicationEntity ae = new ApplicationEntity(aet);
         ae.setAssociationAcceptor(true);
         device.addApplicationEntity(ae);
-        Connection dicom = new Connection("dicom", "localhost", 11113);
+        Connection dicom = new Connection("dicom", host, port);
         device.addConnection(dicom);
         ae.addConnection(dicom);
-        Connection dicomTLS = new Connection("dicom-tls", "localhost", 2763);
+        Connection dicomTLS = new Connection("dicom-tls", host, tlsPort);
         dicomTLS.setTlsCipherSuites(
                 Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
                 Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
         device.addConnection(dicomTLS);
         ae.addConnection(dicomTLS);
-        device.setThisNodeCertificateRefs(config.deviceDN(name));
         return device;
     }
 
     private ArchiveDevice createArchiveDevice(String name) throws Exception {
         ArchiveDevice device = new ArchiveDevice(name);
+        device.setThisNodeCertificates(config.deviceRef(name),
+                (X509Certificate) KEYSTORE.getCertificate(name));
+        device.setAuthorizedNodeCertificates(config.deviceRef("storescp"),
+                (X509Certificate) KEYSTORE.getCertificate("storescp"));
+        device.setAuthorizedNodeCertificates(config.deviceRef("storescu"),
+                (X509Certificate) KEYSTORE.getCertificate("storescu"));
+        device.setAuthorizedNodeCertificates(config.deviceRef("findscu"),
+                (X509Certificate) KEYSTORE.getCertificate("findscu"));
+        device.setAuthorizedNodeCertificates(config.deviceRef("getscu"),
+                (X509Certificate) KEYSTORE.getCertificate("getscu"));
+        device.setAuthorizedNodeCertificates(config.deviceRef("movescu"),
+                (X509Certificate) KEYSTORE.getCertificate("movescu"));
+        device.setAuthorizedNodeCertificates(config.deviceRef("dcmqrscp"),
+                (X509Certificate) KEYSTORE.getCertificate("dcmqrscp"));
         device.setFuzzyStr(new ESoundex());
         device.setAttributeFilter(Entity.Patient, new AttributeFilter(PATIENT_ATTRS));
         device.setAttributeFilter(Entity.Study, new AttributeFilter(STUDY_ATTRS));
@@ -580,8 +618,6 @@ public class PreferencesArchiveConfigurationTest {
                 Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
         device.addConnection(dicomTLS);
         ae.addConnection(dicomTLS);
-        device.setThisNodeCertificateRefs(config.deviceDN(name));
-        device.setAuthorizedNodeCertificateRefs(config.deviceDN(STORESCP_DEVICE));
         return device;
     }
 

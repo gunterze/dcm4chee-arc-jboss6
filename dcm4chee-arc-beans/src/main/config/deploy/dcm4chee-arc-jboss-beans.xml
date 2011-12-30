@@ -51,7 +51,7 @@
       factoryMethod="newSingleThreadScheduledExecutor" />
   </bean>
 
-  <!-- LDAP Archive Configuration
+  <!-- LDAP Archive Configuration -->
   <bean name="ArchiveConfiguration" class="org.dcm4chee.archive.conf.ldap.LdapArchiveConfiguration">
     <constructor>
       <parameter>
@@ -64,9 +64,8 @@
       <parameter>dc=nodomain</parameter>
     </constructor>
   </bean>
-  -->
 
-  <!-- Preferences Archive Configuration -->
+  <!-- Preferences Archive Configuration
   <bean name="ArchiveConfiguration" class="org.dcm4chee.archive.conf.prefs.PreferencesArchiveConfiguration">
     <constructor>
       <parameter>
@@ -76,6 +75,7 @@
       </parameter> 
     </constructor>
   </bean>
+  -->
 
   <bean name="KeyManager" class="javax.net.ssl.KeyManager">
     <constructor factoryClass="org.dcm4che.net.SSLManagerFactory" factoryMethod="createKeyManager">
@@ -83,18 +83,6 @@
       <parameter>resource:dcm4chee-arc-key.jks</parameter>
       <parameter class="java.lang.String">secret</parameter>
       <parameter class="java.lang.String">secret</parameter>
-    </constructor>
-  </bean>
-
-  <bean name="TrustManager" class="javax.net.ssl.TrustManager">
-    <constructor factoryClass="org.dcm4che.net.SSLManagerFactory" factoryMethod="createTrustManager">
-      <parameter class="[Ljava.security.cert.Certificate;">
-        <value-factory bean="ArchiveConfiguration" method="findCertificates">
-          <parameter>
-            <inject bean="Device" state="Instantiated" property="authorizedNodeCertificateRefs"/>
-          </parameter>
-        </value-factory>
-      </parameter>
     </constructor>
   </bean>
 
@@ -116,9 +104,7 @@
     <property name="keyManager">
       <inject bean="KeyManager" />
     </property>
-    <property name="trustManager">
-      <inject bean="TrustManager" />
-    </property>
+    <create method="initTrustManager" />
     <start method="activate" />
     <stop method="deactivate" />
     <demand>Class:org.dcm4chee.archive.ejb.store.InstanceStore</demand>

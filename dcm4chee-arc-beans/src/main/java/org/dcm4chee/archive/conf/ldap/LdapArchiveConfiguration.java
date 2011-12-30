@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.conf.ldap;
 
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
@@ -179,7 +180,8 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
     }
 
     @Override
-    protected void loadFrom(Device device, Attributes attrs) throws NamingException {
+    protected void loadFrom(Device device, Attributes attrs)
+            throws NamingException, CertificateException {
         super.loadFrom(device, attrs);
         if (!(device instanceof ArchiveDevice))
             return;

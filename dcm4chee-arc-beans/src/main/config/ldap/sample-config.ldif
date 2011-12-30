@@ -1,10 +1,212 @@
 version: 1
 
+dn: cn=DICOM Configuration,dc=nodomain
+objectClass: dicomConfigurationRoot
+objectClass: top
+cn: DICOM Configuration
+
+dn: cn=Devices,cn=DICOM Configuration,dc=nodomain
+objectClass: dicomDevicesRoot
+objectClass: top
+cn: Devices
+
+dn: cn=Unique AE Titles Registry,cn=DICOM Configuration,dc=nodomain
+objectClass: dicomUniqueAETitlesRegistryRoot
+objectClass: top
+cn: Unique AE Titles Registry
+
+dn: dicomAETitle=STORESCP,cn=Unique AE Titles Registry,cn=DICOM Configuratio
+ n,dc=nodomain
+objectClass: dicomUniqueAETitle
+dicomAETitle: STORESCP
+
+dn: dicomAETitle=DCMQRSCP,cn=Unique AE Titles Registry,cn=DICOM Configuratio
+ n,dc=nodomain
+objectClass: dicomUniqueAETitle
+dicomAETitle: DCMQRSCP
+
 dn: dicomAETitle=DCM4CHEE,cn=Unique AE Titles Registry,cn=DICOM Configuratio
  n,dc=nodomain
-objectclass: dicomUniqueAETitle
-objectclass: top
+objectClass: dicomUniqueAETitle
 dicomAETitle: DCM4CHEE
+
+dn: dicomDeviceName=storescu,cn=Devices,cn=DICOM Configuration,dc=nodomain
+objectClass: dicomDevice
+objectClass: pkiUser
+dicomDeviceName: storescu
+dicomInstalled: TRUE
+dicomThisNodeCertificateReference: dicomDeviceName=storescu,cn=Devices,cn=DI
+ COM Configuration,dc=nodomain
+userCertificate;binary:: MIICTTCCAbagAwIBAgIETcfJhjANBgkqhkiG9w0BAQUFADBrMQs
+ wCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2
+ RjbTRjaGUxFTATBgNVBAsTDGRjbTRjaGUtdG9vbDERMA8GA1UEAxMIc3RvcmVzY3UwHhcNMTEwN
+ TA5MTEwMTI2WhcNMTIwNTA4MTEwMTI2WjBrMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5h
+ MQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxFTATBgNVBAsTDGRjbTRjaGUtdG9
+ vbDERMA8GA1UEAxMIc3RvcmVzY3UwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAIWXv47tVn
+ a0cmqkTIWlyjo30I5xiQn87+pkOFCtpK6lXpuL4eQ4Wsafcv/fBEe564nd+a8lArBmrcHlS7yU/
+ VX1bPHMOdot6R+qF2icohL9e43Wgvcq7aV3gV2Wtvrg7+STMzV+GgULEYBw0T9pTi1mBTr5hEFV
+ uwqK4lSkmF9dAgMBAAEwDQYJKoZIhvcNAQEFBQADgYEAENTJn6dkVMnz3qhfBb86nso5pp9+sFE
+ xHHQ33yrbbK+m63fQ9gKCJ02VCFW3hBq8IjGAlbZNchHFNE0uJ3GrDXjtXGpNPMmo+2pQ+5quq/
+ 6g3bgcFt+Yn8jd/Y4w1mgP0i5Dc2niJA0FhY0qjzjNp/WfsoiwW8yM1+UFY5BZTBI=
+
+dn: dicomDeviceName=findscu,cn=Devices,cn=DICOM Configuration,dc=nodomain
+objectClass: dicomDevice
+objectClass: pkiUser
+dicomDeviceName: findscu
+dicomInstalled: TRUE
+dicomThisNodeCertificateReference: dicomDeviceName=findscu,cn=Devices,cn=DIC
+ OM Configuration,dc=nodomain
+userCertificate;binary:: MIICSzCCAbSgAwIBAgIETcfpyTANBgkqhkiG9w0BAQUFADBqMQs
+ wCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2
+ RjbTRjaGUxFTATBgNVBAsTDGRjbTRjaGUtdG9vbDEQMA4GA1UEAxMHZmluZHNjdTAeFw0xMTA1M
+ DkxMzE5MDVaFw0xMjA1MDgxMzE5MDVaMGoxCzAJBgNVBAYTAkFUMQ8wDQYDVQQIEwZWaWVubmEx
+ DzANBgNVBAcTBlZpZW5uYTEQMA4GA1UEChMHZGNtNGNoZTEVMBMGA1UECxMMZGNtNGNoZS10b29
+ sMRAwDgYDVQQDEwdmaW5kc2N1MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDPvWkw1XTlX9
+ /TnJLeTphcfqJ6dQ+vyFwGThrAuOtBN4iTr9IaXCTEADJF+VhaQ/AE94a9FUu8vaJ4ZLRDzkb3o
+ yWECcWjwcxBkeCBJK1Tjv4qwrQ4D7lCuO8URS6x2JuFXFc53j5WbIqHla2/Mcy2joRKIqvc5wHm
+ UKT1lH6lIwIDAQABMA0GCSqGSIb3DQEBBQUAA4GBAL6QLWM17dWuYEB0eiIa8bvr0tFMlsTxhEc
+ okJI+scC5SaS5ACbZ/UR+cDdGsMT+hMbIVAxKngyGpG6jA+bEmvwK+5go5NlRXgVGS2XEcHwgfb
+ +aicqo23mlCPwDEhh1asP3opxGhl0CGZLQs9EVXXdqt04JCSlMlkt5lVddKiSi
+
+dn: dicomDeviceName=movescu,cn=Devices,cn=DICOM Configuration,dc=nodomain
+objectClass: dicomDevice
+objectClass: pkiUser
+dicomDeviceName: movescu
+dicomInstalled: TRUE
+dicomThisNodeCertificateReference: dicomDeviceName=movescu,cn=Devices,cn=DIC
+ OM Configuration,dc=nodomain
+userCertificate;binary:: MIICSzCCAbSgAwIBAgIETdLfMjANBgkqhkiG9w0BAQUFADBqMQs
+ wCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2
+ RjbTRjaGUxFTATBgNVBAsTDGRjbTRjaGUtdG9vbDEQMA4GA1UEAxMHbW92ZXNjdTAeFw0xMTA1M
+ TcyMDQ4NTBaFw0xMjA1MTYyMDQ4NTBaMGoxCzAJBgNVBAYTAkFUMQ8wDQYDVQQIEwZWaWVubmEx
+ DzANBgNVBAcTBlZpZW5uYTEQMA4GA1UEChMHZGNtNGNoZTEVMBMGA1UECxMMZGNtNGNoZS10b29
+ sMRAwDgYDVQQDEwdtb3Zlc2N1MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCMwS+GmXBxrF
+ yI793pCRudGoArwH8Y4sAYJcx9lHT2pHf3F3LYvLeE9ritWIdmsMiIyhmvmHWq1sotuE+qvqfW/
+ WZGX3g5w7PukaAlTvqfxFTnzleqWLRubAU2+aWWDHXI0owlPQkzmNFcfKQEZYSUJhiK9Zfa8nF4
+ qEkqM4GvpwIDAQABMA0GCSqGSIb3DQEBBQUAA4GBADTogLVSb4KH4xt11y0Mbdan/H6U5vO2fjZ
+ 0NL9ntuyuN/rNeWs+/HfXyrDDf1RsWYGBSabIG5a69A3LIzbwajfUSnaDFBR9xOLOswrqiYQHwf
+ kf+YIfto5yE99GSAprhzDLrzOlDcDH4bjdA+bsmM7OvahBKIHHcxXv/TRS+VFM
+
+dn: dicomDeviceName=getscu,cn=Devices,cn=DICOM Configuration,dc=nodomain
+objectClass: dicomDevice
+objectClass: pkiUser
+dicomDeviceName: getscu
+dicomInstalled: TRUE
+dicomThisNodeCertificateReference: dicomDeviceName=getscu,cn=Devices,cn=DICO
+ M Configuration,dc=nodomain
+userCertificate;binary:: MIICSzCCAbSgAwIBAgIETk5oQjANBgkqhkiG9w0BAQUFADBqMQs
+ wCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2
+ RjbTRjaGUxFjAUBgNVBAsTDWRjY200Y2hlLXRvb2wxDzANBgNVBAMTBmdldHNjdTAeFw0xMTA4M
+ TkxMzQyMjZaFw0xMjA4MTgxMzQyMjZaMGoxCzAJBgNVBAYTAkFUMQ8wDQYDVQQIEwZWaWVubmEx
+ DzANBgNVBAcTBlZpZW5uYTEQMA4GA1UEChMHZGNtNGNoZTEWMBQGA1UECxMNZGNjbTRjaGUtdG9
+ vbDEPMA0GA1UEAxMGZ2V0c2N1MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDKgWG1S1Aeu8
+ IDFj/oZ3FMxlfJpTB1HXL+pp+fkxXU0BgifLSFD9TIp3aKdzJbtUK889qSTvwNwCte+gdUkLC6Y
+ NsWPsUW4GQI3QtgCLje+2frp/bdSh6ZBymfHQed94tq63oG0MtV9osx1yWJk34XNztTqHIw9m03
+ 7glGFY1XCwIDAQABMA0GCSqGSIb3DQEBBQUAA4GBAAl5SWZ9UUeo6TRwFuWa/W4+NyU4n38qnXQ
+ 1563/QcigGxnQet8XDrpcH/Yj3yXf4q8pKSZgYdG56liaYjT2O1ctuWadwVTTv/bHGciOakt8pf
+ 9SpTD6bMXXEjO0YuutgQv4RVJe3FyvfEzhF7cnmkS/BA1xbewSVEHruTI4b0j0
+
+dn: dicomDeviceName=storescp,cn=Devices,cn=DICOM Configuration,dc=nodomain
+objectClass: dicomDevice
+objectClass: pkiUser
+dicomDeviceName: storescp
+dicomInstalled: TRUE
+dicomThisNodeCertificateReference: dicomDeviceName=storescp,cn=Devices,cn=DI
+ COM Configuration,dc=nodomain
+userCertificate;binary:: MIICTTCCAbagAwIBAgIETcfJ0zANBgkqhkiG9w0BAQUFADBrMQs
+ wCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2
+ RjbTRjaGUxFTATBgNVBAsTDGRjbTRjaGUtdG9vbDERMA8GA1UEAxMIc3RvcmVzY3AwHhcNMTEwN
+ TA5MTEwMjQzWhcNMTIwNTA4MTEwMjQzWjBrMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5h
+ MQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxFTATBgNVBAsTDGRjbTRjaGUtdG9
+ vbDERMA8GA1UEAxMIc3RvcmVzY3AwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAIS0bk+A9a
+ BRcko1Hxr11MB+NuQhyORTefh8K0cwyCXZJLuDHrF2A9OJUmlj9pB1QZAvLP6Z5UK6owMFmuwn1
+ pFdcOoy4ffoOfbz57MFp1GtUGQMR9CUcvQ/yakd1tAkT7t69sHWgQIjIdsx2xarMuEy66G5JF8X
+ 9F9TbGYkEm67AgMBAAEwDQYJKoZIhvcNAQEFBQADgYEAWxbB+7UJzXw7p4+n2RpPMLZWdAUGaGR
+ JzvqY96lZQZuN8SgPb8f6FjXVR3UbVzBc3vQyCiDpfA2xC+Dx6RK3MYsE4M56PwmG6aB1Du93Re
+ 8b4LmFJJLPkekmLp9OiZNxyXE+PzQkGf0f/AbXJn8HbGhWIBVjO4XzLFH+dF7Wl5w=
+
+dn: cn=dicom,dicomDeviceName=storescp,cn=Devices,cn=DICOM Configuration,dc=n
+ odomain
+objectClass: dicomNetworkConnection
+objectClass: dcmNetworkConnection
+dicomHostname: localhost
+cn: dicom
+dicomPort: 11113
+
+dn: cn=dicom-tls,dicomDeviceName=storescp,cn=Devices,cn=DICOM Configuration,
+ dc=nodomain
+objectClass: dicomNetworkConnection
+objectClass: dcmNetworkConnection
+dicomHostname: localhost
+cn: dicom-tls
+dcmTLSProtocol: TLSv1
+dcmTLSProtocol: SSLv3
+dicomPort: 2763
+dicomTLSCipherSuite: TLS_RSA_WITH_AES_128_CBC_SHA
+dicomTLSCipherSuite: SSL_RSA_WITH_3DES_EDE_CBC_SHA
+
+dn: dicomAETitle=STORESCP,dicomDeviceName=storescp,cn=Devices,cn=DICOM Confi
+ guration,dc=nodomain
+objectClass: dicomNetworkAE
+objectClass: dcmNetworkAE
+dicomAETitle: STORESCP
+dicomAssociationAcceptor: TRUE
+dicomAssociationInitiator: FALSE
+dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=storescp,cn=Device
+ s,cn=DICOM Configuration,dc=nodomain
+dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=storescp,cn=De
+ vices,cn=DICOM Configuration,dc=nodomain
+
+dn: dicomDeviceName=dcmqrscp,cn=Devices,cn=DICOM Configuration,dc=nodomain
+objectClass: dicomDevice
+objectClass: pkiUser
+dicomDeviceName: dcmqrscp
+dicomInstalled: TRUE
+dicomThisNodeCertificateReference: dicomDeviceName=dcmqrscp,cn=Devices,cn=DI
+ COM Configuration,dc=nodomain
+userCertificate;binary:: MIICTTCCAbagAwIBAgIETcqZ4DANBgkqhkiG9w0BAQUFADBrMQs
+ wCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2
+ RjbTRjaGUxFTATBgNVBAsTDGRjbTRjaGUtdG9vbDERMA8GA1UEAxMIZGNtcXJzY3AwHhcNMTEwN
+ TExMTQxNDU2WhcNMTIwNTEwMTQxNDU2WjBrMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5h
+ MQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxFTATBgNVBAsTDGRjbTRjaGUtdG9
+ vbDERMA8GA1UEAxMIZGNtcXJzY3AwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAIC0nWrpu/
+ 2j8UfKvyXOdvagNcN/MH1xdt8vDUp0iZ1YO44SPpdqXxeyOYwf8Np7JQtV/pCerNzPiUjP4Fzdi
+ frsrZjHvPvriApGiMx9t3j/+Ya2SW2QkaSR27B4LsM+0xikFAmI4iSc+FXhZL8sV+KvG1qQcrBr
+ THVdbquqt/lrAgMBAAEwDQYJKoZIhvcNAQEFBQADgYEAdBVsrdR+/bUdD3zkn1xbVmIoz2CGeua
+ Y+EUxKi8CbaY9YVJBJLEDdXTiW6F5FHK5rUnIzvbUXViCYvDhse8FeXH1eoi4CRbqbFanRikiZw
+ a8e+3HnzEjgly/c7lKOJ02aSc4T2MgrI7MpxyMYDMb/7fl/ZW6X9BBJW2DX8wAlO0=
+
+dn: cn=dicom,dicomDeviceName=dcmqrscp,cn=Devices,cn=DICOM Configuration,dc=n
+ odomain
+objectClass: dicomNetworkConnection
+objectClass: dcmNetworkConnection
+dicomHostname: localhost
+cn: dicom
+dicomPort: 11113
+
+dn: cn=dicom-tls,dicomDeviceName=dcmqrscp,cn=Devices,cn=DICOM Configuration,
+ dc=nodomain
+objectClass: dicomNetworkConnection
+objectClass: dcmNetworkConnection
+dicomHostname: localhost
+cn: dicom-tls
+dcmTLSProtocol: TLSv1
+dcmTLSProtocol: SSLv3
+dicomPort: 2763
+dicomTLSCipherSuite: TLS_RSA_WITH_AES_128_CBC_SHA
+dicomTLSCipherSuite: SSL_RSA_WITH_3DES_EDE_CBC_SHA
+
+dn: dicomAETitle=DCMQRSCP,dicomDeviceName=dcmqrscp,cn=Devices,cn=DICOM Confi
+ guration,dc=nodomain
+objectClass: dicomNetworkAE
+objectClass: dcmNetworkAE
+dicomAETitle: DCMQRSCP
+dicomAssociationAcceptor: TRUE
+dicomAssociationInitiator: FALSE
+dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=dcmqrscp,cn=Device
+ s,cn=DICOM Configuration,dc=nodomain
+dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=dcmqrscp,cn=De
+ vices,cn=DICOM Configuration,dc=nodomain
 
 dn: dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodoma
  in
@@ -15,6 +217,16 @@ dcmFuzzyAlgorithmClass: org.dcm4che.soundex.ESoundex
 dicomDeviceName: dcm4chee-arc
 dicomInstalled: TRUE
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=storescp,cn=Devices
+ ,cn=DICOM Configuration,dc=nodomain
+dicomAuthorizedNodeCertificateReference: dicomDeviceName=storescu,cn=Devices
+ ,cn=DICOM Configuration,dc=nodomain
+dicomAuthorizedNodeCertificateReference: dicomDeviceName=findscu,cn=Devices,
+ cn=DICOM Configuration,dc=nodomain
+dicomAuthorizedNodeCertificateReference: dicomDeviceName=getscu,cn=Devices,c
+ n=DICOM Configuration,dc=nodomain
+dicomAuthorizedNodeCertificateReference: dicomDeviceName=movescu,cn=Devices,
+ cn=DICOM Configuration,dc=nodomain
+dicomAuthorizedNodeCertificateReference: dicomDeviceName=dcmqrscp,cn=Devices
  ,cn=DICOM Configuration,dc=nodomain
 dicomThisNodeCertificateReference: dicomDeviceName=dcm4chee-arc,cn=Devices,c
  n=DICOM Configuration,dc=nodomain
