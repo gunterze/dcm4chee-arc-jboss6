@@ -58,6 +58,7 @@ import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCMoveSCP;
+import org.dcm4che.net.service.BasicRetrieveTask;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
@@ -112,7 +113,8 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
             throw new DicomServiceException(Status.UnableToProcess, e);
         }
         List<InstanceLocator> matches = calculateMatches(rq, keys);
-        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(as, pc, rq, matches, false) {
+        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(
+                BasicRetrieveTask.Service.C_MOVE, as, pc, rq, matches, false) {
 
             @Override
             protected Association getStoreAssociation() throws DicomServiceException {

@@ -51,6 +51,7 @@ import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCGetSCP;
+import org.dcm4che.net.service.BasicRetrieveTask;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
@@ -91,8 +92,8 @@ public class CGetSCPImpl extends BasicCGetSCP {
         level.validateRetrieveKeys(validator, rootLevel, relational);
         List<InstanceLocator> matches  = calculateMatches(rq, keys);
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-        RetrieveTaskImpl retrieveTask =
-                new RetrieveTaskImpl(as, pc, rq, matches, withoutBulkData);
+        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(
+                BasicRetrieveTask.Service.C_GET, as, pc, rq, matches, withoutBulkData);
         retrieveTask.setSendPendingRSP(ae.isSendPendingCGet());
         return retrieveTask;
     }
