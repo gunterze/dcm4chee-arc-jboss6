@@ -43,6 +43,7 @@ import java.security.cert.X509Certificate;
 import java.util.EnumSet;
 
 import org.dcm4che.conf.api.AttributeCoercion;
+import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.conf.api.ConfigurationNotFoundException;
 import org.dcm4che.conf.ldap.LdapEnv;
 import org.dcm4che.data.Tag;
@@ -438,6 +439,26 @@ public class LdapArchiveConfigurationTest {
         UID.PatientStudyOnlyQueryRetrieveInformationModelGETRetired,
         UID.PatientStudyOnlyQueryRetrieveInformationModelMOVERetired
     };
+
+    private static final String[] OTHER_DEVICES = {
+        "dcmqrscp",
+        "stgcmtscu",
+        "storescp",
+        "mppsscp",
+        "findscu",
+        "getscu",
+        "movescu",
+        "mppsscu",
+        "storescu"
+    };
+
+    private static final String[] OTHER_AES = {
+        "DCMQRSCP",
+        "STGCMTSCU",
+        "STORESCP",
+        "MPPSSCP",
+    };
+
     private static final KeyStore KEYSTORE = loadKeyStore();
     private static KeyStore loadKeyStore() {
         try {
@@ -464,62 +485,43 @@ public class LdapArchiveConfigurationTest {
 //        env.setPassword("secret");
         config = new LdapArchiveConfiguration(env, "dc=nodomain");
 //        config.setUserCertificate("userCertificate");
+        cleanUp();
     }
 
     @After
     public void tearDown() throws Exception {
+        cleanUp();
         config.close();
+    }
+
+    private void cleanUp() throws ConfigurationException {
+        config.unregisterAETitle("DCM4CHEE");
+        for (String aet : OTHER_AES)
+            config.unregisterAETitle(aet);
+
+        try {
+            config.removeDevice("dcm4chee-arc");
+        }  catch (ConfigurationNotFoundException e) {}
+        for (String name : OTHER_DEVICES)
+            try {
+                config.removeDevice(name);
+            }  catch (ConfigurationNotFoundException e) {}
     }
 
     @Test
     public void testPersist() throws Exception {
-        try {
-            config.removeDevice("storescp");
-        }  catch (ConfigurationNotFoundException e) {}
-        try {
-            config.removeDevice("storescu");
-        }  catch (ConfigurationNotFoundException e) {}
-        try {
-            config.removeDevice("findscu");
-        }  catch (ConfigurationNotFoundException e) {}
-        try {
-            config.removeDevice("getscu");
-        }  catch (ConfigurationNotFoundException e) {}
-        try {
-            config.removeDevice("movescu");
-        }  catch (ConfigurationNotFoundException e) {}
-        try {
-            config.removeDevice("dcmqrscp");
-        }  catch (ConfigurationNotFoundException e) {}
-        try {
-            config.removeDevice("dcm4chee-arc");
-        }  catch (ConfigurationNotFoundException e) {}
-        config.unregisterAETitle("STORESCP");
-        config.unregisterAETitle("DCMQRSCP");
-        config.unregisterAETitle("DCM4CHEE");
-        config.registerAETitle("STORESCP");
-        config.registerAETitle("DCMQRSCP");
+        for (int i = 0; i < OTHER_AES.length; i++) {
+            String aet = OTHER_AES[i];
+            config.registerAETitle(aet);
+            config.persist(
+                    createDevice(OTHER_DEVICES[i], aet, "localhost",11113 + i, 2763 + i));
+        }
+        for (int i = OTHER_AES.length; i < OTHER_DEVICES.length; i++)
+            config.persist(createDevice(OTHER_DEVICES[i]));
+
         config.registerAETitle("DCM4CHEE");
-        config.persist(createDevice("storescu"));
-        config.persist(createDevice("findscu"));
-        config.persist(createDevice("movescu"));
-        config.persist(createDevice("getscu"));
-        config.persist(createOtherSCP("storescp", "STORESCP", 
-                "localhost",11113, 2763));
-        config.persist(createOtherSCP("dcmqrscp", "DCMQRSCP",
-                "localhost", 11113, 2763));
         config.persist(createArchiveDevice("dcm4chee-arc"));
         config.findApplicationEntity("DCM4CHEE");
-        config.removeDevice("storescp");
-        config.removeDevice("storescu");
-        config.removeDevice("findscu");
-        config.removeDevice("getscu");
-        config.removeDevice("movescu");
-        config.removeDevice("dcmqrscp");
-        config.removeDevice("dcm4chee-arc");
-        config.unregisterAETitle("STORESCP");
-        config.unregisterAETitle("DCMQRSCP");
-        config.unregisterAETitle("DCM4CHEE");
     }
 
     private Device createDevice(String name) throws Exception {
@@ -529,7 +531,7 @@ public class LdapArchiveConfigurationTest {
         return device;
     }
 
-    private Device createOtherSCP(String name, String aet,
+    private Device createDevice(String name, String aet,
            String host, int port, int tlsPort) throws Exception {
         Device device = createDevice(name);
         ApplicationEntity ae = new ApplicationEntity(aet);
@@ -551,18 +553,9 @@ public class LdapArchiveConfigurationTest {
         ArchiveDevice device = new ArchiveDevice(name);
         device.setThisNodeCertificates(config.deviceRef(name),
                 (X509Certificate) KEYSTORE.getCertificate(name));
-        device.setAuthorizedNodeCertificates(config.deviceRef("storescp"),
-                (X509Certificate) KEYSTORE.getCertificate("storescp"));
-        device.setAuthorizedNodeCertificates(config.deviceRef("storescu"),
-                (X509Certificate) KEYSTORE.getCertificate("storescu"));
-        device.setAuthorizedNodeCertificates(config.deviceRef("findscu"),
-                (X509Certificate) KEYSTORE.getCertificate("findscu"));
-        device.setAuthorizedNodeCertificates(config.deviceRef("getscu"),
-                (X509Certificate) KEYSTORE.getCertificate("getscu"));
-        device.setAuthorizedNodeCertificates(config.deviceRef("movescu"),
-                (X509Certificate) KEYSTORE.getCertificate("movescu"));
-        device.setAuthorizedNodeCertificates(config.deviceRef("dcmqrscp"),
-                (X509Certificate) KEYSTORE.getCertificate("dcmqrscp"));
+        for (String other : OTHER_DEVICES)
+            device.setAuthorizedNodeCertificates(config.deviceRef(other),
+                    (X509Certificate) KEYSTORE.getCertificate(other));
         device.setFuzzyStr(new ESoundex());
         device.setAttributeFilter(Entity.Patient, new AttributeFilter(PATIENT_ATTRS));
         device.setAttributeFilter(Entity.Study, new AttributeFilter(STUDY_ATTRS));
@@ -595,13 +588,15 @@ public class LdapArchiveConfigurationTest {
                 TransferCapability.Role.SCU,
                 "WITHOUT_PN",
                 "resource:dcm4chee-arc-nullify-pn.xsl"));
-        addVerificationStorageTransferCapabilities(ae);
         addStorageTransferCapabilities(ae, IMAGE_CUIDS, IMAGE_TSUIDS);
         addStorageTransferCapabilities(ae, VIDEO_CUIDS, VIDEO_TSUIDS);
         addStorageTransferCapabilities(ae, OTHER_CUIDS, OTHER_TSUIDS);
         addSCPs(ae, QUERY_CUIDS, EnumSet.allOf(QueryOption.class));
         addSCPs(ae, RETRIEVE_CUIDS, EnumSet.of(QueryOption.RELATIONAL));
         addSCP(ae, UID.CompositeInstanceRetrieveWithoutBulkDataGET, null);
+        addSCP(ae, UID.StorageCommitmentPushModelSOPClass, null);
+        addSCP(ae, UID.ModalityPerformedProcedureStepSOPClass, null);
+        addSCP(ae, UID.VerificationSOPClass, null);
         device.addApplicationEntity(ae);
         Connection dicom = new Connection("dicom", "localhost", 11112);
         dicom.setMaxOpsInvoked(0);
@@ -617,19 +612,6 @@ public class LdapArchiveConfigurationTest {
         device.addConnection(dicomTLS);
         ae.addConnection(dicomTLS);
         return device;
-    }
-
-    private void addVerificationStorageTransferCapabilities(
-            ArchiveApplicationEntity ae) {
-        String cuid = UID.VerificationSOPClass;
-        String name = UID.nameOf(cuid).replace('/', ' ');
-        ae.addTransferCapability(
-                new TransferCapability(name + " SCP", cuid, TransferCapability.Role.SCP,
-                        UID.ImplicitVRLittleEndian));
-        ae.addTransferCapability(
-                new TransferCapability(name + " SCU", cuid, TransferCapability.Role.SCU,
-                        UID.ImplicitVRLittleEndian));
-        
     }
 
     private void addSCPs(ArchiveApplicationEntity ae, String[] cuids,
