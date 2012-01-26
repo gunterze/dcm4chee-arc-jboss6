@@ -496,14 +496,16 @@ public class PreferencesArchiveConfigurationTest {
         config.registerAETitle("DCM4CHEE");
         config.persist(createArchiveDevice("dcm4chee-arc"));
         config.findApplicationEntity("DCM4CHEE");
-//        export();
+        export(System.getProperty("export"));
     }
 
-    private void export() throws Exception {
-        OutputStream os = new FileOutputStream(
-                "/home/gunter/dcm4chee-arc/dcm4chee-arc-beans/src/main/config/prefs/sample-config.xml");
+    private void export(String name) throws Exception {
+        if (name == null)
+            return;
+
+        OutputStream os = new FileOutputStream(name);
         try {
-            Preferences.userRoot().node("org/dcm4chee/archive").exportSubtree(os);
+            Preferences.userRoot().node(config.getConfigurationRoot()).exportSubtree(os);
         } finally {
             SafeClose.close(os);
         }

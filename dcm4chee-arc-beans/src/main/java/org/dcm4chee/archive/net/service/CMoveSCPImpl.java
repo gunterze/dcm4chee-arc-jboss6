@@ -51,7 +51,6 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
-import org.dcm4che.net.Device;
 import org.dcm4che.net.IncompatibleConnectionException;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
@@ -79,8 +78,8 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
     @EJB
     private LocateInstances calculateMatches;
 
-    public CMoveSCPImpl(Device device, String[] sopClasses, String... qrLevels) {
-        super(device, sopClasses);
+    public CMoveSCPImpl(String[] sopClasses, String... qrLevels) {
+        super(sopClasses);
         this.qrLevels = qrLevels;
         this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
     }

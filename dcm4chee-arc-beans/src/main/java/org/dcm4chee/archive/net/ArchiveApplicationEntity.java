@@ -74,7 +74,7 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         super(aeTitle);
     }
 
-    private ArchiveDevice getArchiveDevice() {
+    public ArchiveDevice getArchiveDevice() {
         return ((ArchiveDevice) getDevice());
     }
 

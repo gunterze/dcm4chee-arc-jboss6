@@ -44,7 +44,6 @@ import java.util.EnumSet;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.net.Association;
-import org.dcm4che.net.Device;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.ExtendedNegotiation;
@@ -69,15 +68,10 @@ public class CFindSCPImpl extends BasicCFindSCP {
     private final String[] qrLevels;
     private final QueryRetrieveLevel rootLevel;
 
-    public CFindSCPImpl(Device device, String sopClass,
-            String... qrLevels) {
-        super(device, sopClass);
+    public CFindSCPImpl(String sopClass, String... qrLevels) {
+        super(sopClass);
         this.qrLevels = qrLevels;
         this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
-    }
-
-    private final ArchiveDevice getArchiveDevice() {
-        return (ArchiveDevice) device;
     }
 
     @Override
@@ -91,7 +85,7 @@ public class CFindSCPImpl extends BasicCFindSCP {
         level.validateQueryKeys(validator, rootLevel, relational);
         IDWithIssuer[] pids = pids(keys);
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-        ArchiveDevice dev = getArchiveDevice();
+        ArchiveDevice dev = ae.getArchiveDevice();
         EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
         QueryParam queryParam = new QueryParam();
         queryParam.setCombinedDatetimeMatching(queryOpts.contains(QueryOption.DATETIME));

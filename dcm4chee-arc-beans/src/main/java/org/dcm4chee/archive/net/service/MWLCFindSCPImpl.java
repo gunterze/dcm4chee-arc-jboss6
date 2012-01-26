@@ -44,7 +44,6 @@ import java.util.EnumSet;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.net.Association;
-import org.dcm4che.net.Device;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.ExtendedNegotiation;
@@ -63,12 +62,8 @@ import org.dcm4chee.archive.persistence.Issuer;
  */
 public class MWLCFindSCPImpl extends BasicCFindSCP {
 
-    public MWLCFindSCPImpl(Device device, String sopClass) {
-        super(device, sopClass);
-    }
-
-    private final ArchiveDevice getArchiveDevice() {
-        return (ArchiveDevice) device;
+    public MWLCFindSCPImpl(String sopClass) {
+        super(sopClass);
     }
 
     @Override
@@ -77,7 +72,7 @@ public class MWLCFindSCPImpl extends BasicCFindSCP {
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
         IDWithIssuer[] pids = pids(keys);
-        ArchiveDevice dev = getArchiveDevice(); 
+        ArchiveDevice dev = (ArchiveDevice) as.getApplicationEntity().getDevice(); 
         EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
         QueryParam queryParam = new QueryParam();
         queryParam.setCombinedDatetimeMatching(true);

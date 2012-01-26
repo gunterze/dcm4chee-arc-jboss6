@@ -45,7 +45,6 @@ import javax.ejb.EJB;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.net.Association;
-import org.dcm4che.net.Device;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.ExtendedNegotiation;
@@ -72,8 +71,8 @@ public class CGetSCPImpl extends BasicCGetSCP {
     @EJB
     private LocateInstances calculateMatches;
 
-    public CGetSCPImpl(Device device, String[] sopClasses, String... qrLevels) {
-        super(device, sopClasses);
+    public CGetSCPImpl(String[] sopClasses, String... qrLevels) {
+        super(sopClasses);
         this.qrLevels = qrLevels;
         this.withoutBulkData = qrLevels.length == 0;
         this.rootLevel = withoutBulkData
