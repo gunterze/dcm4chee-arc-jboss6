@@ -105,7 +105,7 @@ public class StoreParam {
         return fuzzyStr;
     }
 
-    public final void setAttributeFilters(AttributeFilter[] attributeFilters) {
+    public final void setAttributeFilters(AttributeFilter... attributeFilters) {
         this.attributeFilters = attributeFilters;
     }
 

@@ -52,7 +52,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -76,14 +75,22 @@ public class PerformedProcedureStep implements Serializable {
     public static final String FIND_BY_SOP_INSTANCE_UID =
             "PerformedProcedureStep.findBySOPInstanceUID";
 
+    public static final String IN_PROGRESS = "IN PROGRESS";
+    public static final String COMPLETED = "COMPLETED";
+    public static final String DISCONTINUED = "DISCONTINUED";
+
     @Id
     @GeneratedValue
     @Column(name = "pk")
     private long pk;
 
     @Basic(optional = false)
-    @Column(name = "sop_iuid")
+    @Column(name = "sop_iuid", unique = true)
     private String sopInstanceUID;
+
+    @Basic(optional = false)
+    @Column(name = "pps_status")
+    private String status;
 
     @Basic(optional = false)
     @Column(name = "pps_attrs")
@@ -96,9 +103,6 @@ public class PerformedProcedureStep implements Serializable {
     @JoinColumn(name = "patient_fk")
     private Patient patient;
 
-    @OneToMany(mappedBy = "performedProcedureStep")
-    private Collection<Series> series;
-
     @ManyToMany
     @JoinTable(name = "rel_pps_sps", 
         joinColumns = @JoinColumn(name = "pps_fk", referencedColumnName = "pk"),
@@ -109,6 +113,7 @@ public class PerformedProcedureStep implements Serializable {
     public String toString() {
         return "PerformedProcedureStep[pk=" + pk
                 + ", uid=" + sopInstanceUID
+                + ", status=" + status
                 + "]";
     }
 
@@ -118,6 +123,26 @@ public class PerformedProcedureStep implements Serializable {
 
     public String getSopInstanceUID() {
         return sopInstanceUID;
+    }
+
+    public void setSopInstanceUID(String sopInstanceUID) {
+        this.sopInstanceUID = sopInstanceUID;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public boolean isInProgress() {
+        return IN_PROGRESS.equals(status);
+    }
+
+    public boolean isCompleted() {
+        return COMPLETED.equals(status);
+    }
+
+    public boolean isDiscontinued() {
+        return DISCONTINUED.equals(status);
     }
 
     public byte[] getEncodedAttributes() {
@@ -130,10 +155,6 @@ public class PerformedProcedureStep implements Serializable {
 
     public void setPatient(Patient patient) {
         this.patient = patient;
-    }
-
-    public Collection<Series> getSeries() {
-        return series;
     }
 
     public Collection<ScheduledProcedureStep> getScheduledProcedureSteps() {
@@ -152,8 +173,7 @@ public class PerformedProcedureStep implements Serializable {
     }
 
     public void setAttributes(Attributes attrs, AttributeFilter filter) {
-        sopInstanceUID = attrs.getString(Tag.SOPInstanceUID);
-
+        status = attrs.getString(Tag.PerformedProcedureStepStatus);
         encodedAttributes = Utils.encodeAttributes(
                 cachedAttributes = new Attributes(attrs, filter.getSelection()));
     }

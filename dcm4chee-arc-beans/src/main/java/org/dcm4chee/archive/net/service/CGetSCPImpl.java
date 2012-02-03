@@ -47,7 +47,6 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
-import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCGetSCP;
 import org.dcm4che.net.service.BasicRetrieveTask;
@@ -66,7 +65,7 @@ public class CGetSCPImpl extends BasicCGetSCP {
 
     private final String[] qrLevels;
     private final QueryRetrieveLevel rootLevel;
-    private final boolean withoutBulkData;
+    private boolean withoutBulkData;
 
     @EJB
     private LocateInstances calculateMatches;
@@ -74,11 +73,16 @@ public class CGetSCPImpl extends BasicCGetSCP {
     public CGetSCPImpl(String[] sopClasses, String... qrLevels) {
         super(sopClasses);
         this.qrLevels = qrLevels;
-        this.withoutBulkData = qrLevels.length == 0;
-        this.rootLevel = withoutBulkData
-                ? QueryRetrieveLevel.IMAGE
-                : QueryRetrieveLevel.valueOf(qrLevels[0]);
-   }
+        this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
+    }
+
+    public final boolean isWithoutBulkData() {
+        return withoutBulkData;
+    }
+
+    public final void setWithoutBulkData(boolean withoutBulkData) {
+        this.withoutBulkData = withoutBulkData;
+    }
 
     @Override
     protected RetrieveTask calculateMatches(Association as, PresentationContext pc,
@@ -86,8 +90,9 @@ public class CGetSCPImpl extends BasicCGetSCP {
         AttributesValidator validator = new AttributesValidator(keys);
         QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(validator, qrLevels);
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
-        ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
+        boolean relational = rootLevel == QueryRetrieveLevel.IMAGE
+                || QueryOption.toOptions(as.getAAssociateAC().getExtNegotiationFor(cuid))
+                        .contains(QueryOption.RELATIONAL);
         level.validateRetrieveKeys(validator, rootLevel, relational);
         List<InstanceLocator> matches  = calculateMatches(rq, keys);
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();

@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Agfa Healthcare.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -38,17 +38,16 @@
 
 package org.dcm4chee.archive.ejb.store;
 
+import org.dcm4che.data.Attributes;
+import org.dcm4chee.archive.persistence.PerformedProcedureStep;
+
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public enum Entity {
-    Patient,
-    Study,
-    Series,
-    Instance,
-    Visit,
-    ServiceRequest,
-    RequestedProcedure,
-    ScheduledProcedureStep,
-    PerformedProcedureStep
+public interface PerformedProcedureStepManager {
+
+    PerformedProcedureStep createPerformedProcedureStep(
+            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
+    PerformedProcedureStep updatePerformedProcedureStep(
+            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
 }

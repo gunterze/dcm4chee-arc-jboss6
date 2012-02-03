@@ -6,6 +6,9 @@
 <DicomAttribute keyword="SOPInstanceUID" tag="00080018" vr="UI">
 <Value number="1">1.2.40.0.13.1.1.99.20110607.2.1</Value>
 </DicomAttribute>
+<DicomAttribute keyword="AccessionNumber" tag="00080050" vr="SH">
+<Value number="1">A-20110607</Value>
+</DicomAttribute>
 <DicomAttribute keyword="Modality" tag="00080060" vr="CS">
 <Value number="1">PR</Value>
 </DicomAttribute>
@@ -37,5 +40,15 @@
 </DicomAttribute>
 <DicomAttribute keyword="InstanceNumber" tag="00200013" vr="IS">
 <Value number="1">1</Value>
+</DicomAttribute>
+<DicomAttribute keyword="RequestAttributesSequence" tag="00400275" vr="SQ">
+<Item number="1">
+<DicomAttribute keyword="ScheduledProcedureStepID" tag="00400009" vr="SH">
+<Value number="1">SPS-20110607</Value>
+</DicomAttribute>
+<DicomAttribute keyword="RequestedProcedureID" tag="00401001" vr="SH">
+<Value number="1">P-20110607</Value>
+</DicomAttribute>
+</Item>
 </DicomAttribute>
 </NativeDicomModel>

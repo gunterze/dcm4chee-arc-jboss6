@@ -206,6 +206,10 @@ public class Series implements Serializable {
     private String performedProcedureStepInstanceUID;
 
     @Basic(optional = false)
+    @Column(name = "pps_cuid")
+    private String performedProcedureStepClassUID;
+
+    @Basic(optional = false)
     @Column(name = "series_custom1")
     private String seriesCustomAttribute1;
 
@@ -254,10 +258,6 @@ public class Series implements Serializable {
         joinColumns = @JoinColumn(name = "series_fk", referencedColumnName = "pk"),
         inverseJoinColumns = @JoinColumn(name = "sps_fk", referencedColumnName = "pk"))
     private Collection<ScheduledProcedureStep> scheduledProcedureSteps;
-
-    @ManyToOne
-    @JoinColumn(name = "pps_fk")
-    private PerformedProcedureStep performedProcedureStep;
 
     @ManyToOne
     @JoinColumn(name = "study_fk")
@@ -374,7 +374,11 @@ public class Series implements Serializable {
         return performedProcedureStepInstanceUID;
     }
 
-    public String getSeriesCustomAttribute1() {
+    public String getPerformedProcedureStepClassUID() {
+        return performedProcedureStepClassUID;
+    }
+
+   public String getSeriesCustomAttribute1() {
         return seriesCustomAttribute1;
     }
 
@@ -459,14 +463,6 @@ public class Series implements Serializable {
         this.scheduledProcedureSteps = scheduledProcedureSteps;
     }
 
-    public PerformedProcedureStep getPerformedProcedureStep() {
-        return performedProcedureStep;
-    }
-
-    public void setPerformedProcedureStep(PerformedProcedureStep performedProcedureStep) {
-        this.performedProcedureStep = performedProcedureStep;
-    }
-
     public Study getStudy() {
         return study;
     }
@@ -490,9 +486,13 @@ public class Series implements Serializable {
         bodyPartExamined = attrs.getString(Tag.BodyPartExamined, "*").toUpperCase();
         laterality = attrs.getString(Tag.Laterality, "*").toUpperCase();
         Attributes refPPS = attrs.getNestedDataset(Tag.ReferencedPerformedProcedureStepSequence);
-        performedProcedureStepInstanceUID = refPPS != null
-                ? refPPS.getString(Tag.ReferencedSOPInstanceUID, "*")
-                : "*";
+        if (refPPS != null) {
+            performedProcedureStepInstanceUID = refPPS.getString(Tag.ReferencedSOPInstanceUID, "*");
+            performedProcedureStepClassUID = refPPS.getString(Tag.ReferencedSOPClassUID, "*");
+        } else {
+            performedProcedureStepInstanceUID = "*";
+            performedProcedureStepClassUID = "*";
+        }
         Date dt = attrs.getDate(Tag.PerformedProcedureStepStartDateAndTime, null);
         if (dt != null) {
             performedProcedureStepStartDate = DateUtils.formatDA(null, dt);

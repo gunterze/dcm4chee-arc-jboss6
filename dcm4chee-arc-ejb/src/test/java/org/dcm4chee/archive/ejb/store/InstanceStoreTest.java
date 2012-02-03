@@ -38,20 +38,16 @@
 
 package org.dcm4chee.archive.ejb.store;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
 import javax.ejb.EJB;
 
-import org.dcm4che.data.Tag;
 import org.dcm4che.io.SAXReader;
-import org.dcm4che.soundex.ESoundex;
-import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Instance;
+import org.dcm4chee.archive.persistence.PerformedProcedureStep;
 import org.dcm4chee.archive.persistence.Series;
 import org.dcm4chee.archive.persistence.Study;
 import org.jboss.arquillian.api.Deployment;
@@ -70,6 +66,8 @@ public class InstanceStoreTest {
 
     private static final String SOURCE_AET = "SOURCE_AET";
 
+    private static final String MPPS_IUID = "1.2.40.0.13.1.1.99.20120130";
+
     @Deployment
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
@@ -82,10 +80,18 @@ public class InstanceStoreTest {
                         IssuerFactory.class,
                         RequestFactory.class,
                         PatientFactory.class,
+                        EntityAlreadyExistsException.class,
+                        EntityNotExistsException.class,
+                        IllegalEntityStateException.class,
                         PatientMismatchException.class,
                         PatientMergedException.class,
+                        PerformedProcedureStepManager.class,
+                        PerformedProcedureStepManagerBean.class,
                         NonUniquePatientException.class,
+                        StoreParamFactory.class,
                         RemovePatient.class)
+                .addAsResource("mpps-create.xml")
+                .addAsResource("mpps-set.xml")
                 .addAsResource("ct-1.xml")
                 .addAsResource("ct-2.xml")
                 .addAsResource("pr-1.xml");
@@ -95,6 +101,9 @@ public class InstanceStoreTest {
     private RemovePatient removePatient;
 
     @EJB
+    private PerformedProcedureStepManager mppsMgr;
+
+    @EJB
     private InstanceStore instanceStore;
 
     @After
@@ -102,112 +111,15 @@ public class InstanceStoreTest {
         removePatient.removePatient("TEST-20110607", "DCM4CHEE_TESTDATA");
     }
 
-    private static final AttributeFilter[] ATTR_FILTERS = {
-        new AttributeFilter(   // Patient
-            Tag.SpecificCharacterSet,
-            Tag.PatientName,
-            Tag.PatientID,
-            Tag.IssuerOfPatientID,
-            Tag.OtherPatientIDsSequence,
-            Tag.PatientBirthDate,
-            Tag.PatientSex,
-            Tag.PatientComments
-        ),
-        new AttributeFilter(   // Study
-            Tag.SpecificCharacterSet,
-            Tag.StudyDate,
-            Tag.StudyTime,
-            Tag.AccessionNumber,
-            Tag.IssuerOfAccessionNumberSequence,
-            Tag.ReferringPhysicianName,
-            Tag.StudyDescription,
-            Tag.ProcedureCodeSequence,
-            Tag.StudyInstanceUID,
-            Tag.StudyID
-        ),
-        new AttributeFilter(   // Series
-            Tag.SpecificCharacterSet,
-            Tag.Modality,
-            Tag.Manufacturer,
-            Tag.InstitutionName,
-            Tag.InstitutionCodeSequence,
-            Tag.StationName,
-            Tag.SeriesDescription,
-            Tag.InstitutionalDepartmentName,
-            Tag.PerformingPhysicianName,
-            Tag.ManufacturerModelName,
-            Tag.ReferencedPerformedProcedureStepSequence,
-            Tag.SeriesInstanceUID,
-            Tag.SeriesNumber,
-            Tag.Laterality,
-            Tag.PerformedProcedureStepID,
-            Tag.PerformedProcedureStepStartTime,
-            Tag.RequestAttributesSequence
-        ),
-        new AttributeFilter(   // Instance
-            Tag.SpecificCharacterSet,
-            Tag.ImageType,
-            Tag.SOPClassUID,
-            Tag.SOPInstanceUID,
-            Tag.AcquisitionDate,
-            Tag.ContentDate,
-            Tag.AcquisitionDateTime,
-            Tag.AcquisitionTime,
-            Tag.ContentTime,
-            Tag.ReferencedSeriesSequence,
-            Tag.InstanceNumber,
-            Tag.PhotometricInterpretation,
-            Tag.NumberOfFrames,
-            Tag.Rows,
-            Tag.Columns,
-            Tag.BitsAllocated,
-            Tag.ObservationDateTime,
-            Tag.ConceptNameCodeSequence,
-            Tag.VerifyingObserverSequence,
-            Tag.ReferencedRequestSequence,
-            Tag.CurrentRequestedProcedureEvidenceSequence,
-            Tag.PertinentOtherEvidenceSequence,
-            Tag.CompletionFlag,
-            Tag.VerificationFlag,
-            Tag.IdenticalDocumentsSequence,
-            Tag.DocumentTitle,
-            Tag.MIMETypeOfEncapsulatedDocument,
-            Tag.ContentLabel,
-            Tag.ContentDescription,
-            Tag.PresentationCreationDate,
-            Tag.PresentationCreationTime,
-            Tag.ContentCreatorName,
-            Tag.OriginalAttributesSequence
-        ),
-        new AttributeFilter(   // Visit
-            Tag.AdmissionID,
-            Tag.IssuerOfAdmissionIDSequence
-        ),
-        new AttributeFilter(   // Service Request
-            Tag.AccessionNumber,
-            Tag.IssuerOfAccessionNumberSequence,
-            Tag.RequestingPhysician,
-            Tag.RequestingService
-        ),
-        new AttributeFilter(   // Requested Procedure
-            Tag.StudyInstanceUID,
-            Tag.RequestedProcedureID
-        ),
-        new AttributeFilter(   // Scheduled Procedure Step
-            Tag.Modality,
-            Tag.ScheduledStationAETitle,
-            Tag.ScheduledProcedureStepStartDate,
-            Tag.ScheduledProcedureStepStartTime,
-            Tag.ScheduledPerformingPhysicianName,
-            Tag.ScheduledProcedureStepID,
-            Tag.ScheduledProcedureStepStatus
-        )};
-
     @Test
     public void storeTest() throws Exception {
-        StoreParam storeParam = new StoreParam();
-        storeParam.setAttributeFilters(ATTR_FILTERS);
-        storeParam.setFuzzyStr(new ESoundex());
+        StoreParam storeParam = StoreParamFactory.create();
+        PerformedProcedureStep pps = mppsMgr.createPerformedProcedureStep(
+                MPPS_IUID, SAXReader.parse("resource:mpps-create.xml"), storeParam);
+        assertTrue(pps.isInProgress());
+        pps = mppsMgr.updatePerformedProcedureStep(MPPS_IUID,
+                SAXReader.parse("resource:mpps-set.xml"), storeParam);
+        assertTrue(pps.isCompleted());
         storeParam.setRetrieveAETs("AET_1","AET_2");
         storeParam.setExternalRetrieveAET("AET_3");
         Instance ct1 = instanceStore.newInstance(SOURCE_AET,

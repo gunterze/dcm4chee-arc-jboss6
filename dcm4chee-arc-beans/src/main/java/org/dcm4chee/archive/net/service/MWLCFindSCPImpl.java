@@ -43,6 +43,7 @@ import java.util.EnumSet;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.data.UID;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
@@ -62,8 +63,8 @@ import org.dcm4chee.archive.persistence.Issuer;
  */
 public class MWLCFindSCPImpl extends BasicCFindSCP {
 
-    public MWLCFindSCPImpl(String sopClass) {
-        super(sopClass);
+    public MWLCFindSCPImpl() {
+        super(UID.ModalityWorklistInformationModelFIND);
     }
 
     @Override

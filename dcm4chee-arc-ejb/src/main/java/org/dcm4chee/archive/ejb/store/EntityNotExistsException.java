@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * Agfa Healthcare.
- * Portions created by the Initial Developer are Copyright (C) 2011
+ * Portions created by the Initial Developer are Copyright (C) 2012
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -41,14 +41,12 @@ package org.dcm4chee.archive.ejb.store;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public enum Entity {
-    Patient,
-    Study,
-    Series,
-    Instance,
-    Visit,
-    ServiceRequest,
-    RequestedProcedure,
-    ScheduledProcedureStep,
-    PerformedProcedureStep
+public class EntityNotExistsException extends RuntimeException {
+
+    private static final long serialVersionUID = 5261475687251549552L;
+
+    public EntityNotExistsException(String message) {
+        super(message);
+    }
+
 }

@@ -1,5 +1,20 @@
 version: 1
 
+dn: cn=DICOM Configuration,dc=nodomain
+objectClass: dicomConfigurationRoot
+objectClass: top
+cn: DICOM Configuration
+
+dn: cn=Devices,cn=DICOM Configuration,dc=nodomain
+objectClass: dicomDevicesRoot
+objectClass: top
+cn: Devices
+
+dn: cn=Unique AE Titles Registry,cn=DICOM Configuration,dc=nodomain
+objectClass: dicomUniqueAETitlesRegistryRoot
+objectClass: top
+cn: Unique AE Titles Registry
+
 dn: dicomAETitle=DCMQRSCP,cn=Unique AE Titles Registry,cn=DICOM Configuration,
  dc=nodomain
 objectClass: dicomUniqueAETitle
