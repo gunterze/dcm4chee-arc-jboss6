@@ -4116,6 +4116,7 @@ dcmTag: 00280008
 dcmTag: 00280010
 dcmTag: 00280011
 dcmTag: 00280100
+dcmTag: 0040A032
 dcmTag: 0040A043
 dcmTag: 0040A073
 dcmTag: 0040A370

@@ -182,6 +182,7 @@ public class ArchiveConfigurationTestUtils {
         Tag.Rows,
         Tag.Columns,
         Tag.BitsAllocated,
+        Tag.ObservationDateTime,
         Tag.ConceptNameCodeSequence,
         Tag.VerifyingObserverSequence,
         Tag.ReferencedRequestSequence,

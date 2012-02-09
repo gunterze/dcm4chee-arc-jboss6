@@ -40,6 +40,7 @@
                     <entry key="dcmTag.10" value="00280010"/>
                     <entry key="dcmTag.11" value="00280011"/>
                     <entry key="dcmTag.12" value="00280100"/>
+                    <entry key="dcmTag.26" value="0040A032"/>
                     <entry key="dcmTag.13" value="0040A043"/>
                     <entry key="dcmTag.14" value="0040A073"/>
                     <entry key="dcmTag.15" value="0040A370"/>
