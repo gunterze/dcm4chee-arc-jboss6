@@ -112,6 +112,7 @@
     <demand>Class:org.dcm4chee.archive.ejb.query.CompositeQuery</demand>
     <demand>Class:org.dcm4chee.archive.ejb.query.LocateInstances</demand>
     <demand>Class:org.dcm4chee.archive.ejb.query.ModalityWorklistQuery</demand>
+    <demand>Class:org.dcm4chee.archive.ejb.query.StgCmtQuery</demand>
   </bean>
 
   <!-- Service Registry -->
@@ -131,6 +132,50 @@
         </array>
       </parameter>
     </constructor>
+  </bean>
+
+  <!-- Connection Factory -->
+  <bean name="ConnectionFactory" class="javax.jms.ConnectionFactory">
+    <constructor factoryClass="org.dcm4chee.archive.net.service.JNDIUtils" factoryMethod="lookup">
+      <parameter>java:/ConnectionFactory</parameter>
+    </constructor>
+    <demand>org.hornetq:module=JMS,name="InVMConnectionFactory",type=ConnectionFactory</demand>
+  </bean>
+
+  <!-- The JMS Service -->
+  <bean name="JMSService" class="org.dcm4chee.archive.net.service.JMSService">
+    <constructor>
+      <parameter>
+        <inject bean="ConnectionFactory" />
+      </parameter>
+    </constructor>
+    <start method="start" />
+    <stop method="stop" />
+    <destroy method="close" />
+  </bean>
+
+  <!-- StgCmtSCP Queue-->
+  <bean name="StgCmtSCPQueue" class="javax.jms.Queue">
+    <constructor factoryClass="org.dcm4chee.archive.net.service.JNDIUtils" factoryMethod="lookup">
+      <parameter>queue/StgCmtSCPQueue</parameter>
+    </constructor>
+    <demand>org.hornetq:module=JMS,name="StgCmtSCPQueue",type=Queue</demand>
+  </bean>
+
+  <!-- StgCmtSCP -->
+  <bean name="StgCmtSCP" class="org.dcm4chee.archive.net.service.StgCmtSCPImpl" access-mode="ALL">
+    <property name="device">
+      <inject bean="Device" />
+    </property>
+    <property name="dicomConfiguration">
+      <inject bean="ArchiveConfiguration" />
+    </property>
+    <property name="jmsService">
+      <inject bean="JMSService" />
+    </property>
+    <property name="queue">
+      <inject bean="StgCmtSCPQueue" />
+    </property>
   </bean>
 
   <!-- Patient Root C-FIND SCP -->

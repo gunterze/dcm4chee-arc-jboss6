@@ -176,6 +176,10 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         storeNotDef(attrs, "dcmStoreOriginalAttributes",
                 arcAE.isStoreOriginalAttributes(), false);
         storeNotNull(attrs, "dcmModifyingSystem", arcAE.getModifyingSystem());
+        storeNotDef(attrs, "dcmStgCmtDelay", arcAE.getStorageCommitmentDelay(), 0);
+        storeNotDef(attrs, "dcmStgCmtMaxRetries", arcAE.getStorageCommitmentMaxRetries(), 0);
+        storeNotDef(attrs, "dcmStgCmtRetryInterval", arcAE.getStorageCommitmentRetryInterval(),
+                    ArchiveApplicationEntity.DEF_STGCMT_RETRY_INTERVAL);
         return attrs;
     }
 
@@ -271,6 +275,10 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
        arcae.setStoreOriginalAttributes(
                booleanValue(attrs.get("dcmStoreOriginalAttributes"), false));
        arcae.setModifyingSystem(stringValue(attrs.get("dcmModifyingSystem")));
+       arcae.setStorageCommitmentDelay(intValue(attrs.get("dcmStgCmtDelay"), 0));
+       arcae.setStorageCommitmentMaxRetries(intValue(attrs.get("dcmStgCmtMaxRetries"), 0));
+       arcae.setStorageCommitmentRetryInterval(intValue(attrs.get("dcmStgCmtRetryInterval"),
+               ArchiveApplicationEntity.DEF_STGCMT_RETRY_INTERVAL));
     }
 
     @Override
@@ -351,6 +359,18 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         storeDiff(mods, "dcmModifyingSystem",
                 aa.getModifyingSystem(),
                 bb.getModifyingSystem());
+        storeDiff(mods, "dcmStgCmtDelay",
+                aa.getStorageCommitmentDelay(),
+                bb.getStorageCommitmentDelay(),
+                0);
+        storeDiff(mods, "dcmStgCmtMaxRetries",
+                aa.getStorageCommitmentMaxRetries(),
+                bb.getStorageCommitmentMaxRetries(),
+                0);
+        storeDiff(mods, "dcmStgCmtRetryInterval",
+                aa.getStorageCommitmentRetryInterval(),
+                bb.getStorageCommitmentRetryInterval(),
+                ArchiveApplicationEntity.DEF_STGCMT_RETRY_INTERVAL);
         return mods;
     }
 

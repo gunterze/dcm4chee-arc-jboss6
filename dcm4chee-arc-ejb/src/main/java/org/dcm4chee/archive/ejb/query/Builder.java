@@ -334,7 +334,7 @@ abstract class Builder {
             return null;
 
         return matchUnknown(
-                values.length == 1 ? path.eq(values[0]) : path.in(values),
+                path.in(values),
                 path,
                 matchUnknown);
     }

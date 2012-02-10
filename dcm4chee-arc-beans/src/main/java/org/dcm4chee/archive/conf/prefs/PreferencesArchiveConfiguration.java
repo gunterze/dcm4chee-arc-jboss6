@@ -141,6 +141,10 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
         storeNotDef(prefs, "dcmStoreOriginalAttributes",
                 arcAE.isStoreOriginalAttributes(), false);
         storeNotNull(prefs, "dcmModifyingSystem", arcAE.getModifyingSystem());
+        storeNotDef(prefs, "dcmStgCmtDelay", arcAE.getStorageCommitmentDelay(), 0);
+        storeNotDef(prefs, "dcmStgCmtMaxRetries", arcAE.getStorageCommitmentMaxRetries(), 0);
+        storeNotDef(prefs, "dcmStgCmtRetryInterval", arcAE.getStorageCommitmentRetryInterval(),
+                    ArchiveApplicationEntity.DEF_STGCMT_RETRY_INTERVAL);
     }
 
     @Override
@@ -202,6 +206,10 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
         arcae.setStoreOriginalAttributes(
                 prefs.getBoolean("dcmStoreOriginalAttributes", false));
         arcae.setModifyingSystem(prefs.get("dcmModifyingSystem", null));
+        arcae.setStorageCommitmentDelay(prefs.getInt("dcmStgCmtDelay", 0));
+        arcae.setStorageCommitmentMaxRetries(prefs.getInt("dcmStgCmtMaxRetries", 0));
+        arcae.setStorageCommitmentRetryInterval(prefs.getInt("dcmStgCmtRetryInterval",
+                ArchiveApplicationEntity.DEF_STGCMT_RETRY_INTERVAL));
     }
 
     @Override
@@ -318,6 +326,18 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
          storeDiff(prefs, "dcmModifyingSystem",
                  aa.getModifyingSystem(),
                  bb.getModifyingSystem());
+         storeDiff(prefs, "dcmStgCmtDelay",
+                 aa.getStorageCommitmentDelay(),
+                 bb.getStorageCommitmentDelay(),
+                 0);
+         storeDiff(prefs, "dcmStgCmtMaxRetries",
+                 aa.getStorageCommitmentMaxRetries(),
+                 bb.getStorageCommitmentMaxRetries(),
+                 0);
+         storeDiff(prefs, "dcmStgCmtRetryInterval",
+                 aa.getStorageCommitmentRetryInterval(),
+                 bb.getStorageCommitmentRetryInterval(),
+                 ArchiveApplicationEntity.DEF_STGCMT_RETRY_INTERVAL);
     }
 
     @Override

@@ -55,6 +55,8 @@ import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
  */
 public class ArchiveApplicationEntity extends ApplicationEntity {
 
+    public static final int DEF_STGCMT_RETRY_INTERVAL = 60;
+
     private StoreDuplicate storeDuplicate;
     private String modifyingSystem;
     private String[] retrieveAETs;
@@ -68,6 +70,9 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     private boolean matchUnknown;
     private boolean sendPendingCGet;
     private int sendPendingCMoveInterval;
+    private int storageCommitmentDelay;
+    private int storageCommitmentMaxRetries;
+    private int storageCommitmentRetryInterval = DEF_STGCMT_RETRY_INTERVAL;
     private final AttributeCoercions attributeCoercions = new AttributeCoercions();
 
     public ArchiveApplicationEntity(String aeTitle) {
@@ -215,6 +220,31 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
 
     public void setSendPendingCMoveInterval(int sendPendingCMoveInterval) {
         this.sendPendingCMoveInterval = sendPendingCMoveInterval;
+    }
+
+    public final int getStorageCommitmentDelay() {
+        return storageCommitmentDelay;
+    }
+
+    public final void setStorageCommitmentDelay(int storageCommitmentDelay) {
+        this.storageCommitmentDelay = storageCommitmentDelay;
+    }
+
+    public final int getStorageCommitmentMaxRetries() {
+        return storageCommitmentMaxRetries;
+    }
+
+    public final void setStorageCommitmentMaxRetries(int storageCommitmentMaxRetries) {
+        this.storageCommitmentMaxRetries = storageCommitmentMaxRetries;
+    }
+
+    public final int getStorageCommitmentRetryInterval() {
+        return storageCommitmentRetryInterval;
+    }
+
+    public final void setStorageCommitmentRetryInterval(
+            int storageCommitmentRetryInterval) {
+        this.storageCommitmentRetryInterval = storageCommitmentRetryInterval;
     }
 
     public StoreParam getStoreParam() {

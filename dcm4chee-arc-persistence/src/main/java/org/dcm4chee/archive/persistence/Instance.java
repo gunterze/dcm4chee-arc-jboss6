@@ -156,10 +156,6 @@ public class Instance implements Serializable {
     private boolean archived;
 
     @Basic(optional = false)
-    @Column(name = "commitment")
-    private boolean storageComitted;
-
-    @Basic(optional = false)
     @Column(name = "inst_attrs")
     private byte[] encodedAttributes;
 
@@ -303,14 +299,6 @@ public class Instance implements Serializable {
 
     public void setArchived(boolean archived) {
         this.archived = archived;
-    }
-
-    public boolean isStorageComitted() {
-        return storageComitted;
-    }
-
-    public void setStorageComitted(boolean storageComitted) {
-        this.storageComitted = storageComitted;
     }
 
     public byte[] getEncodedAttributes() {

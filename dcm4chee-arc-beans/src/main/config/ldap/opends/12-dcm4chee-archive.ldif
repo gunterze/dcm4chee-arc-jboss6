@@ -111,6 +111,24 @@ attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.16.3
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
+attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.17
+  NAME 'dcmStgCmtDelay'
+  DESC 'Delay of return of Storage Commitment Result in s. 0 if absent'
+  EQUALITY integerMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+  SINGLE-VALUE )
+attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.18
+  NAME 'dcmStgCmtMaxRetries'
+  DESC 'Maximum number of retries to return Storage Commitment Result. 0 if absent'
+  EQUALITY integerMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+  SINGLE-VALUE )
+attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.19
+  NAME 'dcmStgCmtRetryInterval'
+  DESC 'Interval between retries to return Storage Commitment Result in s. 60 if absent'
+  EQUALITY integerMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+  SINGLE-VALUE )
 objectClasses: ( 1.2.40.0.13.1.1.15.0.4.4
   NAME 'dcmArchiveDevice'
   DESC 'DICOM Archive Device related information'
@@ -134,7 +152,10 @@ objectClasses: ( 1.2.40.0.13.1.1.15.0.4.5
     dcmSendPendingCMoveInterval $
     dcmSuppressWarningCoercionOfDataElements $
     dcmStoreOriginalAttributes $
-    dcmModifyingSystem ) )
+    dcmModifyingSystem $
+    dcmStgCmtDelay $
+    dcmStgCmtMaxRetries $
+    dcmStgCmtRetryInterval ) )
 objectClasses: ( 1.2.40.0.13.1.1.15.0.4.10
   NAME 'dcmAttributeFilter'
   DESC 'Attributes stored in the database'
@@ -145,4 +166,4 @@ objectClasses: ( 1.2.40.0.13.1.1.15.0.4.10
   MAY (
     dcmCustomAttribute1 $
     dcmCustomAttribute2 $
-    dcmCustomAttribute3 ) )
+    dcmCustomAttribute3) )
