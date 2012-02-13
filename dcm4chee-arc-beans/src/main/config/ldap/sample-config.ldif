@@ -1551,6 +1551,15 @@ objectClass: dicomTransferCapability
 objectClass: dcmTransferCapability
 cn: Modality Performed Procedure Step SOP Class SCP
 
+dn: cn=Modality Performed Procedure Step SOP Class SCU,dicomAETitle=DCM4CHEE,d
+ icomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomSOPClass: 1.2.840.10008.3.1.2.3.3
+dicomTransferRole: SCU
+dicomTransferSyntax: 1.2.840.10008.1.2
+objectClass: dicomTransferCapability
+objectClass: dcmTransferCapability
+cn: Modality Performed Procedure Step SOP Class SCU
+
 dn: cn=Arterial Pulse Waveform Storage SCP,dicomAETitle=DCM4CHEE,dicomDeviceNa
  me=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dicomSOPClass: 1.2.840.10008.5.1.4.1.1.9.5.1

@@ -56,6 +56,7 @@ import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
 public class ArchiveApplicationEntity extends ApplicationEntity {
 
     public static final int DEF_STGCMT_RETRY_INTERVAL = 60;
+    public static final int DEF_FWD_MPPS_RETRY_INTERVAL = 60;
 
     private StoreDuplicate storeDuplicate;
     private String modifyingSystem;
@@ -73,6 +74,9 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     private int storageCommitmentDelay;
     private int storageCommitmentMaxRetries;
     private int storageCommitmentRetryInterval = DEF_STGCMT_RETRY_INTERVAL;
+    private String[] forwardMPPSDestinations = {};
+    private int forwardMPPSMaxRetries;
+    private int forwardMPPSRetryInterval = DEF_FWD_MPPS_RETRY_INTERVAL;
     private final AttributeCoercions attributeCoercions = new AttributeCoercions();
 
     public ArchiveApplicationEntity(String aeTitle) {
@@ -81,10 +85,6 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
 
     public ArchiveDevice getArchiveDevice() {
         return ((ArchiveDevice) getDevice());
-    }
-
-    public Boolean getMatchUnknown() {
-        return matchUnknown;
     }
 
     public AttributeCoercion getAttributeCoercion(String sopClass,
@@ -245,6 +245,30 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     public final void setStorageCommitmentRetryInterval(
             int storageCommitmentRetryInterval) {
         this.storageCommitmentRetryInterval = storageCommitmentRetryInterval;
+    }
+
+    public final String[] getForwardMPPSDestinations() {
+        return forwardMPPSDestinations;
+    }
+
+    public final void setForwardMPPSDestinations(String[] forwardMPPSDestinations) {
+        this.forwardMPPSDestinations = forwardMPPSDestinations;
+    }
+
+    public final int getForwardMPPSMaxRetries() {
+        return forwardMPPSMaxRetries;
+    }
+
+    public final void setForwardMPPSMaxRetries(int forwardMPPSMaxRetries) {
+        this.forwardMPPSMaxRetries = forwardMPPSMaxRetries;
+    }
+
+    public final int getForwardMPPSRetryInterval() {
+        return forwardMPPSRetryInterval;
+    }
+
+    public final void setForwardMPPSRetryInterval(int forwardMPPSRetryInterval) {
+        this.forwardMPPSRetryInterval = forwardMPPSRetryInterval;
     }
 
     public StoreParam getStoreParam() {

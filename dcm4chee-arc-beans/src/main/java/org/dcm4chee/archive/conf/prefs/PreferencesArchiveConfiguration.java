@@ -145,6 +145,10 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
         storeNotDef(prefs, "dcmStgCmtMaxRetries", arcAE.getStorageCommitmentMaxRetries(), 0);
         storeNotDef(prefs, "dcmStgCmtRetryInterval", arcAE.getStorageCommitmentRetryInterval(),
                     ArchiveApplicationEntity.DEF_STGCMT_RETRY_INTERVAL);
+        storeNotEmpty(prefs, "dcmFwdMppsDestination", arcAE.getForwardMPPSDestinations());
+        storeNotDef(prefs, "dcmFwdMppsMaxRetries", arcAE.getForwardMPPSMaxRetries(), 0);
+        storeNotDef(prefs, "dcmFwdMppsRetryInterval", arcAE.getForwardMPPSRetryInterval(),
+                    ArchiveApplicationEntity.DEF_FWD_MPPS_RETRY_INTERVAL);
     }
 
     @Override
@@ -210,6 +214,10 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
         arcae.setStorageCommitmentMaxRetries(prefs.getInt("dcmStgCmtMaxRetries", 0));
         arcae.setStorageCommitmentRetryInterval(prefs.getInt("dcmStgCmtRetryInterval",
                 ArchiveApplicationEntity.DEF_STGCMT_RETRY_INTERVAL));
+        arcae.setForwardMPPSDestinations(stringArray(prefs, "dcmFwdMppsDestination"));
+        arcae.setForwardMPPSMaxRetries(prefs.getInt("dcmFwdMppsMaxRetries", 0));
+        arcae.setForwardMPPSRetryInterval(prefs.getInt("dcmFwdMppsRetryInterval",
+                ArchiveApplicationEntity.DEF_FWD_MPPS_RETRY_INTERVAL));
     }
 
     @Override
@@ -338,6 +346,17 @@ public class PreferencesArchiveConfiguration extends PreferencesDicomConfigurati
                  aa.getStorageCommitmentRetryInterval(),
                  bb.getStorageCommitmentRetryInterval(),
                  ArchiveApplicationEntity.DEF_STGCMT_RETRY_INTERVAL);
+         storeDiff(prefs, "dcmFwdMppsDestination",
+                 aa.getForwardMPPSDestinations(),
+                 bb.getForwardMPPSDestinations());
+         storeDiff(prefs, "dcmFwdMppsMaxRetries",
+                 aa.getForwardMPPSMaxRetries(),
+                 bb.getForwardMPPSMaxRetries(),
+                 0);
+         storeDiff(prefs, "dcmFwdMppsRetryInterval",
+                 aa.getForwardMPPSRetryInterval(),
+                 bb.getForwardMPPSRetryInterval(),
+                 ArchiveApplicationEntity.DEF_FWD_MPPS_RETRY_INTERVAL);
     }
 
     @Override

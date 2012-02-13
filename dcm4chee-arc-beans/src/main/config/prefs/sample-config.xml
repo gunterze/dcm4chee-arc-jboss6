@@ -35,26 +35,26 @@
                 <map/>
                 <node name="Instance">
                   <map>
-                    <entry key="dcmTag.#" value="25"/>
+                    <entry key="dcmTag.#" value="26"/>
                     <entry key="dcmTag.1" value="00080005"/>
                     <entry key="dcmTag.10" value="00280010"/>
                     <entry key="dcmTag.11" value="00280011"/>
                     <entry key="dcmTag.12" value="00280100"/>
-                    <entry key="dcmTag.26" value="0040A032"/>
-                    <entry key="dcmTag.13" value="0040A043"/>
-                    <entry key="dcmTag.14" value="0040A073"/>
-                    <entry key="dcmTag.15" value="0040A370"/>
-                    <entry key="dcmTag.16" value="0040A491"/>
-                    <entry key="dcmTag.17" value="0040A493"/>
-                    <entry key="dcmTag.18" value="00420010"/>
-                    <entry key="dcmTag.19" value="00420012"/>
+                    <entry key="dcmTag.13" value="0040A032"/>
+                    <entry key="dcmTag.14" value="0040A043"/>
+                    <entry key="dcmTag.15" value="0040A073"/>
+                    <entry key="dcmTag.16" value="0040A370"/>
+                    <entry key="dcmTag.17" value="0040A491"/>
+                    <entry key="dcmTag.18" value="0040A493"/>
+                    <entry key="dcmTag.19" value="00420010"/>
                     <entry key="dcmTag.2" value="00080008"/>
-                    <entry key="dcmTag.20" value="00700080"/>
-                    <entry key="dcmTag.21" value="00700081"/>
-                    <entry key="dcmTag.22" value="00700082"/>
-                    <entry key="dcmTag.23" value="00700083"/>
-                    <entry key="dcmTag.24" value="00700084"/>
-                    <entry key="dcmTag.25" value="04000561"/>
+                    <entry key="dcmTag.20" value="00420012"/>
+                    <entry key="dcmTag.21" value="00700080"/>
+                    <entry key="dcmTag.22" value="00700081"/>
+                    <entry key="dcmTag.23" value="00700082"/>
+                    <entry key="dcmTag.24" value="00700083"/>
+                    <entry key="dcmTag.25" value="00700084"/>
+                    <entry key="dcmTag.26" value="04000561"/>
                     <entry key="dcmTag.3" value="00080016"/>
                     <entry key="dcmTag.4" value="00080018"/>
                     <entry key="dcmTag.5" value="00080023"/>
@@ -1814,6 +1814,15 @@
                     </node>
                     <node name="184">
                       <map>
+                        <entry key="cn" value="Modality Performed Procedure Step SOP Class SCU"/>
+                        <entry key="dicomSOPClass" value="1.2.840.10008.3.1.2.3.3"/>
+                        <entry key="dicomTransferRole" value="SCU"/>
+                        <entry key="dicomTransferSyntax.#" value="1"/>
+                        <entry key="dicomTransferSyntax.1" value="1.2.840.10008.1.2"/>
+                      </map>
+                    </node>
+                    <node name="185">
+                      <map>
                         <entry key="cn" value="Arterial Pulse Waveform Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.9.5.1"/>
                         <entry key="dicomTransferRole" value="SCU"/>
@@ -1824,7 +1833,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="185">
+                    <node name="186">
                       <map>
                         <entry key="cn" value="Macular Grid Thickness and Volume Report Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.79.1"/>
@@ -1836,7 +1845,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="186">
+                    <node name="187">
                       <map>
                         <entry key="cn" value="Ophthalmic Tomography Image Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.77.1.5.4"/>
@@ -1857,7 +1866,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="187">
+                    <node name="188">
                       <map>
                         <entry key="cn" value="Stereometric Relationship Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.77.1.5.3"/>
@@ -1869,7 +1878,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="188">
+                    <node name="189">
                       <map>
                         <entry key="cn" value="Ophthalmic Photography 16 Bit Image Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.77.1.5.2"/>
@@ -1890,19 +1899,6 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="189">
-                      <map>
-                        <entry key="cn" value="Video Photographic Image Storage SCU"/>
-                        <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.77.1.4.1"/>
-                        <entry key="dicomTransferRole" value="SCU"/>
-                        <entry key="dicomTransferSyntax.#" value="5"/>
-                        <entry key="dicomTransferSyntax.1" value="1.2.840.10008.1.2.4.50"/>
-                        <entry key="dicomTransferSyntax.2" value="1.2.840.10008.1.2.4.100"/>
-                        <entry key="dicomTransferSyntax.3" value="1.2.840.10008.1.2.4.101"/>
-                        <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.4.103"/>
-                        <entry key="dicomTransferSyntax.5" value="1.2.840.10008.1.2.4.102"/>
-                      </map>
-                    </node>
                     <node name="19">
                       <map>
                         <entry key="cn" value="RT Brachy Treatment Record Storage SCP"/>
@@ -1916,6 +1912,19 @@
                       </map>
                     </node>
                     <node name="190">
+                      <map>
+                        <entry key="cn" value="Video Photographic Image Storage SCU"/>
+                        <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.77.1.4.1"/>
+                        <entry key="dicomTransferRole" value="SCU"/>
+                        <entry key="dicomTransferSyntax.#" value="5"/>
+                        <entry key="dicomTransferSyntax.1" value="1.2.840.10008.1.2.4.50"/>
+                        <entry key="dicomTransferSyntax.2" value="1.2.840.10008.1.2.4.100"/>
+                        <entry key="dicomTransferSyntax.3" value="1.2.840.10008.1.2.4.101"/>
+                        <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.4.103"/>
+                        <entry key="dicomTransferSyntax.5" value="1.2.840.10008.1.2.4.102"/>
+                      </map>
+                    </node>
+                    <node name="191">
                       <map>
                         <entry key="cn" value="Enhanced PET Image Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.130"/>
@@ -1936,7 +1945,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="191">
+                    <node name="192">
                       <map>
                         <entry key="cn" value="Enhanced XA Image Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.12.1.1"/>
@@ -1957,7 +1966,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="192">
+                    <node name="193">
                       <map>
                         <entry key="cn" value="Basic Structured Display Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.131"/>
@@ -1969,7 +1978,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="193">
+                    <node name="194">
                       <map>
                         <entry key="cn" value="Autorefraction Measurements Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.78.2"/>
@@ -1981,7 +1990,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="194">
+                    <node name="195">
                       <map>
                         <entry key="cn" value="Lensometry Measurements Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.78.1"/>
@@ -1993,7 +2002,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="195">
+                    <node name="196">
                       <map>
                         <entry key="cn" value="Spectacle Prescription Report Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.78.6"/>
@@ -2005,7 +2014,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="196">
+                    <node name="197">
                       <map>
                         <entry key="cn" value="Visual Acuity Measurements Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.78.5"/>
@@ -2017,7 +2026,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="197">
+                    <node name="198">
                       <map>
                         <entry key="cn" value="Subjective Refraction Measurements Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.78.4"/>
@@ -2029,22 +2038,10 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="198">
+                    <node name="199">
                       <map>
                         <entry key="cn" value="Keratometry Measurements Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.78.3"/>
-                        <entry key="dicomTransferRole" value="SCU"/>
-                        <entry key="dicomTransferSyntax.#" value="4"/>
-                        <entry key="dicomTransferSyntax.1" value="1.2.840.10008.1.2"/>
-                        <entry key="dicomTransferSyntax.2" value="1.2.840.10008.1.2.1"/>
-                        <entry key="dicomTransferSyntax.3" value="1.2.840.10008.1.2.1.99"/>
-                        <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
-                      </map>
-                    </node>
-                    <node name="199">
-                      <map>
-                        <entry key="cn" value="Intraocular Lens Calculations Storage SCU"/>
-                        <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.78.8"/>
                         <entry key="dicomTransferRole" value="SCU"/>
                         <entry key="dicomTransferSyntax.#" value="4"/>
                         <entry key="dicomTransferSyntax.1" value="1.2.840.10008.1.2"/>
@@ -2079,6 +2076,18 @@
                     </node>
                     <node name="200">
                       <map>
+                        <entry key="cn" value="Intraocular Lens Calculations Storage SCU"/>
+                        <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.78.8"/>
+                        <entry key="dicomTransferRole" value="SCU"/>
+                        <entry key="dicomTransferSyntax.#" value="4"/>
+                        <entry key="dicomTransferSyntax.1" value="1.2.840.10008.1.2"/>
+                        <entry key="dicomTransferSyntax.2" value="1.2.840.10008.1.2.1"/>
+                        <entry key="dicomTransferSyntax.3" value="1.2.840.10008.1.2.1.99"/>
+                        <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
+                      </map>
+                    </node>
+                    <node name="201">
+                      <map>
                         <entry key="cn" value="Comprehensive SR Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.88.33"/>
                         <entry key="dicomTransferRole" value="SCU"/>
@@ -2089,7 +2098,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="201">
+                    <node name="202">
                       <map>
                         <entry key="cn" value="Ophthalmic Photography 8 Bit Image Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.77.1.5.1"/>
@@ -2110,7 +2119,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="202">
+                    <node name="203">
                       <map>
                         <entry key="cn" value="Ophthalmic Axial Measurements Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.78.7"/>
@@ -2122,7 +2131,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="203">
+                    <node name="204">
                       <map>
                         <entry key="cn" value="Nuclear Medicine Image Storage (Retired) SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.5"/>
@@ -2143,7 +2152,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="204">
+                    <node name="205">
                       <map>
                         <entry key="cn" value="MR Image Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.4"/>
@@ -2164,7 +2173,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="205">
+                    <node name="206">
                       <map>
                         <entry key="cn" value="Ultrasound Multi-frame Image Storage (Retired) SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.3"/>
@@ -2185,7 +2194,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="206">
+                    <node name="207">
                       <map>
                         <entry key="cn" value="CT Image Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.2"/>
@@ -2206,7 +2215,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="207">
+                    <node name="208">
                       <map>
                         <entry key="cn" value="Standalone Curve Storage (Retired) SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.9"/>
@@ -2218,22 +2227,10 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="208">
+                    <node name="209">
                       <map>
                         <entry key="cn" value="Surface Segmentation Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.66.5"/>
-                        <entry key="dicomTransferRole" value="SCU"/>
-                        <entry key="dicomTransferSyntax.#" value="4"/>
-                        <entry key="dicomTransferSyntax.1" value="1.2.840.10008.1.2"/>
-                        <entry key="dicomTransferSyntax.2" value="1.2.840.10008.1.2.1"/>
-                        <entry key="dicomTransferSyntax.3" value="1.2.840.10008.1.2.1.99"/>
-                        <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
-                      </map>
-                    </node>
-                    <node name="209">
-                      <map>
-                        <entry key="cn" value="Standalone Overlay Storage (Retired) SCU"/>
-                        <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.8"/>
                         <entry key="dicomTransferRole" value="SCU"/>
                         <entry key="dicomTransferSyntax.#" value="4"/>
                         <entry key="dicomTransferSyntax.1" value="1.2.840.10008.1.2"/>
@@ -2256,6 +2253,18 @@
                     </node>
                     <node name="210">
                       <map>
+                        <entry key="cn" value="Standalone Overlay Storage (Retired) SCU"/>
+                        <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.8"/>
+                        <entry key="dicomTransferRole" value="SCU"/>
+                        <entry key="dicomTransferSyntax.#" value="4"/>
+                        <entry key="dicomTransferSyntax.1" value="1.2.840.10008.1.2"/>
+                        <entry key="dicomTransferSyntax.2" value="1.2.840.10008.1.2.1"/>
+                        <entry key="dicomTransferSyntax.3" value="1.2.840.10008.1.2.1.99"/>
+                        <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
+                      </map>
+                    </node>
+                    <node name="211">
+                      <map>
                         <entry key="cn" value="Segmentation Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.66.4"/>
                         <entry key="dicomTransferRole" value="SCU"/>
@@ -2266,7 +2275,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="211">
+                    <node name="212">
                       <map>
                         <entry key="cn" value="Secondary Capture Image Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.7"/>
@@ -2287,7 +2296,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="212">
+                    <node name="213">
                       <map>
                         <entry key="cn" value="X-Ray Radiofluoroscopic Image Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.12.2"/>
@@ -2308,7 +2317,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="213">
+                    <node name="214">
                       <map>
                         <entry key="cn" value="Ultrasound Image Storage (Retired) SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.6"/>
@@ -2329,7 +2338,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="214">
+                    <node name="215">
                       <map>
                         <entry key="cn" value="X-Ray Angiographic Image Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.12.1"/>
@@ -2350,7 +2359,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="215">
+                    <node name="216">
                       <map>
                         <entry key="cn" value="Spatial Registration Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.66.1"/>
@@ -2362,7 +2371,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="216">
+                    <node name="217">
                       <map>
                         <entry key="cn" value="Standalone PET Curve Storage (Retired) SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.129"/>
@@ -2374,7 +2383,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="217">
+                    <node name="218">
                       <map>
                         <entry key="cn" value="Video Microscopic Image Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.77.1.2.1"/>
@@ -2387,31 +2396,10 @@
                         <entry key="dicomTransferSyntax.5" value="1.2.840.10008.1.2.4.102"/>
                       </map>
                     </node>
-                    <node name="218">
+                    <node name="219">
                       <map>
                         <entry key="cn" value="X-Ray Angiographic Bi-Plane Image Storage (Retired) SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.12.3"/>
-                        <entry key="dicomTransferRole" value="SCU"/>
-                        <entry key="dicomTransferSyntax.#" value="13"/>
-                        <entry key="dicomTransferSyntax.1" value="1.2.840.10008.1.2"/>
-                        <entry key="dicomTransferSyntax.10" value="1.2.840.10008.1.2.4.81"/>
-                        <entry key="dicomTransferSyntax.11" value="1.2.840.10008.1.2.4.90"/>
-                        <entry key="dicomTransferSyntax.12" value="1.2.840.10008.1.2.4.91"/>
-                        <entry key="dicomTransferSyntax.13" value="1.2.840.10008.1.2.5"/>
-                        <entry key="dicomTransferSyntax.2" value="1.2.840.10008.1.2.1"/>
-                        <entry key="dicomTransferSyntax.3" value="1.2.840.10008.1.2.1.99"/>
-                        <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
-                        <entry key="dicomTransferSyntax.5" value="1.2.840.10008.1.2.4.50"/>
-                        <entry key="dicomTransferSyntax.6" value="1.2.840.10008.1.2.4.51"/>
-                        <entry key="dicomTransferSyntax.7" value="1.2.840.10008.1.2.4.70"/>
-                        <entry key="dicomTransferSyntax.8" value="1.2.840.10008.1.2.4.57"/>
-                        <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
-                      </map>
-                    </node>
-                    <node name="219">
-                      <map>
-                        <entry key="cn" value="Positron Emission Tomography Image Storage SCU"/>
-                        <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.128"/>
                         <entry key="dicomTransferRole" value="SCU"/>
                         <entry key="dicomTransferSyntax.#" value="13"/>
                         <entry key="dicomTransferSyntax.1" value="1.2.840.10008.1.2"/>
@@ -2443,6 +2431,27 @@
                     </node>
                     <node name="220">
                       <map>
+                        <entry key="cn" value="Positron Emission Tomography Image Storage SCU"/>
+                        <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.128"/>
+                        <entry key="dicomTransferRole" value="SCU"/>
+                        <entry key="dicomTransferSyntax.#" value="13"/>
+                        <entry key="dicomTransferSyntax.1" value="1.2.840.10008.1.2"/>
+                        <entry key="dicomTransferSyntax.10" value="1.2.840.10008.1.2.4.81"/>
+                        <entry key="dicomTransferSyntax.11" value="1.2.840.10008.1.2.4.90"/>
+                        <entry key="dicomTransferSyntax.12" value="1.2.840.10008.1.2.4.91"/>
+                        <entry key="dicomTransferSyntax.13" value="1.2.840.10008.1.2.5"/>
+                        <entry key="dicomTransferSyntax.2" value="1.2.840.10008.1.2.1"/>
+                        <entry key="dicomTransferSyntax.3" value="1.2.840.10008.1.2.1.99"/>
+                        <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
+                        <entry key="dicomTransferSyntax.5" value="1.2.840.10008.1.2.4.50"/>
+                        <entry key="dicomTransferSyntax.6" value="1.2.840.10008.1.2.4.51"/>
+                        <entry key="dicomTransferSyntax.7" value="1.2.840.10008.1.2.4.70"/>
+                        <entry key="dicomTransferSyntax.8" value="1.2.840.10008.1.2.4.57"/>
+                        <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
+                      </map>
+                    </node>
+                    <node name="221">
+                      <map>
                         <entry key="cn" value="Deformable Spatial Registration Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.66.3"/>
                         <entry key="dicomTransferRole" value="SCU"/>
@@ -2453,7 +2462,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="221">
+                    <node name="222">
                       <map>
                         <entry key="cn" value="Spatial Fiducials Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.66.2"/>
@@ -2465,7 +2474,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="222">
+                    <node name="223">
                       <map>
                         <entry key="cn" value="Intravascular Optical Coherence Tomography Image Storage - For Processing SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.14.2"/>
@@ -2486,7 +2495,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="223">
+                    <node name="224">
                       <map>
                         <entry key="cn" value="Intravascular Optical Coherence Tomography Image Storage - For Presentation SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.14.1"/>
@@ -2507,7 +2516,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="224">
+                    <node name="225">
                       <map>
                         <entry key="cn" value="Enhanced XRF Image Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.12.2.1"/>
@@ -2528,7 +2537,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="225">
+                    <node name="226">
                       <map>
                         <entry key="cn" value="Enhanced SR Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.88.22"/>
@@ -2540,7 +2549,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="226">
+                    <node name="227">
                       <map>
                         <entry key="cn" value="Computed Radiography Image Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.1"/>
@@ -2561,7 +2570,7 @@
                         <entry key="dicomTransferSyntax.9" value="1.2.840.10008.1.2.4.80"/>
                       </map>
                     </node>
-                    <node name="227">
+                    <node name="228">
                       <map>
                         <entry key="cn" value="Encapsulated CDA Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.104.2"/>
@@ -2573,7 +2582,7 @@
                         <entry key="dicomTransferSyntax.4" value="1.2.840.10008.1.2.2"/>
                       </map>
                     </node>
-                    <node name="228">
+                    <node name="229">
                       <map>
                         <entry key="cn" value="Encapsulated PDF Storage SCU"/>
                         <entry key="dicomSOPClass" value="1.2.840.10008.5.1.4.1.1.104.1"/>

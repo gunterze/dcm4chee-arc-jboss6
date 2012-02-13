@@ -38,6 +38,10 @@
 
 package org.dcm4chee.archive.conf.ldap;
 
+
+import static org.dcm4che.net.TransferCapability.Role.SCP;
+import static org.dcm4che.net.TransferCapability.Role.SCU;
+
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.EnumSet;
@@ -597,23 +601,27 @@ public class ArchiveConfigurationTestUtils {
         ae.setSendPendingCMoveInterval(5000);
         ae.addAttributeCoercion(new AttributeCoercion(null, 
                 AttributeCoercion.DIMSE.C_STORE_RQ, 
-                TransferCapability.Role.SCP,
+                SCP,
                 "ENSURE_PID",
                 "resource:dcm4chee-arc-ensure-pid.xsl"));
         ae.addAttributeCoercion(new AttributeCoercion(null, 
                 AttributeCoercion.DIMSE.C_STORE_RQ, 
-                TransferCapability.Role.SCU,
+                SCU,
                 "WITHOUT_PN",
                 "resource:dcm4chee-arc-nullify-pn.xsl"));
-        addStorageTransferCapabilities(ae, IMAGE_CUIDS, IMAGE_TSUIDS);
-        addStorageTransferCapabilities(ae, VIDEO_CUIDS, VIDEO_TSUIDS);
-        addStorageTransferCapabilities(ae, OTHER_CUIDS, OTHER_TSUIDS);
-        addSCPs(ae, QUERY_CUIDS, EnumSet.allOf(QueryOption.class));
-        addSCPs(ae, RETRIEVE_CUIDS, EnumSet.of(QueryOption.RELATIONAL));
-        addSCP(ae, UID.CompositeInstanceRetrieveWithoutBulkDataGET, null);
-        addSCP(ae, UID.StorageCommitmentPushModelSOPClass, null);
-        addSCP(ae, UID.ModalityPerformedProcedureStepSOPClass, null);
-        addSCP(ae, UID.VerificationSOPClass, null);
+        addTCs(ae, null, SCP, IMAGE_CUIDS, IMAGE_TSUIDS);
+        addTCs(ae, null, SCP, VIDEO_CUIDS, VIDEO_TSUIDS);
+        addTCs(ae, null, SCP, OTHER_CUIDS, OTHER_TSUIDS);
+        addTCs(ae, null, SCU, IMAGE_CUIDS, IMAGE_TSUIDS);
+        addTCs(ae, null, SCU, VIDEO_CUIDS, VIDEO_TSUIDS);
+        addTCs(ae, null, SCU, OTHER_CUIDS, OTHER_TSUIDS);
+        addTCs(ae, EnumSet.allOf(QueryOption.class), SCP, QUERY_CUIDS, UID.ImplicitVRLittleEndian);
+        addTCs(ae, EnumSet.of(QueryOption.RELATIONAL), SCP, RETRIEVE_CUIDS, UID.ImplicitVRLittleEndian);
+        addTC(ae, null, SCP, UID.CompositeInstanceRetrieveWithoutBulkDataGET, UID.ImplicitVRLittleEndian);
+        addTC(ae, null, SCP, UID.StorageCommitmentPushModelSOPClass, UID.ImplicitVRLittleEndian);
+        addTC(ae, null, SCP, UID.ModalityPerformedProcedureStepSOPClass, UID.ImplicitVRLittleEndian);
+        addTC(ae, null, SCU, UID.ModalityPerformedProcedureStepSOPClass, UID.ImplicitVRLittleEndian);
+        addTC(ae, null, SCP, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
         device.addApplicationEntity(ae);
         Connection dicom = new Connection("dicom", "localhost", 11112);
         dicom.setMaxOpsInvoked(0);
@@ -631,29 +639,17 @@ public class ArchiveConfigurationTestUtils {
         return device;
     }
 
-    private static void addSCPs(ArchiveApplicationEntity ae, String[] cuids,
-            EnumSet<QueryOption> queryOpts) {
+    private static void addTCs(ArchiveApplicationEntity ae, EnumSet<QueryOption> queryOpts,
+            TransferCapability.Role role, String[] cuids, String... tss) {
         for (String cuid : cuids)
-            addSCP(ae, cuid, queryOpts);
+            addTC(ae, queryOpts, role, cuid, tss);
     }
 
-    private static void addSCP(ArchiveApplicationEntity ae, String cuid,
-            EnumSet<QueryOption> queryOpts) {
+    private static void addTC(ArchiveApplicationEntity ae, EnumSet<QueryOption> queryOpts,
+            TransferCapability.Role role, String cuid, String... tss) {
         String name = UID.nameOf(cuid).replace('/', ' ');
-        TransferCapability tc = new TransferCapability(name + " SCP", cuid,
-                TransferCapability.Role.SCP, UID.ImplicitVRLittleEndian);
+        TransferCapability tc = new TransferCapability(name + ' ' + role, cuid, role, tss);
         tc.setQueryOptions(queryOpts);
         ae.addTransferCapability(tc);
-    }
-
-    private static void addStorageTransferCapabilities(ArchiveApplicationEntity ae,
-            String[] cuids, String[] tss) {
-        for (String cuid : cuids) {
-            String name = UID.nameOf(cuid).replace('/', ' ');
-            ae.addTransferCapability(
-                    new TransferCapability(name + " SCP", cuid, TransferCapability.Role.SCP, tss));
-            ae.addTransferCapability(
-                    new TransferCapability(name + " SCU", cuid, TransferCapability.Role.SCU, tss));
-        }
     }
 }

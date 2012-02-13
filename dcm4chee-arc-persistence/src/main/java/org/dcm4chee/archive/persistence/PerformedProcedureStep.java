@@ -93,6 +93,10 @@ public class PerformedProcedureStep implements Serializable {
     private String status;
 
     @Basic(optional = false)
+    @Column(name = "ian")
+    private boolean instanceAvailableNotification;
+
+    @Basic(optional = false)
     @Column(name = "pps_attrs")
     private byte[] encodedAttributes;
 
@@ -114,6 +118,7 @@ public class PerformedProcedureStep implements Serializable {
         return "PerformedProcedureStep[pk=" + pk
                 + ", uid=" + sopInstanceUID
                 + ", status=" + status
+                + ", ian=" + instanceAvailableNotification
                 + "]";
     }
 
@@ -143,6 +148,14 @@ public class PerformedProcedureStep implements Serializable {
 
     public boolean isDiscontinued() {
         return DISCONTINUED.equals(status);
+    }
+
+    public boolean isInstanceAvailableNotification() {
+        return instanceAvailableNotification;
+    }
+
+    public void setInstanceAvailableNotification(boolean ian) {
+        this.instanceAvailableNotification = ian;
     }
 
     public byte[] getEncodedAttributes() {

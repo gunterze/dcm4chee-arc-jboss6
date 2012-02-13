@@ -95,19 +95,19 @@ public class StgCmtSCPImpl extends BasicNActionSCP implements MessageListener {
         this.device = device;
     }
 
-    public DicomConfiguration getDicomConfiguration() {
+    public final DicomConfiguration getDicomConfiguration() {
         return dicomConfiguration;
     }
 
-    public void setDicomConfiguration(DicomConfiguration dicomConfiguration) {
+    public final void setDicomConfiguration(DicomConfiguration dicomConfiguration) {
         this.dicomConfiguration = dicomConfiguration;
     }
 
-    public JMSService getJmsService() {
+    public final JMSService getJmsService() {
         return jmsService;
     }
 
-    public void setJmsService(JMSService jmsService) {
+    public final void setJmsService(JMSService jmsService) {
         this.jmsService = jmsService;
     }
 
@@ -234,6 +234,5 @@ public class StgCmtSCPImpl extends BasicNActionSCP implements MessageListener {
             }},
          delay);
     }
-
 
 }
