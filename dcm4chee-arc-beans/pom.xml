@@ -63,19 +63,19 @@
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
-      <artifactId>dcm4che-conf-api</artifactId>
+      <artifactId>dcm4che-conf-api-hl7</artifactId>
       <version>3.0.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
-      <artifactId>dcm4che-conf-ldap</artifactId>
+      <artifactId>dcm4che-conf-ldap-hl7</artifactId>
       <version>3.0.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
-      <artifactId>dcm4che-conf-prefs</artifactId>
+      <artifactId>dcm4che-conf-prefs-hl7</artifactId>
       <version>3.0.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
@@ -87,7 +87,7 @@
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
-      <artifactId>dcm4che-net</artifactId>
+      <artifactId>dcm4che-net-hl7</artifactId>
       <version>3.0.0-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>

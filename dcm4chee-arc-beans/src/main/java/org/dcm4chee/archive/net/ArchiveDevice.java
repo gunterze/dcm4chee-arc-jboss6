@@ -42,7 +42,7 @@ import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerConfigurationException;
 
 import org.dcm4che.io.TemplatesCache;
-import org.dcm4che.net.Device;
+import org.dcm4che.net.hl7.HL7Device;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.persistence.AttributeFilter;
@@ -51,7 +51,7 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class ArchiveDevice extends Device {
+public class ArchiveDevice extends HL7Device {
 
     private FuzzyStr fuzzyStr;
     private final AttributeFilter[] attributeFilters = new AttributeFilter[Entity.values().length];

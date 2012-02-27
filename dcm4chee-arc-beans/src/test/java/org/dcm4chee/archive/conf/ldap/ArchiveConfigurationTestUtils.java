@@ -58,6 +58,7 @@ import org.dcm4che.net.Device;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.SSLManagerFactory;
 import org.dcm4che.net.TransferCapability;
+import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.soundex.ESoundex;
 import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
@@ -493,7 +494,8 @@ public class ArchiveConfigurationTestUtils {
         "getscu",
         "movescu",
         "mppsscu",
-        "storescu"
+        "storescu",
+        "hl7snd"
     };
 
     private static final String[] OTHER_AES = {
@@ -501,6 +503,16 @@ public class ArchiveConfigurationTestUtils {
         "STGCMTSCU",
         "STORESCP",
         "MPPSSCP",
+    };
+
+    private static final String[] HL7_MESSAGE_TYPES = {
+        "ADT^A02",
+        "ADT^A03",
+        "ADT^A06",
+        "ADT^A07",
+        "ADT^A08",
+        "ADT^A40",
+        "ORM^O01"
     };
 
     private static final KeyStore KEYSTORE = loadKeyStore();
@@ -636,6 +648,18 @@ public class ArchiveConfigurationTestUtils {
                 Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
         device.addConnection(dicomTLS);
         ae.addConnection(dicomTLS);
+        HL7Application hl7App = new HL7Application("*");
+        hl7App.setAcceptedMessageTypes(HL7_MESSAGE_TYPES);
+        device.addHL7Application(hl7App);
+        Connection hl7 = new Connection("hl7", "localhost", 2575);
+        device.addConnection(hl7);
+        hl7App.addConnection(hl7);
+        Connection hl7TLS = new Connection("hl7-tls", "localhost", 12575);
+        hl7TLS.setTlsCipherSuites(
+                Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
+                Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
+        device.addConnection(hl7TLS);
+        hl7App.addConnection(hl7TLS);
         return device;
     }
 

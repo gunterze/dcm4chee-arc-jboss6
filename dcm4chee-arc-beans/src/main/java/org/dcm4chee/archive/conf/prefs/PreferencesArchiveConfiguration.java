@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
-import org.dcm4che.conf.prefs.PreferencesDicomConfiguration;
+import org.dcm4che.conf.prefs.hl7.PreferencesHL7Configuration;
 import org.dcm4che.data.ValueSelector;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Connection;
@@ -61,7 +61,7 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class PreferencesArchiveConfiguration extends PreferencesDicomConfiguration {
+public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration {
 
     public PreferencesArchiveConfiguration(Preferences rootPrefs) {
         super(rootPrefs);

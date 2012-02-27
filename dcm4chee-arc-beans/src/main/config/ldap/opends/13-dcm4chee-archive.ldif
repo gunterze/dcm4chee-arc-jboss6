@@ -31,7 +31,7 @@ attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.4
   SINGLE-VALUE )
 attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.5
   NAME 'dcmStoreDuplicate'
-  DESC 'Specifies behavior on receive of objects with exisiting SOP Instance UID: "IGNORE", "STORE" or "REPLACE"'
+  DESC 'Specifies behavior on receive of objects with existing SOP Instance UID: "IGNORE", "STORE" or "REPLACE"'
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
@@ -132,9 +132,8 @@ attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.19
 attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.20
   NAME 'dcmFwdMppsDestination'
   DESC 'Destination to forward MPPS N-CREATE RQ and N-SET RQ'
-  EQUALITY caseIgnoreMatch
-  SUBSTR caseIgnoreSubstringsMatch
-  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+  EQUALITY caseExactIA5Match
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
 attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.21
   NAME 'dcmFwdMppsMaxRetries'
   DESC 'Maximum number of retries to forward MPPS N-CREATE RQ and N-SET RQ. 0 if absent'
@@ -146,6 +145,12 @@ attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.22
   DESC 'Interval between retries to forward MPPS N-CREATE RQ and N-SET RQ in s. 60 if absent'
   EQUALITY integerMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+  SINGLE-VALUE )
+attributeTypes: ( 1.2.40.0.13.1.1.15.0.3.23
+  NAME 'dcmEntity'
+  DESC 'Entity of the Attribute Filter ("Patient", "Study", "Series", "Instance", "Visit", "ServiceRequest", "RequestedProcedure", "ScheduledProcedureStep", "PerformedProcedureStep").'
+  EQUALITY caseExactIA5Match
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
 objectClasses: ( 1.2.40.0.13.1.1.15.0.4.4
   NAME 'dcmArchiveDevice'
@@ -182,7 +187,7 @@ objectClasses: ( 1.2.40.0.13.1.1.15.0.4.10
   DESC 'Attributes stored in the database'
   SUP top STRUCTURAL
   MUST (
-    cn $
+    dcmEntity $
     dcmTag )
   MAY (
     dcmCustomAttribute1 $

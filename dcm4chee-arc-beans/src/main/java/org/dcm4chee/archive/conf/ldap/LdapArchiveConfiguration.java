@@ -54,7 +54,7 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.ModificationItem;
 import javax.naming.directory.SearchResult;
 
-import org.dcm4che.conf.ldap.ExtendedLdapDicomConfiguration;
+import org.dcm4che.conf.ldap.hl7.LdapHL7Configuration;
 import org.dcm4che.data.ValueSelector;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Device;
@@ -70,7 +70,7 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
+public class LdapArchiveConfiguration extends LdapHL7Configuration {
 
     public LdapArchiveConfiguration(Hashtable<String, Object> env, String baseDN)
             throws NamingException {
@@ -125,7 +125,7 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
             return;
         ArchiveDevice arcDev = (ArchiveDevice) device;
         for (Entity entity : Entity.values())
-            createSubcontext(dnOf("cn", entity.toString(), deviceDN),
+            createSubcontext(dnOf("dcmEntity", entity.toString(), deviceDN),
                     storeTo(arcDev.getAttributeFilter(entity), entity, new BasicAttributes(true)));
     }
 
@@ -140,7 +140,7 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
 
     private static Attributes storeTo(AttributeFilter filter, Entity entity, BasicAttributes attrs) {
         attrs.put("objectclass", "dcmAttributeFilter");
-        attrs.put("cn", entity.name());
+        attrs.put("dcmEntity", entity.name());
         attrs.put(tagsAttr("dcmTag", filter.getSelection()));
         storeNotNull(attrs, "dcmCustomAttribute1", filter.getCustomAttribute1());
         storeNotNull(attrs, "dcmCustomAttribute2", filter.getCustomAttribute2());
@@ -220,7 +220,7 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
                 filter.setCustomAttribute2(valueSelector(attrs.get("dcmCustomAttribute2")));
                 filter.setCustomAttribute3(valueSelector(attrs.get("dcmCustomAttribute3")));
                 device.setAttributeFilter(
-                        Entity.valueOf(stringValue(attrs.get("cn"))), filter);
+                        Entity.valueOf(stringValue(attrs.get("dcmEntity"))), filter);
             }
         } finally {
            safeClose(ne);
@@ -403,7 +403,7 @@ public class LdapArchiveConfiguration extends ExtendedLdapDicomConfiguration {
         ArchiveDevice aa = (ArchiveDevice) prev;
         ArchiveDevice bb = (ArchiveDevice) device;
         for (Entity entity : Entity.values())
-            modifyAttributes(dnOf("cn", entity.toString(), deviceDN),
+            modifyAttributes(dnOf("dcmEntity", entity.toString(), deviceDN),
                     storeDiffs(aa.getAttributeFilter(entity), bb.getAttributeFilter(entity),
                             new ArrayList<ModificationItem>()));
     }

@@ -124,7 +124,7 @@
   </bean>
 
   <!-- The DICOM Device -->
-  <bean name="Device" class="org.dcm4che.net.Device">
+  <bean name="Device" class="org.dcm4che.net.hl7.HL7Device">
     <constructor factoryMethod="findDevice">
       <factory bean="ArchiveConfiguration"/>
       <parameter>dcm4chee-arc</parameter>
@@ -137,6 +137,9 @@
     </property>
     <property name="dimseRQHandler">
       <inject bean="DicomServiceRegistry" />
+    </property>
+     <property name="HL7MessageListener">
+      <inject bean="HL7ServiceRegistry" />
     </property>
     <property name="keyManager">
       <inject bean="KeyManager" />
@@ -152,9 +155,14 @@
     <demand>Class:org.dcm4chee.archive.ejb.query.StgCmtQuery</demand>
   </bean>
 
-  <!-- Service Registry -->
+  <!-- DICOM Service Registry -->
   <bean name="DicomServiceRegistry" class="org.dcm4che.net.service.DicomServiceRegistry">
     <incallback method="addDicomService" />
+  </bean>
+
+  <!-- HL7 Service Registry -->
+  <bean name="HL7ServiceRegistry" class="org.dcm4che.net.hl7.service.HL7ServiceRegistry">
+    <incallback method="addHL7Service" />
   </bean>
 
   <!-- CEchoSCP -->

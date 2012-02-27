@@ -319,6 +319,25 @@ userCertificate;binary:: MIICTTCCAbagAwIBAgIETcfJhjANBgkqhkiG9w0BAQUFADBrMQswC
  gKCJ02VCFW3hBq8IjGAlbZNchHFNE0uJ3GrDXjtXGpNPMmo+2pQ+5quq/6g3bgcFt+Yn8jd/Y4w1m
  gP0i5Dc2niJA0FhY0qjzjNp/WfsoiwW8yM1+UFY5BZTBI=
 
+dn: dicomDeviceName=hl7snd,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomInstalled: TRUE
+dicomDeviceName: hl7snd
+objectClass: dicomDevice
+objectClass: pkiUser
+dicomThisNodeCertificateReference: dicomDeviceName=hl7snd,cn=Devices,cn=DICOM 
+ Configuration,dc=nodomain
+userCertificate;binary:: MIICSTCCAbKgAwIBAgIETztwfzANBgkqhkiG9w0BAQUFADBpMQswC
+ QYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbT
+ RjaGUxFTATBgNVBAsTDGRjbTRjaGUtdG9vbDEPMA0GA1UEAxMGaGw3c25kMB4XDTEyMDIxNTA4NDQ
+ 0N1oXDTEzMDIxNDA4NDQ0N1owaTELMAkGA1UEBhMCQVQxDzANBgNVBAgTBlZpZW5uYTEPMA0GA1UE
+ BxMGVmllbm5hMRAwDgYDVQQKEwdkY200Y2hlMRUwEwYDVQQLEwxkY200Y2hlLXRvb2wxDzANBgNVB
+ AMTBmhsN3NuZDCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEA3b74xNeEJudoc6BADEpmfXo9/K
+ QpAhjv/eCo9nBJQ0bEugfQBz6xPW1nuWk4EisgyESc/v79jJ0lq5GUNKZTjL3VjL27vwh/aPifVwC
+ eOb1zgKqIG0A3O3WsvE7xMtBOxf9aYkh2JEY+aBx6RvTpBnYEE97/NWgg29RwPC/VGIECAwEAATAN
+ BgkqhkiG9w0BAQUFAAOBgQBZHm35m+hDbM8A/K6GTP0cbc2fo4sPM9dMGGHX9uNXItORInzJXKOS3
+ WQutI035r2EAhsTCYLMDwuzlVlQi2uKmmM6R7hSlWtRQXMPRE9ilp8foY2sPWXa6i46rgFv0xmY6M
+ t7wCoHJgDqXtvMuARHndADwMvQWbU7p3Xee9K4TA==
+
 dn: dicomAETitle=DCM4CHEE,cn=Unique AE Titles Registry,cn=DICOM Configuration,
  dc=nodomain
 objectClass: dicomUniqueAETitle
@@ -346,7 +365,10 @@ dicomAuthorizedNodeCertificateReference: dicomDeviceName=mppsscu,cn=Devices,cn
  =DICOM Configuration,dc=nodomain
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=storescu,cn=Devices,c
  n=DICOM Configuration,dc=nodomain
+dicomAuthorizedNodeCertificateReference: dicomDeviceName=hl7snd,cn=Devices,cn=
+ DICOM Configuration,dc=nodomain
 objectClass: dicomDevice
+objectClass: hl7Device
 objectClass: dcmArchiveDevice
 objectClass: pkiUser
 dicomThisNodeCertificateReference: dicomDeviceName=dcm4chee-arc,cn=Devices,cn=
@@ -386,6 +408,26 @@ dcmMaxOpsPerformed: 0
 dcmTLSProtocol: TLSv1
 dcmTLSProtocol: SSLv3
 cn: dicom-tls
+
+dn: cn=hl7,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=n
+ odomain
+dicomHostname: localhost
+dicomPort: 2575
+objectClass: dicomNetworkConnection
+objectClass: dcmNetworkConnection
+cn: hl7
+
+dn: cn=hl7-tls,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,
+ dc=nodomain
+dicomHostname: localhost
+dicomPort: 12575
+objectClass: dicomNetworkConnection
+objectClass: dcmNetworkConnection
+dicomTLSCipherSuite: TLS_RSA_WITH_AES_128_CBC_SHA
+dicomTLSCipherSuite: SSL_RSA_WITH_3DES_EDE_CBC_SHA
+dcmTLSProtocol: TLSv1
+dcmTLSProtocol: SSLv3
+cn: hl7-tls
 
 dn: dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Con
  figuration,dc=nodomain
@@ -1550,15 +1592,6 @@ dicomTransferSyntax: 1.2.840.10008.1.2
 objectClass: dicomTransferCapability
 objectClass: dcmTransferCapability
 cn: Modality Performed Procedure Step SOP Class SCP
-
-dn: cn=Modality Performed Procedure Step SOP Class SCU,dicomAETitle=DCM4CHEE,d
- icomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
-dicomSOPClass: 1.2.840.10008.3.1.2.3.3
-dicomTransferRole: SCU
-dicomTransferSyntax: 1.2.840.10008.1.2
-objectClass: dicomTransferCapability
-objectClass: dcmTransferCapability
-cn: Modality Performed Procedure Step SOP Class SCU
 
 dn: cn=Arterial Pulse Waveform Storage SCP,dicomAETitle=DCM4CHEE,dicomDeviceNa
  me=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
@@ -3263,6 +3296,15 @@ objectClass: dicomTransferCapability
 objectClass: dcmTransferCapability
 cn: Raw Data Storage SCU
 
+dn: cn=Modality Performed Procedure Step SOP Class SCU,dicomAETitle=DCM4CHEE,d
+ icomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomSOPClass: 1.2.840.10008.3.1.2.3.3
+dicomTransferRole: SCU
+dicomTransferSyntax: 1.2.840.10008.1.2
+objectClass: dicomTransferCapability
+objectClass: dcmTransferCapability
+cn: Modality Performed Procedure Step SOP Class SCU
+
 dn: cn=Arterial Pulse Waveform Storage SCU,dicomAETitle=DCM4CHEE,dicomDeviceNa
  me=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dicomSOPClass: 1.2.840.10008.5.1.4.1.1.9.5.1
@@ -4000,8 +4042,24 @@ labeledURI: resource:dcm4chee-arc-ensure-pid.xsl
 objectClass: dcmAttributeCoercion
 dicomAETitle: ENSURE_PID
 
-dn: cn=Patient,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,
- dc=nodomain
+dn: hl7ApplicationName=*,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Conf
+ iguration,dc=nodomain
+objectClass: hl7Application
+dicomNetworkConnectionReference: cn=hl7,dicomDeviceName=dcm4chee-arc,cn=Device
+ s,cn=DICOM Configuration,dc=nodomain
+dicomNetworkConnectionReference: cn=hl7-tls,dicomDeviceName=dcm4chee-arc,cn=De
+ vices,cn=DICOM Configuration,dc=nodomain
+hl7AcceptedMessageType: ADT^A02
+hl7AcceptedMessageType: ADT^A03
+hl7AcceptedMessageType: ADT^A06
+hl7AcceptedMessageType: ADT^A07
+hl7AcceptedMessageType: ADT^A08
+hl7AcceptedMessageType: ADT^A40
+hl7AcceptedMessageType: ORM^O01
+hl7ApplicationName: *
+
+dn: dcmEntity=Patient,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configu
+ ration,dc=nodomain
 dcmTag: 00080005
 dcmTag: 00100010
 dcmTag: 00100020
@@ -4063,11 +4121,11 @@ dcmTag: 00380100
 dcmTag: 00380500
 dcmTag: 00380502
 dcmTag: 00403001
+dcmEntity: Patient
 objectClass: dcmAttributeFilter
-cn: Patient
 
-dn: cn=Study,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc
- =nodomain
+dn: dcmEntity=Study,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configura
+ tion,dc=nodomain
 dcmTag: 00080005
 dcmTag: 00080020
 dcmTag: 00080030
@@ -4085,11 +4143,11 @@ dcmTag: 001021B0
 dcmTag: 00102203
 dcmTag: 0020000D
 dcmTag: 00200010
+dcmEntity: Study
 objectClass: dcmAttributeFilter
-cn: Study
 
-dn: cn=Series,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,d
- c=nodomain
+dn: dcmEntity=Series,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configur
+ ation,dc=nodomain
 dcmTag: 00080005
 dcmTag: 00080060
 dcmTag: 00080070
@@ -4108,11 +4166,11 @@ dcmTag: 00200060
 dcmTag: 00400244
 dcmTag: 00400245
 dcmTag: 00400275
+dcmEntity: Series
 objectClass: dcmAttributeFilter
-cn: Series
 
-dn: cn=Instance,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration
- ,dc=nodomain
+dn: dcmEntity=Instance,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Config
+ uration,dc=nodomain
 dcmTag: 00080005
 dcmTag: 00080008
 dcmTag: 00080016
@@ -4139,11 +4197,11 @@ dcmTag: 00700082
 dcmTag: 00700083
 dcmTag: 00700084
 dcmTag: 04000561
+dcmEntity: Instance
 objectClass: dcmAttributeFilter
-cn: Instance
 
-dn: cn=Visit,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc
- =nodomain
+dn: dcmEntity=Visit,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configura
+ tion,dc=nodomain
 dcmTag: 00080005
 dcmTag: 00080080
 dcmTag: 00080081
@@ -4166,11 +4224,11 @@ dcmTag: 00380064
 dcmTag: 00380300
 dcmTag: 00380400
 dcmTag: 00384000
+dcmEntity: Visit
 objectClass: dcmAttributeFilter
-cn: Visit
 
-dn: cn=ServiceRequest,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configu
- ration,dc=nodomain
+dn: dcmEntity=ServiceRequest,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM 
+ Configuration,dc=nodomain
 dcmTag: 00080005
 dcmTag: 00080050
 dcmTag: 00080051
@@ -4188,11 +4246,11 @@ dcmTag: 00402010
 dcmTag: 00402016
 dcmTag: 00402017
 dcmTag: 00402400
+dcmEntity: ServiceRequest
 objectClass: dcmAttributeFilter
-cn: ServiceRequest
 
-dn: cn=RequestedProcedure,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Con
- figuration,dc=nodomain
+dn: dcmEntity=RequestedProcedure,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DI
+ COM Configuration,dc=nodomain
 dcmTag: 00080005
 dcmTag: 00080020
 dcmTag: 00080030
@@ -4210,11 +4268,11 @@ dcmTag: 0040100A
 dcmTag: 00401010
 dcmTag: 00401011
 dcmTag: 00401400
+dcmEntity: RequestedProcedure
 objectClass: dcmAttributeFilter
-cn: RequestedProcedure
 
-dn: cn=ScheduledProcedureStep,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM
-  Configuration,dc=nodomain
+dn: dcmEntity=ScheduledProcedureStep,dicomDeviceName=dcm4chee-arc,cn=Devices,c
+ n=DICOM Configuration,dc=nodomain
 dcmTag: 00080005
 dcmTag: 00080060
 dcmTag: 00102210
@@ -4235,11 +4293,11 @@ dcmTag: 00400012
 dcmTag: 00400020
 dcmTag: 00400400
 dcmTag: 00400500
+dcmEntity: ScheduledProcedureStep
 objectClass: dcmAttributeFilter
-cn: ScheduledProcedureStep
 
-dn: cn=PerformedProcedureStep,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM
-  Configuration,dc=nodomain
+dn: dcmEntity=PerformedProcedureStep,dicomDeviceName=dcm4chee-arc,cn=Devices,c
+ n=DICOM Configuration,dc=nodomain
 dcmTag: 00080005
 dcmTag: 00080060
 dcmTag: 00081032
@@ -4280,6 +4338,6 @@ dcmTag: 00400324
 dcmTag: 00400340
 dcmTag: 00401012
 dcmTag: 00408302
+dcmEntity: PerformedProcedureStep
 objectClass: dcmAttributeFilter
-cn: PerformedProcedureStep
 

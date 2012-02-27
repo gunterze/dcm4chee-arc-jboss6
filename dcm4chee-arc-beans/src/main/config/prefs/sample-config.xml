@@ -15,8 +15,9 @@
               <map>
                 <entry key="dcmArchiveDevice" value="true"/>
                 <entry key="dcmFuzzyAlgorithmClass" value="org.dcm4che.soundex.ESoundex"/>
-                <entry key="dicomAuthorizedNodeCertificateReference.#" value="9"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.#" value="10"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/dcmqrscp"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.10" value="org/dcm4chee/archive/dicomDevicesRoot/hl7snd"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.2" value="org/dcm4chee/archive/dicomDevicesRoot/stgcmtscu"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.3" value="org/dcm4chee/archive/dicomDevicesRoot/storescp"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.4" value="org/dcm4chee/archive/dicomDevicesRoot/mppsscp"/>
@@ -28,6 +29,7 @@
                 <entry key="dicomInstalled" value="true"/>
                 <entry key="dicomThisNodeCertificateReference.#" value="1"/>
                 <entry key="dicomThisNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/dcm4chee-arc"/>
+                <entry key="hl7Device" value="true"/>
                 <entry key="userCertificate.#" value="1"/>
                 <entry key="userCertificate.1" value="MIICTTCCAbagAwIBAgIETvRlSTANBgkqhkiG9w0BAQUFADBrMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxETAPBgNVBAsTCGRjbTRjaGVlMRUwEwYDVQQDEwxkY200Y2hlZS1hcmMwHhcNMTExMjIzMTEyNjAxWhcNMTIxMjIyMTEyNjAxWjBrMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxETAPBgNVBAsTCGRjbTRjaGVlMRUwEwYDVQQDEwxkY200Y2hlZS1hcmMwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAIpyZpH077XTZAvXt/TXSlqU/523X01Va4rzw9BOLITD1Yqo3gOQ4TFIO9WjHQaV1cwsAL5emi65ssd/YjrJHWA6QBRHYDBGNldQlSzKduYS5BqaW3yhCBMw9lZLVN1Gh7QUgWknFNHpSH0uV65esBf598KFzRl8eh8l4/njH9wNAgMBAAEwDQYJKoZIhvcNAQEFBQADgYEAeFaW8IJ3aitQDDL9chQ5k5YNFtZwNDdnVnnsvGgYINYd2VYW6ql2BvXiH49qG5UPJZhqEIDD9VZd2GiJfI/16/YNZBE+0SgUQXsqED9NmqjZRNz0hO6Qddc9+wlBNmlGKyA+ftzNw0Uq1WqXh2IcrxTBMsDKKZLbqbAK7tiECPo="/>
               </map>
@@ -3911,6 +3913,44 @@
                     <entry key="dicomTLSCipherSuite.2" value="SSL_RSA_WITH_3DES_EDE_CBC_SHA"/>
                   </map>
                 </node>
+                <node name="3">
+                  <map>
+                    <entry key="cn" value="hl7"/>
+                    <entry key="dicomHostname" value="localhost"/>
+                    <entry key="dicomPort" value="2575"/>
+                  </map>
+                </node>
+                <node name="4">
+                  <map>
+                    <entry key="cn" value="hl7-tls"/>
+                    <entry key="dcmTLSProtocol.#" value="2"/>
+                    <entry key="dcmTLSProtocol.1" value="TLSv1"/>
+                    <entry key="dcmTLSProtocol.2" value="SSLv3"/>
+                    <entry key="dicomHostname" value="localhost"/>
+                    <entry key="dicomPort" value="12575"/>
+                    <entry key="dicomTLSCipherSuite.#" value="2"/>
+                    <entry key="dicomTLSCipherSuite.1" value="TLS_RSA_WITH_AES_128_CBC_SHA"/>
+                    <entry key="dicomTLSCipherSuite.2" value="SSL_RSA_WITH_3DES_EDE_CBC_SHA"/>
+                  </map>
+                </node>
+              </node>
+              <node name="hl7Application">
+                <map/>
+                <node name="*">
+                  <map>
+                    <entry key="dicomNetworkConnectionReference.#" value="2"/>
+                    <entry key="dicomNetworkConnectionReference.1" value="3"/>
+                    <entry key="dicomNetworkConnectionReference.2" value="4"/>
+                    <entry key="hl7AcceptedMessageType.#" value="7"/>
+                    <entry key="hl7AcceptedMessageType.1" value="ADT^A02"/>
+                    <entry key="hl7AcceptedMessageType.2" value="ADT^A03"/>
+                    <entry key="hl7AcceptedMessageType.3" value="ADT^A06"/>
+                    <entry key="hl7AcceptedMessageType.4" value="ADT^A07"/>
+                    <entry key="hl7AcceptedMessageType.5" value="ADT^A08"/>
+                    <entry key="hl7AcceptedMessageType.6" value="ADT^A40"/>
+                    <entry key="hl7AcceptedMessageType.7" value="ORM^O01"/>
+                  </map>
+                </node>
               </node>
             </node>
             <node name="dcmqrscp">
@@ -3982,6 +4022,21 @@
                 <entry key="dicomThisNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/getscu"/>
                 <entry key="userCertificate.#" value="1"/>
                 <entry key="userCertificate.1" value="MIICSzCCAbSgAwIBAgIETk5oQjANBgkqhkiG9w0BAQUFADBqMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxFjAUBgNVBAsTDWRjY200Y2hlLXRvb2wxDzANBgNVBAMTBmdldHNjdTAeFw0xMTA4MTkxMzQyMjZaFw0xMjA4MTgxMzQyMjZaMGoxCzAJBgNVBAYTAkFUMQ8wDQYDVQQIEwZWaWVubmExDzANBgNVBAcTBlZpZW5uYTEQMA4GA1UEChMHZGNtNGNoZTEWMBQGA1UECxMNZGNjbTRjaGUtdG9vbDEPMA0GA1UEAxMGZ2V0c2N1MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDKgWG1S1Aeu8IDFj/oZ3FMxlfJpTB1HXL+pp+fkxXU0BgifLSFD9TIp3aKdzJbtUK889qSTvwNwCte+gdUkLC6YNsWPsUW4GQI3QtgCLje+2frp/bdSh6ZBymfHQed94tq63oG0MtV9osx1yWJk34XNztTqHIw9m037glGFY1XCwIDAQABMA0GCSqGSIb3DQEBBQUAA4GBAAl5SWZ9UUeo6TRwFuWa/W4+NyU4n38qnXQ1563/QcigGxnQet8XDrpcH/Yj3yXf4q8pKSZgYdG56liaYjT2O1ctuWadwVTTv/bHGciOakt8pf9SpTD6bMXXEjO0YuutgQv4RVJe3FyvfEzhF7cnmkS/BA1xbewSVEHruTI4b0j0"/>
+              </map>
+              <node name="dcmNetworkAE">
+                <map/>
+              </node>
+              <node name="dcmNetworkConnection">
+                <map/>
+              </node>
+            </node>
+            <node name="hl7snd">
+              <map>
+                <entry key="dicomInstalled" value="true"/>
+                <entry key="dicomThisNodeCertificateReference.#" value="1"/>
+                <entry key="dicomThisNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/hl7snd"/>
+                <entry key="userCertificate.#" value="1"/>
+                <entry key="userCertificate.1" value="MIICSTCCAbKgAwIBAgIETztwfzANBgkqhkiG9w0BAQUFADBpMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxFTATBgNVBAsTDGRjbTRjaGUtdG9vbDEPMA0GA1UEAxMGaGw3c25kMB4XDTEyMDIxNTA4NDQ0N1oXDTEzMDIxNDA4NDQ0N1owaTELMAkGA1UEBhMCQVQxDzANBgNVBAgTBlZpZW5uYTEPMA0GA1UEBxMGVmllbm5hMRAwDgYDVQQKEwdkY200Y2hlMRUwEwYDVQQLEwxkY200Y2hlLXRvb2wxDzANBgNVBAMTBmhsN3NuZDCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEA3b74xNeEJudoc6BADEpmfXo9/KQpAhjv/eCo9nBJQ0bEugfQBz6xPW1nuWk4EisgyESc/v79jJ0lq5GUNKZTjL3VjL27vwh/aPifVwCeOb1zgKqIG0A3O3WsvE7xMtBOxf9aYkh2JEY+aBx6RvTpBnYEE97/NWgg29RwPC/VGIECAwEAATANBgkqhkiG9w0BAQUFAAOBgQBZHm35m+hDbM8A/K6GTP0cbc2fo4sPM9dMGGHX9uNXItORInzJXKOS3WQutI035r2EAhsTCYLMDwuzlVlQi2uKmmM6R7hSlWtRQXMPRE9ilp8foY2sPWXa6i46rgFv0xmY6Mt7wCoHJgDqXtvMuARHndADwMvQWbU7p3Xee9K4TA=="/>
               </map>
               <node name="dcmNetworkAE">
                 <map/>
