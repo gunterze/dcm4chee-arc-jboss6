@@ -368,7 +368,6 @@ dicomAuthorizedNodeCertificateReference: dicomDeviceName=storescu,cn=Devices,c
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=hl7snd,cn=Devices,cn=
  DICOM Configuration,dc=nodomain
 objectClass: dicomDevice
-objectClass: hl7Device
 objectClass: dcmArchiveDevice
 objectClass: pkiUser
 dicomThisNodeCertificateReference: dicomDeviceName=dcm4chee-arc,cn=Devices,cn=
