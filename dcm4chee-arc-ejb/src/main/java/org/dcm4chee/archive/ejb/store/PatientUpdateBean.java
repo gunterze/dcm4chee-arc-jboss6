@@ -38,19 +38,49 @@
 
 package org.dcm4chee.archive.ejb.store;
 
-import javax.ejb.Local;
+import java.util.Collection;
+
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.PerformedProcedureStep;
+import org.dcm4chee.archive.persistence.Study;
+import org.dcm4chee.archive.persistence.Visit;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Local
-public interface PerformedProcedureStepManager {
+@Stateless
+public class PatientUpdateBean implements PatientUpdate {
 
-    PerformedProcedureStep createPerformedProcedureStep(
-            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
-    PerformedProcedureStep updatePerformedProcedureStep(
-            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
+    @PersistenceContext(unitName = "dcm4chee-arc")
+    private EntityManager em;
+
+    @Override
+    public void mergePatient(Attributes attrs, Attributes merged, StoreParam storeParam) {
+        Patient mergedPat = PatientFactory.updateOrCreatePatient(em, merged, storeParam);
+        Patient pat = PatientFactory.updateOrCreatePatient(em, attrs, storeParam);
+        Collection<Study> studies = mergedPat.getStudies();
+        if (studies != null)
+            for (Study study : studies)
+                study.setPatient(pat);
+        Collection<Visit> visits = mergedPat.getVisits();
+        if (visits != null)
+            for (Visit visit : visits)
+                visit.setPatient(pat);
+        Collection<PerformedProcedureStep> ppss = mergedPat.getPerformedProcedureSteps();
+        if (ppss != null)
+            for (PerformedProcedureStep pps : ppss)
+                pps.setPatient(pat);
+        mergedPat.setMergedWith(pat);
+    }
+
+    @Override
+    public void updatePatient(Attributes attrs, StoreParam storeParam) {
+        PatientFactory.updateOrCreatePatient(em, attrs, storeParam);
+    }
+
 }

@@ -58,6 +58,7 @@ import org.dcm4che.conf.ldap.hl7.LdapHL7Configuration;
 import org.dcm4che.data.ValueSelector;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Device;
+import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
@@ -65,6 +66,7 @@ import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 import org.dcm4chee.archive.net.ArchiveDevice;
+import org.dcm4chee.archive.net.ArchiveHL7Application;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 
 /**
@@ -94,6 +96,14 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
     }
 
     @Override
+    protected Attribute objectClassesOf(HL7Application app, Attribute attr) {
+        super.objectClassesOf(app, attr);
+        if (app instanceof ArchiveHL7Application)
+            attr.add("dcmArchiveHL7Application");
+        return attr;
+    }
+
+    @Override
     protected Device newDevice(Attributes attrs) throws NamingException {
         if (!hasObjectClass(attrs, "dcmArchiveDevice"))
             return super.newDevice(attrs);
@@ -105,6 +115,13 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         if (!hasObjectClass(attrs, "dcmArchiveNetworkAE"))
             return super.newApplicationEntity(attrs);
         return new ArchiveApplicationEntity(stringValue(attrs.get("dicomAETitle")));
+    }
+
+    @Override
+    protected HL7Application newHL7Application(Attributes attrs) throws NamingException {
+        if (!hasObjectClass(attrs, "dcmArchiveHL7Application"))
+            return super.newHL7Application(attrs);
+        return new ArchiveHL7Application(stringValue(attrs.get("hl7ApplicationName")));
     }
 
     @Override
@@ -187,6 +204,19 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         return attrs;
     }
 
+    @Override
+    protected Attributes storeTo(HL7Application hl7App, String deviceDN, Attributes attrs) {
+        super.storeTo(hl7App, deviceDN, attrs);
+        if (!(hl7App instanceof ArchiveHL7Application))
+            return attrs;
+
+        ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
+        storeNotNull(attrs, "hl7DefaultCharacterSet", arcHL7App.getHL7DefaultCharacterSet());
+        storeNotNull(attrs, "dcmCharacterSet", arcHL7App.getDicomCharacterSet());
+        storeNotEmpty(attrs, "labeledURI", arcHL7App.getTemplatesURIs());
+        return attrs;
+    }
+ 
     @Override
     protected void loadFrom(Device device, Attributes attrs)
             throws NamingException, CertificateException {
@@ -299,6 +329,17 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
     }
 
     @Override
+    protected void loadFrom(HL7Application hl7App, Attributes attrs) throws NamingException {
+       super.loadFrom(hl7App, attrs);
+       if (!(hl7App instanceof ArchiveHL7Application))
+           return;
+       ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
+       arcHL7App.setHL7DefaultCharacterSet(stringValue(attrs.get("hl7DefaultCharacterSet")));
+       arcHL7App.setDicomCharacterSet(stringValue(attrs.get("dcmCharacterSet")));
+       arcHL7App.setTemplatesURIs(stringArray(attrs.get("labeledURI")));
+    }
+
+    @Override
     protected List<ModificationItem> storeDiffs(Device a, Device b,
             List<ModificationItem> mods) {
         super.storeDiffs(a, b, mods);
@@ -390,6 +431,28 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                 aa.getForwardMPPSRetryInterval(),
                 bb.getForwardMPPSRetryInterval(),
                 ArchiveApplicationEntity.DEF_FWD_MPPS_RETRY_INTERVAL);
+        return mods;
+    }
+
+    @Override
+    protected List<ModificationItem> storeDiffs(HL7Application a,
+            HL7Application b, String deviceDN, List<ModificationItem> mods) {
+        super.storeDiffs(a, b, deviceDN, mods);
+        if (!(a instanceof ArchiveHL7Application 
+           && b instanceof ArchiveHL7Application))
+            return mods;
+        
+        ArchiveHL7Application aa = (ArchiveHL7Application) a;
+        ArchiveHL7Application bb = (ArchiveHL7Application) b;
+        storeDiff(mods, "hl7DefaultCharacterSet",
+                aa.getHL7DefaultCharacterSet(),
+                bb.getHL7DefaultCharacterSet());
+        storeDiff(mods, "dcmCharacterSet",
+                aa.getDicomCharacterSet(),
+                bb.getDicomCharacterSet());
+        storeDiff(mods, "labeledURI",
+                aa.getTemplatesURIs(),
+                bb.getTemplatesURIs());
         return mods;
     }
 

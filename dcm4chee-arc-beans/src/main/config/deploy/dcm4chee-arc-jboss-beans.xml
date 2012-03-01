@@ -363,4 +363,20 @@
   <!-- Modality Worklist C-FIND SCP -->
   <bean name="ModalityWorklistCFindSCP" class="org.dcm4chee.archive.net.service.MWLCFindSCPImpl"/>
 
+  <!-- PatientUpdateService -->
+  <bean name="PatientUpdateService" class="org.dcm4chee.archive.net.service.PatientUpdateService" access-mode="ALL">
+    <constructor>
+      <parameter>
+        <array>
+          <value>ADT^A02</value>
+          <value>ADT^A03</value>
+          <value>ADT^A06</value>
+          <value>ADT^A07</value>
+          <value>ADT^A08</value>
+          <value>ADT^A40</value>
+        </array>
+      </parameter>
+    </constructor>
+  </bean>
+
 </deployment>

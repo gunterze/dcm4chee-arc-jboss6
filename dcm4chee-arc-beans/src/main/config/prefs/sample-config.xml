@@ -3937,6 +3937,8 @@
                 <map/>
                 <node name="*">
                   <map>
+                    <entry key="dcmArchiveHL7Application" value="true"/>
+                    <entry key="dcmCharacterSet" value="ISO_IR 100"/>
                     <entry key="dicomNetworkConnectionReference.#" value="2"/>
                     <entry key="dicomNetworkConnectionReference.1" value="3"/>
                     <entry key="dicomNetworkConnectionReference.2" value="4"/>
@@ -3948,6 +3950,9 @@
                     <entry key="hl7AcceptedMessageType.5" value="ADT^A08"/>
                     <entry key="hl7AcceptedMessageType.6" value="ADT^A40"/>
                     <entry key="hl7AcceptedMessageType.7" value="ORM^O01"/>
+                    <entry key="hl7DefaultCharacterSet" value="8859/1"/>
+                    <entry key="labeledURI.#" value="1"/>
+                    <entry key="labeledURI.1" value="resource:dcm4chee-arc-hl7-adt2dcm.xsl adt2dcm"/>
                   </map>
                 </node>
               </node>

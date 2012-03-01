@@ -272,10 +272,7 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     }
 
     public StoreParam getStoreParam() {
-        ArchiveDevice dev = getArchiveDevice();
-        StoreParam storeParam = new StoreParam();
-        storeParam.setFuzzyStr(dev.getFuzzyStr());
-        storeParam.setAttributeFilters(dev.getAttributeFilters());
+        StoreParam storeParam = getArchiveDevice().getStoreParam();
         storeParam.setStoreOriginalAttributes(isStoreOriginalAttributes());
         storeParam.setModifyingSystem(getEffectiveModifyingSystem());
         storeParam.setRetrieveAETs(getRetrieveAETs());

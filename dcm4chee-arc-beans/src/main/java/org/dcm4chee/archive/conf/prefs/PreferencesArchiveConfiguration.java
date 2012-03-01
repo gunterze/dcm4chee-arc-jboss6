@@ -49,6 +49,7 @@ import org.dcm4che.data.ValueSelector;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Connection;
 import org.dcm4che.net.Device;
+import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
@@ -56,6 +57,7 @@ import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 import org.dcm4chee.archive.net.ArchiveDevice;
+import org.dcm4chee.archive.net.ArchiveHL7Application;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 
 /**
@@ -152,6 +154,20 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
     }
 
     @Override
+    protected void storeTo(HL7Application hl7App, Preferences prefs,
+            List<Connection> devConns) {
+        super.storeTo(hl7App, prefs, devConns);
+        if (!(hl7App instanceof ArchiveHL7Application))
+            return;
+
+        ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
+        prefs.putBoolean("dcmArchiveHL7Application", true);
+        storeNotNull(prefs, "hl7DefaultCharacterSet", arcHL7App.getHL7DefaultCharacterSet());
+        storeNotNull(prefs, "dcmCharacterSet", arcHL7App.getDicomCharacterSet());
+        storeNotEmpty(prefs, "labeledURI", arcHL7App.getTemplatesURIs());
+    }
+
+    @Override
     protected Device newDevice(Preferences deviceNode) {
         if (!deviceNode.getBoolean("dcmArchiveDevice", false))
             return super.newDevice(deviceNode);
@@ -165,6 +181,14 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
             return super.newApplicationEntity(aeNode);
 
         return new ArchiveApplicationEntity(aeNode.name());
+    }
+
+    @Override
+    protected HL7Application newHL7Application(Preferences hl7AppNode) {
+        if (!hl7AppNode.getBoolean("dcmArchiveHL7Application", false))
+            return super.newHL7Application(hl7AppNode);
+
+        return new ArchiveHL7Application(hl7AppNode.name());
     }
 
     @Override
@@ -228,6 +252,17 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
             return;
         ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
         load(arcae.getAttributeCoercions(), aeNode);
+    }
+
+    @Override
+    protected void loadFrom(HL7Application hl7App, Preferences prefs) {
+        super.loadFrom(hl7App, prefs);
+        if (!(hl7App instanceof ArchiveHL7Application))
+            return;
+        ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
+        arcHL7App.setHL7DefaultCharacterSet(prefs.get("hl7DefaultCharacterSet", null));
+        arcHL7App.setDicomCharacterSet(prefs.get("dcmCharacterSet", null));
+        arcHL7App.setTemplatesURIs(stringArray(prefs, "labeledURI"));
     }
 
     private static void loadAttributeFilters(ArchiveDevice device, Preferences deviceNode)
@@ -372,6 +407,27 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         for (Entity entity : Entity.values())
             storeDiffs(afsNode.node(entity.name()), aa.getAttributeFilter(entity),
                     bb.getAttributeFilter(entity));
+    }
+
+    @Override
+    protected void storeDiffs(Preferences prefs, HL7Application a,
+            HL7Application b) {
+        super.storeDiffs(prefs, a, b);
+        if (!(a instanceof ArchiveHL7Application 
+           && b instanceof ArchiveHL7Application))
+                 return;
+
+         ArchiveHL7Application aa = (ArchiveHL7Application) a;
+         ArchiveHL7Application bb = (ArchiveHL7Application) b;
+         storeDiff(prefs, "hl7DefaultCharacterSet",
+                 aa.getHL7DefaultCharacterSet(),
+                 bb.getHL7DefaultCharacterSet());
+         storeDiff(prefs, "dcmCharacterSet",
+                 aa.getDicomCharacterSet(),
+                 bb.getDicomCharacterSet());
+         storeDiff(prefs, "labeledURI",
+                 aa.getTemplatesURIs(),
+                 bb.getTemplatesURIs());
     }
 
     private void storeDiffs(Preferences prefs, AttributeFilter prev, AttributeFilter filter) {

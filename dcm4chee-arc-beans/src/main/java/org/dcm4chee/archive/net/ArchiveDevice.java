@@ -45,6 +45,7 @@ import org.dcm4che.io.TemplatesCache;
 import org.dcm4che.net.hl7.HL7Device;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4chee.archive.ejb.store.Entity;
+import org.dcm4chee.archive.ejb.store.StoreParam;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 
 
@@ -96,5 +97,12 @@ public class ArchiveDevice extends HL7Device {
 
     public AttributeFilter[] getAttributeFilters() {
         return attributeFilters;
+    }
+
+    public StoreParam getStoreParam() {
+        StoreParam storeParam = new StoreParam();
+        storeParam.setFuzzyStr(fuzzyStr);
+        storeParam.setAttributeFilters(attributeFilters);
+        return storeParam;
     }
 }

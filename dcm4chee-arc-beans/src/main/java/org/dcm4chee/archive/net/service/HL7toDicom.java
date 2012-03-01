@@ -36,21 +36,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.ejb.store;
+package org.dcm4chee.archive.net.service;
 
-import javax.ejb.Local;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+import javax.xml.transform.Templates;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXResult;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.persistence.PerformedProcedureStep;
+import org.dcm4che.hl7.HL7Parser;
+import org.dcm4che.io.ContentHandlerAdapter;
+import org.xml.sax.SAXException;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Local
-public interface PerformedProcedureStepManager {
+abstract class HL7toDicom {
 
-    PerformedProcedureStep createPerformedProcedureStep(
-            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
-    PerformedProcedureStep updatePerformedProcedureStep(
-            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
+    public interface SetParameter {
+
+        void initiate(Transformer transformer);
+
+    }
+
+    private static SAXTransformerFactory factory =
+            (SAXTransformerFactory) TransformerFactory.newInstance();
+
+    public static Attributes transform(Templates tpl,
+            byte[] msg, int off, int len, String charsetName, SetParameter init)
+            throws TransformerConfigurationException, IOException, SAXException {
+        Attributes attrs = new Attributes();
+        TransformerHandler th = factory.newTransformerHandler(tpl);
+        if (init != null)
+            init.initiate(th.getTransformer());
+        th.setResult(new SAXResult(new ContentHandlerAdapter(attrs)));
+        new HL7Parser(th).parse(new InputStreamReader(
+                new ByteArrayInputStream(msg, off, len),
+                charsetName));
+        return attrs;
+    }
 }

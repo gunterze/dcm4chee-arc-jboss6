@@ -41,16 +41,15 @@ package org.dcm4chee.archive.ejb.store;
 import javax.ejb.Local;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.persistence.PerformedProcedureStep;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @Local
-public interface PerformedProcedureStepManager {
+public interface PatientUpdate {
 
-    PerformedProcedureStep createPerformedProcedureStep(
-            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
-    PerformedProcedureStep updatePerformedProcedureStep(
-            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
+    void mergePatient(Attributes attrs, Attributes mrg, StoreParam storeParam);
+
+    void updatePatient(Attributes attrs, StoreParam storeParam);
+
 }

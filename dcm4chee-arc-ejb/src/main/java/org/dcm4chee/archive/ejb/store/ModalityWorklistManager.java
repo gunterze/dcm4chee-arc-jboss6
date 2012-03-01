@@ -38,12 +38,15 @@
 
 package org.dcm4chee.archive.ejb.store;
 
+import javax.ejb.Local;
+
 import org.dcm4che.data.Attributes;
 import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
+@Local
 public interface ModalityWorklistManager {
 
     ScheduledProcedureStep createScheduledProcedureStep(

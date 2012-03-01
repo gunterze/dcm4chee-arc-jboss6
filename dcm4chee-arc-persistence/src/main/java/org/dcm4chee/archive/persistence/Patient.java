@@ -265,6 +265,10 @@ public class Patient implements Serializable {
         return mergedWith;
     }
 
+    public void setMergedWith(Patient mergedWith) {
+        this.mergedWith = mergedWith;
+    }
+
     public Collection<Patient> getPrevious() {
         return previous;
     }

@@ -58,12 +58,12 @@ import org.dcm4che.net.Device;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.SSLManagerFactory;
 import org.dcm4che.net.TransferCapability;
-import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.soundex.ESoundex;
 import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 import org.dcm4chee.archive.net.ArchiveDevice;
+import org.dcm4chee.archive.net.ArchiveHL7Application;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 
 
@@ -648,8 +648,11 @@ public class ArchiveConfigurationTestUtils {
                 Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
         device.addConnection(dicomTLS);
         ae.addConnection(dicomTLS);
-        HL7Application hl7App = new HL7Application("*");
+        ArchiveHL7Application hl7App = new ArchiveHL7Application("*");
         hl7App.setAcceptedMessageTypes(HL7_MESSAGE_TYPES);
+        hl7App.setDicomCharacterSet("ISO_IR 100");
+        hl7App.setHL7DefaultCharacterSet("8859/1");
+        hl7App.addTemplatesURI("adt2dcm", "resource:dcm4chee-arc-hl7-adt2dcm.xsl");
         device.addHL7Application(hl7App);
         Connection hl7 = new Connection("hl7", "localhost", 2575);
         device.addConnection(hl7);

@@ -36,21 +36,57 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.ejb.store;
+package org.dcm4chee.archive.net.service;
 
-import javax.ejb.Local;
+import javax.ejb.EJB;
+import javax.xml.transform.Transformer;
 
 import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.persistence.PerformedProcedureStep;
+import org.dcm4che.data.Tag;
+import org.dcm4che.hl7.Ack;
+import org.dcm4che.hl7.HL7Exception;
+import org.dcm4che.hl7.HL7Utils;
+import org.dcm4che.net.hl7.HL7Application;
+import org.dcm4che.net.hl7.service.HL7Service;
+import org.dcm4chee.archive.ejb.store.PatientUpdate;
+import org.dcm4chee.archive.net.ArchiveHL7Application;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Local
-public interface PerformedProcedureStepManager {
+public class PatientUpdateService extends HL7Service {
 
-    PerformedProcedureStep createPerformedProcedureStep(
-            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
-    PerformedProcedureStep updatePerformedProcedureStep(
-            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
+    public PatientUpdateService(String... messageTypes) {
+        super(messageTypes);
+    }
+
+    @EJB
+    private PatientUpdate patientUpdate;
+
+    @Override
+    public byte[] onMessage(HL7Application hl7App, String[] msh,
+            byte[] msg, int off, int len) throws HL7Exception {
+        try {
+            final ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
+            Attributes attrs = HL7toDicom.transform(
+                    arcHL7App.getTemplates("adt2dcm"), msg, off, len,
+                    HL7Utils.charsetName(msh, arcHL7App.getHL7DefaultCharacterSet()),
+                    new HL7toDicom.SetParameter(){
+                        @Override
+                        public void initiate(Transformer tf) {
+                            tf.setParameter("dcmCharacterSet",
+                                    arcHL7App.getDicomCharacterSet());
+                        }});
+            Attributes mrg = attrs.getNestedDataset(Tag.ModifiedAttributesSequence);
+            if (mrg == null) {
+                patientUpdate.updatePatient(attrs, arcHL7App.getStoreParam());
+            } else {
+                patientUpdate.mergePatient(attrs, mrg, arcHL7App.getStoreParam());
+            }
+            return super.onMessage(hl7App, msh, msg, off, len);
+        } catch (Exception e) {
+            throw new HL7Exception(Ack.AE, e);
+        }
+    }
+
 }
