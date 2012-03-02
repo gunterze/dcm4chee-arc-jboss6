@@ -71,7 +71,7 @@ import org.dcm4che.soundex.FuzzyStr;
 @NamedQueries({
 @NamedQuery(
     name="Patient.findByPatientID",
-    query="SELECT p FROM Patient p LEFT JOIN FETCH p.issuerOfPatientID" +
+    query="SELECT p FROM Patient p LEFT JOIN FETCH p.issuerOfPatientID " +
           "WHERE p.patientID = ?1" ),
 @NamedQuery(
     name="Patient.findByPatientIDWithoutIssuer",
