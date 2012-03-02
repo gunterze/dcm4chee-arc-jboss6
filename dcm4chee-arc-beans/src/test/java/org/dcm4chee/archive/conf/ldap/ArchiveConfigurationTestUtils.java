@@ -650,7 +650,6 @@ public class ArchiveConfigurationTestUtils {
         ae.addConnection(dicomTLS);
         ArchiveHL7Application hl7App = new ArchiveHL7Application("*");
         hl7App.setAcceptedMessageTypes(HL7_MESSAGE_TYPES);
-        hl7App.setDicomCharacterSet("ISO_IR 100");
         hl7App.setHL7DefaultCharacterSet("8859/1");
         hl7App.addTemplatesURI("adt2dcm", "resource:dcm4chee-arc-hl7-adt2dcm.xsl");
         device.addHL7Application(hl7App);

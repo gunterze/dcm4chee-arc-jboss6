@@ -1,16 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
-  <xsl:param name="dcmCharacterSet"/>
-
-  <xsl:template name="dcmCharacterSet">
-    <xsl:if test="$dcmCharacterSet">
-      <DicomAttribute tag="00080005" vr="CS">
-        <Value number="1">
-          <xsl:value-of select="$dcmCharacterSet"/>
-        </Value>
-      </DicomAttribute>
-    </xsl:if>
-  </xsl:template>
+  <xsl:param name="hl7CharacterSet"/>
 
   <xsl:template name="attr">
     <xsl:param name="tag"/>
@@ -38,6 +28,19 @@
           </Value>
         </xsl:if>
       </DicomAttribute>
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template name="sex">
+    <xsl:param name="val"/>
+    <xsl:if test="$val">
+      <xsl:choose>
+        <xsl:when test="$val = 'F' or $val = 'M' or $val = 'O'">
+          <xsl:value-of select="$val"/>
+        </xsl:when>
+        <xsl:when test="$val = 'A' or $val = 'N'">O</xsl:when>
+        <xsl:otherwise>&quot;&quot;</xsl:otherwise>
+      </xsl:choose>
     </xsl:if>
   </xsl:template>
 
@@ -220,15 +223,20 @@
       <xsl:with-param name="cx" select="field[3]"/>
     </xsl:call-template>
     <!-- Patient Birth Date -->
-    <xsl:call-template name="ts2daAttr">
+    <xsl:call-template name="attr">
       <xsl:with-param name="tag" select="'00100030'"/>
-      <xsl:with-param name="ts" select="field[7]"/>
+      <xsl:with-param name="vr" select="'DA'"/>
+      <xsl:with-param name="val" select="substring(field[7],1,8)"/>
     </xsl:call-template>
     <!-- Patient Sex -->
     <xsl:call-template name="attr">
       <xsl:with-param name="tag" select="'00100040'"/>
       <xsl:with-param name="vr" select="'CS'"/>
-      <xsl:with-param name="val" select="field[8]"/>
+      <xsl:with-param name="val">
+        <xsl:call-template name="sex">
+          <xsl:with-param name="val" select="field[8]"/>
+        </xsl:call-template>
+      </xsl:with-param>
     </xsl:call-template>
     <!-- Patient's Mother's Birth Name -->
     <xsl:call-template name="xpn2pnAttr">

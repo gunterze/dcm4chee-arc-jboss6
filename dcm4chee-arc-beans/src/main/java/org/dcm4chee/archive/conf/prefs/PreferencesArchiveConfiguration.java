@@ -163,7 +163,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
         prefs.putBoolean("dcmArchiveHL7Application", true);
         storeNotNull(prefs, "hl7DefaultCharacterSet", arcHL7App.getHL7DefaultCharacterSet());
-        storeNotNull(prefs, "dcmCharacterSet", arcHL7App.getDicomCharacterSet());
         storeNotEmpty(prefs, "labeledURI", arcHL7App.getTemplatesURIs());
     }
 
@@ -261,7 +260,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
             return;
         ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
         arcHL7App.setHL7DefaultCharacterSet(prefs.get("hl7DefaultCharacterSet", null));
-        arcHL7App.setDicomCharacterSet(prefs.get("dcmCharacterSet", null));
         arcHL7App.setTemplatesURIs(stringArray(prefs, "labeledURI"));
     }
 
@@ -422,9 +420,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
          storeDiff(prefs, "hl7DefaultCharacterSet",
                  aa.getHL7DefaultCharacterSet(),
                  bb.getHL7DefaultCharacterSet());
-         storeDiff(prefs, "dcmCharacterSet",
-                 aa.getDicomCharacterSet(),
-                 bb.getDicomCharacterSet());
          storeDiff(prefs, "labeledURI",
                  aa.getTemplatesURIs(),
                  bb.getTemplatesURIs());

@@ -367,19 +367,6 @@ m-syntax: 1.3.6.1.4.1.1466.115.121.1.26
 m-length: 0
 m-singleValue: TRUE
 
-dn: m-oid=1.2.40.0.13.1.1.15.0.3.25, ou=attributeTypes, cn=dcm4chee-archive, ou=
- schema
-objectclass: metaAttributeType
-objectclass: metaTop
-objectclass: top
-m-oid: 1.2.40.0.13.1.1.15.0.3.25
-m-name: dcmCharacterSet
-m-description: Specific Character Set used in generated DICOM Data Sets
-m-equality: caseExactIA5Match
-m-syntax: 1.3.6.1.4.1.1466.115.121.1.26
-m-length: 0
-m-singleValue: TRUE
-
 dn: ou=comparators, cn=dcm4chee-archive, ou=schema
 objectclass: organizationalUnit
 objectclass: top
@@ -489,7 +476,6 @@ m-supObjectClass: top
 m-typeObjectClass: AUXILIARY
 m-may: labeledURI
 m-may: hl7DefaultCharacterSet
-m-may: dcmCharacterSet
 
 dn: ou=syntaxCheckers, cn=dcm4chee-archive, ou=schema
 objectclass: organizationalUnit

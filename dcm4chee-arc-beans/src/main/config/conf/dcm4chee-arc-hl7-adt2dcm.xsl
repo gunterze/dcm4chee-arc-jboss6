@@ -4,7 +4,6 @@
   <xsl:include href="dcm4chee-arc-hl7-common.xsl"/>
   <xsl:template match="/hl7">
     <NativeDicomModel>
-      <xsl:call-template name="dcmCharacterSet"/>
       <xsl:apply-templates select="PID"/>
       <xsl:apply-templates select="MRG"/>
     </NativeDicomModel>

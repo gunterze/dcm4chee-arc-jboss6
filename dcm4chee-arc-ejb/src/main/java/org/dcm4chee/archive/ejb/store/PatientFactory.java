@@ -136,6 +136,8 @@ public abstract class PatientFactory {
             Patient mergedWith = patient.getMergedWith();
             if (mergedWith != null)
                 throw new PatientMergedException("" + patient + " merged with " + mergedWith);
+            if (issuer != null && patient.getIssuerOfPatientID() == null)
+                patient.setIssuerOfPatientID(issuer);
             Attributes patientAttrs = patient.getAttributes();
             Attributes modified = new Attributes();
             if (patientAttrs.updateSelectedAttributes(data, modified, filter.getSelection())) {

@@ -3938,7 +3938,6 @@
                 <node name="*">
                   <map>
                     <entry key="dcmArchiveHL7Application" value="true"/>
-                    <entry key="dcmCharacterSet" value="ISO_IR 100"/>
                     <entry key="dicomNetworkConnectionReference.#" value="2"/>
                     <entry key="dicomNetworkConnectionReference.1" value="3"/>
                     <entry key="dicomNetworkConnectionReference.2" value="4"/>

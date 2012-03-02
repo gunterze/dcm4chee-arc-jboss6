@@ -3596,7 +3596,6 @@ objectClass: dcmAttributeCoercion
 dicomAETitle: ENSURE_PID
 
 dn: hl7ApplicationName=*,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
-dcmCharacterSet: ISO_IR 100
 hl7DefaultCharacterSet: 8859/1
 labeledURI: resource:dcm4chee-arc-hl7-adt2dcm.xsl adt2dcm
 objectClass: hl7Application
