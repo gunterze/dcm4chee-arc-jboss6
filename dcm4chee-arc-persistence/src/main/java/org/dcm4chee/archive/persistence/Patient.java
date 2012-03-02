@@ -70,6 +70,10 @@ import org.dcm4che.soundex.FuzzyStr;
  */
 @NamedQueries({
 @NamedQuery(
+    name="Patient.findByPatientID",
+    query="SELECT p FROM Patient p LEFT JOIN FETCH p.issuerOfPatientID" +
+          "WHERE p.patientID = ?1" ),
+@NamedQuery(
     name="Patient.findByPatientIDWithoutIssuer",
     query="SELECT p FROM Patient p " +
           "WHERE p.patientID = ?1 AND p.issuerOfPatientID IS NULL"),
@@ -83,6 +87,9 @@ import org.dcm4che.soundex.FuzzyStr;
 public class Patient implements Serializable {
 
     private static final long serialVersionUID = 6430339764844147679L;
+
+    public static final String FIND_BY_PATIENT_ID =
+            "Patient.findByPatientID";
 
     public static final String FIND_BY_PATIENT_ID_WITHOUT_ISSUER =
             "Patient.findByPatientIDWithoutIssuer";

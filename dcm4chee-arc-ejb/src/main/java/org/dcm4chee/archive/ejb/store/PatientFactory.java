@@ -38,6 +38,9 @@
 
 package org.dcm4chee.archive.ejb.store;
 
+import java.util.Iterator;
+import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
@@ -59,13 +62,26 @@ public abstract class PatientFactory {
         if (pid == null)
             throw new NonUniqueResultException();
         TypedQuery<Patient> query = em.createNamedQuery(
-                    issuer != null 
-                        ? Patient.FIND_BY_PATIENT_ID_WITH_ISSUER
-                        : Patient.FIND_BY_PATIENT_ID_WITHOUT_ISSUER, Patient.class)
+                    Patient.FIND_BY_PATIENT_ID, Patient.class)
                 .setParameter(1, pid);
-        if (issuer != null)
-            query.setParameter(2, issuer);
-        return query.getSingleResult();
+        List<Patient> list = query.getResultList();
+        if (issuer != null) {
+            for (Iterator<Patient> it = list.iterator(); it.hasNext();) {
+                Patient pat = (Patient) it.next();
+                Issuer issuer2 = pat.getIssuerOfPatientID();
+                if (issuer2 != null) {
+                    if (issuer2.matches(issuer))
+                        return pat;
+                    else
+                        it.remove();
+                }
+            }
+        }
+        if (list.isEmpty())
+            throw new NoResultException();
+        if (list.size() > 1)
+            throw new NonUniqueResultException();
+        return list.get(0);
     }
 
     public static Patient followMergedWith(Patient patient) {
