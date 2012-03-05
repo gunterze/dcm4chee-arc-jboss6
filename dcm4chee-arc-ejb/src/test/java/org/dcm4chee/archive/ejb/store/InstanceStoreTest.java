@@ -50,7 +50,7 @@ import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.PerformedProcedureStep;
 import org.dcm4chee.archive.persistence.Series;
 import org.dcm4chee.archive.persistence.Study;
-import org.jboss.arquillian.api.Deployment;
+import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
