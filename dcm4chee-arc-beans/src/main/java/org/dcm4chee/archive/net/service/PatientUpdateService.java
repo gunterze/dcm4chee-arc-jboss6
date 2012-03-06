@@ -43,7 +43,7 @@ import javax.ejb.EJB;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.hl7.HL7Exception;
-import org.dcm4che.hl7.MSH;
+import org.dcm4che.hl7.HL7Segment;
 import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.net.hl7.service.HL7Service;
 import org.dcm4chee.archive.ejb.store.PatientUpdate;
@@ -62,11 +62,11 @@ public class PatientUpdateService extends HL7Service {
     private PatientUpdate patientUpdate;
 
     @Override
-    public byte[] onMessage(HL7Application hl7App, MSH msh,
+    public byte[] onMessage(HL7Application hl7App, HL7Segment msh,
             byte[] msg, int off, int len) throws HL7Exception {
         try {
             ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
-            String hl7cs = msh.getField(MSH.CharacterSet, arcHL7App.getHL7DefaultCharacterSet());
+            String hl7cs = msh.getField(17, arcHL7App.getHL7DefaultCharacterSet());
             Attributes attrs = HL7toDicom.transform(
                     arcHL7App.getTemplates("adt2dcm"), msg, off, len, hl7cs);
             Attributes mrg = attrs.getNestedDataset(Tag.ModifiedAttributesSequence);

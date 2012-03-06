@@ -52,8 +52,8 @@ import javax.xml.transform.sax.TransformerHandler;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.dcm4che.hl7.HL7Charset;
 import org.dcm4che.hl7.HL7Parser;
-import org.dcm4che.hl7.MSH;
 import org.dcm4che.io.ContentHandlerAdapter;
 import org.xml.sax.SAXException;
 
@@ -69,14 +69,14 @@ abstract class HL7toDicom {
             byte[] msg, int off, int len, String hl7charset)
             throws TransformerConfigurationException, IOException, SAXException {
         Attributes attrs = new Attributes();
-        String dicomCharset = MSH.toDicomCharacterSetCode(hl7charset);
+        String dicomCharset = HL7Charset.toDicomCharacterSetCode(hl7charset);
         if (dicomCharset != null)
             attrs.setString(Tag.SpecificCharacterSet, VR.CS, dicomCharset);
         TransformerHandler th = factory.newTransformerHandler(tpl);
         th.setResult(new SAXResult(new ContentHandlerAdapter(attrs)));
         new HL7Parser(th).parse(new InputStreamReader(
                 new ByteArrayInputStream(msg, off, len),
-                MSH.toCharsetName(hl7charset)));
+                HL7Charset.toCharsetName(hl7charset)));
         return attrs;
     }
 }
