@@ -17,20 +17,6 @@
     </xsl:if>
   </xsl:template>
 
-  <xsl:template name="ts2daAttr">
-    <xsl:param name="tag"/>
-    <xsl:param name="ts"/>
-    <xsl:if test="$ts">
-      <DicomAttribute tag="{$tag}" vr="DA">
-        <xsl:if test="$ts != '&quot;&quot;'">
-          <Value number="1">
-            <xsl:value-of select="substring($ts,1,8)"/>
-          </Value>
-        </xsl:if>
-      </DicomAttribute>
-    </xsl:if>
-  </xsl:template>
-
   <xsl:template name="sex">
     <xsl:param name="val"/>
     <xsl:if test="$val">
