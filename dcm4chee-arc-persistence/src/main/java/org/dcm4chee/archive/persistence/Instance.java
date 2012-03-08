@@ -266,7 +266,7 @@ public class Instance implements Serializable {
     }
 
     public void setRetrieveAETs(String... retrieveAETs) {
-        this.retrieveAETs = StringUtils.join(retrieveAETs, '\\');
+        this.retrieveAETs = StringUtils.concat(retrieveAETs, '\\');
     }
 
     public String getExternalRetrieveAET() {

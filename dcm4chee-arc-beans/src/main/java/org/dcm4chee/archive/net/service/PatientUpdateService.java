@@ -77,7 +77,7 @@ public class PatientUpdateService extends HL7Service {
             }
             return super.onMessage(hl7App, msh, msg, off, len);
         } catch (Exception e) {
-            throw new HL7Exception("AE", e);
+            throw new HL7Exception(HL7Exception.AE, e);
         }
     }
 

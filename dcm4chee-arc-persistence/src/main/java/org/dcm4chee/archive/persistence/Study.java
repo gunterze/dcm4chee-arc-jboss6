@@ -357,7 +357,7 @@ public class Study implements Serializable {
     }
 
     public void setModalitiesInStudy(String... modalitiesInStudy) {
-        this.modalitiesInStudy = StringUtils.join(modalitiesInStudy, '\\');
+        this.modalitiesInStudy = StringUtils.concat(modalitiesInStudy, '\\');
     }
 
     public String[] getSOPClassesInStudy() {
@@ -365,7 +365,7 @@ public class Study implements Serializable {
     }
 
     public void setSOPClassesInStudy(String... sopClassesInStudy) {
-        this.sopClassesInStudy = StringUtils.join(sopClassesInStudy, '\\');
+        this.sopClassesInStudy = StringUtils.concat(sopClassesInStudy, '\\');
     }
 
     public String[] getRetrieveAETs() {
@@ -373,7 +373,7 @@ public class Study implements Serializable {
     }
 
     public void setRetrieveAETs(String... retrieveAETs) {
-        this.retrieveAETs = StringUtils.join(retrieveAETs, '\\');
+        this.retrieveAETs = StringUtils.concat(retrieveAETs, '\\');
     }
 
     public String getExternalRetrieveAET() {
