@@ -118,7 +118,6 @@
       <artifactId>dcm4chee-arc-persistence</artifactId>
       <classifier>${db}</classifier>
       <version>${parent.version}</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.dcm4che</groupId>
@@ -148,7 +147,6 @@
       <groupId>org.hibernate.javax.persistence</groupId>
       <artifactId>hibernate-jpa-2.0-api</artifactId>
       <version>1.0.0.Final</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.hibernate</groupId>
@@ -166,8 +164,7 @@
       <groupId>org.jboss.spec.javax.ejb</groupId>
       <artifactId>jboss-ejb-api_3.1_spec</artifactId>
       <version>1.0.0.Final</version>
-      <scope>compile</scope>
-    </dependency>
+   </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
