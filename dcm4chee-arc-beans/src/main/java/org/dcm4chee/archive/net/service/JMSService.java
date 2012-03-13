@@ -87,7 +87,8 @@ public class JMSService {
             MessageProducer producer = session.createProducer(dest);
             Message msg = creator.createMessage(session);
             if (delay > 0)
-                msg.setLongProperty("_HQ_SCHED_DELIVERY", System.currentTimeMillis() + delay * 1000);
+                msg.setLongProperty("_HQ_SCHED_DELIVERY",
+                        System.currentTimeMillis() + delay * 1000);
             producer.send(msg);
         } finally {
             session.close();

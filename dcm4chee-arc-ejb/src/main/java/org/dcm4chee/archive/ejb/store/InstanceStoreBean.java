@@ -47,8 +47,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
@@ -57,9 +60,15 @@ import javax.persistence.PersistenceUnit;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
+import org.dcm4che.data.UID;
 import org.dcm4che.data.VR;
+import org.dcm4che.net.Status;
+import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.StringUtils;
+import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
+import org.dcm4chee.archive.ejb.query.IANQuery;
+import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.ContentItem;
 import org.dcm4chee.archive.persistence.FileRef;
@@ -67,9 +76,9 @@ import org.dcm4chee.archive.persistence.FileSystem;
 import org.dcm4chee.archive.persistence.FileSystemStatus;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.Patient;
+import org.dcm4chee.archive.persistence.PerformedProcedureStep;
 import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
 import org.dcm4chee.archive.persistence.Series;
-import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Study;
 import org.dcm4chee.archive.persistence.VerifyingObserver;
 
@@ -82,11 +91,43 @@ public class InstanceStoreBean implements InstanceStore {
     @PersistenceUnit(unitName = "dcm4chee-arc")
     private EntityManagerFactory emf;
     private EntityManager em;
+
+    @EJB
+    private IANQuery ianQuery;
+
     private Series cachedSeries;
+    private PerformedProcedureStep prevMpps;
+    private PerformedProcedureStep curMpps;
 
     @PostConstruct
     public void init() {
         em = emf.createEntityManager();
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+    public Attributes createIANforPreviousMPPS() {
+        try {
+            return createIANforMPPS(prevMpps);
+        } finally {
+            prevMpps = null;
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+    public Attributes createIANforCurrentMPPS() {
+        try {
+            return createIANforMPPS(curMpps);
+        } finally {
+            curMpps = null;
+        }
+    }
+
+    private Attributes createIANforMPPS(PerformedProcedureStep pps) {
+        return (pps == null || pps.isInProgress())
+                ? null
+                : ianQuery.createIANforMPPS(pps);
     }
 
     @Override
@@ -171,8 +212,8 @@ public class InstanceStoreBean implements InstanceStore {
             Availability availability, StoreParam storeParam) {
         em.joinTransaction();
         AttributeFilter instFilter = storeParam.getAttributeFilter(Entity.Instance);
-        Instance inst = new Instance();
         Series series = getSeries(sourceAET, data, availability, storeParam);
+        Instance inst = new Instance();
         inst.setSeries(series);
         inst.setConceptNameCode(
                 CodeFactory.getCode(em, data.getNestedDataset(Tag.ConceptNameCodeSequence)));
@@ -378,7 +419,6 @@ public class InstanceStoreBean implements InstanceStore {
         return list;
     }
 
-
     private Series getSeries(String sourceAET, Attributes data, Availability availability,
             StoreParam storeParam) {
         String seriesIUID = data.getString(Tag.SeriesInstanceUID, null);
@@ -386,6 +426,8 @@ public class InstanceStoreBean implements InstanceStore {
         AttributeFilter seriesFilter = storeParam.getAttributeFilter(Entity.Series);
         if (series == null || !series.getSeriesInstanceUID().equals(seriesIUID)) {
             updateCachedSeries();
+            updateRefPPS(data.getNestedDataset(Tag.ReferencedPerformedProcedureStepSequence));
+            checkRefPPS(data);
             try {
                 cachedSeries = series = findSeries(seriesIUID);
             } catch (NoResultException e) {
@@ -406,12 +448,86 @@ public class InstanceStoreBean implements InstanceStore {
                 em.persist(series);
                 return series;
             }
+        } else {
+            checkRefPPS(data);
         }
         Attributes seriesAttrs = series.getAttributes();
         if (seriesAttrs.mergeSelected(data, seriesFilter.getSelection())) {
             series.setAttributes(seriesAttrs, seriesFilter, storeParam.getFuzzyStr());
         }
         return series;
+    }
+
+    private void updateRefPPS(Attributes refPPS) {
+        String mppsIUID = refPPS != null
+                && UID.ModalityPerformedProcedureStepSOPClass.equals(
+                        refPPS.getString(Tag.ReferencedSOPClassUID))
+                        ? refPPS.getString(Tag.ReferencedSOPInstanceUID)
+                        : null;
+        PerformedProcedureStep mpps = curMpps;
+        if (mpps == null || !mpps.getSopInstanceUID().equals(mppsIUID)) {
+            prevMpps = mpps;
+            curMpps = mpps = findPPS(mppsIUID);
+        }
+    }
+
+    private void checkRefPPS(Attributes data) {
+        PerformedProcedureStep mpps = curMpps;
+        if (mpps == null || mpps.isInProgress())
+            return;
+
+        String seriesIUID = data.getString(Tag.SeriesInstanceUID);
+        String sopIUID = data.getString(Tag.SOPInstanceUID);
+        String sopCUID = data.getString(Tag.SOPClassUID);
+        Sequence perfSeriesSeq = mpps.getAttributes()
+                .getSequence(Tag.PerformedSeriesSequence);
+        for (Attributes perfSeries : perfSeriesSeq) {
+            if (seriesIUID.equals(perfSeries.getString(Tag.SeriesInstanceUID))) {
+                if (containsRef(sopCUID, sopIUID,
+                        perfSeries.getSequence(Tag.ReferencedImageSequence))
+                 || containsRef(sopCUID, sopIUID,
+                        perfSeries.getSequence(Tag.ReferencedNonImageCompositeSOPInstanceSequence)))
+                    return;
+                break;
+            }
+        }
+        for (Attributes perfSeries : perfSeriesSeq) {
+            if (containsRef(sopCUID, sopIUID,
+                    perfSeries.getSequence(Tag.ReferencedImageSequence))
+             || containsRef(sopCUID, sopIUID,
+                    perfSeries.getSequence(Tag.ReferencedNonImageCompositeSOPInstanceSequence)))
+            throw new DicomServiceRuntimeException(
+                    new DicomServiceException(Status.ProcessingFailure,
+                            "Mismatch of Series Instance UID in Referenced PPS"));
+        }
+        throw new DicomServiceRuntimeException(
+                new DicomServiceException(Status.ProcessingFailure,
+                        "No such Instance in Referenced PPS"));
+    }
+
+    private boolean containsRef(String sopCUID, String sopIUID, Sequence refSOPs) {
+        if (refSOPs != null)
+            for (Attributes refSOP : refSOPs)
+                if (sopIUID.equals(refSOP.getString(Tag.ReferencedSOPInstanceUID)))
+                    if (sopCUID.equals(refSOP.getString(Tag.ReferencedSOPClassUID)))
+                        return true;
+                    else
+                        throw new DicomServiceRuntimeException(
+                                new DicomServiceException(Status.ProcessingFailure,
+                                        "Mismatch of SOP Class UID in Referenced PPS"));
+        return false;
+    }
+
+    private PerformedProcedureStep findPPS(String mppsIUID) {
+        if (mppsIUID != null)
+            try {
+                return em.createNamedQuery(
+                        PerformedProcedureStep.FIND_BY_SOP_INSTANCE_UID,
+                        PerformedProcedureStep.class)
+                     .setParameter(1, mppsIUID)
+                     .getSingleResult();
+            } catch (NoResultException e) { }
+        return null;
     }
 
     private Collection<ScheduledProcedureStep> getScheduledProcedureSteps(
@@ -444,6 +560,8 @@ public class InstanceStoreBean implements InstanceStore {
     public void close() {
         updateCachedSeries();
         cachedSeries = null;
+        prevMpps = null;
+        curMpps = null;
         em.close();
         em = null;
     }

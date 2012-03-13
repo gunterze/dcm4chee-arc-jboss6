@@ -55,8 +55,7 @@ import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
  */
 public class ArchiveApplicationEntity extends ApplicationEntity {
 
-    public static final int DEF_STGCMT_RETRY_INTERVAL = 60;
-    public static final int DEF_FWD_MPPS_RETRY_INTERVAL = 60;
+    public static final int DEF_RETRY_INTERVAL = 60;
 
     private StoreDuplicate storeDuplicate;
     private String modifyingSystem;
@@ -73,10 +72,13 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     private int sendPendingCMoveInterval;
     private int storageCommitmentDelay;
     private int storageCommitmentMaxRetries;
-    private int storageCommitmentRetryInterval = DEF_STGCMT_RETRY_INTERVAL;
+    private int storageCommitmentRetryInterval = DEF_RETRY_INTERVAL;
     private String[] forwardMPPSDestinations = {};
     private int forwardMPPSMaxRetries;
-    private int forwardMPPSRetryInterval = DEF_FWD_MPPS_RETRY_INTERVAL;
+    private int forwardMPPSRetryInterval = DEF_RETRY_INTERVAL;
+    private String[] ianDestinations = {};
+    private int ianMaxRetries;
+    private int ianRetryInterval = DEF_RETRY_INTERVAL;
     private final AttributeCoercions attributeCoercions = new AttributeCoercions();
 
     public ArchiveApplicationEntity(String aeTitle) {
@@ -269,6 +271,34 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
 
     public final void setForwardMPPSRetryInterval(int forwardMPPSRetryInterval) {
         this.forwardMPPSRetryInterval = forwardMPPSRetryInterval;
+    }
+
+    public String[] getIANDestinations() {
+        return ianDestinations;
+    }
+
+    public void setIANDestinations(String[] ianDestinations) {
+        this.ianDestinations = ianDestinations;
+    }
+
+    public boolean hasIANDestinations() {
+        return ianDestinations.length > 0;
+    }
+
+    public int getIANMaxRetries() {
+        return ianMaxRetries;
+    }
+
+    public void setIANMaxRetries(int ianMaxRetries) {
+        this.ianMaxRetries = ianMaxRetries;
+    }
+
+    public int getIANRetryInterval() {
+        return ianRetryInterval;
+    }
+
+    public void setIANRetryInterval(int ianRetryInterval) {
+        this.ianRetryInterval = ianRetryInterval;
     }
 
     public StoreParam getStoreParam() {

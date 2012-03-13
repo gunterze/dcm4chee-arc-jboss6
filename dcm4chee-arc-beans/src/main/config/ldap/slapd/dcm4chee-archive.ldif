@@ -157,6 +157,23 @@ olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.24
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
+olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.25
+  NAME 'dcmIanDestination'
+  DESC 'Destination to send IAN N-CREATE RQ'
+  EQUALITY caseExactIA5Match
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.26
+  NAME 'dcmIanMaxRetries'
+  DESC 'Maximum number of retries to send IAN N-CREATE RQ. 0 if absent'
+  EQUALITY integerMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+  SINGLE-VALUE )
+olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.27
+  NAME 'dcmIanRetryInterval'
+  DESC 'Interval between retries to send IAN N-CREATE RQ in s. 60 if absent'
+  EQUALITY integerMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+  SINGLE-VALUE )
 olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.4
   NAME 'dcmArchiveDevice'
   DESC 'DICOM Archive Device related information'
@@ -186,7 +203,10 @@ olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.5
     dcmStgCmtRetryInterval $
     dcmFwdMppsDestination $
     dcmFwdMppsMaxRetries $
-    dcmFwdMppsRetryInterval ) )
+    dcmFwdMppsRetryInterval $
+    dcmIanDestination $
+    dcmIanMaxRetries $
+    dcmIanRetryInterval ) )
 olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.10
   NAME 'dcmAttributeFilter'
   DESC 'Attributes stored in the database'

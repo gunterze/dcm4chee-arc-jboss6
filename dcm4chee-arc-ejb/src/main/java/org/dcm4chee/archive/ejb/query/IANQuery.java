@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.ejb.store;
+package org.dcm4chee.archive.ejb.query;
 
 import javax.ejb.Local;
 
@@ -47,11 +47,7 @@ import org.dcm4chee.archive.persistence.PerformedProcedureStep;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 @Local
-public interface PerformedProcedureStepManager {
+public interface IANQuery {
 
-    PerformedProcedureStep createPerformedProcedureStep(
-            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
-
-    PPSWithIAN updatePerformedProcedureStep(
-            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
+    Attributes createIANforMPPS(PerformedProcedureStep pps);
 }

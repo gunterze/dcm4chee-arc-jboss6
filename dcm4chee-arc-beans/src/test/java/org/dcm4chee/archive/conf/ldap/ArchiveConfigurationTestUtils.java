@@ -633,6 +633,7 @@ public class ArchiveConfigurationTestUtils {
         addTC(ae, null, SCP, UID.StorageCommitmentPushModelSOPClass, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCP, UID.ModalityPerformedProcedureStepSOPClass, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCU, UID.ModalityPerformedProcedureStepSOPClass, UID.ImplicitVRLittleEndian);
+        addTC(ae, null, SCU, UID.InstanceAvailabilityNotificationSOPClass, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCP, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
         device.addApplicationEntity(ae);
         Connection dicom = new Connection("dicom", "localhost", 11112);

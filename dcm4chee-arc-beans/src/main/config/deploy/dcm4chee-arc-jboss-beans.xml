@@ -88,6 +88,14 @@
     <demand>org.hornetq:module=JMS,name="FwdMppsQueue",type=Queue</demand>
   </bean>
 
+  <!-- Instance Availability Notification Queue-->
+  <bean name="IanQueue" class="javax.jms.Queue">
+    <constructor factoryClass="org.dcm4chee.archive.net.service.JNDIUtils" factoryMethod="lookup">
+      <parameter>queue/IanQueue</parameter>
+    </constructor>
+    <demand>org.hornetq:module=JMS,name="IanQueue",type=Queue</demand>
+  </bean>
+
   <!-- LDAP Archive Configuration -->
   <bean name="ArchiveConfiguration" class="org.dcm4chee.archive.conf.ldap.LdapArchiveConfiguration">
     <constructor>
@@ -168,6 +176,22 @@
   <!-- CEchoSCP -->
   <bean name="CEchoSCP" class="org.dcm4che.net.service.BasicCEchoSCP"/>
 
+  <!-- Instance Available Notification SCU -->
+  <bean name="IanSCU" class="org.dcm4chee.archive.net.service.IanSCU">
+    <property name="device">
+      <inject bean="Device" />
+    </property>
+    <property name="dicomConfiguration">
+      <inject bean="ArchiveConfiguration" />
+    </property>
+    <property name="jmsService">
+      <inject bean="JMSService" />
+    </property>
+    <property name="queue">
+      <inject bean="IanQueue" />
+    </property>
+  </bean>
+
   <!-- CStoreSCP -->
   <bean name="CStoreSCP" class="org.dcm4chee.archive.net.service.CStoreSCPImpl">
     <constructor>
@@ -177,6 +201,9 @@
         </array>
       </parameter>
     </constructor>
+    <property name="ianSCU">
+      <inject bean="IanSCU" />
+    </property>
   </bean>
 
   <!-- StgCmtSCP -->
@@ -195,8 +222,8 @@
     </property>
   </bean>
 
-  <!-- Modality Performed Procedure Step SCP -->
-  <bean name="ModalityPerformedProcedureStepSCP" class="org.dcm4chee.archive.net.service.MppsSCPImpl" access-mode="ALL">
+  <!-- Modality Performed Procedure Step SCU -->
+  <bean name="MppsSCU" class="org.dcm4chee.archive.net.service.MppsSCU">
     <property name="device">
       <inject bean="Device" />
     </property>
@@ -208,6 +235,16 @@
     </property>
     <property name="queue">
       <inject bean="FwdMppsQueue" />
+    </property>
+  </bean>
+
+  <!-- Modality Performed Procedure Step SCP -->
+  <bean name="MppsSCP" class="org.dcm4chee.archive.net.service.MppsSCPImpl" access-mode="ALL">
+    <property name="mppsSCU">
+      <inject bean="MppsSCU" />
+    </property>
+    <property name="ianSCU">
+      <inject bean="IanSCU" />
     </property>
   </bean>
 

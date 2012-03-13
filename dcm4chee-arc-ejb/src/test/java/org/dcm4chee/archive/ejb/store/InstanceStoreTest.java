@@ -45,6 +45,7 @@ import java.util.Arrays;
 import javax.ejb.EJB;
 
 import org.dcm4che.io.SAXReader;
+import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.PerformedProcedureStep;
@@ -82,7 +83,7 @@ public class InstanceStoreTest {
                         PatientFactory.class,
                         EntityAlreadyExistsException.class,
                         EntityNotExistsException.class,
-                        IllegalEntityStateException.class,
+                        DicomServiceRuntimeException.class,
                         PatientMismatchException.class,
                         PatientMergedException.class,
                         PerformedProcedureStepManager.class,
@@ -117,7 +118,7 @@ public class InstanceStoreTest {
         PerformedProcedureStep pps = mppsMgr.createPerformedProcedureStep(
                 MPPS_IUID, SAXReader.parse("resource:mpps-create.xml"), storeParam);
         assertTrue(pps.isInProgress());
-        pps = mppsMgr.updatePerformedProcedureStep(MPPS_IUID,
+        mppsMgr.updatePerformedProcedureStep(MPPS_IUID,
                 SAXReader.parse("resource:mpps-set.xml"), storeParam);
         assertTrue(pps.isCompleted());
         storeParam.setRetrieveAETs("AET_1","AET_2");

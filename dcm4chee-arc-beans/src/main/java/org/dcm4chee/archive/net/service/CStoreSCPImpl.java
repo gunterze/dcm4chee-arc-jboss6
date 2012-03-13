@@ -61,6 +61,7 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.TagUtils;
+import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.ejb.store.StoreParam;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
@@ -73,9 +74,18 @@ import org.dcm4chee.archive.persistence.FileSystem;
 public class CStoreSCPImpl extends BasicCStoreSCP {
 
     private boolean initFileSystem = true;
- 
+    private IanSCU ianSCU;
+
     public CStoreSCPImpl(String... sopClasses) {
         super(sopClasses);
+    }
+
+    public final IanSCU getIanSCU() {
+        return ianSCU;
+    }
+
+    public final void setIanSCU(IanSCU ianSCU) {
+        this.ianSCU = ianSCU;
     }
 
     @Override
@@ -164,14 +174,19 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             StoreParam storeParam = ae.getStoreParam();
             if (store.addFileRef(sourceAET, ds, modified,
                     new FileRef(fs, filePath, pc.getTransferSyntax(), dst.length(),
-                            digest(digest)), storeParam))
+                            digest(digest)), storeParam)) {
                 dst = null;
+                if (ae.hasIANDestinations())
+                    scheduleIAN(ae, store.createIANforPreviousMPPS());
+            }
             if (!modified.isEmpty()
                     && !ae.isSuppressWarningCoercionOfDataElements()) {
                 rsp.setInt(Tag.Status, VR.US, Status.CoercionOfDataElements);
                 rsp.setInt(Tag.OffendingElement, VR.AT, modified.tags());
             }
             return dst;
+        } catch (DicomServiceRuntimeException e) {
+            throw e.getDicomServiceException();
         } catch (Exception e) {
             throw new DicomServiceException(Status.ProcessingFailure,
                     DicomServiceException.initialCauseOf(e));
@@ -227,8 +242,18 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
     private void closeInstanceStore(Association as) {
         InstanceStore store =
                 (InstanceStore) as.clearProperty(InstanceStore.JNDI_NAME);
-        if (store != null)
+        if (store != null) {
+            ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+            if (ae.hasIANDestinations())
+                scheduleIAN(ae, store.createIANforCurrentMPPS());
             store.close();
+        }
+    }
+
+    private void scheduleIAN(ArchiveApplicationEntity ae, Attributes ian) {
+        if (ian != null)
+            for (String remoteAET : ae.getIANDestinations())
+                ianSCU.scheduleIAN(ae.getAETitle(), remoteAET, ian, 0, 0);
     }
 
     @Override

@@ -66,4 +66,8 @@ public interface InstanceStore {
 
     FileSystem selectFileSystem(String groupID);
 
+    Attributes createIANforPreviousMPPS();
+
+    Attributes createIANforCurrentMPPS();
+
 }

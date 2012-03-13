@@ -196,11 +196,15 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         storeNotDef(attrs, "dcmStgCmtDelay", arcAE.getStorageCommitmentDelay(), 0);
         storeNotDef(attrs, "dcmStgCmtMaxRetries", arcAE.getStorageCommitmentMaxRetries(), 0);
         storeNotDef(attrs, "dcmStgCmtRetryInterval", arcAE.getStorageCommitmentRetryInterval(),
-                    ArchiveApplicationEntity.DEF_STGCMT_RETRY_INTERVAL);
+                    ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
         storeNotEmpty(attrs, "dcmFwdMppsDestination", arcAE.getForwardMPPSDestinations());
         storeNotDef(attrs, "dcmFwdMppsMaxRetries", arcAE.getForwardMPPSMaxRetries(), 0);
         storeNotDef(attrs, "dcmFwdMppsRetryInterval", arcAE.getForwardMPPSRetryInterval(),
-                    ArchiveApplicationEntity.DEF_FWD_MPPS_RETRY_INTERVAL);
+                    ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+        storeNotEmpty(attrs, "dcmIanDestination", arcAE.getIANDestinations());
+        storeNotDef(attrs, "dcmIanMaxRetries", arcAE.getIANMaxRetries(), 0);
+        storeNotDef(attrs, "dcmIanRetryInterval", arcAE.getIANRetryInterval(),
+                    ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
         return attrs;
     }
 
@@ -311,11 +315,15 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
        arcae.setStorageCommitmentDelay(intValue(attrs.get("dcmStgCmtDelay"), 0));
        arcae.setStorageCommitmentMaxRetries(intValue(attrs.get("dcmStgCmtMaxRetries"), 0));
        arcae.setStorageCommitmentRetryInterval(intValue(attrs.get("dcmStgCmtRetryInterval"),
-               ArchiveApplicationEntity.DEF_STGCMT_RETRY_INTERVAL));
+               ArchiveApplicationEntity.DEF_RETRY_INTERVAL));
        arcae.setForwardMPPSDestinations(stringArray(attrs.get("dcmFwdMppsDestination")));
        arcae.setForwardMPPSMaxRetries(intValue(attrs.get("dcmFwdMppsMaxRetries"), 0));
        arcae.setForwardMPPSRetryInterval(intValue(attrs.get("dcmFwdMppsRetryInterval"),
-               ArchiveApplicationEntity.DEF_FWD_MPPS_RETRY_INTERVAL));
+               ArchiveApplicationEntity.DEF_RETRY_INTERVAL));
+       arcae.setIANDestinations(stringArray(attrs.get("dcmIanDestination")));
+       arcae.setIANMaxRetries(intValue(attrs.get("dcmIanMaxRetries"), 0));
+       arcae.setIANRetryInterval(intValue(attrs.get("dcmIanRetryInterval"),
+               ArchiveApplicationEntity.DEF_RETRY_INTERVAL));
     }
 
     @Override
@@ -417,7 +425,7 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         storeDiff(mods, "dcmStgCmtRetryInterval",
                 aa.getStorageCommitmentRetryInterval(),
                 bb.getStorageCommitmentRetryInterval(),
-                ArchiveApplicationEntity.DEF_STGCMT_RETRY_INTERVAL);
+                ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
         storeDiff(mods, "dcmFwdMppsDestination",
                 aa.getForwardMPPSDestinations(),
                 bb.getForwardMPPSDestinations());
@@ -428,7 +436,18 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         storeDiff(mods, "dcmFwdMppsRetryInterval",
                 aa.getForwardMPPSRetryInterval(),
                 bb.getForwardMPPSRetryInterval(),
-                ArchiveApplicationEntity.DEF_FWD_MPPS_RETRY_INTERVAL);
+                ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+        storeDiff(mods, "dcmIanDestination",
+                aa.getIANDestinations(),
+                bb.getIANDestinations());
+        storeDiff(mods, "dcmIanMaxRetries",
+                aa.getIANMaxRetries(),
+                bb.getIANMaxRetries(),
+                0);
+        storeDiff(mods, "dcmIanRetryInterval",
+                aa.getIANRetryInterval(),
+                bb.getIANRetryInterval(),
+                ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
         return mods;
     }
 

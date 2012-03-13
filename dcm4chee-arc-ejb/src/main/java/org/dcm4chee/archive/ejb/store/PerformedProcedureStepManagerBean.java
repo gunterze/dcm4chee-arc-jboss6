@@ -41,6 +41,7 @@ package org.dcm4chee.archive.ejb.store;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -49,6 +50,11 @@ import javax.persistence.PersistenceContext;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
+import org.dcm4che.net.Status;
+import org.dcm4che.net.service.BasicMppsSCP;
+import org.dcm4che.net.service.DicomServiceException;
+import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
+import org.dcm4chee.archive.ejb.query.IANQuery;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.PerformedProcedureStep;
@@ -62,6 +68,9 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
 
     @PersistenceContext(unitName = "dcm4chee-arc")
     private EntityManager em;
+
+    @EJB
+    private IANQuery ianQuery;
 
     @Override
     public PerformedProcedureStep createPerformedProcedureStep(
@@ -86,7 +95,7 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
     }
 
     @Override
-    public PerformedProcedureStep updatePerformedProcedureStep(
+    public PPSWithIAN updatePerformedProcedureStep(
             String sopInstanceUID, Attributes modified, StoreParam storeParam) {
         PerformedProcedureStep pps;
         try {
@@ -95,17 +104,28 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
             throw new EntityNotExistsException(sopInstanceUID);
         }
         if (!pps.isInProgress())
-            throw new IllegalEntityStateException(pps.toString());
+            throw new DicomServiceRuntimeException(
+                    new DicomServiceException(Status.ProcessingFailure,
+                            BasicMppsSCP.MAY_NO_LONGER_BE_UPDATED)
+                        .setErrorID(BasicMppsSCP.MAY_NO_LONGER_BE_UPDATED_ERROR_ID));
 
         AttributeFilter filter = storeParam.getAttributeFilter(Entity.PerformedProcedureStep);
         Attributes attrs = pps.getAttributes();
         attrs.addAll(modified);
         pps.setAttributes(attrs, filter);
+        Attributes ian = null;
+        if (!pps.isInProgress()) {
+            if (!attrs.containsValue(Tag.PerformedSeriesSequence))
+                throw new DicomServiceRuntimeException(
+                        new DicomServiceException(Status.MissingAttributeValue)
+                        .setAttributeIdentifierList(Tag.PerformedSeriesSequence));
+            ian = ianQuery.createIANforMPPS(pps);
+        }
         em.merge(pps);
-        return pps;
+        return new PPSWithIAN(pps, ian);
     }
 
-   private PerformedProcedureStep find(String sopInstanceUID) {
+    private PerformedProcedureStep find(String sopInstanceUID) {
         return em.createNamedQuery(
                 PerformedProcedureStep.FIND_BY_SOP_INSTANCE_UID,
                 PerformedProcedureStep.class)

@@ -38,15 +38,19 @@
 
 package org.dcm4chee.archive.ejb.store;
 
+import org.dcm4che.data.Attributes;
+import org.dcm4chee.archive.persistence.PerformedProcedureStep;
+
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class IllegalEntityStateException extends RuntimeException {
+public class PPSWithIAN {
 
-    private static final long serialVersionUID = 5068928465321380834L;
+    public final PerformedProcedureStep pps;
+    public final Attributes ian;
 
-    public IllegalEntityStateException(String message) {
-        super(message);
+    public PPSWithIAN(PerformedProcedureStep pps, Attributes ian) {
+        this.pps = pps;
+        this.ian = ian;
     }
-
 }

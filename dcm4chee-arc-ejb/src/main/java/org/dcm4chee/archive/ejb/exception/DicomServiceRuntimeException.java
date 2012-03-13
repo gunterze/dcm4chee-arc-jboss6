@@ -36,22 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.dcm4chee.archive.ejb.store;
+package org.dcm4chee.archive.ejb.exception;
 
-import javax.ejb.Local;
-
-import org.dcm4che.data.Attributes;
-import org.dcm4chee.archive.persistence.PerformedProcedureStep;
+import org.dcm4che.net.service.DicomServiceException;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-@Local
-public interface PerformedProcedureStepManager {
+public class DicomServiceRuntimeException extends RuntimeException {
 
-    PerformedProcedureStep createPerformedProcedureStep(
-            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
+    private static final long serialVersionUID = -4005571254718726605L;
 
-    PPSWithIAN updatePerformedProcedureStep(
-            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
+    public DicomServiceRuntimeException(DicomServiceException cause) {
+        super(cause);
+    }
+
+    public final DicomServiceException getDicomServiceException() {
+        return (DicomServiceException) getCause();
+    }
 }
