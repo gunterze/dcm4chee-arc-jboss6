@@ -44,6 +44,7 @@ import javax.xml.transform.TransformerConfigurationException;
 import org.dcm4che.conf.api.AttributeCoercion;
 import org.dcm4che.conf.api.AttributeCoercions;
 import org.dcm4che.net.ApplicationEntity;
+import org.dcm4che.net.Dimse;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.TransferCapability.Role;
 import org.dcm4che.util.AttributesFormat;
@@ -90,13 +91,13 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     }
 
     public AttributeCoercion getAttributeCoercion(String sopClass,
-            AttributeCoercion.DIMSE cmd, Role role, String aeTitle) {
-        return attributeCoercions.get(sopClass, cmd, role, aeTitle);
+            Dimse dimse, Role role, String aeTitle) {
+        return attributeCoercions.get(sopClass, dimse, role, aeTitle);
     }
 
     public AttributeCoercion removeAttributeCoercion(String sopClass,
-            AttributeCoercion.DIMSE cmd, Role role, String aeTitle) {
-        return attributeCoercions.remove(sopClass, cmd, role, aeTitle);
+            Dimse dimse, Role role, String aeTitle) {
+        return attributeCoercions.remove(sopClass, dimse, role, aeTitle);
     }
 
     public AttributeCoercions getAttributeCoercions() {
@@ -177,9 +178,9 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         this.storageFilePathFormat = storageFilePathFormat;
     }
 
-    public Templates getAttributeCoercionTemplates(String cuid, AttributeCoercion.DIMSE cmd,
+    public Templates getAttributeCoercionTemplates(String cuid, Dimse dimse,
             TransferCapability.Role role, String aet) throws TransformerConfigurationException {
-        AttributeCoercion ac = getAttributeCoercion(cuid, cmd, role, aet);
+        AttributeCoercion ac = getAttributeCoercion(cuid, dimse, role, aet);
         return ac != null ? getArchiveDevice().getTemplates(ac.getURI()) : null;
     }
 

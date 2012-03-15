@@ -55,6 +55,7 @@ import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Connection;
 import org.dcm4che.net.Device;
+import org.dcm4che.net.Dimse;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.SSLManagerFactory;
 import org.dcm4che.net.TransferCapability;
@@ -612,12 +613,12 @@ public class ArchiveConfigurationTestUtils {
         ae.setSendPendingCGet(true);
         ae.setSendPendingCMoveInterval(5000);
         ae.addAttributeCoercion(new AttributeCoercion(null, 
-                AttributeCoercion.DIMSE.C_STORE_RQ, 
+                Dimse.C_STORE_RQ, 
                 SCP,
                 "ENSURE_PID",
                 "resource:dcm4chee-arc-ensure-pid.xsl"));
         ae.addAttributeCoercion(new AttributeCoercion(null, 
-                AttributeCoercion.DIMSE.C_STORE_RQ, 
+                Dimse.C_STORE_RQ, 
                 SCU,
                 "WITHOUT_PN",
                 "resource:dcm4chee-arc-nullify-pn.xsl"));

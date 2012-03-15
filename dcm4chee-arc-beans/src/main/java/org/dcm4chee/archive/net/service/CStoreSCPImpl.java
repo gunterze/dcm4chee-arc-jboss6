@@ -46,13 +46,13 @@ import java.security.SecureRandom;
 
 import javax.xml.transform.Templates;
 
-import org.dcm4che.conf.api.AttributeCoercion.DIMSE;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.io.SAXTransformer;
 import org.dcm4che.net.Association;
+import org.dcm4che.net.Dimse;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.pdu.PresentationContext;
@@ -161,7 +161,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
         try {
             Attributes modified = new Attributes();
-            Templates tpl = ae.getAttributeCoercionTemplates(cuid, DIMSE.C_STORE_RQ,
+            Templates tpl = ae.getAttributeCoercionTemplates(cuid, Dimse.C_STORE_RQ,
                     TransferCapability.Role.SCP, sourceAET);
             if (tpl != null)
                 ds.updateAttributes(SAXTransformer.transform(ds, tpl, false, false), modified);

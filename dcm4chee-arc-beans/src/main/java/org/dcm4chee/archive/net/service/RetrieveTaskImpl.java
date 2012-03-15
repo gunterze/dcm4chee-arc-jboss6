@@ -43,7 +43,6 @@ import java.util.List;
 
 import javax.xml.transform.Templates;
 
-import org.dcm4che.conf.api.AttributeCoercion.DIMSE;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.io.DicomInputStream;
@@ -51,6 +50,7 @@ import org.dcm4che.io.SAXTransformer;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.DataWriter;
 import org.dcm4che.net.DataWriterAdapter;
+import org.dcm4che.net.Dimse;
 import org.dcm4che.net.TransferCapability.Role;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicRetrieveTask;
@@ -92,7 +92,7 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
         try {
             Templates tpl = ae.getAttributeCoercionTemplates(
-                    inst.cuid, DIMSE.C_STORE_RQ, Role.SCU, as.getRemoteAET());
+                    inst.cuid, Dimse.C_STORE_RQ, Role.SCU, as.getRemoteAET());
             if (tpl != null)
                 attrs.updateAttributes(SAXTransformer.transform(attrs, tpl, false, false), null);
         } catch (Exception e) {
