@@ -63,7 +63,7 @@ public class PatientUpdateService extends HL7Service {
 
     @Override
     public byte[] onMessage(HL7Application hl7App, HL7Segment msh,
-            byte[] msg, int off, int len) throws HL7Exception {
+            byte[] msg, int off, int len, int mshlen) throws HL7Exception {
         try {
             ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
             String hl7cs = msh.getField(17, arcHL7App.getHL7DefaultCharacterSet());
@@ -75,7 +75,7 @@ public class PatientUpdateService extends HL7Service {
             } else {
                 patientUpdate.mergePatient(attrs, mrg, arcHL7App.getStoreParam());
             }
-            return super.onMessage(hl7App, msh, msg, off, len);
+            return super.onMessage(hl7App, msh, msg, off, len, mshlen);
         } catch (Exception e) {
             throw new HL7Exception(HL7Exception.AE, e);
         }
