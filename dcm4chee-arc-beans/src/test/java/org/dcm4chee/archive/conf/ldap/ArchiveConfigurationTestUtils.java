@@ -491,6 +491,7 @@ public class ArchiveConfigurationTestUtils {
         "stgcmtscu",
         "storescp",
         "mppsscp",
+        "ianscp",
         "findscu",
         "getscu",
         "movescu",
@@ -504,6 +505,7 @@ public class ArchiveConfigurationTestUtils {
         "STGCMTSCU",
         "STORESCP",
         "MPPSSCP",
+        "IANSCP"
     };
 
     private static final String[] HL7_MESSAGE_TYPES = {

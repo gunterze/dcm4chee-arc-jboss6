@@ -15,17 +15,18 @@
               <map>
                 <entry key="dcmArchiveDevice" value="true"/>
                 <entry key="dcmFuzzyAlgorithmClass" value="org.dcm4che.soundex.ESoundex"/>
-                <entry key="dicomAuthorizedNodeCertificateReference.#" value="10"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.#" value="11"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/dcmqrscp"/>
-                <entry key="dicomAuthorizedNodeCertificateReference.10" value="org/dcm4chee/archive/dicomDevicesRoot/hl7snd"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.10" value="org/dcm4chee/archive/dicomDevicesRoot/storescu"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.11" value="org/dcm4chee/archive/dicomDevicesRoot/hl7snd"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.2" value="org/dcm4chee/archive/dicomDevicesRoot/stgcmtscu"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.3" value="org/dcm4chee/archive/dicomDevicesRoot/storescp"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.4" value="org/dcm4chee/archive/dicomDevicesRoot/mppsscp"/>
-                <entry key="dicomAuthorizedNodeCertificateReference.5" value="org/dcm4chee/archive/dicomDevicesRoot/findscu"/>
-                <entry key="dicomAuthorizedNodeCertificateReference.6" value="org/dcm4chee/archive/dicomDevicesRoot/getscu"/>
-                <entry key="dicomAuthorizedNodeCertificateReference.7" value="org/dcm4chee/archive/dicomDevicesRoot/movescu"/>
-                <entry key="dicomAuthorizedNodeCertificateReference.8" value="org/dcm4chee/archive/dicomDevicesRoot/mppsscu"/>
-                <entry key="dicomAuthorizedNodeCertificateReference.9" value="org/dcm4chee/archive/dicomDevicesRoot/storescu"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.5" value="org/dcm4chee/archive/dicomDevicesRoot/ianscp"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.6" value="org/dcm4chee/archive/dicomDevicesRoot/findscu"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.7" value="org/dcm4chee/archive/dicomDevicesRoot/getscu"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.8" value="org/dcm4chee/archive/dicomDevicesRoot/movescu"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.9" value="org/dcm4chee/archive/dicomDevicesRoot/mppsscu"/>
                 <entry key="dicomInstalled" value="true"/>
                 <entry key="dicomThisNodeCertificateReference.#" value="1"/>
                 <entry key="dicomThisNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/dcm4chee-arc"/>
@@ -4057,6 +4058,53 @@
                 <map/>
               </node>
             </node>
+            <node name="ianscp">
+              <map>
+                <entry key="dicomInstalled" value="true"/>
+                <entry key="dicomThisNodeCertificateReference.#" value="1"/>
+                <entry key="dicomThisNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/ianscp"/>
+                <entry key="userCertificate.#" value="1"/>
+                <entry key="userCertificate.1" value="MIICSTCCAbKgAwIBAgIET2LsdjANBgkqhkiG9w0BAQUFADBpMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxFTATBgNVBAsTDGRjbTRjaGUtdG9vbDEPMA0GA1UEAxMGaWFuc2NwMB4XDTEyMDMxNjA3MzIwNloXDTEzMDMxNjA3MzIwNlowaTELMAkGA1UEBhMCQVQxDzANBgNVBAgTBlZpZW5uYTEPMA0GA1UEBxMGVmllbm5hMRAwDgYDVQQKEwdkY200Y2hlMRUwEwYDVQQLEwxkY200Y2hlLXRvb2wxDzANBgNVBAMTBmlhbnNjcDCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAkMnPVpASzoOc+COw3EiOcqa3PftKWdJxfUKB/e7wqwIhETdSHh4btwckaxljTQXoKGh2A0Mnqf7onxc1MD+7ucU6o3jQO989nKnIJ5LRHksKv7MtPbyv3GNRQXfVXH3rQiGNPAgi5nJjc1VHv7wdlvUZ6QUoJT+XfvjhNmUsua8CAwEAATANBgkqhkiG9w0BAQUFAAOBgQAg+wXRSPxxosUTqgR4RSVTmKHuRsLzW7+LA6FYxYjQo+pOaI2MQq71HC8tPnWmRSKblHJf9r8fq4i8YsYYJau4pJ0YxydlhVELrkw8hxLxyBDmzPRzF+UQKnwcQR4/BNnRpusKnMy0qHODpeLUQFlNdl0MlE/1O2IGG9LeXgGj2w=="/>
+              </map>
+              <node name="dcmNetworkAE">
+                <map/>
+                <node name="IANSCP">
+                  <map>
+                    <entry key="dicomAssociationAcceptor" value="true"/>
+                    <entry key="dicomAssociationInitiator" value="true"/>
+                    <entry key="dicomNetworkConnectionReference.#" value="2"/>
+                    <entry key="dicomNetworkConnectionReference.1" value="1"/>
+                    <entry key="dicomNetworkConnectionReference.2" value="2"/>
+                  </map>
+                  <node name="dicomTransferCapability">
+                    <map/>
+                  </node>
+                </node>
+              </node>
+              <node name="dcmNetworkConnection">
+                <map/>
+                <node name="1">
+                  <map>
+                    <entry key="cn" value="dicom"/>
+                    <entry key="dicomHostname" value="localhost"/>
+                    <entry key="dicomPort" value="11117"/>
+                  </map>
+                </node>
+                <node name="2">
+                  <map>
+                    <entry key="cn" value="dicom-tls"/>
+                    <entry key="dcmTLSProtocol.#" value="2"/>
+                    <entry key="dcmTLSProtocol.1" value="TLSv1"/>
+                    <entry key="dcmTLSProtocol.2" value="SSLv3"/>
+                    <entry key="dicomHostname" value="localhost"/>
+                    <entry key="dicomPort" value="2767"/>
+                    <entry key="dicomTLSCipherSuite.#" value="2"/>
+                    <entry key="dicomTLSCipherSuite.1" value="TLS_RSA_WITH_AES_128_CBC_SHA"/>
+                    <entry key="dicomTLSCipherSuite.2" value="SSL_RSA_WITH_3DES_EDE_CBC_SHA"/>
+                  </map>
+                </node>
+              </node>
+            </node>
             <node name="movescu">
               <map>
                 <entry key="dicomInstalled" value="true"/>
@@ -4250,6 +4298,9 @@
               <map/>
             </node>
             <node name="DCMQRSCP">
+              <map/>
+            </node>
+            <node name="IANSCP">
               <map/>
             </node>
             <node name="MPPSSCP">

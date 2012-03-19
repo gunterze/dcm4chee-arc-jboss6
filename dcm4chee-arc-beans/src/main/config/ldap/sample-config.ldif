@@ -156,6 +156,45 @@ dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=mppsscp,cn=Devices
 dicomAETitle: MPPSSCP
 dicomAssociationAcceptor: TRUE
 
+dn: dicomAETitle=IANSCP,cn=Unique AE Titles Registry,cn=DICOM Configuration,dc=nodomain
+objectClass: dicomUniqueAETitle
+dicomAETitle: IANSCP
+
+dn: dicomDeviceName=ianscp,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomInstalled: TRUE
+dicomDeviceName: ianscp
+objectClass: dicomDevice
+objectClass: pkiUser
+dicomThisNodeCertificateReference: dicomDeviceName=ianscp,cn=Devices,cn=DICOM Configuration,dc=nodomain
+userCertificate;binary:: MIICSTCCAbKgAwIBAgIET2LsdjANBgkqhkiG9w0BAQUFADBpMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxFTATBgNVBAsTDGRjbTRjaGUtdG9vbDEPMA0GA1UEAxMGaWFuc2NwMB4XDTEyMDMxNjA3MzIwNloXDTEzMDMxNjA3MzIwNlowaTELMAkGA1UEBhMCQVQxDzANBgNVBAgTBlZpZW5uYTEPMA0GA1UEBxMGVmllbm5hMRAwDgYDVQQKEwdkY200Y2hlMRUwEwYDVQQLEwxkY200Y2hlLXRvb2wxDzANBgNVBAMTBmlhbnNjcDCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAkMnPVpASzoOc+COw3EiOcqa3PftKWdJxfUKB/e7wqwIhETdSHh4btwckaxljTQXoKGh2A0Mnqf7onxc1MD+7ucU6o3jQO989nKnIJ5LRHksKv7MtPbyv3GNRQXfVXH3rQiGNPAgi5nJjc1VHv7wdlvUZ6QUoJT+XfvjhNmUsua8CAwEAATANBgkqhkiG9w0BAQUFAAOBgQAg+wXRSPxxosUTqgR4RSVTmKHuRsLzW7+LA6FYxYjQo+pOaI2MQq71HC8tPnWmRSKblHJf9r8fq4i8YsYYJau4pJ0YxydlhVELrkw8hxLxyBDmzPRzF+UQKnwcQR4/BNnRpusKnMy0qHODpeLUQFlNdl0MlE/1O2IGG9LeXgGj2w==
+
+dn: cn=dicom,dicomDeviceName=ianscp,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomHostname: localhost
+dicomPort: 11117
+objectClass: dicomNetworkConnection
+objectClass: dcmNetworkConnection
+cn: dicom
+
+dn: cn=dicom-tls,dicomDeviceName=ianscp,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomHostname: localhost
+dicomPort: 2767
+objectClass: dicomNetworkConnection
+objectClass: dcmNetworkConnection
+dicomTLSCipherSuite: TLS_RSA_WITH_AES_128_CBC_SHA
+dicomTLSCipherSuite: SSL_RSA_WITH_3DES_EDE_CBC_SHA
+dcmTLSProtocol: TLSv1
+dcmTLSProtocol: SSLv3
+cn: dicom-tls
+
+dn: dicomAETitle=IANSCP,dicomDeviceName=ianscp,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomAssociationInitiator: TRUE
+objectClass: dicomNetworkAE
+objectClass: dcmNetworkAE
+dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=ianscp,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=ianscp,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomAETitle: IANSCP
+dicomAssociationAcceptor: TRUE
+
 dn: dicomDeviceName=findscu,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dicomInstalled: TRUE
 dicomDeviceName: findscu
@@ -216,6 +255,7 @@ dicomAuthorizedNodeCertificateReference: dicomDeviceName=dcmqrscp,cn=Devices,cn=
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=stgcmtscu,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=storescp,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=mppsscp,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomAuthorizedNodeCertificateReference: dicomDeviceName=ianscp,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=findscu,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=getscu,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dicomAuthorizedNodeCertificateReference: dicomDeviceName=movescu,cn=Devices,cn=DICOM Configuration,dc=nodomain
