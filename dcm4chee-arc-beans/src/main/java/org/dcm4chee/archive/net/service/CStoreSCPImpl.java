@@ -63,7 +63,6 @@ import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
-import org.dcm4chee.archive.ejb.store.StoreParam;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 import org.dcm4chee.archive.persistence.FileRef;
 import org.dcm4chee.archive.persistence.FileSystem;
@@ -121,13 +120,9 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             FileSystem fs = (FileSystem) storage;
             String iuid = rq.getString(Tag.AffectedSOPInstanceUID);
             ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-            File file = new File(
-                    new File(fs.getDirectory(), ae.getReceivingDirectoryPath()), 
-                    ae.getStorageFilePathFormat() == null
-                            ? iuid.replace('.', '/')
-                            : iuid);
-            File dir = file.getParentFile();
+            File dir = new File(fs.getDirectory(), ae.getReceivingDirectoryPath());
             dir.mkdirs();
+            File file = new File(dir, iuid);
             while (!file.createNewFile())
                 file = new File(dir, Integer.toString(LazyInitialization.nextInt()));
             return file;
@@ -165,16 +160,15 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
                     TransferCapability.Role.SCP, sourceAET);
             if (tpl != null)
                 ds.updateAttributes(SAXTransformer.transform(ds, tpl, false, false), modified);
-            AttributesFormat filePathFormatFor = ae.getStorageFilePathFormat();
-            File dst = filePathFormatFor != null
-                    ? rename(as, rq, fs, file, filePathFormatFor.format(ds))
+            AttributesFormat filePathFormat = ae.getStorageFilePathFormat();
+            File dst = filePathFormat != null
+                    ? rename(as, rq, fs, file, format(filePathFormat, ds))
                     : file;
             String filePath = dst.toURI().toString().substring(fs.getURI().length());
             InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
-            StoreParam storeParam = ae.getStoreParam();
             if (store.addFileRef(sourceAET, ds, modified,
                     new FileRef(fs, filePath, pc.getTransferSyntax(), dst.length(),
-                            digest(digest)), storeParam)) {
+                            digest(digest)), ae.getStoreParam())) {
                 dst = null;
                 if (ae.hasIANDestinations())
                     scheduleIAN(ae, store.createIANforPreviousMPPS());
@@ -190,6 +184,12 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         } catch (Exception e) {
             throw new DicomServiceException(Status.ProcessingFailure,
                     DicomServiceException.initialCauseOf(e));
+        }
+    }
+
+    private String format(AttributesFormat format, Attributes ds) {
+        synchronized (format) {
+            return format.format(ds);
         }
     }
 

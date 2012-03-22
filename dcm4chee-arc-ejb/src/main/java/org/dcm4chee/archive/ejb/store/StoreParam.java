@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.ejb.store;
 
+import org.dcm4che.data.Attributes;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 
@@ -56,6 +57,7 @@ public class StoreParam {
     private String[] retrieveAETs;
     private String externalRetrieveAET;
     private StoreDuplicate storeDuplicate;
+    private RejectionNotes rejectionNotes;
 
     public final boolean isStoreOriginalAttributes() {
         return storeOriginalAttributes;
@@ -112,4 +114,13 @@ public class StoreParam {
     public AttributeFilter getAttributeFilter(Entity entity) {
         return attributeFilters[entity.ordinal()];
     }
+
+    public final void setRejectionNotes(RejectionNotes rejectionNotes) {
+        this.rejectionNotes = rejectionNotes;
+    }
+
+    public RejectionNote getRejectionNote(Attributes codeItem) {
+        return rejectionNotes.get(codeItem);
+    }
+
 }

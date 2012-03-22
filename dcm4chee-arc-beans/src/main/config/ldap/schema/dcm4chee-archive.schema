@@ -201,6 +201,44 @@ attributetype ( 1.2.40.0.13.1.1.15.0.3.27
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
   SINGLE-VALUE )
 
+attributetype ( 1.2.40.0.13.1.1.15.0.3.28
+  NAME 'dcmCodeValue'
+  DESC 'Code Value (0008,0100)'
+  EQUALITY caseIgnoreMatch
+  SUBSTR caseIgnoreSubstringsMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+  SINGLE-VALUE )
+
+attributetype ( 1.2.40.0.13.1.1.15.0.3.29
+  NAME 'dcmCodingSchemeDesignator'
+  DESC 'Coding Scheme Designator (0008,0102)'
+  EQUALITY caseIgnoreMatch
+  SUBSTR caseIgnoreSubstringsMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+  SINGLE-VALUE )
+
+attributetype ( 1.2.40.0.13.1.1.15.0.3.30
+  NAME 'dcmCodingSchemeVersion'
+  DESC 'Coding Scheme Version (0008,0103)'
+  EQUALITY caseIgnoreMatch
+  SUBSTR caseIgnoreSubstringsMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+  SINGLE-VALUE )
+
+attributetype ( 1.2.40.0.13.1.1.15.0.3.31
+  NAME 'dcmCodeMeaning'
+  DESC 'Code Meaning (0008,0104)'
+  EQUALITY caseIgnoreMatch
+  SUBSTR caseIgnoreSubstringsMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+  SINGLE-VALUE )
+
+attributetype ( 1.2.40.0.13.1.1.15.0.3.32
+  NAME 'dcmRejectionAction'
+  DESC 'Specify Action associated with Rejection Note: ("HIDE_REJECTED_INSTANCES", "HIDE_REJECTION_NOTE", "NOT_ACCEPT_SUBSEQUENT_OCCURRENCE", "STICKY_ON_SUBSEQUENT_OCCURRENCE")'
+  EQUALITY caseExactIA5Match
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.26 )
+
 objectclass ( 1.2.40.0.13.1.1.15.0.4.4
   NAME 'dcmArchiveDevice'
   DESC 'DICOM Archive Device related information'
@@ -255,3 +293,15 @@ objectclass ( 1.2.40.0.13.1.1.15.0.4.11
   MAY (
      labeledURI $
      hl7DefaultCharacterSet ) )
+
+objectclass ( 1.2.40.0.13.1.1.15.0.4.12
+  NAME 'dcmRejectionNote'
+  DESC 'Key Object Selection Document Title of Rejection Note with associated Actions'
+  SUP top STRUCTURAL
+  MUST (
+    dcmCodeValue $
+    dcmCodingSchemeDesignator $
+    dcmRejectionAction )
+  MAY (
+    dcmCodingSchemeVersion $
+    dcmCodeMeaning ) )

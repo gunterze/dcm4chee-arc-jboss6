@@ -70,6 +70,7 @@ import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
 import org.dcm4chee.archive.ejb.query.IANQuery;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
+import org.dcm4chee.archive.persistence.Code;
 import org.dcm4chee.archive.persistence.ContentItem;
 import org.dcm4chee.archive.persistence.FileRef;
 import org.dcm4chee.archive.persistence.FileSystem;
@@ -98,6 +99,7 @@ public class InstanceStoreBean implements InstanceStore {
     private Series cachedSeries;
     private PerformedProcedureStep prevMpps;
     private PerformedProcedureStep curMpps;
+    private Code curRejectionCode;
 
     @PostConstruct
     public void init() {
@@ -217,6 +219,7 @@ public class InstanceStoreBean implements InstanceStore {
         inst.setSeries(series);
         inst.setConceptNameCode(
                 CodeFactory.getCode(em, data.getNestedDataset(Tag.ConceptNameCodeSequence)));
+        inst.setRejectionCode(curRejectionCode);
         inst.setVerifyingObservers(createVerifyingObservers(
                 data.getSequence(Tag.VerifyingObserverSequence), storeParam.getFuzzyStr()));
         inst.setContentItems(createContentItems(data.getSequence(Tag.ContentSequence)));
@@ -426,7 +429,9 @@ public class InstanceStoreBean implements InstanceStore {
         AttributeFilter seriesFilter = storeParam.getAttributeFilter(Entity.Series);
         if (series == null || !series.getSeriesInstanceUID().equals(seriesIUID)) {
             updateCachedSeries();
-            updateRefPPS(data.getNestedDataset(Tag.ReferencedPerformedProcedureStepSequence));
+            updateRefPPS(
+                    data.getNestedDataset(Tag.ReferencedPerformedProcedureStepSequence),
+                    storeParam);
             checkRefPPS(data);
             try {
                 cachedSeries = series = findSeries(seriesIUID);
@@ -458,7 +463,7 @@ public class InstanceStoreBean implements InstanceStore {
         return series;
     }
 
-    private void updateRefPPS(Attributes refPPS) {
+    private void updateRefPPS(Attributes refPPS, StoreParam storeParam) {
         String mppsIUID = refPPS != null
                 && UID.ModalityPerformedProcedureStepSOPClass.equals(
                         refPPS.getString(Tag.ReferencedSOPClassUID))
@@ -468,7 +473,25 @@ public class InstanceStoreBean implements InstanceStore {
         if (mpps == null || !mpps.getSopInstanceUID().equals(mppsIUID)) {
             prevMpps = mpps;
             curMpps = mpps = findPPS(mppsIUID);
+            curRejectionCode = rejectionCode(mpps, storeParam);
         }
+    }
+
+    private Code rejectionCode(PerformedProcedureStep mpps, StoreParam storeParam) {
+        if (mpps == null || !mpps.isDiscontinued())
+            return null;
+        
+        Attributes discontinueReason = mpps.getAttributes()
+                .getNestedDataset(Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);
+        RejectionNote rn = storeParam.getRejectionNote(discontinueReason);
+        if (rn == null)
+            return null;
+        
+        return CodeFactory.getCode(em,
+                rn.getCodeValue(),
+                rn.getCodingSchemeDesignator(),
+                rn.getCodingSchemeVersion(),
+                rn.getCodeMeaning());
     }
 
     private void checkRefPPS(Attributes data) {
@@ -562,6 +585,7 @@ public class InstanceStoreBean implements InstanceStore {
         cachedSeries = null;
         prevMpps = null;
         curMpps = null;
+        curRejectionCode = null;
         em.close();
         em = null;
     }

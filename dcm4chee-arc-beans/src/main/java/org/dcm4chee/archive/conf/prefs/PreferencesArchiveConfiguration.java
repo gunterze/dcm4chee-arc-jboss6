@@ -40,6 +40,7 @@ package org.dcm4chee.archive.conf.prefs;
 
 import java.security.cert.CertificateException;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
@@ -54,6 +55,8 @@ import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.ejb.store.Entity;
+import org.dcm4chee.archive.ejb.store.RejectionNote;
+import org.dcm4chee.archive.ejb.store.RejectionNotes;
 import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 import org.dcm4chee.archive.net.ArchiveDevice;
@@ -101,6 +104,22 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
             return;
         ArchiveApplicationEntity arcAE = (ArchiveApplicationEntity) ae;
         store(arcAE.getAttributeCoercions(), aeNode);
+        store(arcAE.getRejectionNotes(), aeNode);
+    }
+
+    private void store(RejectionNotes rns, Preferences aeNode) {
+        Preferences rnsNode = aeNode.node("dcmRejectionNote");
+        int index = 1;
+        for (RejectionNote rn : rns.getAll())
+            storeTo(rn, rnsNode.node("" + index ++));
+    }
+
+    private void storeTo(RejectionNote rn, Preferences prefs) {
+        storeNotNull(prefs, "dcmCodeValue", rn.getCodeValue());
+        storeNotNull(prefs, "dcmCodingSchemeDesignator", rn.getCodingSchemeDesignator());
+        storeNotNull(prefs, "dcmCodingSchemeVersion", rn.getCodingSchemeVersion());
+        storeNotNull(prefs, "dcmCodeMeaning", rn.getCodeMeaning());
+        storeNotEmpty(prefs, "dcmRejectionAction", rn.getActions().toArray());
     }
 
     private static void storeTo(AttributeFilter filter, Preferences prefs) {
@@ -259,6 +278,32 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
             return;
         ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
         load(arcae.getAttributeCoercions(), aeNode);
+        load(arcae.getRejectionNotes(), aeNode);
+    }
+
+    private void load(RejectionNotes rn, Preferences aeNode)
+            throws BackingStoreException {
+        Preferences rns = aeNode.node("dcmRejectionNote");
+        for (String index : rns.childrenNames())
+            rn.add(loadRejectionNoteFrom(rns.node(index)));
+    }
+
+    private RejectionNote loadRejectionNoteFrom(Preferences prefs) {
+        RejectionNote rn = new RejectionNote(
+                prefs.get("dcmCodeValue", null),
+                prefs.get("dcmCodingSchemeDesignator", null),
+                prefs.get("dcmCodingSchemeVersion", null),
+                prefs.get("dcmCodeMeaning", null));
+        loadRejectionActionsFrom(rn, "dcmRejectionAction", prefs);
+        return rn;
+    }
+
+    private void loadRejectionActionsFrom(RejectionNote rn, String key,
+            Preferences prefs) {
+        int n = prefs.getInt(key + ".#", 0);
+        for (int i = 0; i < n; i++)
+            rn.addAction(RejectionNote.Action.valueOf(
+                    prefs.get(key + '.' + (i+1), null)));
     }
 
     @Override
@@ -478,6 +523,37 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         ArchiveApplicationEntity aa = (ArchiveApplicationEntity) prev;
         ArchiveApplicationEntity bb = (ArchiveApplicationEntity) ae;
         merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), aePrefs);
+        merge(aa.getRejectionNotes(), bb.getRejectionNotes(), aePrefs);
+    }
+
+    private void merge(RejectionNotes prevs, RejectionNotes rns, Preferences aePrefs)
+            throws BackingStoreException {
+        Preferences rnsNode = aePrefs.node("dcmRejectionNote");
+        int index = 1;
+        Iterator<RejectionNote> prevIter = prevs.getAll().iterator();
+        for (RejectionNote rn : rns.getAll()) {
+            Preferences rnNode = rnsNode.node("" + index++);
+            if (prevIter.hasNext())
+                storeDiffs(rnNode, prevIter.next(), rn);
+            else
+                storeTo(rn, rnNode);
+        }
+        while (prevIter.hasNext()) {
+            prevIter.next();
+            rnsNode.node("" + index++).removeNode();
+        }
+    }
+
+    private void storeDiffs(Preferences prefs, RejectionNote a, RejectionNote b) {
+        storeDiff(prefs, "dcmCodeValue", a.getCodeValue(), b.getCodeValue());
+        storeDiff(prefs, "dcmCodingSchemeDesignator", 
+                a.getCodingSchemeDesignator(),
+                b.getCodingSchemeDesignator());
+        storeDiff(prefs, "dcmCodingSchemeVersion",
+                a.getCodingSchemeVersion(),
+                b.getCodingSchemeVersion());
+        storeDiff(prefs, "dcmCodeMeaning", a.getCodeMeaning(), b.getCodeMeaning());
+        storeDiff(prefs, "dcmRejectionAction", a.getActions().toArray(), b.getActions().toArray());
     }
 
 }

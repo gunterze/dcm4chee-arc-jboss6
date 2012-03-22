@@ -48,6 +48,8 @@ import org.dcm4che.net.Dimse;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.TransferCapability.Role;
 import org.dcm4che.util.AttributesFormat;
+import org.dcm4chee.archive.ejb.store.RejectionNote;
+import org.dcm4chee.archive.ejb.store.RejectionNotes;
 import org.dcm4chee.archive.ejb.store.StoreParam;
 import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
 
@@ -81,6 +83,7 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     private int ianMaxRetries;
     private int ianRetryInterval = DEF_RETRY_INTERVAL;
     private final AttributeCoercions attributeCoercions = new AttributeCoercions();
+    private final RejectionNotes rejectionNotes = new RejectionNotes();
 
     public ArchiveApplicationEntity(String aeTitle) {
         super(aeTitle);
@@ -302,13 +305,27 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         this.ianRetryInterval = ianRetryInterval;
     }
 
+    public RejectionNotes getRejectionNotes() {
+        return rejectionNotes;
+    }
+
+    public RejectionNote addRejectionNote(RejectionNote rn) {
+        return rejectionNotes.add(rn);
+    }
+
+    public RejectionNote removeRejectionNote(RejectionNote rn) {
+        return rejectionNotes.remove(rn);
+    }
+
     public StoreParam getStoreParam() {
         StoreParam storeParam = getArchiveDevice().getStoreParam();
-        storeParam.setStoreOriginalAttributes(isStoreOriginalAttributes());
+        storeParam.setStoreOriginalAttributes(storeOriginalAttributes);
         storeParam.setModifyingSystem(getEffectiveModifyingSystem());
-        storeParam.setRetrieveAETs(getRetrieveAETs());
-        storeParam.setExternalRetrieveAET(getExternalRetrieveAET());
-        storeParam.setStoreDuplicate(getStoreDuplicate());
+        storeParam.setRetrieveAETs(retrieveAETs);
+        storeParam.setExternalRetrieveAET(externalRetrieveAET);
+        storeParam.setStoreDuplicate(storeDuplicate);
+        storeParam.setRejectionNotes(rejectionNotes);
         return storeParam;
     }
+
 }

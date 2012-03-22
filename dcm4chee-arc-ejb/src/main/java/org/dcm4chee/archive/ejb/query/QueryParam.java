@@ -40,6 +40,7 @@ package org.dcm4chee.archive.ejb.query;
 
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4chee.archive.persistence.AttributeFilter;
+import org.dcm4chee.archive.persistence.Code;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -52,6 +53,7 @@ public class QueryParam {
     private boolean fuzzySemanticMatching;
     private boolean matchUnknown;
     private String[] roles;
+    private Code[] hideRejectionCodes;
 
     public final boolean isCombinedDatetimeMatching() {
         return combinedDatetimeMatching;
@@ -83,6 +85,14 @@ public class QueryParam {
 
     public final void setRoles(String... roles) {
         this.roles = roles != null ? roles.clone() : null;
+    }
+
+    public final Code[] getHideRejectionCodes() {
+        return hideRejectionCodes;
+    }
+
+    public final void setHideRejectionCodes(Code[] hideRejectionCodes) {
+        this.hideRejectionCodes = hideRejectionCodes;
     }
 
     public void setFuzzyStr(FuzzyStr fuzzyStr) {

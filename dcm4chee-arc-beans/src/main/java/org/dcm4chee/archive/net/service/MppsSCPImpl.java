@@ -51,7 +51,6 @@ import org.dcm4chee.archive.ejb.store.EntityAlreadyExistsException;
 import org.dcm4chee.archive.ejb.store.EntityNotExistsException;
 import org.dcm4chee.archive.ejb.store.PPSWithIAN;
 import org.dcm4chee.archive.ejb.store.PerformedProcedureStepManager;
-import org.dcm4chee.archive.ejb.store.StoreParam;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 
 /**
@@ -87,9 +86,8 @@ public class MppsSCPImpl extends BasicMppsSCP {
         String localAET = as.getLocalAET();
         String iuid = rq.getString(Tag.AffectedSOPInstanceUID);
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-        StoreParam storeParam = ae.getStoreParam();
         try {
-            ppsmgr.createPerformedProcedureStep(iuid , rqAttrs, storeParam);
+            ppsmgr.createPerformedProcedureStep(iuid , rqAttrs, ae.getStoreParam());
         } catch (EntityAlreadyExistsException e) {
             throw new DicomServiceException(Status.DuplicateSOPinstance)
                 .setUID(Tag.AffectedSOPInstanceUID, iuid);
@@ -109,10 +107,10 @@ public class MppsSCPImpl extends BasicMppsSCP {
         String localAET = as.getLocalAET();
         String iuid = rq.getString(Tag.RequestedSOPInstanceUID);
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-        StoreParam storeParam = ae.getStoreParam();
         PPSWithIAN ppsWithIAN;
         try {
-            ppsWithIAN = ppsmgr.updatePerformedProcedureStep(iuid, rqAttrs, storeParam);
+            ppsWithIAN = ppsmgr.updatePerformedProcedureStep(iuid, rqAttrs,
+                    ae.getStoreParam());
         } catch (EntityNotExistsException e) {
             throw new DicomServiceException(Status.NoSuchObjectInstance)
                 .setUID(Tag.AffectedSOPInstanceUID, iuid);

@@ -40,6 +40,8 @@ package org.dcm4chee.archive.ejb.store;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -56,6 +58,8 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
 import org.dcm4chee.archive.ejb.query.IANQuery;
 import org.dcm4chee.archive.persistence.AttributeFilter;
+import org.dcm4chee.archive.persistence.Code;
+import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.PerformedProcedureStep;
 import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
@@ -95,8 +99,8 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
     }
 
     @Override
-    public PPSWithIAN updatePerformedProcedureStep(
-            String sopInstanceUID, Attributes modified, StoreParam storeParam) {
+    public PPSWithIAN updatePerformedProcedureStep(String sopInstanceUID,
+            Attributes modified, StoreParam storeParam) {
         PerformedProcedureStep pps;
         try {
             pps = find(sopInstanceUID);
@@ -120,9 +124,46 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
                         new DicomServiceException(Status.MissingAttributeValue)
                         .setAttributeIdentifierList(Tag.PerformedSeriesSequence));
             ian = ianQuery.createIANforMPPS(pps);
+            if (pps.isDiscontinued()) {
+                RejectionNote rn = storeParam.getRejectionNote(
+                        attrs.getNestedDataset(
+                                Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence));
+                if (rn != null) {
+                    setRejectionCodeInRefSOPInstances(attrs);
+                    ian = null;
+                }
+            }
         }
         em.merge(pps);
         return new PPSWithIAN(pps, ian);
+    }
+
+    private void setRejectionCodeInRefSOPInstances(Attributes attrs) {
+        Attributes ppsdrcode = attrs.getNestedDataset(
+                Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);
+        Code rejectionCode = CodeFactory.getCode(em, ppsdrcode);
+        Sequence perfSeriesSeq = attrs.getSequence(Tag.PerformedSeriesSequence);
+        HashSet<String> iuids = new HashSet<String>();
+        for (Attributes perfSeries : perfSeriesSeq) {
+            addRefSOPInstanceUIDs(iuids,
+                    perfSeries.getSequence(Tag.ReferencedImageSequence));
+            addRefSOPInstanceUIDs(iuids,
+                    perfSeries.getSequence(Tag.ReferencedNonImageCompositeSOPInstanceSequence));
+            List<Instance> insts =
+                em.createNamedQuery(Instance.FIND_BY_SERIES_INSTANCE_UID, Instance.class)
+                  .setParameter(1, perfSeries.getString(Tag.SeriesInstanceUID))
+                  .getResultList();
+            for (Instance inst : insts)
+                if (iuids.contains(inst.getSopInstanceUID()))
+                    inst.setRejectionCode(rejectionCode);
+            iuids.clear();
+        }
+    }
+
+    private void addRefSOPInstanceUIDs(HashSet<String> iuids, Sequence refImgs) {
+        if (refImgs != null)
+            for (Attributes ref : refImgs)
+                iuids.add(ref.getString(Tag.ReferencedSOPInstanceUID));
     }
 
     private PerformedProcedureStep find(String sopInstanceUID) {

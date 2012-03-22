@@ -332,6 +332,7 @@
                     <entry key="dcmRetrieveAET.1" value="DCM4CHEE"/>
                     <entry key="dcmSendPendingCGet" value="true"/>
                     <entry key="dcmSendPendingCMoveInterval" value="5000"/>
+                    <entry key="dcmStorageFilePathFormat" value="archive/{now,date,yyyy/MM/dd}/{0020000D,hash}/{0020000E,hash}/{00080018,hash}"/>
                     <entry key="dcmStoreDuplicate" value="STORE"/>
                     <entry key="dcmStoreOriginalAttributes" value="true"/>
                     <entry key="dicomAssociationAcceptor" value="true"/>
@@ -356,6 +357,61 @@
                         <entry key="dicomAETitle" value="ENSURE_PID"/>
                         <entry key="dicomTransferRole" value="SCP"/>
                         <entry key="labeledURI" value="resource:dcm4chee-arc-ensure-pid.xsl"/>
+                      </map>
+                    </node>
+                  </node>
+                  <node name="dcmRejectionNote">
+                    <map/>
+                    <node name="1">
+                      <map>
+                        <entry key="dcmCodeMeaning" value="Data Retention Period Expired"/>
+                        <entry key="dcmCodeValue" value="XXXXXX22"/>
+                        <entry key="dcmCodingSchemeDesignator" value="99IHEIOCM"/>
+                        <entry key="dcmRejectionAction.#" value="2"/>
+                        <entry key="dcmRejectionAction.1" value="HIDE_REJECTED_INSTANCES"/>
+                        <entry key="dcmRejectionAction.2" value="HIDE_REJECTION_NOTE"/>
+                      </map>
+                    </node>
+                    <node name="2">
+                      <map>
+                        <entry key="dcmCodeMeaning" value="Incorrect worklist entry selected"/>
+                        <entry key="dcmCodeValue" value="110514"/>
+                        <entry key="dcmCodingSchemeDesignator" value="DCM"/>
+                        <entry key="dcmRejectionAction.#" value="2"/>
+                        <entry key="dcmRejectionAction.1" value="HIDE_REJECTED_INSTANCES"/>
+                        <entry key="dcmRejectionAction.2" value="NOT_ACCEPT_SUBSEQUENT_OCCURRENCE"/>
+                      </map>
+                    </node>
+                    <node name="3">
+                      <map>
+                        <entry key="dcmCodeMeaning" value="Rejected for Quality Reasons"/>
+                        <entry key="dcmCodeValue" value="113001"/>
+                        <entry key="dcmCodingSchemeDesignator" value="DCM"/>
+                        <entry key="dcmRejectionAction.#" value="2"/>
+                        <entry key="dcmRejectionAction.1" value="HIDE_REJECTED_INSTANCES"/>
+                        <entry key="dcmRejectionAction.2" value="STICKY_ON_SUBSEQUENT_OCCURRENCE"/>
+                      </map>
+                    </node>
+                    <node name="4">
+                      <map>
+                        <entry key="dcmCodeMeaning" value="Rejected for Patient Safety Reasons"/>
+                        <entry key="dcmCodeValue" value="113037"/>
+                        <entry key="dcmCodingSchemeDesignator" value="DCM"/>
+                        <entry key="dcmRejectionAction.#" value="3"/>
+                        <entry key="dcmRejectionAction.1" value="HIDE_REJECTED_INSTANCES"/>
+                        <entry key="dcmRejectionAction.2" value="HIDE_REJECTION_NOTE"/>
+                        <entry key="dcmRejectionAction.3" value="NOT_ACCEPT_SUBSEQUENT_OCCURRENCE"/>
+                      </map>
+                    </node>
+                    <node name="5">
+                      <map>
+                        <entry key="dcmCodeMeaning" value="Incorrect Modality Worklist Entry"/>
+                        <entry key="dcmCodeValue" value="XXXXXX11"/>
+                        <entry key="dcmCodingSchemeDesignator" value="99IHEIOCM"/>
+                        <entry key="dcmRejectionAction.#" value="3"/>
+                        <entry key="dcmRejectionAction.1" value="HIDE_REJECTED_INSTANCES"/>
+                        <entry key="dcmRejectionAction.2" value="HIDE_REJECTION_NOTE"/>
+                        <entry key="dcmRejectionAction.3" value="NOT_ACCEPT_SUBSEQUENT_OCCURRENCE"/>
                       </map>
                     </node>
                   </node>

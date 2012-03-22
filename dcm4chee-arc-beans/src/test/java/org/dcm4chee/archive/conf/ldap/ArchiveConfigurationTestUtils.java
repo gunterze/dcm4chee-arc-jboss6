@@ -60,7 +60,9 @@ import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.SSLManagerFactory;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.soundex.ESoundex;
+import org.dcm4che.util.AttributesFormat;
 import org.dcm4chee.archive.ejb.store.Entity;
+import org.dcm4chee.archive.ejb.store.RejectionNote;
 import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 import org.dcm4chee.archive.net.ArchiveDevice;
@@ -606,6 +608,8 @@ public class ArchiveConfigurationTestUtils {
         ae.setAssociationInitiator(true);
         ae.setFileSystemGroupID("DEFAULT");
         ae.setReceivingDirectoryPath("incoming");
+        ae.setStorageFilePathFormat(new AttributesFormat(
+                "archive/{now,date,yyyy/MM/dd}/{0020000D,hash}/{0020000E,hash}/{00080018,hash}") );
         ae.setDigestAlgorithm("MD5");
         ae.setRetrieveAETs("DCM4CHEE");
         ae.setStoreOriginalAttributes(true);
@@ -614,6 +618,28 @@ public class ArchiveConfigurationTestUtils {
         ae.setMatchUnknown(true);
         ae.setSendPendingCGet(true);
         ae.setSendPendingCMoveInterval(5000);
+        ae.addRejectionNote(
+                new RejectionNote("110514", "DCM", null, "Incorrect worklist entry selected")
+                    .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
+                    .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE));
+        ae.addRejectionNote(
+                new RejectionNote("113001", "DCM", null, "Rejected for Quality Reasons")
+                    .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
+                    .addAction(RejectionNote.Action.STICKY_ON_SUBSEQUENT_OCCURRENCE));
+        ae.addRejectionNote(
+                new RejectionNote("113037", "DCM", null, "Rejected for Patient Safety Reasons")
+                    .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
+                    .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE)
+                    .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE));
+        ae.addRejectionNote(
+                new RejectionNote("XXXXXX11", "99IHEIOCM", null, "Incorrect Modality Worklist Entry")
+                    .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
+                    .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE)
+                    .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE));
+        ae.addRejectionNote(
+                new RejectionNote("XXXXXX22", "99IHEIOCM", null, "Data Retention Period Expired")
+                    .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
+                    .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE));
         ae.addAttributeCoercion(new AttributeCoercion(null, 
                 Dimse.C_STORE_RQ, 
                 SCP,

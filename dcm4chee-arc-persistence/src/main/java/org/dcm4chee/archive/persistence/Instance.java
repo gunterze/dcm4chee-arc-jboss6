@@ -73,7 +73,10 @@ import org.dcm4che.util.StringUtils;
 @NamedQueries({
 @NamedQuery(
     name="Instance.findBySOPInstanceUID",
-    query="SELECT i FROM Instance i WHERE i.sopInstanceUID = ?1 AND i.replaced = false")
+    query="SELECT i FROM Instance i WHERE i.sopInstanceUID = ?1 AND i.replaced = false"),
+@NamedQuery(
+    name="Instance.findBySeriesInstanceUID",
+    query="SELECT i FROM Instance i WHERE i.series.seriesInstanceUID = ?1 AND i.replaced = false")
 })
 @Entity
 @Table(name = "instance")
@@ -82,7 +85,9 @@ public class Instance implements Serializable {
     private static final long serialVersionUID = -6510894512195470408L;
 
     public static final String FIND_BY_SOP_INSTANCE_UID =
-        "Instance.findBySOPInstanceUID";
+            "Instance.findBySOPInstanceUID";
+    public static final String FIND_BY_SERIES_INSTANCE_UID =
+            "Instance.findBySeriesInstanceUID";
 
     @Id
     @GeneratedValue
@@ -162,6 +167,10 @@ public class Instance implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "srcode_fk")
     private Code conceptNameCode;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rjcode_fk")
+    private Code rejectionCode;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "instance_fk")
@@ -311,6 +320,14 @@ public class Instance implements Serializable {
 
     public void setConceptNameCode(Code conceptNameCode) {
         this.conceptNameCode = conceptNameCode;
+    }
+
+    public Code getRejectionCode() {
+        return rejectionCode;
+    }
+
+    public void setRejectionCode(Code rejectionCode) {
+        this.rejectionCode = rejectionCode;
     }
 
     public Collection<VerifyingObserver> getVerifyingObservers() {

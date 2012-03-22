@@ -63,6 +63,8 @@ import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.ejb.store.Entity;
+import org.dcm4chee.archive.ejb.store.RejectionNote;
+import org.dcm4chee.archive.ejb.store.RejectionNotes;
 import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 import org.dcm4chee.archive.net.ArchiveDevice;
@@ -153,6 +155,32 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
             return;
         ArchiveApplicationEntity arcAE = (ArchiveApplicationEntity) ae;
         store(arcAE.getAttributeCoercions(), aeDN);
+        store(arcAE.getRejectionNotes(), aeDN);
+    }
+
+    private void store(RejectionNotes rns, String aeDN) throws NamingException {
+        for (RejectionNote rn : rns.getAll())
+            createSubcontext(dnOf(rn, aeDN), storeTo(rn, new BasicAttributes(true)));
+    }
+
+    private static String dnOf(RejectionNote rn, String parentDN) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("dcmCodeValue=").append(rn.getCodeValue());
+        sb.append("+dcmCodingSchemeDesignator=").append(rn.getCodingSchemeDesignator());
+        if (rn.getCodingSchemeVersion() != null)
+            sb.append("+dcmCodingSchemeVersion=").append(rn.getCodingSchemeVersion());
+        sb.append(',').append(parentDN);
+        return sb.toString();
+    }
+
+    private static Attributes storeTo(RejectionNote ac, BasicAttributes attrs) {
+        attrs.put("objectclass", "dcmRejectionNote");
+        storeNotNull(attrs, "dcmCodeValue", ac.getCodeValue());
+        storeNotNull(attrs, "dcmCodingSchemeDesignator", ac.getCodingSchemeDesignator());
+        storeNotNull(attrs, "dcmCodingSchemeVersion", ac.getCodingSchemeVersion());
+        storeNotNull(attrs, "dcmCodeMeaning", ac.getCodeMeaning());
+        storeNotEmpty(attrs, "dcmRejectionAction", ac.getActions().toArray());
+        return attrs;
     }
 
     private static Attributes storeTo(AttributeFilter filter, Entity entity, BasicAttributes attrs) {
@@ -333,15 +361,46 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
             return;
         ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
         load(arcae.getAttributeCoercions(), aeDN);
+        load(arcae.getRejectionNotes(), aeDN);
+    }
+
+    private void load(RejectionNotes acs, String aeDN) throws NamingException {
+        NamingEnumeration<SearchResult> ne = search(aeDN, "(objectclass=dcmRejectionNote)");
+        try {
+            while (ne.hasMore())
+                acs.add(loadRejectionNoteFrom(ne.next().getAttributes()));
+        } finally {
+           safeClose(ne);
+        }
+    }
+
+    private RejectionNote loadRejectionNoteFrom(Attributes attrs)
+            throws NamingException {
+        RejectionNote rn = new RejectionNote(
+                stringValue(attrs.get("dcmCodeValue")),
+                stringValue(attrs.get("dcmCodingSchemeDesignator")),
+                stringValue(attrs.get("dcmCodingSchemeVersion")),
+                stringValue(attrs.get("dcmCodeMeaning")));
+        loadRejectionActionsFrom(rn, attrs.get("dcmRejectionAction"));
+        return rn;
+    }
+
+    private void loadRejectionActionsFrom(RejectionNote rn, Attribute attr)
+            throws NamingException {
+        if (attr != null)
+            for (int i = 0, n = attr.size(); i < n; i++)
+                rn.addAction(RejectionNote.Action.valueOf((String) attr.get(i)));
     }
 
     @Override
-    protected void loadFrom(HL7Application hl7App, Attributes attrs) throws NamingException {
+    protected void loadFrom(HL7Application hl7App, Attributes attrs)
+            throws NamingException {
        super.loadFrom(hl7App, attrs);
        if (!(hl7App instanceof ArchiveHL7Application))
            return;
        ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
-       arcHL7App.setHL7DefaultCharacterSet(stringValue(attrs.get("hl7DefaultCharacterSet")));
+       arcHL7App.setHL7DefaultCharacterSet(
+               stringValue(attrs.get("hl7DefaultCharacterSet")));
        arcHL7App.setTemplatesURIs(stringArray(attrs.get("labeledURI")));
     }
 
@@ -496,6 +555,40 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         ArchiveApplicationEntity aa = (ArchiveApplicationEntity) prev;
         ArchiveApplicationEntity bb = (ArchiveApplicationEntity) ae;
         merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), aeDN);
+        merge(aa.getRejectionNotes(), bb.getRejectionNotes(), aeDN);
+    }
+
+    private void merge(RejectionNotes prevs, RejectionNotes acs, String parentDN)
+            throws NamingException {
+        for (RejectionNote prev : prevs.getAll())
+            if (acs.getEquals(prev) == null)
+                destroySubcontext(dnOf(prev, parentDN));
+        for (RejectionNote rn : acs.getAll()) {
+            String dn = dnOf(rn, parentDN);
+            RejectionNote prev = prevs.getEquals(rn);
+            if (prev == null)
+                createSubcontext(dn, storeTo(rn, new BasicAttributes(true)));
+            else
+                modifyAttributes(dn, storeDiffs(prev, rn, new ArrayList<ModificationItem>()));
+        }
+    }
+
+    private List<ModificationItem> storeDiffs(RejectionNote prev,
+            RejectionNote rn, ArrayList<ModificationItem> mods) {
+        storeDiff(mods, "dcmCodeValue", prev.getCodeValue(), rn.getCodeValue());
+        storeDiff(mods, "dcmCodingSchemeDesignator", 
+                prev.getCodingSchemeDesignator(),
+                rn.getCodingSchemeDesignator());
+        storeDiff(mods, "dcmCodingSchemeVersion",
+                prev.getCodingSchemeVersion(),
+                rn.getCodingSchemeVersion());
+        storeDiff(mods, "dcmCodeMeaning",
+                prev.getCodeMeaning(),
+                rn.getCodeMeaning());
+        storeDiff(mods, "dcmRejectionAction",
+                prev.getActions().toArray(),
+                rn.getActions().toArray());
+        return mods;
     }
 
     private List<ModificationItem> storeDiffs(AttributeFilter prev,
