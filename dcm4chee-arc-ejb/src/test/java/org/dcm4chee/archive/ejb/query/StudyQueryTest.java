@@ -38,8 +38,7 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,7 +60,6 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -130,77 +128,75 @@ public class StudyQueryTest {
     @Test
     public void testByModalitiesInStudyPR() throws Exception {
         query.findStudies(pids("MODS_IN_STUDY"), modalitiesInStudy("PR"), QUERY_PARAM);
-        assertTrue(countMatches(query, 2));
+        assertEquals(2, countMatches(query));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyMatchUnknownPR() throws Exception {
         query.findStudies(pids("MODS_IN_STUDY"), modalitiesInStudy("PR"), MATCH_UNKNOWN);
-        assertTrue(countMatches(query, 3));
+        assertEquals(3, countMatches(query));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyCT() throws Exception {
         query.findStudies(pids("MODS_IN_STUDY"), modalitiesInStudy("CT"), QUERY_PARAM);
-        assertTrue(countMatches(query, 1));
+        assertEquals(1, countMatches(query));
         query.close();
     }
     
     @Test
     public void testByModalitiesInStudyMatchUnknownCT() throws Exception {
         query.findStudies(pids("MODS_IN_STUDY"), modalitiesInStudy("CT"), MATCH_UNKNOWN);
-        assertTrue(countMatches(query, 2));
+        assertEquals(2, countMatches(query));
         query.close();
     }
 
     @Test
     public void testByDateTime() throws Exception {
-        query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange("20110620", "103000.000"),
+        query.findStudies(pids("RANGE-MATCHING"),
+                studyDateTimeRange("20110620", "103000.000"),
                 QUERY_PARAM);
-        assertTrue(query.hasMoreMatches());
-        String studyUID = query.nextMatch().getString(Tag.StudyInstanceUID);
-        assertFalse(query.hasMoreMatches());
-        assertTrue(studyUID.equals("1.2.40.0.13.1.1.99.3"));
+        assertSetEquals(studyIUIDResultList(query), "1.2.40.0.13.1.1.99.3");
         query.close();
     }
 
     @Test
     public void testByOpenEndTime() throws Exception {
-        query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange(null, "1030-"), QUERY_PARAM);
-        assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyIUIDResultList(query);
-        String studyUIDs[] =
-                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-                        "1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6" };
-        Collection<String> col = Arrays.asList(studyUIDs);
-        assertTrue(equals(result, col));
+        query.findStudies(pids("RANGE-MATCHING"),
+                studyDateTimeRange(null, "1030-"),
+                QUERY_PARAM);
+        assertSetEquals(studyIUIDResultList(query),
+                "1.2.40.0.13.1.1.99.3",
+                "1.2.40.0.13.1.1.99.4",
+                "1.2.40.0.13.1.1.99.5",
+                "1.2.40.0.13.1.1.99.6");
         query.close();
     }
 
     @Test
     public void testByOpenStartTime() throws Exception {
-        query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange(null, "-1430"), QUERY_PARAM);
-        assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyIUIDResultList(query);
-        String studyUIDs[] =
-                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-                        "1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6" };
-        Collection<String> col = Arrays.asList(studyUIDs);
-        assertTrue(equals(result, col));
+        query.findStudies(pids("RANGE-MATCHING"),
+                studyDateTimeRange(null, "-1430"),
+                QUERY_PARAM);
+        assertSetEquals(studyIUIDResultList(query),
+                "1.2.40.0.13.1.1.99.3",
+                "1.2.40.0.13.1.1.99.4",
+                "1.2.40.0.13.1.1.99.5",
+                "1.2.40.0.13.1.1.99.6");
         query.close();
     }
     
     @Test
     public void testByDateTimeMatchUnknown() throws Exception {
-        query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange("20110620", "103000.000"),
+        query.findStudies(pids("RANGE-MATCHING"),
+                studyDateTimeRange("20110620", "103000.000"),
                 MATCH_UNKNOWN);
-        assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyIUIDResultList(query);
-        String studyUIDs[] = { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.8","1.2.40.0.13.1.1.99.9" };
-        Collection<String> col = Arrays.asList(studyUIDs);
-        assertTrue(equals(result, col));
+        assertSetEquals(studyIUIDResultList(query),
+                "1.2.40.0.13.1.1.99.3",
+                "1.2.40.0.13.1.1.99.8",
+                "1.2.40.0.13.1.1.99.9");
         query.close();
     }
 
@@ -208,13 +204,11 @@ public class StudyQueryTest {
     public void testByTimeRange() throws Exception {
         query.findStudies(pids("RANGE-MATCHING"), studyDateTimeRange(null, "1030-1430"),
                 QUERY_PARAM);
-        assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyIUIDResultList(query);
-        String studyUIDs[] =
-                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-                        "1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6" };
-        Collection<String> col = Arrays.asList(studyUIDs);
-        assertTrue(equals(result, col));
+        assertSetEquals(studyIUIDResultList(query),
+                "1.2.40.0.13.1.1.99.3",
+                "1.2.40.0.13.1.1.99.4",
+                "1.2.40.0.13.1.1.99.5",
+                "1.2.40.0.13.1.1.99.6");
         query.close();
     }
 
@@ -223,14 +217,13 @@ public class StudyQueryTest {
         query.findStudies(pids("RANGE-MATCHING"),
                 studyDateTimeRange("20100620-20110620", null),
                 QUERY_PARAM);
-        assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyIUIDResultList(query);
-        String studyUIDs[] =
-                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-                        "1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6",
-                        "1.2.40.0.13.1.1.99.7", "1.2.40.0.13.1.1.99.8" };
-        Collection<String> col = Arrays.asList(studyUIDs);
-        assertTrue(equals(result, col));
+        assertSetEquals(studyIUIDResultList(query),
+                "1.2.40.0.13.1.1.99.3",
+                "1.2.40.0.13.1.1.99.4",
+                "1.2.40.0.13.1.1.99.5",
+                "1.2.40.0.13.1.1.99.6",
+                "1.2.40.0.13.1.1.99.7",
+                "1.2.40.0.13.1.1.99.8" );
         query.close();
     }
 
@@ -239,13 +232,11 @@ public class StudyQueryTest {
         query.findStudies(pids("RANGE-MATCHING"),
                 studyDateTimeRange("20100620-20110620", "1030-1430"),
                 QUERY_PARAM);
-        assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyIUIDResultList(query);
-        String studyUIDs[] =
-                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-                        "1.2.40.0.13.1.1.99.5", "1.2.40.0.13.1.1.99.6" };
-        Collection<String> col = Arrays.asList(studyUIDs);
-        assertTrue(equals(result, col));
+        assertSetEquals(studyIUIDResultList(query),
+                "1.2.40.0.13.1.1.99.3",
+                "1.2.40.0.13.1.1.99.4",
+                "1.2.40.0.13.1.1.99.5",
+                "1.2.40.0.13.1.1.99.6");
         query.close();
     }
 
@@ -254,14 +245,12 @@ public class StudyQueryTest {
         query.findStudies(pids("RANGE-MATCHING"),
                 studyDateTimeRange("20100620-20110620", "1040-1430"),
                 COMBINED_DATE_TIME);
-        assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyIUIDResultList(query);
-        String studyUIDs[] =
-                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-                        "1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
-                        "1.2.40.0.13.1.1.99.6" };
-        Collection<String> col = Arrays.asList(studyUIDs);
-        assertTrue(equals(result, col));
+        assertSetEquals(studyIUIDResultList(query),
+                "1.2.40.0.13.1.1.99.3",
+                "1.2.40.0.13.1.1.99.4",
+                "1.2.40.0.13.1.1.99.8",
+                "1.2.40.0.13.1.1.99.7",
+                "1.2.40.0.13.1.1.99.6");
         query.close();
     }
 
@@ -270,14 +259,12 @@ public class StudyQueryTest {
         query.findStudies(pids("RANGE-MATCHING"),
                 studyDateTimeRange("20100620-", "1040-"),
                 COMBINED_DATE_TIME);
-        assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyIUIDResultList(query);
-        String studyUIDs[] =
-                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-                        "1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
-                        "1.2.40.0.13.1.1.99.6" };
-        Collection<String> col = Arrays.asList(studyUIDs);
-        assertTrue(equals(result, col));
+        assertSetEquals(studyIUIDResultList(query),
+                "1.2.40.0.13.1.1.99.3",
+                "1.2.40.0.13.1.1.99.4",
+                "1.2.40.0.13.1.1.99.8",
+                "1.2.40.0.13.1.1.99.7",
+                "1.2.40.0.13.1.1.99.6");
         query.close();
     }
 
@@ -286,14 +273,12 @@ public class StudyQueryTest {
         query.findStudies(pids("RANGE-MATCHING"),
                 studyDateTimeRange("-20110620", "-1420"),
                 COMBINED_DATE_TIME);
-        assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyIUIDResultList(query);
-        String studyUIDs[] =
-                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.5",
-                        "1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
-                        "1.2.40.0.13.1.1.99.6" };
-        Collection<String> col = Arrays.asList(studyUIDs);
-        assertTrue(equals(result, col));
+        assertSetEquals(studyIUIDResultList(query),
+                "1.2.40.0.13.1.1.99.3",
+                "1.2.40.0.13.1.1.99.5",
+                "1.2.40.0.13.1.1.99.8",
+                "1.2.40.0.13.1.1.99.7",
+                "1.2.40.0.13.1.1.99.6");
         query.close();
     }
 
@@ -302,14 +287,13 @@ public class StudyQueryTest {
         query.findStudies(pids("RANGE-MATCHING"),
                 studyDateTimeRange("20100620-20110620", "1040-1430"),
                 COMBINED_DATE_TIME_MATCH_UNKNOWN);
-        assertTrue(query.hasMoreMatches());
-        ArrayList<String> result = studyIUIDResultList(query);
-        String studyUIDs[] =
-                { "1.2.40.0.13.1.1.99.3", "1.2.40.0.13.1.1.99.4",
-                        "1.2.40.0.13.1.1.99.8", "1.2.40.0.13.1.1.99.7",
-                        "1.2.40.0.13.1.1.99.6", "1.2.40.0.13.1.1.99.9" };
-        Collection<String> col = Arrays.asList(studyUIDs);
-        assertTrue(equals(result, col));
+        assertSetEquals(studyIUIDResultList(query),
+                "1.2.40.0.13.1.1.99.3",
+                "1.2.40.0.13.1.1.99.4",
+                "1.2.40.0.13.1.1.99.8",
+                "1.2.40.0.13.1.1.99.7",
+                "1.2.40.0.13.1.1.99.6",
+                "1.2.40.0.13.1.1.99.9");
         query.close();
     }
 
@@ -318,7 +302,7 @@ public class StudyQueryTest {
         query.findStudies(pids("ISSUER_OF_ACCNO"),
                 issuerOfAccessionNumber("A1234", "DCM4CHEE_TESTDATA_ACCNO_ISSUER_1", null, null),
                 QUERY_PARAM);
-        assertTrue(countMatches(query, 1));
+        assertEquals(1, countMatches(query));
         query.close();
     }
 
@@ -327,7 +311,7 @@ public class StudyQueryTest {
         query.findStudies(pids("ISSUER_OF_ACCNO"),
                 issuerOfAccessionNumber("A1234","DCM4CHEE_TESTDATA_ACCNO_ISSUER_2", null, null),
                 MATCH_UNKNOWN);
-        assertTrue(countMatches(query, 2));
+        assertEquals(2, countMatches(query));
         query.close();
     }
 
@@ -335,7 +319,7 @@ public class StudyQueryTest {
     public void testByProcedureCodes() throws Exception {
         query.findStudies(pids("PROC_CODE_SEQ"),
                 procedureCodes("PROC_CODE_1", "99DCM4CHEE_TEST", null), QUERY_PARAM);
-        assertTrue(countMatches(query, 1));
+        assertEquals(1, countMatches(query));
         query.close();
     }
     
@@ -343,50 +327,43 @@ public class StudyQueryTest {
     public void testByProcedureCodesMatchUnknown() throws Exception {
         query.findStudies(pids("PROC_CODE_SEQ"),
                 procedureCodes("PROC_CODE_2", "99DCM4CHEE_TEST", null), MATCH_UNKNOWN);
-        assertTrue(countMatches(query, 2));
+        assertEquals(2, countMatches(query));
         query.close();
     }
     
-    @Before
-    public void clearDB(){
-        mgr.revokeStudyPermission("1.2.40.0.13.1.1.99.10", "DCM4CHEE_TEST", StudyPermissionAction.QUERY);
-        mgr.revokeStudyPermission("1.2.40.0.13.1.1.99.11", "DCM4CHEE_TEST", StudyPermissionAction.QUERY);
-        mgr.revokeStudyPermission("1.2.40.0.13.1.1.99.12", "DCM4CHEE_TEST", StudyPermissionAction.QUERY);
-    }
-
     @Test
     public void testByStudyPermission() throws Exception {
-        String StudyIUIDs[] = { "1.2.40.0.13.1.1.99.10", "1.2.40.0.13.1.1.99.11", 
-        "1.2.40.0.13.1.1.99.12" };
-        Collection<String> col = Arrays.asList(StudyIUIDs);
-        for (String studyIUID : StudyIUIDs)
-            assertTrue(mgr.grantStudyPermission(studyIUID, "DCM4CHEE_TEST", StudyPermissionAction.QUERY));
-        query.findStudies(null, new Attributes(),
-                queryParam(false, false, "DCM4CHEE_TEST", "FooBar"));
-        ArrayList<String> result = studyIUIDResultList(query);
-        assertTrue(equals(result, col));
-        query.findStudies(null, new Attributes(), queryParam(false, false, "FooBar"));
-        result = studyIUIDResultList(query);
-        assertFalse(equals(result, col));
-        query.close();
-        for (String studyIUID : StudyIUIDs)
-            assertTrue(mgr.revokeStudyPermission(studyIUID, "DCM4CHEE_TEST", StudyPermissionAction.QUERY));
+        String suids[] = {
+                "1.2.40.0.13.1.1.99.10",
+                "1.2.40.0.13.1.1.99.11",
+                "1.2.40.0.13.1.1.99.12" };
+        for (String suid : suids)
+            mgr.grantStudyPermission(suid, "DCM4CHEE_TEST", StudyPermissionAction.QUERY);
+        try {
+            query.findStudies(null, new Attributes(),
+                    queryParam(false, false, "DCM4CHEE_TEST", "FooBar"));
+            assertSetEquals(studyIUIDResultList(query), suids);
+            query.findStudies(null, new Attributes(), queryParam(false, false, "FooBar"));
+            assertTrue(studyIUIDResultList(query).isEmpty());
+        } finally {
+            query.close();
+            for (String suid : suids)
+                mgr.revokeStudyPermission(suid, "DCM4CHEE_TEST", StudyPermissionAction.QUERY);
+        }
     }
 
-    private boolean equals(ArrayList<String> result, Collection<String> col) {
-        if (result.containsAll(col) && result.size()==col.size())
-            return true;
-        else 
-            return false;
+    private static void assertSetEquals(Collection<String> values, String... expected) {
+        assertTrue(expected.length == values.size()
+                && values.containsAll(Arrays.asList(expected)));
     }
-    
-    private boolean countMatches(CompositeQuery query, int count) throws Exception {
+
+    private int countMatches(CompositeQuery query) throws Exception {
         int i = 0;
         while(query.hasMoreMatches()){
             query.nextMatch();
             i++;
         }
-        return count==i;
+        return i;
     }
 
     private Attributes procedureCodes(String value, String designator,

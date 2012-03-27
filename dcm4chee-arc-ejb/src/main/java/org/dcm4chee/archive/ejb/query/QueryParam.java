@@ -39,8 +39,8 @@
 package org.dcm4chee.archive.ejb.query;
 
 import org.dcm4che.soundex.FuzzyStr;
+import org.dcm4chee.archive.ejb.store.RejectionNotes;
 import org.dcm4chee.archive.persistence.AttributeFilter;
-import org.dcm4chee.archive.persistence.Code;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -52,8 +52,8 @@ public class QueryParam {
     private boolean combinedDatetimeMatching;
     private boolean fuzzySemanticMatching;
     private boolean matchUnknown;
+    private RejectionNotes rejectionNotes;
     private String[] roles;
-    private Code[] hideRejectionCodes;
 
     public final boolean isCombinedDatetimeMatching() {
         return combinedDatetimeMatching;
@@ -79,6 +79,14 @@ public class QueryParam {
         this.matchUnknown = matchUnknown;
     }
 
+    public final RejectionNotes getRejectionNotes() {
+        return rejectionNotes;
+    }
+
+    public final void setRejectionNotes(RejectionNotes rejectionNotes) {
+        this.rejectionNotes = rejectionNotes;
+    }
+
     public final String[] getRoles() {
         return roles != null ? roles.clone() : null;
     }
@@ -87,27 +95,19 @@ public class QueryParam {
         this.roles = roles != null ? roles.clone() : null;
     }
 
-    public final Code[] getHideRejectionCodes() {
-        return hideRejectionCodes;
-    }
-
-    public final void setHideRejectionCodes(Code[] hideRejectionCodes) {
-        this.hideRejectionCodes = hideRejectionCodes;
-    }
-
-    public void setFuzzyStr(FuzzyStr fuzzyStr) {
+    public final void setFuzzyStr(FuzzyStr fuzzyStr) {
         this.fuzzyStr = fuzzyStr;
     }
 
-    public FuzzyStr getFuzzyStr() {
+    public final FuzzyStr getFuzzyStr() {
         return fuzzyStr;
     }
 
-    public void setAttributeFilters(AttributeFilter[] attributeFilters) {
+    public final void setAttributeFilters(AttributeFilter[] attributeFilters) {
         this.attributeFilters = attributeFilters;
     }
 
-    public AttributeFilter[] getAttributeFilters() {
+    public final AttributeFilter[] getAttributeFilters() {
         return attributeFilters;
     }
 

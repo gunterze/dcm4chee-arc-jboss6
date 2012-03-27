@@ -42,6 +42,7 @@ import java.util.EnumSet;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4chee.archive.persistence.Code;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -56,8 +57,9 @@ public class RejectionNote {
     }
 
     private final Key key;
-    private String codeMeaning;
-    private EnumSet<Action> actions = EnumSet.noneOf(Action.class);
+    private final String codeMeaning;
+    private final EnumSet<Action> actions = EnumSet.noneOf(Action.class);
+    private Code code;
 
     public RejectionNote(String codeValue, String codingSchemeDesignator,
             String codingSchemeVersion, String codeMeaning) {
@@ -83,6 +85,14 @@ public class RejectionNote {
 
     public final String getCodeMeaning() {
         return codeMeaning;
+    }
+
+    public final Code getCode() {
+        return code;
+    }
+
+    public final void setCode(Code code) {
+        this.code = code;
     }
 
     public final EnumSet<Action> getActions() {

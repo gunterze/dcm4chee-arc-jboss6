@@ -70,7 +70,7 @@ public abstract class PatientFactory {
                 Patient pat = (Patient) it.next();
                 Issuer issuer2 = pat.getIssuerOfPatientID();
                 if (issuer2 != null) {
-                    if (issuer2.matches(issuer))
+                    if (equals(issuer, issuer2))
                         return pat;
                     else
                         it.remove();
@@ -155,5 +155,23 @@ public abstract class PatientFactory {
             }
         }
         return patient;
+    }
+
+    public static boolean equals(Issuer issuer1, Issuer issuer2) {
+        if (issuer1 == issuer2)
+            return true;
+
+        String entityID1 = issuer1.getLocalNamespaceEntityID();
+        if (entityID1 != null && entityID1.equals(issuer2.getLocalNamespaceEntityID()))
+            return true;
+
+        String entityUID1 = issuer1.getUniversalEntityID();
+        String entityType1 = issuer1.getUniversalEntityIDType();
+        if (entityUID1 != null && entityType1 != null
+                && entityUID1.equals(issuer2.getUniversalEntityID())
+                && entityType1.equals(issuer2.getUniversalEntityIDType()))
+            return true;
+
+        return false;
     }
 }

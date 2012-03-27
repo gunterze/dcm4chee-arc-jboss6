@@ -38,6 +38,8 @@
 
 package org.dcm4chee.archive.net;
 
+import java.util.EnumSet;
+
 import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerConfigurationException;
 
@@ -45,9 +47,11 @@ import org.dcm4che.conf.api.AttributeCoercion;
 import org.dcm4che.conf.api.AttributeCoercions;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Dimse;
+import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.TransferCapability.Role;
 import org.dcm4che.util.AttributesFormat;
+import org.dcm4chee.archive.ejb.query.QueryParam;
 import org.dcm4chee.archive.ejb.store.RejectionNote;
 import org.dcm4chee.archive.ejb.store.RejectionNotes;
 import org.dcm4chee.archive.ejb.store.StoreParam;
@@ -326,6 +330,19 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         storeParam.setStoreDuplicate(storeDuplicate);
         storeParam.setRejectionNotes(rejectionNotes);
         return storeParam;
+    }
+
+    public QueryParam getQueryParam(EnumSet<QueryOption> queryOpts, String[] roles) {
+        ArchiveDevice dev = getArchiveDevice();
+        QueryParam queryParam = new QueryParam();
+        queryParam.setFuzzyStr(dev.getFuzzyStr());
+        queryParam.setAttributeFilters(dev.getAttributeFilters());
+        queryParam.setCombinedDatetimeMatching(queryOpts.contains(QueryOption.DATETIME));
+        queryParam.setFuzzySemanticMatching(queryOpts.contains(QueryOption.FUZZY));
+        queryParam.setMatchUnknown(matchUnknown);
+        queryParam.setRejectionNotes(rejectionNotes);
+        queryParam.setRoles(roles);
+        return queryParam;
     }
 
 }

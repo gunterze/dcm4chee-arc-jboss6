@@ -601,9 +601,9 @@ m-description: Key Object Selection Document Title of Rejection Note with associ
 m-supObjectClass: top
 m-must: dcmCodeValue
 m-must: dcmCodingSchemeDesignator
+m-must: dcmCodeMeaning
 m-must: dcmRejectionAction
 m-may: dcmCodingSchemeVersion
-m-may: dcmCodeMeaning
 
 dn: ou=syntaxCheckers, cn=dcm4chee-archive, ou=schema
 objectclass: organizationalUnit

@@ -57,7 +57,6 @@ import org.dcm4chee.archive.ejb.query.CompositeQuery;
 import org.dcm4chee.archive.ejb.query.IDWithIssuer;
 import org.dcm4chee.archive.ejb.query.QueryParam;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
-import org.dcm4chee.archive.net.ArchiveDevice;
 import org.dcm4chee.archive.persistence.Issuer;
 
 /**
@@ -81,19 +80,12 @@ public class CFindSCPImpl extends BasicCFindSCP {
         QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(validator, qrLevels);
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
+        EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
+        boolean relational = queryOpts.contains(QueryOption.RELATIONAL);
         level.validateQueryKeys(validator, rootLevel, relational);
         IDWithIssuer[] pids = pids(keys);
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-        ArchiveDevice dev = ae.getArchiveDevice();
-        EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
-        QueryParam queryParam = new QueryParam();
-        queryParam.setCombinedDatetimeMatching(queryOpts.contains(QueryOption.DATETIME));
-        queryParam.setFuzzySemanticMatching(queryOpts.contains(QueryOption.FUZZY));
-        queryParam.setMatchUnknown(ae.isMatchUnknown());
-        queryParam.setFuzzyStr(dev.getFuzzyStr());
-        queryParam.setAttributeFilters(dev.getAttributeFilters());
-        queryParam.setRoles(roles());
+        QueryParam queryParam = ae.getQueryParam(queryOpts, roles());
         try {
             CompositeQuery query = (CompositeQuery) JNDIUtils.lookup(CompositeQuery.JNDI_NAME);
             switch (level) {

@@ -74,7 +74,7 @@ import com.mysema.query.types.path.StringPath;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  * @author Michael Backhaus <michael.backhaus@gmail.com>
  */
-abstract class Builder {
+public abstract class Builder {
 
     static void addPatientLevelPredicates(BooleanBuilder builder, IDWithIssuer[] pids,
             Attributes keys, QueryParam queryParam) {

@@ -173,10 +173,19 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
                 if (ae.hasIANDestinations())
                     scheduleIAN(ae, store.createIANforPreviousMPPS());
             }
-            if (!modified.isEmpty()
-                    && !ae.isSuppressWarningCoercionOfDataElements()) {
-                rsp.setInt(Tag.Status, VR.US, Status.CoercionOfDataElements);
-                rsp.setInt(Tag.OffendingElement, VR.AT, modified.tags());
+            if (!modified.isEmpty()) {
+                if (LOG.isInfoEnabled()) {
+                    LOG.info("{}:Coercion of Data Elements:\n{}\nto:\n{}",
+                            new Object[] { 
+                                as,
+                                modified,
+                                new Attributes(ds, ds.bigEndian(), modified.tags())
+                            });
+                }
+                if (!ae.isSuppressWarningCoercionOfDataElements()) {
+                    rsp.setInt(Tag.Status, VR.US, Status.CoercionOfDataElements);
+                    rsp.setInt(Tag.OffendingElement, VR.AT, modified.tags());
+                }
             }
             return dst;
         } catch (DicomServiceRuntimeException e) {

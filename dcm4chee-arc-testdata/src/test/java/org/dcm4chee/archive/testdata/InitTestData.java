@@ -44,15 +44,21 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.io.SAXReader;
 import org.dcm4che.soundex.ESoundex;
+import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
+import org.dcm4chee.archive.ejb.query.Builder;
+import org.dcm4chee.archive.ejb.query.IANQuery;
+import org.dcm4chee.archive.ejb.query.IANQueryBean;
 import org.dcm4chee.archive.ejb.store.CodeFactory;
 import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.ejb.store.EntityAlreadyExistsException;
+import org.dcm4chee.archive.ejb.store.EntityNotExistsException;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.ejb.store.InstanceStoreBean;
 import org.dcm4chee.archive.ejb.store.IssuerFactory;
 import org.dcm4chee.archive.ejb.store.ModalityWorklistManager;
 import org.dcm4chee.archive.ejb.store.ModalityWorklistManagerBean;
 import org.dcm4chee.archive.ejb.store.NonUniquePatientException;
+import org.dcm4chee.archive.ejb.store.PPSWithIAN;
 import org.dcm4chee.archive.ejb.store.PatientFactory;
 import org.dcm4chee.archive.ejb.store.PatientMergedException;
 import org.dcm4chee.archive.ejb.store.PatientMismatchException;
@@ -76,20 +82,26 @@ public class InitTestData {
     private static final String SOURCE_AET = "SOURCE_AET";
     private static final String RETRIEVE_AETS = "RETRIEVE_AET";
     private static final Class<?>[] CLASSES = {
-        StoreParam.class,
+        Builder.class,
+        CodeFactory.class,
+        DicomServiceRuntimeException.class,
         Entity.class,
+        EntityAlreadyExistsException.class,
+        EntityNotExistsException.class,
+        IANQuery.class,
+        IANQueryBean.class,
         InstanceStore.class,
         InstanceStoreBean.class,
+        IssuerFactory.class,
+        PatientFactory.class,
         ModalityWorklistManager.class,
         ModalityWorklistManagerBean.class,
-        CodeFactory.class,
-        IssuerFactory.class,
-        RequestFactory.class,
-        PatientFactory.class,
+        NonUniquePatientException.class,
         PatientMismatchException.class,
         PatientMergedException.class,
-        NonUniquePatientException.class,
-        EntityAlreadyExistsException.class
+        PPSWithIAN.class,
+        RequestFactory.class,
+        StoreParam.class,
     };
 
     private static final String[] INSTANCES = {
@@ -265,7 +277,8 @@ public class InitTestData {
         storeParam.setFuzzyStr(new ESoundex());
         for (String res : INSTANCES) {
             Attributes ds = SAXReader.parse("resource:" + res, null);
-            instanceStore.newInstance(SOURCE_AET, ds, Availability.ONLINE, storeParam );
+            instanceStore.newInstance(SOURCE_AET, ds, new Attributes(),
+                    Availability.ONLINE, storeParam );
         }
         instanceStore.close();
         for (String res : MWL_ITEMS) {

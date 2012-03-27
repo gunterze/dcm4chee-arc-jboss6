@@ -75,7 +75,7 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
  */
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public class IANQueryImpl implements IANQuery {
+public class IANQueryBean implements IANQuery {
 
     @PersistenceUnit(unitName = "dcm4chee-arc")
     private EntityManagerFactory emf;

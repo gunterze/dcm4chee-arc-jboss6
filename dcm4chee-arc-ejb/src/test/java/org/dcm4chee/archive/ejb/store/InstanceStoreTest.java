@@ -38,14 +38,23 @@
 
 package org.dcm4chee.archive.ejb.store;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 
 import javax.ejb.EJB;
 
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
 import org.dcm4che.io.SAXReader;
 import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
+import org.dcm4chee.archive.ejb.query.Builder;
+import org.dcm4chee.archive.ejb.query.IANQuery;
+import org.dcm4chee.archive.ejb.query.IANQueryBean;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.PerformedProcedureStep;
@@ -73,24 +82,28 @@ public class InstanceStoreTest {
     public static JavaArchive createDeployment() {
        return ShrinkWrap.create(JavaArchive.class, "test.jar")
                 .addClasses(
-                        Entity.class,
-                        StoreParam.class,
-                        InstanceStore.class,
-                        InstanceStoreBean.class,
+                        Builder.class,
                         CodeFactory.class,
-                        IssuerFactory.class,
-                        RequestFactory.class,
-                        PatientFactory.class,
+                        DicomServiceRuntimeException.class,
+                        Entity.class,
                         EntityAlreadyExistsException.class,
                         EntityNotExistsException.class,
-                        DicomServiceRuntimeException.class,
+                        IANQuery.class,
+                        IANQueryBean.class,
+                        InstanceStore.class,
+                        InstanceStoreBean.class,
+                        IssuerFactory.class,
+                        PatientFactory.class,
+                        NonUniquePatientException.class,
                         PatientMismatchException.class,
                         PatientMergedException.class,
                         PerformedProcedureStepManager.class,
                         PerformedProcedureStepManagerBean.class,
-                        NonUniquePatientException.class,
-                        StoreParamFactory.class,
-                        RemovePatient.class)
+                        PPSWithIAN.class,
+                        RemovePatient.class,
+                        RequestFactory.class,
+                        StoreParam.class,
+                        StoreParamFactory.class)
                 .addAsResource("mpps-create.xml")
                 .addAsResource("mpps-set.xml")
                 .addAsResource("ct-1.xml")
@@ -118,21 +131,35 @@ public class InstanceStoreTest {
         PerformedProcedureStep pps = mppsMgr.createPerformedProcedureStep(
                 MPPS_IUID, SAXReader.parse("resource:mpps-create.xml"), storeParam);
         assertTrue(pps.isInProgress());
-        mppsMgr.updatePerformedProcedureStep(MPPS_IUID,
+        PPSWithIAN ppsWithIAN = mppsMgr.updatePerformedProcedureStep(MPPS_IUID,
                 SAXReader.parse("resource:mpps-set.xml"), storeParam);
-        assertTrue(pps.isCompleted());
+        assertTrue(ppsWithIAN.pps.isCompleted());
         storeParam.setRetrieveAETs("AET_1","AET_2");
         storeParam.setExternalRetrieveAET("AET_3");
+        Attributes modified1 = new Attributes();
         Instance ct1 = instanceStore.newInstance(SOURCE_AET,
-                SAXReader.parse("resource:ct-1.xml"), Availability.ONLINE, storeParam);
+                SAXReader.parse("resource:ct-1.xml"), modified1,
+                Availability.ONLINE, storeParam);
+        assertTrue(modified1.isEmpty());
         storeParam.setRetrieveAETs("AET_2");
         storeParam.setExternalRetrieveAET("AET_3");
+        Attributes modified2 = new Attributes();
         Instance ct2 = instanceStore.newInstance(SOURCE_AET,
-                SAXReader.parse("resource:ct-2.xml"), Availability.NEARLINE, storeParam);
+                SAXReader.parse("resource:ct-2.xml"), modified2,
+                Availability.NEARLINE, storeParam);
+        assertEquals(2, modified2.size());
+        assertEquals("TEST-REPLACE", modified2.getString(Tag.StudyID));
+        assertEquals("0", modified2.getString(Tag.SeriesNumber));
         storeParam.setRetrieveAETs("AET_1","AET_2");
         storeParam.setExternalRetrieveAET("AET_4");
+        Attributes modified3 = new Attributes();
         Instance pr1 = instanceStore.newInstance(SOURCE_AET,
-                SAXReader.parse("resource:pr-1.xml"), Availability.ONLINE, storeParam);
+                SAXReader.parse("resource:pr-1.xml"), modified3,
+                Availability.ONLINE, storeParam);
+        assertEquals(1, modified3.size());
+        assertEquals("TEST-REPLACE", modified3.getString(Tag.StudyID));
+        Attributes ian = instanceStore.createIANforCurrentMPPS();
+        assertNotNull(ian);
         instanceStore.close();
         Series ctSeries = ct1.getSeries();
         Series prSeries = pr1.getSeries();

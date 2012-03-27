@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.ejb.store;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
@@ -75,5 +76,13 @@ public class RejectionNotes {
 
     public void clear() {
         map.clear();
+    }
+
+    public Collection<RejectionNote> getWithAction(RejectionNote.Action action) {
+        ArrayList<RejectionNote> result = new ArrayList<RejectionNote>(map.size());
+        for (RejectionNote rn : map.values())
+            if (rn.getActions().contains(action))
+                result.add(rn);
+        return result;
     }
 }

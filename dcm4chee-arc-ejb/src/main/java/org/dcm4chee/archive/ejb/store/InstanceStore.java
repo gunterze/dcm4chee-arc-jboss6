@@ -54,8 +54,8 @@ public interface InstanceStore {
 
     public static final String JNDI_NAME = "InstanceStoreBean/local";
 
-    Instance newInstance(String sourceAET, Attributes data, Availability availability,
-            StoreParam storeParam);
+    Instance newInstance(String sourceAET, Attributes data, Attributes modified,
+            Availability availability, StoreParam storeParam);
 
     boolean addFileRef(String sourceAET, Attributes data, Attributes modified,
             FileRef fileRef, StoreParam storeParam);

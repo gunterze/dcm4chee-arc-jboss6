@@ -12,6 +12,16 @@
 <DicomAttribute keyword="Modality" tag="00080060" vr="CS">
 <Value number="1">CT</Value>
 </DicomAttribute>
+<DicomAttribute keyword="PerformedProcedureStepSequence" tag="00081111" vr="SQ">
+<Item number="1">
+<DicomAttribute keyword="ReferencedSOPClassUID" tag="00081150" vr="UI">
+<Value number="1">1.2.840.10008.3.1.2.3.3</Value>
+</DicomAttribute>
+<DicomAttribute keyword="ReferencedSOPInstanceUID" tag="00081155" vr="UI">
+<Value number="1">1.2.40.0.13.1.1.99.20120130</Value>
+</DicomAttribute>
+</Item>
+</DicomAttribute>
 <DicomAttribute keyword="PatientName" tag="00100010" vr="PN">
 <PersonName number="1">
 <Alphabetic>

@@ -142,24 +142,20 @@ public class InstanceStoreBean implements InstanceStore {
             inst = findInstance(data.getString(Tag.SOPInstanceUID, null));
             switch (storeParam.getStoreDuplicate()) {
             case IGNORE:
-                coerceInstanceAttributes(data, inst, modified);
+                coerceInstanceAttributes(inst, data, modified);
                 return false;
             case STORE:
-                coerceInstanceAttributes(data, inst, modified);
+                coerceInstanceAttributes(inst, data, modified);
                 if (hasFileWithFileSystemGroupID(inst, fs.getGroupID()))
                     return false;
                 break;
             case REPLACE:
                 inst.setReplaced(true);
-                inst = newInstance(sourceAET, data, fs.getAvailability(), storeParam);
-                coerceSeriesAttributes(data, inst, modified);
-                storeOriginalAttributes(sourceAET, data, modified, inst, storeParam);
+                inst = newInstance(sourceAET, data, modified, fs.getAvailability(), storeParam);
                 break;
             }
         } catch (NoResultException e) {
-            inst = newInstance(sourceAET, data, fs.getAvailability(), storeParam);
-            coerceSeriesAttributes(data, inst, modified);
-            storeOriginalAttributes(sourceAET, data, modified, inst, storeParam);
+            inst = newInstance(sourceAET, data, modified, fs.getAvailability(), storeParam);
         }
         fileRef.setInstance(inst);
         em.persist(fileRef);
@@ -174,16 +170,15 @@ public class InstanceStoreBean implements InstanceStore {
         return false;
     }
 
-    private static void coerceInstanceAttributes(Attributes data, Instance inst,
+    private static void coerceInstanceAttributes(Instance inst, Attributes data,
             Attributes modified) {
-        coerceSeriesAttributes(data, inst, modified);
+        coerceSeriesAttributes(inst.getSeries(), data, modified);
         data.updateAttributes(inst.getAttributes(), modified);
         modified.remove(Tag.OriginalAttributesSequence);
     }
 
-    private static void coerceSeriesAttributes(Attributes data, Instance inst,
+    private static void coerceSeriesAttributes(Series series, Attributes data,
             Attributes modified) {
-        Series series = inst.getSeries();
         Study study = series.getStudy();
         Patient patient = study.getPatient();
         data.updateAttributes(patient.getAttributes(), modified);
@@ -191,30 +186,22 @@ public class InstanceStoreBean implements InstanceStore {
         data.updateAttributes(series.getAttributes(), modified);
     }
 
-    private static void storeOriginalAttributes(String sourceAET, Attributes data,
-            Attributes modified, Instance inst, StoreParam storeParam) {
+    @Override
+    public Instance newInstance(String sourceAET, Attributes data,
+            Attributes modified, Availability availability, StoreParam storeParam) {
+        em.joinTransaction();
+        AttributeFilter instFilter = storeParam.getAttributeFilter(Entity.Instance);
+        Series series = getSeries(sourceAET, data, availability, storeParam);
+        coerceSeriesAttributes(series, data, modified);
         if (!modified.isEmpty() && storeParam.isStoreOriginalAttributes()) {
-            Attributes instAttrs = inst.getAttributes();
             Attributes item = new Attributes(4);
-            Sequence origAttrsSeq = instAttrs.getSequence(Tag.OriginalAttributesSequence);
-            if (origAttrsSeq == null)
-                origAttrsSeq = instAttrs.newSequence(Tag.OriginalAttributesSequence, 1);
+            Sequence origAttrsSeq = data.ensureSequence(Tag.OriginalAttributesSequence, 1);
             origAttrsSeq.add(item);
             item.setDate(Tag.AttributeModificationDateTime, VR.DT, new Date());
             item.setString(Tag.ModifyingSystem, VR.LO, storeParam.getModifyingSystem());
             item.setString(Tag.SourceOfPreviousValues, VR.LO, sourceAET);
             item.newSequence(Tag.ModifiedAttributesSequence, 1).add(modified);
-            inst.setAttributes(instAttrs, storeParam.getAttributeFilter(Entity.Instance),
-                    storeParam.getFuzzyStr());
         }
-    }
-
-    @Override
-    public Instance newInstance(String sourceAET, Attributes data,
-            Availability availability, StoreParam storeParam) {
-        em.joinTransaction();
-        AttributeFilter instFilter = storeParam.getAttributeFilter(Entity.Instance);
-        Series series = getSeries(sourceAET, data, availability, storeParam);
         Instance inst = new Instance();
         inst.setSeries(series);
         inst.setConceptNameCode(
@@ -473,25 +460,12 @@ public class InstanceStoreBean implements InstanceStore {
         if (mpps == null || !mpps.getSopInstanceUID().equals(mppsIUID)) {
             prevMpps = mpps;
             curMpps = mpps = findPPS(mppsIUID);
-            curRejectionCode = rejectionCode(mpps, storeParam);
+            curRejectionCode = mpps != null && mpps.isDiscontinued()
+                    ? CodeFactory.getCode(em, storeParam.getRejectionNote(
+                            mpps.getAttributes().getNestedDataset(
+                                    Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence)))
+                    : null;
         }
-    }
-
-    private Code rejectionCode(PerformedProcedureStep mpps, StoreParam storeParam) {
-        if (mpps == null || !mpps.isDiscontinued())
-            return null;
-        
-        Attributes discontinueReason = mpps.getAttributes()
-                .getNestedDataset(Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);
-        RejectionNote rn = storeParam.getRejectionNote(discontinueReason);
-        if (rn == null)
-            return null;
-        
-        return CodeFactory.getCode(em,
-                rn.getCodeValue(),
-                rn.getCodingSchemeDesignator(),
-                rn.getCodingSchemeVersion(),
-                rn.getCodeMeaning());
     }
 
     private void checkRefPPS(Attributes data) {

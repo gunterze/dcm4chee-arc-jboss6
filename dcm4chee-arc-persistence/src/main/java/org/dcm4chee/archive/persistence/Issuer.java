@@ -175,19 +175,4 @@ public class Issuer implements Serializable {
         issuer.entityUIDType = item.getString(Tag.UniversalEntityIDType, null);
         return issuer;
     }
-
-    public boolean matches(Issuer other) {
-        if (pk == other.pk)
-            return true;
-
-        if (entityID != null && entityID.equals(other.entityID))
-            return true;
-
-        if (entityUID != null && entityUIDType != null
-                && entityUID.equals(other.entityUID)
-                && entityUIDType.equals(other.entityUIDType))
-            return true;
-
-        return false;
-    }
 }

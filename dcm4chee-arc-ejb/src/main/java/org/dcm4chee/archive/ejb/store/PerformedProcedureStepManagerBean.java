@@ -129,7 +129,7 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
                         attrs.getNestedDataset(
                                 Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence));
                 if (rn != null) {
-                    setRejectionCodeInRefSOPInstances(attrs);
+                    setRejectionCodeInRefSOPInstances(attrs, CodeFactory.getCode(em, rn));
                     ian = null;
                 }
             }
@@ -138,10 +138,7 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
         return new PPSWithIAN(pps, ian);
     }
 
-    private void setRejectionCodeInRefSOPInstances(Attributes attrs) {
-        Attributes ppsdrcode = attrs.getNestedDataset(
-                Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);
-        Code rejectionCode = CodeFactory.getCode(em, ppsdrcode);
+    private void setRejectionCodeInRefSOPInstances(Attributes attrs, Code rejectionCode) {
         Sequence perfSeriesSeq = attrs.getSequence(Tag.PerformedSeriesSequence);
         HashSet<String> iuids = new HashSet<String>();
         for (Attributes perfSeries : perfSeriesSeq) {

@@ -97,4 +97,20 @@ public abstract class CodeFactory {
 
         return list;
     }
+
+    public static Code getCode(EntityManager em, RejectionNote rn) {
+        if (rn == null)
+            return null;
+
+        Code code = rn.getCode();
+        if (code == null) {
+            code = getCode(em,
+                    rn.getCodeValue(),
+                    rn.getCodingSchemeDesignator(),
+                    rn.getCodingSchemeVersion(),
+                    rn.getCodeMeaning());
+            rn.setCode(code);
+        }
+        return code;
+    }
 }
