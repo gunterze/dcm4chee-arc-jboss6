@@ -38,8 +38,10 @@
 
 package org.dcm4chee.archive.ejb.query;
 
+import java.util.List;
+
 import org.dcm4che.soundex.FuzzyStr;
-import org.dcm4chee.archive.ejb.store.RejectionNotes;
+import org.dcm4chee.archive.ejb.store.RejectionNote;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 
 /**
@@ -52,7 +54,7 @@ public class QueryParam {
     private boolean combinedDatetimeMatching;
     private boolean fuzzySemanticMatching;
     private boolean matchUnknown;
-    private RejectionNotes rejectionNotes;
+    private List<RejectionNote> rejectionNotes;
     private String[] roles;
 
     public final boolean isCombinedDatetimeMatching() {
@@ -79,11 +81,11 @@ public class QueryParam {
         this.matchUnknown = matchUnknown;
     }
 
-    public final RejectionNotes getRejectionNotes() {
+    public final List<RejectionNote> getRejectionNotes() {
         return rejectionNotes;
     }
 
-    public final void setRejectionNotes(RejectionNotes rejectionNotes) {
+    public final void setRejectionNotes(List<RejectionNote> rejectionNotes) {
         this.rejectionNotes = rejectionNotes;
     }
 

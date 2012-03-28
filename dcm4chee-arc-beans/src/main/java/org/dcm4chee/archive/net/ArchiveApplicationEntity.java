@@ -38,7 +38,9 @@
 
 package org.dcm4chee.archive.net;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 
 import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerConfigurationException;
@@ -53,9 +55,8 @@ import org.dcm4che.net.TransferCapability.Role;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4chee.archive.ejb.query.QueryParam;
 import org.dcm4chee.archive.ejb.store.RejectionNote;
-import org.dcm4chee.archive.ejb.store.RejectionNotes;
+import org.dcm4chee.archive.ejb.store.StoreDuplicate;
 import org.dcm4chee.archive.ejb.store.StoreParam;
-import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -64,7 +65,6 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
 
     public static final int DEF_RETRY_INTERVAL = 60;
 
-    private StoreDuplicate storeDuplicate;
     private String modifyingSystem;
     private String[] retrieveAETs;
     private String externalRetrieveAET;
@@ -86,8 +86,9 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     private String[] ianDestinations = {};
     private int ianMaxRetries;
     private int ianRetryInterval = DEF_RETRY_INTERVAL;
+    private final List<StoreDuplicate> storeDuplicates  = new ArrayList<StoreDuplicate>();
+    private final List<RejectionNote> rejectionNotes = new ArrayList<RejectionNote>();
     private final AttributeCoercions attributeCoercions = new AttributeCoercions();
-    private final RejectionNotes rejectionNotes = new RejectionNotes();
 
     public ArchiveApplicationEntity(String aeTitle) {
         super(aeTitle);
@@ -115,12 +116,16 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         return attributeCoercions.add(ac);
     }
 
-    public StoreDuplicate getStoreDuplicate() {
-        return storeDuplicate;
+    public List<StoreDuplicate> getStoreDuplicates() {
+        return storeDuplicates;
     }
 
-    public void setStoreDuplicate(StoreDuplicate storeDuplicate) {
-        this.storeDuplicate = storeDuplicate;
+    public void addStoreDuplicate(StoreDuplicate storeDuplicate) {
+        storeDuplicates.add(storeDuplicate);
+    }
+
+    public boolean removeStoreDuplicate(StoreDuplicate storeDuplicate) {
+        return storeDuplicates.remove(storeDuplicate);
     }
 
     public String getModifyingSystem() {
@@ -309,15 +314,15 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         this.ianRetryInterval = ianRetryInterval;
     }
 
-    public RejectionNotes getRejectionNotes() {
+    public List<RejectionNote> getRejectionNotes() {
         return rejectionNotes;
     }
 
-    public RejectionNote addRejectionNote(RejectionNote rn) {
-        return rejectionNotes.add(rn);
+    public void addRejectionNote(RejectionNote rn) {
+        rejectionNotes.add(rn);
     }
 
-    public RejectionNote removeRejectionNote(RejectionNote rn) {
+    public boolean removeRejectionNote(RejectionNote rn) {
         return rejectionNotes.remove(rn);
     }
 
@@ -327,7 +332,7 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         storeParam.setModifyingSystem(getEffectiveModifyingSystem());
         storeParam.setRetrieveAETs(retrieveAETs);
         storeParam.setExternalRetrieveAET(externalRetrieveAET);
-        storeParam.setStoreDuplicate(storeDuplicate);
+        storeParam.setStoreDuplicates(storeDuplicates);
         storeParam.setRejectionNotes(rejectionNotes);
         return storeParam;
     }

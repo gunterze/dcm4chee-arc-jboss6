@@ -316,7 +316,6 @@ dcmStoreOriginalAttributes: TRUE
 dcmSendPendingCGet: TRUE
 dcmMatchUnknown: TRUE
 dicomAssociationInitiator: TRUE
-dcmStoreDuplicate: STORE
 dicomAssociationAcceptor: TRUE
 dicomAETitle: DCM4CHEE
 dcmReceivingDirectoryPath: incoming
@@ -3644,13 +3643,20 @@ labeledURI: resource:dcm4chee-arc-ensure-pid.xsl
 objectClass: dcmAttributeCoercion
 dicomAETitle: ENSURE_PID
 
-dn: dcmCodeValue=XXXXXX22+dcmCodingSchemeDesignator=99IHEIOCM,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
-dcmRejectionAction: HIDE_REJECTED_INSTANCES
-dcmRejectionAction: HIDE_REJECTION_NOTE
-objectClass: dcmRejectionNote
-dcmCodeMeaning: Data Retention Period Expired
-dcmCodingSchemeDesignator: 99IHEIOCM
-dcmCodeValue: XXXXXX22
+dn: dcmStoreDuplicateCondition=NO_FILE,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dcmStoreDuplicateAction: STORE
+objectClass: dcmStoreDuplicate
+dcmStoreDuplicateCondition: NO_FILE
+
+dn: dcmStoreDuplicateCondition=EQ_CHECKSUM,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dcmStoreDuplicateAction: IGNORE
+objectClass: dcmStoreDuplicate
+dcmStoreDuplicateCondition: EQ_CHECKSUM
+
+dn: dcmStoreDuplicateCondition=NE_CHECKSUM,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dcmStoreDuplicateAction: REPLACE
+objectClass: dcmStoreDuplicate
+dcmStoreDuplicateCondition: NE_CHECKSUM
 
 dn: dcmCodeValue=110514+dcmCodingSchemeDesignator=DCM,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dcmRejectionAction: HIDE_REJECTED_INSTANCES
@@ -3662,7 +3668,6 @@ dcmCodeValue: 110514
 
 dn: dcmCodeValue=113001+dcmCodingSchemeDesignator=DCM,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dcmRejectionAction: HIDE_REJECTED_INSTANCES
-dcmRejectionAction: STICKY_ON_SUBSEQUENT_OCCURRENCE
 objectClass: dcmRejectionNote
 dcmCodeMeaning: Rejected for Quality Reasons
 dcmCodingSchemeDesignator: DCM
@@ -3685,6 +3690,15 @@ objectClass: dcmRejectionNote
 dcmCodeMeaning: Incorrect Modality Worklist Entry
 dcmCodingSchemeDesignator: 99IHEIOCM
 dcmCodeValue: XXXXXX11
+
+dn: dcmCodeValue=XXXXXX22+dcmCodingSchemeDesignator=99IHEIOCM,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dcmRejectionAction: HIDE_REJECTED_INSTANCES
+dcmRejectionAction: HIDE_REJECTION_NOTE
+dcmRejectionAction: NOT_REJECT_SUBSEQUENT_OCCURRENCE
+objectClass: dcmRejectionNote
+dcmCodeMeaning: Data Retention Period Expired
+dcmCodingSchemeDesignator: 99IHEIOCM
+dcmCodeValue: XXXXXX22
 
 dn: hl7ApplicationName=*,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
 hl7DefaultCharacterSet: 8859/1

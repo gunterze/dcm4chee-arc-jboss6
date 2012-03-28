@@ -53,34 +53,34 @@ public class RejectionNote {
         HIDE_REJECTED_INSTANCES,
         HIDE_REJECTION_NOTE,
         NOT_ACCEPT_SUBSEQUENT_OCCURRENCE,
-        STICKY_ON_SUBSEQUENT_OCCURRENCE
+        NOT_REJECT_SUBSEQUENT_OCCURRENCE
     }
 
-    private final Key key;
+    private final String codeValue;
+    private final String codingSchemeDesignator;
+    private final String codingSchemeVersion;
     private final String codeMeaning;
     private final EnumSet<Action> actions = EnumSet.noneOf(Action.class);
     private Code code;
 
     public RejectionNote(String codeValue, String codingSchemeDesignator,
             String codingSchemeVersion, String codeMeaning) {
-        key = new Key(codeValue, codingSchemeDesignator, codingSchemeVersion);
+        this.codeValue = codeValue;
+        this.codingSchemeDesignator = codingSchemeDesignator;
+        this.codingSchemeVersion = codingSchemeVersion;
         this.codeMeaning = codeMeaning;
     }
 
-    final Key key() {
-        return key;
-    }
-
     public final String getCodeValue() {
-        return key.codeValue;
+        return codeValue;
     }
 
     public final String getCodingSchemeDesignator() {
-        return key.codingSchemeDesignator;
+        return codingSchemeDesignator;
     }
 
     public final String getCodingSchemeVersion() {
-        return key.codingSchemeVersion;
+        return codingSchemeVersion;
     }
 
     public final String getCodeMeaning() {
@@ -104,57 +104,35 @@ public class RejectionNote {
         return this;
     }
 
-    static class Key {
-        final String codeValue;
-        final String codingSchemeDesignator;
-        final String codingSchemeVersion;
+    public boolean matches(Code code) {
+        return matches(code.getCodeValue(),
+                code.getCodingSchemeDesignator(),
+                code.getCodingSchemeVersion());
+    }
 
-        Key(String codeValue, String codingSchemeDesignator,
-                String codingSchemeVersion) {
-            this.codeValue = codeValue;
-            this.codingSchemeDesignator = codingSchemeDesignator;
-            this.codingSchemeVersion = codingSchemeVersion;
-        }
+    public boolean matches(Attributes codeItem) {
+        return matches(codeItem.getString(Tag.CodeValue),
+                codeItem.getString(Tag.CodingSchemeDesignator),
+                codeItem.getString(Tag.CodingSchemeVersion));
+    }
 
-        Key(Attributes item) {
-            this(item.getString(Tag.CodeValue),
-                 item.getString(Tag.CodingSchemeDesignator),
-                 item.getString(Tag.CodingSchemeVersion));
-        }
+    public boolean matches(RejectionNote other) {
+        return matches(other.codeValue, 
+                other.codingSchemeDesignator,
+                other.codingSchemeVersion);
+    }
 
-        @Override
-        public int hashCode() {
-            int h = ((codeValue == null) ? 0 : codeValue.hashCode());
-            h = 31*h + ((codingSchemeDesignator == null) 
-                        ? 0
-                        : codingSchemeDesignator.hashCode());
-            h = 31*h + ((codingSchemeVersion == null)
-                        ? 0 
-                        : codingSchemeVersion.hashCode());
-            return h;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (!(obj instanceof Key))
-                return false;
-            Key other = (Key) obj;
-            if ((codeValue == null)
-                    ? other.codeValue != null
-                    : !codeValue.equals(other.codeValue))
-                return false;
-            if ((codingSchemeDesignator == null)
-                    ? other.codingSchemeDesignator != null
-                    : !codingSchemeDesignator.equals(other.codingSchemeDesignator))
-                return false;
-            if ((codingSchemeVersion == null)
-                    ? other.codingSchemeVersion != null
-                    : !codingSchemeVersion.equals(other.codingSchemeVersion))
-                return false;
-            return true;
-        }
-    };
+    public boolean matches(String codeValue, String codingSchemeDesignator,
+            String codingSchemeVersion) {
+        if (!this.codeValue.equals(codeValue))
+            return false;
+        if (!this.codingSchemeDesignator.equals(codingSchemeDesignator))
+            return false;
+        if (this.codingSchemeVersion != null
+                ? !this.codingSchemeVersion.equals(codingSchemeVersion)
+                : codingSchemeVersion != null)
+            return false;
+        return true;
+    }
 
 }

@@ -159,7 +159,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             Templates tpl = ae.getAttributeCoercionTemplates(cuid, Dimse.C_STORE_RQ,
                     TransferCapability.Role.SCP, sourceAET);
             if (tpl != null)
-                ds.updateAttributes(SAXTransformer.transform(ds, tpl, false, false), modified);
+                ds.update(SAXTransformer.transform(ds, tpl, false, false), modified);
             AttributesFormat filePathFormat = ae.getStorageFilePathFormat();
             File dst = filePathFormat != null
                     ? rename(as, rq, fs, file, format(filePathFormat, ds))

@@ -56,8 +56,7 @@ import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.ejb.store.RejectionNote;
-import org.dcm4chee.archive.ejb.store.RejectionNotes;
-import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
+import org.dcm4chee.archive.ejb.store.StoreDuplicate;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 import org.dcm4chee.archive.net.ArchiveDevice;
 import org.dcm4chee.archive.net.ArchiveHL7Application;
@@ -104,13 +103,26 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
             return;
         ArchiveApplicationEntity arcAE = (ArchiveApplicationEntity) ae;
         store(arcAE.getAttributeCoercions(), aeNode);
-        store(arcAE.getRejectionNotes(), aeNode);
+        storeStoreDuplicates(arcAE.getStoreDuplicates(), aeNode);
+        storeRejectionNotes(arcAE.getRejectionNotes(), aeNode);
     }
 
-    private void store(RejectionNotes rns, Preferences aeNode) {
+    private void storeStoreDuplicates(List<StoreDuplicate> sds, Preferences aeNode) {
+        Preferences sdsNode = aeNode.node("dcmStoreDuplicate");
+        int index = 1;
+        for (StoreDuplicate sd : sds)
+            storeTo(sd, sdsNode.node("" + index ++));
+    }
+
+    private void storeTo(StoreDuplicate sd, Preferences prefs) {
+        storeNotNull(prefs, "dcmStoreDuplicateCondition", sd.getCondition());
+        storeNotNull(prefs, "dcmStoreDuplicateAction", sd.getAction());
+    }
+
+    private void storeRejectionNotes(List<RejectionNote> rns, Preferences aeNode) {
         Preferences rnsNode = aeNode.node("dcmRejectionNote");
         int index = 1;
-        for (RejectionNote rn : rns.getAll())
+        for (RejectionNote rn : rns)
             storeTo(rn, rnsNode.node("" + index ++));
     }
 
@@ -151,7 +163,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         storeNotNull(prefs, "dcmReceivingDirectoryPath", arcAE.getReceivingDirectoryPath());
         storeNotNull(prefs, "dcmStorageFilePathFormat", arcAE.getStorageFilePathFormat());
         storeNotNull(prefs, "dcmDigestAlgorithm", arcAE.getDigestAlgorithm());
-        storeNotNull(prefs, "dcmStoreDuplicate", arcAE.getStoreDuplicate());
         storeNotNull(prefs, "dcmExternalRetrieveAET", arcAE.getExternalRetrieveAET());
         storeNotEmpty(prefs, "dcmRetrieveAET", arcAE.getRetrieveAETs());
         storeNotDef(prefs, "dcmMatchUnknown", arcAE.isMatchUnknown(), false);
@@ -245,7 +256,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         arcae.setStorageFilePathFormat(
                 AttributesFormat.valueOf(prefs.get("dcmStorageFilePathFormat", null)));
         arcae.setDigestAlgorithm(prefs.get("dcmDigestAlgorithm", null));
-        arcae.setStoreDuplicate(storeDuplicate(prefs.get("dcmStoreDuplicate", null)));
         arcae.setExternalRetrieveAET(prefs.get("dcmExternalRetrieveAET", null));
         arcae.setRetrieveAETs(stringArray(prefs, "dcmRetrieveAET"));
         arcae.setMatchUnknown(prefs.getBoolean("dcmMatchUnknown", false));
@@ -278,14 +288,28 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
             return;
         ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
         load(arcae.getAttributeCoercions(), aeNode);
-        load(arcae.getRejectionNotes(), aeNode);
+        loadStoreDuplicates(arcae.getStoreDuplicates(), aeNode);
+        loadRejectionNotes(arcae.getRejectionNotes(), aeNode);
     }
 
-    private void load(RejectionNotes rn, Preferences aeNode)
+    private void loadStoreDuplicates(List<StoreDuplicate> sds, Preferences aeNode)
             throws BackingStoreException {
-        Preferences rns = aeNode.node("dcmRejectionNote");
-        for (String index : rns.childrenNames())
-            rn.add(loadRejectionNoteFrom(rns.node(index)));
+        Preferences sdsNode = aeNode.node("dcmStoreDuplicate");
+        for (String index : sdsNode.childrenNames())
+            sds.add(storeDuplicate(sdsNode.node(index)));
+    }
+
+    private StoreDuplicate storeDuplicate(Preferences prefs) {
+        return new StoreDuplicate(
+                StoreDuplicate.Condition.valueOf(prefs.get("dcmStoreDuplicateCondition", null)),
+                StoreDuplicate.Action.valueOf(prefs.get("dcmStoreDuplicateAction", null)));
+    }
+
+    private void loadRejectionNotes(List<RejectionNote> rns, Preferences aeNode)
+            throws BackingStoreException {
+        Preferences rnsNode = aeNode.node("dcmRejectionNote");
+        for (String index : rnsNode.childrenNames())
+            rns.add(loadRejectionNoteFrom(rnsNode.node(index)));
     }
 
     private RejectionNote loadRejectionNoteFrom(Preferences prefs) {
@@ -331,10 +355,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
             device.setAttributeFilter(
                     Entity.valueOf(entity), filter);
         }
-    }
-
-    private static StoreDuplicate storeDuplicate(String s) {
-        return s != null ? StoreDuplicate.valueOf(s) : null;
     }
 
     private static int[] tags(Preferences prefs, String key) {
@@ -388,9 +408,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
          storeDiff(prefs, "dcmDigestAlgorithm",
                  aa.getDigestAlgorithm(),
                  bb.getDigestAlgorithm());
-         storeDiff(prefs, "dcmStoreDuplicate",
-                 aa.getStoreDuplicate(),
-                 bb.getStoreDuplicate());
          storeDiff(prefs, "dcmExternalRetrieveAET",
                  aa.getExternalRetrieveAET(),
                  bb.getExternalRetrieveAET());
@@ -523,15 +540,39 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         ArchiveApplicationEntity aa = (ArchiveApplicationEntity) prev;
         ArchiveApplicationEntity bb = (ArchiveApplicationEntity) ae;
         merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), aePrefs);
-        merge(aa.getRejectionNotes(), bb.getRejectionNotes(), aePrefs);
+        mergeStoreDuplicates(aa.getStoreDuplicates(), bb.getStoreDuplicates(), aePrefs);
+        mergeRejectionNotes(aa.getRejectionNotes(), bb.getRejectionNotes(), aePrefs);
     }
 
-    private void merge(RejectionNotes prevs, RejectionNotes rns, Preferences aePrefs)
-            throws BackingStoreException {
+    private void mergeStoreDuplicates(List<StoreDuplicate> prevs, List<StoreDuplicate> sds,
+            Preferences aePrefs) throws BackingStoreException {
+        Preferences sdsNode = aePrefs.node("dcmStoreDuplicate");
+        int index = 1;
+        Iterator<StoreDuplicate> prevIter = prevs.iterator();
+        for (StoreDuplicate sd : sds) {
+            Preferences sdNode = sdsNode.node("" + index++);
+            if (prevIter.hasNext())
+                storeDiffs(sdNode, prevIter.next(), sd);
+            else
+                storeTo(sd, sdNode);
+        }
+        while (prevIter.hasNext()) {
+            prevIter.next();
+            sdsNode.node("" + index++).removeNode();
+        }
+    }
+
+    private void storeDiffs(Preferences prefs, StoreDuplicate a, StoreDuplicate b) {
+        storeDiff(prefs, "dcmStoreDuplicateCondition", a.getCondition(), b.getCondition());
+        storeDiff(prefs, "dcmStoreDuplicateAction", a.getAction(), b.getAction());
+    }
+
+    private void mergeRejectionNotes(List<RejectionNote> prevs, List<RejectionNote> rns,
+            Preferences aePrefs) throws BackingStoreException {
         Preferences rnsNode = aePrefs.node("dcmRejectionNote");
         int index = 1;
-        Iterator<RejectionNote> prevIter = prevs.getAll().iterator();
-        for (RejectionNote rn : rns.getAll()) {
+        Iterator<RejectionNote> prevIter = prevs.iterator();
+        for (RejectionNote rn : rns) {
             Preferences rnNode = rnsNode.node("" + index++);
             if (prevIter.hasNext())
                 storeDiffs(rnNode, prevIter.next(), rn);

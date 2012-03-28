@@ -94,7 +94,7 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
             Templates tpl = ae.getAttributeCoercionTemplates(
                     inst.cuid, Dimse.C_STORE_RQ, Role.SCU, as.getRemoteAET());
             if (tpl != null)
-                attrs.updateAttributes(SAXTransformer.transform(attrs, tpl, false, false), null);
+                attrs.update(SAXTransformer.transform(attrs, tpl, false, false), null);
         } catch (Exception e) {
             throw new IOException(e);
         }

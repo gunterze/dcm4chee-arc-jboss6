@@ -125,13 +125,15 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
                         .setAttributeIdentifierList(Tag.PerformedSeriesSequence));
             ian = ianQuery.createIANforMPPS(pps);
             if (pps.isDiscontinued()) {
-                RejectionNote rn = storeParam.getRejectionNote(
-                        attrs.getNestedDataset(
-                                Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence));
-                if (rn != null) {
-                    setRejectionCodeInRefSOPInstances(attrs, CodeFactory.getCode(em, rn));
-                    ian = null;
-                }
+                Attributes reasonCode = attrs.getNestedDataset(
+                        Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);
+                if (reasonCode != null)
+                    for (RejectionNote rn : storeParam.getRejectionNotes())
+                        if (rn.matches(reasonCode)) {
+                            setRejectionCodeInRefSOPInstances(attrs, CodeFactory.getCode(em, rn));
+                            ian = null;
+                            break;
+                        }
             }
         }
         em.merge(pps);

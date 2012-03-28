@@ -140,7 +140,7 @@ public abstract class PatientFactory {
                 patient.setIssuerOfPatientID(issuer);
             Attributes patientAttrs = patient.getAttributes();
             Attributes modified = new Attributes();
-            if (patientAttrs.updateSelectedAttributes(data, modified, filter.getSelection())) {
+            if (patientAttrs.updateSelected(data, modified, filter.getSelection())) {
                 patient.setAttributes(patientAttrs, filter, storeParam.getFuzzyStr());
             }
         } catch (NonUniqueResultException e) {

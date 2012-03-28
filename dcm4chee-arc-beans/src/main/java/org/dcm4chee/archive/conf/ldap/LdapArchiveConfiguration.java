@@ -64,8 +64,7 @@ import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.ejb.store.RejectionNote;
-import org.dcm4chee.archive.ejb.store.RejectionNotes;
-import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
+import org.dcm4chee.archive.ejb.store.StoreDuplicate;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 import org.dcm4chee.archive.net.ArchiveDevice;
 import org.dcm4chee.archive.net.ArchiveHL7Application;
@@ -155,12 +154,24 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
             return;
         ArchiveApplicationEntity arcAE = (ArchiveApplicationEntity) ae;
         store(arcAE.getAttributeCoercions(), aeDN);
-        store(arcAE.getRejectionNotes(), aeDN);
+        for (StoreDuplicate sd : arcAE.getStoreDuplicates())
+            createSubcontext(dnOf(sd, aeDN), storeTo(sd, new BasicAttributes(true)));
+        for (RejectionNote rn : arcAE.getRejectionNotes())
+            createSubcontext(dnOf(rn, aeDN), storeTo(rn, new BasicAttributes(true)));
     }
 
-    private void store(RejectionNotes rns, String aeDN) throws NamingException {
-        for (RejectionNote rn : rns.getAll())
-            createSubcontext(dnOf(rn, aeDN), storeTo(rn, new BasicAttributes(true)));
+    private String dnOf(StoreDuplicate sd, String aeDN) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("dcmStoreDuplicateCondition=").append(sd.getCondition());
+        sb.append(',').append(aeDN);
+        return sb.toString();
+    }
+
+    private Attributes storeTo(StoreDuplicate sd, BasicAttributes attrs) {
+        attrs.put("objectclass", "dcmStoreDuplicate");
+        storeNotNull(attrs, "dcmStoreDuplicateCondition", sd.getCondition());
+        storeNotNull(attrs, "dcmStoreDuplicateAction", sd.getAction());
+        return attrs;
     }
 
     private static String dnOf(RejectionNote rn, String parentDN) {
@@ -210,7 +221,6 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         storeNotNull(attrs, "dcmReceivingDirectoryPath", arcAE.getReceivingDirectoryPath());
         storeNotNull(attrs, "dcmStorageFilePathFormat", arcAE.getStorageFilePathFormat());
         storeNotNull(attrs, "dcmDigestAlgorithm", arcAE.getDigestAlgorithm());
-        storeNotNull(attrs, "dcmStoreDuplicate", arcAE.getStoreDuplicate());
         storeNotNull(attrs, "dcmExternalRetrieveAET", arcAE.getExternalRetrieveAET());
         storeNotEmpty(attrs, "dcmRetrieveAET", arcAE.getRetrieveAETs());
         storeNotDef(attrs, "dcmMatchUnknown", arcAE.isMatchUnknown(), false);
@@ -302,10 +312,6 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         }
     }
 
-    private static StoreDuplicate storeDuplicate(Attribute attr) throws NamingException {
-        return attr != null ? StoreDuplicate.valueOf((String) attr.get()) : null;
-    }
-
     private  static AttributesFormat attributesFormat(Attribute attr) throws NamingException {
         return attr != null ? new AttributesFormat((String) attr.get()) : null;
     }
@@ -329,7 +335,6 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
        arcae.setReceivingDirectoryPath(stringValue(attrs.get("dcmReceivingDirectoryPath")));
        arcae.setStorageFilePathFormat(attributesFormat(attrs.get("dcmStorageFilePathFormat")));
        arcae.setDigestAlgorithm(stringValue(attrs.get("dcmDigestAlgorithm")));
-       arcae.setStoreDuplicate(storeDuplicate(attrs.get("dcmStoreDuplicate")));
        arcae.setExternalRetrieveAET(stringValue(attrs.get("dcmExternalRetrieveAET")));
        arcae.setRetrieveAETs(stringArray(attrs.get("dcmRetrieveAET")));
        arcae.setMatchUnknown(booleanValue(attrs.get("dcmMatchUnknown"), false));
@@ -361,14 +366,33 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
             return;
         ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
         load(arcae.getAttributeCoercions(), aeDN);
-        load(arcae.getRejectionNotes(), aeDN);
+        loadStoreDuplicates(arcae.getStoreDuplicates(), aeDN);
+        loadRejectionNotes(arcae.getRejectionNotes(), aeDN);
     }
 
-    private void load(RejectionNotes acs, String aeDN) throws NamingException {
+    private void loadStoreDuplicates(List<StoreDuplicate> sds, String aeDN) throws NamingException {
+        NamingEnumeration<SearchResult> ne = search(aeDN, "(objectclass=dcmStoreDuplicate)");
+        try {
+            while (ne.hasMore())
+                sds.add(storeDuplicate(ne.next().getAttributes()));
+        } finally {
+           safeClose(ne);
+        }
+    }
+
+    private StoreDuplicate storeDuplicate(Attributes attrs) throws NamingException {
+        return new StoreDuplicate(
+                StoreDuplicate.Condition.valueOf(
+                        stringValue(attrs.get("dcmStoreDuplicateCondition"))),
+                StoreDuplicate.Action.valueOf(
+                        stringValue(attrs.get("dcmStoreDuplicateAction"))));
+    }
+
+    private void loadRejectionNotes(List<RejectionNote> rns, String aeDN) throws NamingException {
         NamingEnumeration<SearchResult> ne = search(aeDN, "(objectclass=dcmRejectionNote)");
         try {
             while (ne.hasMore())
-                acs.add(loadRejectionNoteFrom(ne.next().getAttributes()));
+                rns.add(loadRejectionNoteFrom(ne.next().getAttributes()));
         } finally {
            safeClose(ne);
         }
@@ -441,9 +465,6 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         storeDiff(mods, "dcmDigestAlgorithm",
                 aa.getDigestAlgorithm(),
                 bb.getDigestAlgorithm());
-        storeDiff(mods, "dcmStoreDuplicate",
-                aa.getStoreDuplicate(),
-                bb.getStoreDuplicate());
         storeDiff(mods, "dcmExternalRetrieveAET",
                 aa.getExternalRetrieveAET(),
                 bb.getExternalRetrieveAET());
@@ -555,17 +576,18 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         ArchiveApplicationEntity aa = (ArchiveApplicationEntity) prev;
         ArchiveApplicationEntity bb = (ArchiveApplicationEntity) ae;
         merge(aa.getAttributeCoercions(), bb.getAttributeCoercions(), aeDN);
-        merge(aa.getRejectionNotes(), bb.getRejectionNotes(), aeDN);
+        mergeStoreDuplicates(aa.getStoreDuplicates(), bb.getStoreDuplicates(), aeDN);
+        mergeRejectionNotes(aa.getRejectionNotes(), bb.getRejectionNotes(), aeDN);
     }
 
-    private void merge(RejectionNotes prevs, RejectionNotes acs, String parentDN)
+    private void mergeStoreDuplicates(List<StoreDuplicate> prevs, List<StoreDuplicate> acs, String parentDN)
             throws NamingException {
-        for (RejectionNote prev : prevs.getAll())
-            if (acs.getEquals(prev) == null)
+        for (StoreDuplicate prev : prevs)
+            if (findMatching(acs, prev) == null)
                 destroySubcontext(dnOf(prev, parentDN));
-        for (RejectionNote rn : acs.getAll()) {
+        for (StoreDuplicate rn : acs) {
             String dn = dnOf(rn, parentDN);
-            RejectionNote prev = prevs.getEquals(rn);
+            StoreDuplicate prev = findMatching(prevs, rn);
             if (prev == null)
                 createSubcontext(dn, storeTo(rn, new BasicAttributes(true)));
             else
@@ -573,15 +595,52 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         }
     }
 
+    private List<ModificationItem> storeDiffs(StoreDuplicate prev,
+            StoreDuplicate sd, ArrayList<ModificationItem> mods) {
+        storeDiff(mods, "dcmRejectionAction",
+                prev.getAction(),
+                sd.getAction());
+        return mods;
+    }
+
+    private StoreDuplicate findMatching(List<StoreDuplicate> sds, StoreDuplicate sd) {
+       for (StoreDuplicate other : sds)
+           if (other.getCondition() == sd.getCondition())
+               return other;
+       return null;
+    }
+
+    private void mergeRejectionNotes(List<RejectionNote> prevs, List<RejectionNote> rns, String parentDN)
+            throws NamingException {
+        for (RejectionNote prev : prevs)
+            if (findMatching(rns, prev) == null)
+                destroySubcontext(dnOf(prev, parentDN));
+        for (RejectionNote rn : rns) {
+            String dn = dnOf(rn, parentDN);
+            RejectionNote prev = findMatching(prevs, rn);
+            if (prev == null)
+                createSubcontext(dn, storeTo(rn, new BasicAttributes(true)));
+            else
+                modifyAttributes(dn, storeDiffs(prev, rn, new ArrayList<ModificationItem>()));
+        }
+    }
+
+    private RejectionNote findMatching(List<RejectionNote> rns, RejectionNote rn) {
+        for (RejectionNote other : rns)
+            if (other.matches(rn))
+                return other;
+        return null;
+    }
+
     private List<ModificationItem> storeDiffs(RejectionNote prev,
             RejectionNote rn, ArrayList<ModificationItem> mods) {
-        storeDiff(mods, "dcmCodeValue", prev.getCodeValue(), rn.getCodeValue());
-        storeDiff(mods, "dcmCodingSchemeDesignator", 
-                prev.getCodingSchemeDesignator(),
-                rn.getCodingSchemeDesignator());
-        storeDiff(mods, "dcmCodingSchemeVersion",
-                prev.getCodingSchemeVersion(),
-                rn.getCodingSchemeVersion());
+//        storeDiff(mods, "dcmCodeValue", prev.getCodeValue(), rn.getCodeValue());
+//        storeDiff(mods, "dcmCodingSchemeDesignator", 
+//                prev.getCodingSchemeDesignator(),
+//                rn.getCodingSchemeDesignator());
+//        storeDiff(mods, "dcmCodingSchemeVersion",
+//                prev.getCodingSchemeVersion(),
+//                rn.getCodingSchemeVersion());
         storeDiff(mods, "dcmCodeMeaning",
                 prev.getCodeMeaning(),
                 rn.getCodeMeaning());

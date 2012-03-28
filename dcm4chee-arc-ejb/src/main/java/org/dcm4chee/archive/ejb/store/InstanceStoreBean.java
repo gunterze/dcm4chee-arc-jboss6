@@ -38,6 +38,8 @@
 
 package org.dcm4chee.archive.ejb.store;
 
+import static org.dcm4chee.archive.ejb.store.RejectionNote.Action.*;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -140,18 +142,28 @@ public class InstanceStoreBean implements InstanceStore {
         Instance inst;
         try {
             inst = findInstance(data.getString(Tag.SOPInstanceUID, null));
-            switch (storeParam.getStoreDuplicate()) {
+            Code rejectionCode = inst.getRejectionCode();
+            RejectionNote rn = storeParam.getRejectionNote(rejectionCode);
+            if (rn != null && rn.getActions().contains(NOT_ACCEPT_SUBSEQUENT_OCCURRENCE))
+                throw new DicomServiceRuntimeException(
+                        new DicomServiceException(Status.CannotUnderstand,
+                                rejectionCode.getCodeMeaning()));
+            switch (storeDuplicate(inst, fileRef.getDigest(), fs.getGroupID(), storeParam)) {
             case IGNORE:
                 coerceInstanceAttributes(inst, data, modified);
+                if (rn != null && rn.getActions().contains(NOT_REJECT_SUBSEQUENT_OCCURRENCE))
+                    inst.setRejectionCode(null);
                 return false;
             case STORE:
-                coerceInstanceAttributes(inst, data, modified);
-                if (hasFileWithFileSystemGroupID(inst, fs.getGroupID()))
-                    return false;
+                updateInstanceAttributes(inst, data, modified, storeParam);
+                if (rn != null && rn.getActions().contains(NOT_REJECT_SUBSEQUENT_OCCURRENCE))
+                    inst.setRejectionCode(null);
                 break;
             case REPLACE:
                 inst.setReplaced(true);
                 inst = newInstance(sourceAET, data, modified, fs.getAvailability(), storeParam);
+                if (rn != null && !rn.getActions().contains(NOT_REJECT_SUBSEQUENT_OCCURRENCE))
+                    inst.setRejectionCode(rejectionCode);
                 break;
             }
         } catch (NoResultException e) {
@@ -162,28 +174,45 @@ public class InstanceStoreBean implements InstanceStore {
         return true;
     }
 
-    private static boolean hasFileWithFileSystemGroupID(Instance inst, String groupID) {
-        for (FileRef fileRef2 : inst.getFileRefs())
-            if (fileRef2.getFileSystem().getGroupID().equals(groupID))
-                return true;
+    private StoreDuplicate.Action storeDuplicate(Instance inst, String digest,
+            String fsGroupID, StoreParam storeParam) {
+        Collection<FileRef> files = inst.getFileRefs();
+        boolean noFiles = files.isEmpty();
+        boolean equalsChecksum = false;
+        boolean equalsFileSystemGroupID = false;
+        for (FileRef fileRef : files) {
+            if (!equalsFileSystemGroupID && fsGroupID.equals(fileRef.getFileSystem().getGroupID()))
+                equalsFileSystemGroupID = true;
+            if (!equalsChecksum && digest != null && digest.equals(fileRef.getDigest()))
+                equalsChecksum = true;
+        }
+        return storeParam.getStoreDuplicate(noFiles, equalsChecksum, equalsFileSystemGroupID);
+    }
 
-        return false;
+    private void updateInstanceAttributes(Instance inst, Attributes data,
+            Attributes modified, StoreParam storeParam) {
+        Attributes instAttrs = inst.getAttributes();
+        final AttributeFilter filter = storeParam.getAttributeFilter(Entity.Instance);
+        Attributes updated = new Attributes();
+        if (instAttrs.updateSelected(data, updated, filter.getSelection())) {
+            inst.setAttributes(data, filter, storeParam.getFuzzyStr());
+        }
+        coerceSeriesAttributes(inst.getSeries(), data, modified);
     }
 
     private static void coerceInstanceAttributes(Instance inst, Attributes data,
             Attributes modified) {
         coerceSeriesAttributes(inst.getSeries(), data, modified);
-        data.updateAttributes(inst.getAttributes(), modified);
-        modified.remove(Tag.OriginalAttributesSequence);
+        data.update(inst.getAttributes(), modified);
     }
 
     private static void coerceSeriesAttributes(Series series, Attributes data,
             Attributes modified) {
         Study study = series.getStudy();
         Patient patient = study.getPatient();
-        data.updateAttributes(patient.getAttributes(), modified);
-        data.updateAttributes(study.getAttributes(), modified);
-        data.updateAttributes(series.getAttributes(), modified);
+        data.update(patient.getAttributes(), modified);
+        data.update(study.getAttributes(), modified);
+        data.update(series.getAttributes(), modified);
     }
 
     @Override
@@ -460,11 +489,13 @@ public class InstanceStoreBean implements InstanceStore {
         if (mpps == null || !mpps.getSopInstanceUID().equals(mppsIUID)) {
             prevMpps = mpps;
             curMpps = mpps = findPPS(mppsIUID);
-            curRejectionCode = mpps != null && mpps.isDiscontinued()
-                    ? CodeFactory.getCode(em, storeParam.getRejectionNote(
-                            mpps.getAttributes().getNestedDataset(
-                                    Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence)))
-                    : null;
+            curRejectionCode = null;
+            if (mpps != null && mpps.isDiscontinued()) {
+                Attributes codeItem = mpps.getAttributes()
+                        .getNestedDataset(Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);
+                curRejectionCode = CodeFactory.getCode(em,
+                        storeParam.getRejectionNote(codeItem));
+            }
         }
     }
 

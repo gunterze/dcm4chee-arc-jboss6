@@ -63,7 +63,7 @@ import org.dcm4che.soundex.ESoundex;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.ejb.store.RejectionNote;
-import org.dcm4chee.archive.ejb.store.StoreParam.StoreDuplicate;
+import org.dcm4chee.archive.ejb.store.StoreDuplicate;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 import org.dcm4chee.archive.net.ArchiveDevice;
 import org.dcm4chee.archive.net.ArchiveHL7Application;
@@ -614,18 +614,28 @@ public class ArchiveConfigurationTestUtils {
         ae.setRetrieveAETs("DCM4CHEE");
         ae.setStoreOriginalAttributes(true);
         ae.setSuppressWarningCoercionOfDataElements(false);
-        ae.setStoreDuplicate(StoreDuplicate.STORE);
         ae.setMatchUnknown(true);
         ae.setSendPendingCGet(true);
         ae.setSendPendingCMoveInterval(5000);
+        ae.addStoreDuplicate(
+                new StoreDuplicate(
+                        StoreDuplicate.Condition.NO_FILE,
+                        StoreDuplicate.Action.STORE));
+        ae.addStoreDuplicate(
+                new StoreDuplicate(
+                        StoreDuplicate.Condition.EQ_CHECKSUM,
+                        StoreDuplicate.Action.IGNORE));
+        ae.addStoreDuplicate(
+                new StoreDuplicate(
+                        StoreDuplicate.Condition.NE_CHECKSUM,
+                        StoreDuplicate.Action.REPLACE));
         ae.addRejectionNote(
                 new RejectionNote("110514", "DCM", null, "Incorrect worklist entry selected")
                     .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
                     .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE));
         ae.addRejectionNote(
                 new RejectionNote("113001", "DCM", null, "Rejected for Quality Reasons")
-                    .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
-                    .addAction(RejectionNote.Action.STICKY_ON_SUBSEQUENT_OCCURRENCE));
+                    .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES));
         ae.addRejectionNote(
                 new RejectionNote("113037", "DCM", null, "Rejected for Patient Safety Reasons")
                     .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
@@ -639,7 +649,8 @@ public class ArchiveConfigurationTestUtils {
         ae.addRejectionNote(
                 new RejectionNote("XXXXXX22", "99IHEIOCM", null, "Data Retention Period Expired")
                     .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
-                    .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE));
+                    .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE)
+                    .addAction(RejectionNote.Action.NOT_REJECT_SUBSEQUENT_OCCURRENCE));
         ae.addAttributeCoercion(new AttributeCoercion(null, 
                 Dimse.C_STORE_RQ, 
                 SCP,
