@@ -100,20 +100,19 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
 
     public AttributeCoercion getAttributeCoercion(String sopClass,
             Dimse dimse, Role role, String aeTitle) {
-        return attributeCoercions.get(sopClass, dimse, role, aeTitle);
-    }
-
-    public AttributeCoercion removeAttributeCoercion(String sopClass,
-            Dimse dimse, Role role, String aeTitle) {
-        return attributeCoercions.remove(sopClass, dimse, role, aeTitle);
+        return attributeCoercions.findMatching(sopClass, dimse, role, aeTitle);
     }
 
     public AttributeCoercions getAttributeCoercions() {
         return attributeCoercions;
     }
 
-    public AttributeCoercion addAttributeCoercion(AttributeCoercion ac) {
-        return attributeCoercions.add(ac);
+    public void addAttributeCoercion(AttributeCoercion ac) {
+        attributeCoercions.add(ac);
+    }
+
+    public boolean removeAttributeCoercion(AttributeCoercion ac) {
+        return attributeCoercions.remove(ac);
     }
 
     public List<StoreDuplicate> getStoreDuplicates() {
