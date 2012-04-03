@@ -87,17 +87,6 @@ public abstract class CodeFactory {
                 : null;
     }
 
-    public static List<Code> createCodes(EntityManager em, Sequence seq) {
-        if (seq == null || seq.isEmpty())
-            return null;
-
-        ArrayList<Code> list = new ArrayList<Code>(seq.size());
-        for (Attributes item : seq)
-            list.add(CodeFactory.getCode(em, item));
-
-        return list;
-    }
-
     public static Code getCode(EntityManager em, RejectionNote rn) {
         if (rn == null)
             return null;
@@ -113,4 +102,27 @@ public abstract class CodeFactory {
         }
         return code;
     }
+
+    public static List<Code> createCodes(EntityManager em, Sequence seq) {
+        if (seq == null || seq.isEmpty())
+            return null;
+
+        ArrayList<Code> list = new ArrayList<Code>(seq.size());
+        for (Attributes item : seq)
+            list.add(CodeFactory.getCode(em, item));
+
+        return list;
+    }
+
+    public static List<Code> createCodes(EntityManager em, List<RejectionNote> rns) {
+        if (rns.isEmpty())
+            return null;
+
+        ArrayList<Code> list = new ArrayList<Code>(rns.size());
+        for (RejectionNote rn : rns)
+            list.add(CodeFactory.getCode(em, rn));
+
+        return list;
+    }
+
 }
