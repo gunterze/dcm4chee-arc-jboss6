@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -219,7 +220,10 @@ public class InstanceStoreBean implements InstanceStore {
     public Instance newInstance(String sourceAET, Attributes data,
             Attributes modified, Availability availability, StoreParam storeParam) {
         em.joinTransaction();
-        AttributeFilter instFilter = storeParam.getAttributeFilter(Entity.Instance);
+        Attributes conceptNameCode = data.getNestedDataset(Tag.ConceptNameCodeSequence);
+        RejectionNote rn = storeParam.getRejectionNote(conceptNameCode);
+        if (rn != null)
+            rejectRefInstances(data, CodeFactory.getCode(em, rn));
         Series series = getSeries(sourceAET, data, availability, storeParam);
         coerceSeriesAttributes(series, data, modified);
         if (!modified.isEmpty() && storeParam.isStoreOriginalAttributes()) {
@@ -233,8 +237,7 @@ public class InstanceStoreBean implements InstanceStore {
         }
         Instance inst = new Instance();
         inst.setSeries(series);
-        inst.setConceptNameCode(
-                CodeFactory.getCode(em, data.getNestedDataset(Tag.ConceptNameCodeSequence)));
+        inst.setConceptNameCode(CodeFactory.getCode(em, conceptNameCode));
         inst.setRejectionCode(curRejectionCode);
         inst.setVerifyingObservers(createVerifyingObservers(
                 data.getSequence(Tag.VerifyingObserverSequence), storeParam.getFuzzyStr()));
@@ -242,11 +245,60 @@ public class InstanceStoreBean implements InstanceStore {
         inst.setRetrieveAETs(storeParam.getRetrieveAETs());
         inst.setExternalRetrieveAET(storeParam.getExternalRetrieveAET());
         inst.setAvailability(availability);
-        inst.setAttributes(data, instFilter, storeParam.getFuzzyStr());
+        inst.setAttributes(data, 
+                storeParam.getAttributeFilter(Entity.Instance),
+                storeParam.getFuzzyStr());
         em.persist(inst);
         setDirty(series);
         em.flush();
         return inst;
+    }
+
+    private void rejectRefInstances(Attributes data, Code rejectionCode) {
+        HashMap<String,String> iuid2cuid = new HashMap<String,String>();
+        Sequence refStudySeq = data.getSequence(Tag.CurrentRequestedProcedureEvidenceSequence);
+        if (refStudySeq == null)
+            rejectionFailed("Rejection failed: Missing Type 1 attribute");
+        for (Attributes refStudy : refStudySeq) {
+            String studyIUID = refStudy.getString(Tag.StudyInstanceUID);
+            Sequence refSeriesSeq = refStudy.getSequence(Tag.ReferencedSeriesSequence);
+            if (studyIUID == null || refSeriesSeq == null)
+                rejectionFailed("Rejection failed: Missing Type 1 attribute");
+            for (Attributes refSeries : refSeriesSeq) {
+                String seriesIUID = refSeries.getString(Tag.SeriesInstanceUID);
+                Sequence refSOPSeq = refSeries.getSequence(Tag.ReferencedSOPSequence);
+                if (seriesIUID == null || refSOPSeq == null)
+                    rejectionFailed("Rejection failed: Missing Type 1 attribute");
+                for (Attributes refSOP : refSOPSeq) {
+                    String refCUID = refSOP.getString(Tag.ReferencedSOPClassUID);
+                    String refIUID = refSOP.getString(Tag.ReferencedSOPInstanceUID);
+                    if (refCUID == null || refIUID == null)
+                        rejectionFailed("Rejection failed: Missing Type 1 attribute");
+                    iuid2cuid.put(refIUID, refCUID);
+                }
+                List<Instance> insts =
+                    em.createNamedQuery(Instance.FIND_BY_STUDY_AND_SERIES_INSTANCE_UID, Instance.class)
+                      .setParameter(1, studyIUID)
+                      .setParameter(2, seriesIUID)
+                      .getResultList();
+                for (Instance inst : insts) {
+                    String refCUID = iuid2cuid.remove(inst.getSopInstanceUID());
+                    if (refCUID != null) {
+                        if (!refCUID.equals(inst.getSopClassUID()))
+                            rejectionFailed("Rejection failed: Mismatch of SOP Class UID");
+                        inst.setRejectionCode(rejectionCode);
+                    }
+                }
+                if (!iuid2cuid.isEmpty())
+                    rejectionFailed("Rejection failed: No such referenced SOP Instances");
+            }
+        }
+    }
+
+    private void rejectionFailed(String message) {
+        throw new DicomServiceRuntimeException(
+                new DicomServiceException(Status.CannotUnderstand, message)
+                .setOffendingElements(Tag.CurrentRequestedProcedureEvidenceSequence));
     }
 
     @Override

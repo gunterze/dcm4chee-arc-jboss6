@@ -186,7 +186,7 @@ public class IANQueryBean implements IANQuery {
                 if (!studyIUD.equals(a[0]))
                     throw new DicomServiceRuntimeException(
                             new DicomServiceException(Status.ProcessingFailure,
-                                    "Referenced SOP Instances belongs to multiple Studies"));
+                                    "Referenced SOP Instances belong to multiple Studies"));
                 if (!seriesIUID.equals(a[1]))
                     throw new DicomServiceRuntimeException(
                             new DicomServiceException(Status.ProcessingFailure,

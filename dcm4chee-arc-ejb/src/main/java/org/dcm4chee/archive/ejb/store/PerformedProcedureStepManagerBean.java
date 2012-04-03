@@ -127,21 +127,20 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
             if (pps.isDiscontinued()) {
                 Attributes reasonCode = attrs.getNestedDataset(
                         Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);
-                if (reasonCode != null)
-                    for (RejectionNote rn : storeParam.getRejectionNotes())
-                        if (rn.matches(reasonCode)) {
-                            setRejectionCodeInRefSOPInstances(attrs, CodeFactory.getCode(em, rn));
-                            ian = null;
-                            break;
-                        }
+                RejectionNote rn = storeParam.getRejectionNote(reasonCode);
+                if (rn != null) {
+                    rejectPerformedSeries(
+                            attrs.getSequence(Tag.PerformedSeriesSequence),
+                            CodeFactory.getCode(em, rn));
+                    ian = null;
+                }
             }
         }
         em.merge(pps);
         return new PPSWithIAN(pps, ian);
     }
 
-    private void setRejectionCodeInRefSOPInstances(Attributes attrs, Code rejectionCode) {
-        Sequence perfSeriesSeq = attrs.getSequence(Tag.PerformedSeriesSequence);
+    private void rejectPerformedSeries(Sequence perfSeriesSeq, Code rejectionCode) {
         HashSet<String> iuids = new HashSet<String>();
         for (Attributes perfSeries : perfSeriesSeq) {
             addRefSOPInstanceUIDs(iuids,

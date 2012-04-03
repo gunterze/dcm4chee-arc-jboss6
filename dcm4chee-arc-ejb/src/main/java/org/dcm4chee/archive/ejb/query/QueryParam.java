@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.ejb.query;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.dcm4che.soundex.FuzzyStr;
@@ -83,6 +84,14 @@ public class QueryParam {
 
     public final List<RejectionNote> getRejectionNotes() {
         return rejectionNotes;
+    }
+
+    public final List<RejectionNote> getRejectionNotes(RejectionNote.Action action) {
+        List<RejectionNote> list = new ArrayList<RejectionNote>(rejectionNotes.size());
+        for (RejectionNote rn : rejectionNotes) 
+            if (rn.getActions().contains(action))
+                list.add(rn);
+        return list;
     }
 
     public final void setRejectionNotes(List<RejectionNote> rejectionNotes) {
