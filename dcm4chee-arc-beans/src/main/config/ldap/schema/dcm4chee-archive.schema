@@ -256,13 +256,12 @@ objectclass ( 1.2.40.0.13.1.1.15.0.4.5
   NAME 'dcmArchiveNetworkAE'
   DESC 'DICOM Archive Network AE related information'
   SUP top AUXILIARY
-  MUST (
+  MAY (
     dcmFileSystemGroupID $
     dcmReceivingDirectoryPath $
-    dcmRetrieveAET )
-  MAY (
     dcmStorageFilePathFormat $
     dcmDigestAlgorithm $
+    dcmRetrieveAET $
     dcmExternalRetrieveAET $
     dcmMatchUnknown $
     dcmSendPendingCGet $

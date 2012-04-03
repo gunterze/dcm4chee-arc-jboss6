@@ -488,6 +488,29 @@ public class ArchiveConfigurationTestUtils {
         UID.PatientStudyOnlyQueryRetrieveInformationModelMOVERetired
     };
 
+    private static final RejectionNote INCORRECT_WORKLIST_ENTRY_SELECTED =
+            new RejectionNote("110514", "DCM", null, "Incorrect worklist entry selected")
+                .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
+                .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE);
+    private static final RejectionNote REJECTED_FOR_QUALITY_REASONS =
+            new RejectionNote("113001", "DCM", null, "Rejected for Quality Reasons")
+                .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES);
+    private static final RejectionNote REJECT_FOR_PATIENT_SAFETY_REASONS =
+            new RejectionNote("113037", "DCM", null, "Rejected for Patient Safety Reasons")
+                .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
+                .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE)
+                .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE);
+    private static final RejectionNote INCORRECT_MODALITY_WORKLIST_ENTRY =
+            new RejectionNote("XXXXXX11", "99IHEIOCM", null, "Incorrect Modality Worklist Entry")
+                .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
+                .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE)
+                .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE);
+    private static final RejectionNote DATA_RETENTION_PERIOD_EXPIRED =
+            new RejectionNote("XXXXXX22", "99IHEIOCM", null, "Data Retention Period Expired")
+                .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
+                .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE)
+                .addAction(RejectionNote.Action.NOT_REJECT_SUBSEQUENT_OCCURRENCE);
+
     private static final String[] OTHER_DEVICES = {
         "dcmqrscp",
         "stgcmtscu",
@@ -532,6 +555,7 @@ public class ArchiveConfigurationTestUtils {
 
     public static void cleanUp(DicomConfiguration config) throws ConfigurationException {
         config.unregisterAETitle("DCM4CHEE");
+        config.unregisterAETitle("DCM4CHEE_ADMIN");
         for (String aet : OTHER_AES)
             config.unregisterAETitle(aet);
 
@@ -555,6 +579,7 @@ public class ArchiveConfigurationTestUtils {
             config.persist(createDevice(config, OTHER_DEVICES[i]));
 
         config.registerAETitle("DCM4CHEE");
+        config.registerAETitle("DCM4CHEE_ADMIN");
         config.persist(createArchiveDevice(config, "dcm4chee-arc"));
         config.findApplicationEntity("DCM4CHEE");
     }
@@ -603,8 +628,54 @@ public class ArchiveConfigurationTestUtils {
         device.setAttributeFilter(Entity.RequestedProcedure, new AttributeFilter(REQUESTED_PROCEDURE_ATTRS));
         device.setAttributeFilter(Entity.ScheduledProcedureStep, new AttributeFilter(SPS_ATTRS));
         device.setAttributeFilter(Entity.PerformedProcedureStep, new AttributeFilter(PPS_ATTRS));
-        ArchiveApplicationEntity ae = new ArchiveApplicationEntity("DCM4CHEE");
-        ae.setAssociationAcceptor(true);
+        Connection dicom = createConnection("dicom", "localhost", 11112);
+        dicom.setMaxOpsInvoked(0);
+        dicom.setMaxOpsPerformed(0);
+        device.addConnection(dicom);
+        Connection dicomTLS = new Connection("dicom-tls", "localhost", 2762);
+        dicomTLS.setMaxOpsInvoked(0);
+        dicomTLS.setMaxOpsPerformed(0);
+        dicomTLS.setTlsCipherSuites(
+                Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
+                Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
+        device.addConnection(dicomTLS);
+        ArchiveApplicationEntity ae = createAE("DCM4CHEE");
+        device.addApplicationEntity(ae);
+        ae.addConnection(dicom);
+        ae.addConnection(dicomTLS);
+        ArchiveApplicationEntity adminAE = createAdminAE("DCM4CHEE_ADMIN");
+        device.addApplicationEntity(adminAE);
+        adminAE.addConnection(dicom);
+        adminAE.addConnection(dicomTLS);
+        ArchiveHL7Application hl7App = new ArchiveHL7Application("*");
+        hl7App.setAcceptedMessageTypes(HL7_MESSAGE_TYPES);
+        hl7App.setHL7DefaultCharacterSet("8859/1");
+        hl7App.addTemplatesURI("adt2dcm", "resource:dcm4chee-arc-hl7-adt2dcm.xsl");
+        device.addHL7Application(hl7App);
+        Connection hl7 = new Connection("hl7", "localhost", 2575);
+        device.addConnection(hl7);
+        hl7App.addConnection(hl7);
+        Connection hl7TLS = new Connection("hl7-tls", "localhost", 12575);
+        hl7TLS.setTlsCipherSuites(
+                Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
+                Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
+        device.addConnection(hl7TLS);
+        hl7App.addConnection(hl7TLS);
+        return device;
+    }
+
+
+    private static Connection createConnection(String commonName,
+            String hostname, int port, String... tlsCipherSuites) {
+        Connection conn = new Connection(commonName, hostname, port);
+        conn.setTlsCipherSuites(tlsCipherSuites);
+        return conn;
+    }
+
+
+    private static ArchiveApplicationEntity createAE(String aet) {
+        ArchiveApplicationEntity ae = new ArchiveApplicationEntity(aet);
+        ae .setAssociationAcceptor(true);
         ae.setAssociationInitiator(true);
         ae.setFileSystemGroupID("DEFAULT");
         ae.setReceivingDirectoryPath("incoming");
@@ -629,28 +700,11 @@ public class ArchiveConfigurationTestUtils {
                 new StoreDuplicate(
                         StoreDuplicate.Condition.NE_CHECKSUM,
                         StoreDuplicate.Action.REPLACE));
-        ae.addRejectionNote(
-                new RejectionNote("110514", "DCM", null, "Incorrect worklist entry selected")
-                    .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
-                    .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE));
-        ae.addRejectionNote(
-                new RejectionNote("113001", "DCM", null, "Rejected for Quality Reasons")
-                    .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES));
-        ae.addRejectionNote(
-                new RejectionNote("113037", "DCM", null, "Rejected for Patient Safety Reasons")
-                    .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
-                    .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE)
-                    .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE));
-        ae.addRejectionNote(
-                new RejectionNote("XXXXXX11", "99IHEIOCM", null, "Incorrect Modality Worklist Entry")
-                    .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
-                    .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE)
-                    .addAction(RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE));
-        ae.addRejectionNote(
-                new RejectionNote("XXXXXX22", "99IHEIOCM", null, "Data Retention Period Expired")
-                    .addAction(RejectionNote.Action.HIDE_REJECTED_INSTANCES)
-                    .addAction(RejectionNote.Action.HIDE_REJECTION_NOTE)
-                    .addAction(RejectionNote.Action.NOT_REJECT_SUBSEQUENT_OCCURRENCE));
+        ae.addRejectionNote(INCORRECT_WORKLIST_ENTRY_SELECTED);
+        ae.addRejectionNote(REJECTED_FOR_QUALITY_REASONS);
+        ae.addRejectionNote(REJECT_FOR_PATIENT_SAFETY_REASONS);
+        ae.addRejectionNote(INCORRECT_MODALITY_WORKLIST_ENTRY);
+        ae.addRejectionNote(DATA_RETENTION_PERIOD_EXPIRED);
         ae.addAttributeCoercion(new AttributeCoercion(null, 
                 Dimse.C_STORE_RQ, 
                 SCP,
@@ -675,35 +729,28 @@ public class ArchiveConfigurationTestUtils {
         addTC(ae, null, SCU, UID.ModalityPerformedProcedureStepSOPClass, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCU, UID.InstanceAvailabilityNotificationSOPClass, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCP, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
-        device.addApplicationEntity(ae);
-        Connection dicom = new Connection("dicom", "localhost", 11112);
-        dicom.setMaxOpsInvoked(0);
-        dicom.setMaxOpsPerformed(0);
-        device.addConnection(dicom);
-        ae.addConnection(dicom);
-        Connection dicomTLS = new Connection("dicom-tls", "localhost", 2762);
-        dicomTLS.setMaxOpsInvoked(0);
-        dicomTLS.setMaxOpsPerformed(0);
-        dicomTLS.setTlsCipherSuites(
-                Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
-                Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
-        device.addConnection(dicomTLS);
-        ae.addConnection(dicomTLS);
-        ArchiveHL7Application hl7App = new ArchiveHL7Application("*");
-        hl7App.setAcceptedMessageTypes(HL7_MESSAGE_TYPES);
-        hl7App.setHL7DefaultCharacterSet("8859/1");
-        hl7App.addTemplatesURI("adt2dcm", "resource:dcm4chee-arc-hl7-adt2dcm.xsl");
-        device.addHL7Application(hl7App);
-        Connection hl7 = new Connection("hl7", "localhost", 2575);
-        device.addConnection(hl7);
-        hl7App.addConnection(hl7);
-        Connection hl7TLS = new Connection("hl7-tls", "localhost", 12575);
-        hl7TLS.setTlsCipherSuites(
-                Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
-                Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
-        device.addConnection(hl7TLS);
-        hl7App.addConnection(hl7TLS);
-        return device;
+        return ae;
+    }
+
+    private static ArchiveApplicationEntity createAdminAE(String aet) {
+        ArchiveApplicationEntity ae = new ArchiveApplicationEntity(aet);
+        ae .setAssociationAcceptor(true);
+        ae.setAssociationInitiator(true);
+        ae.setMatchUnknown(true);
+        ae.setSendPendingCGet(true);
+        ae.setSendPendingCMoveInterval(5000);
+        ae.addRejectionNote(INCORRECT_WORKLIST_ENTRY_SELECTED);
+        ae.addRejectionNote(REJECT_FOR_PATIENT_SAFETY_REASONS);
+        ae.addRejectionNote(INCORRECT_MODALITY_WORKLIST_ENTRY);
+        ae.addRejectionNote(DATA_RETENTION_PERIOD_EXPIRED);
+        addTCs(ae, null, SCU, IMAGE_CUIDS, IMAGE_TSUIDS);
+        addTCs(ae, null, SCU, VIDEO_CUIDS, VIDEO_TSUIDS);
+        addTCs(ae, null, SCU, OTHER_CUIDS, OTHER_TSUIDS);
+        addTCs(ae, EnumSet.allOf(QueryOption.class), SCP, QUERY_CUIDS, UID.ImplicitVRLittleEndian);
+        addTCs(ae, EnumSet.of(QueryOption.RELATIONAL), SCP, RETRIEVE_CUIDS, UID.ImplicitVRLittleEndian);
+        addTC(ae, null, SCP, UID.CompositeInstanceRetrieveWithoutBulkDataGET, UID.ImplicitVRLittleEndian);
+        addTC(ae, null, SCP, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
+        return ae;
     }
 
     private static void addTCs(ArchiveApplicationEntity ae, EnumSet<QueryOption> queryOpts,

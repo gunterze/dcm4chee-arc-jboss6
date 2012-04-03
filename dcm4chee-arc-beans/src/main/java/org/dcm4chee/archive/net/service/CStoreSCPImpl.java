@@ -92,6 +92,9 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         try {
             ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
             String fsGroupID = ae.getFileSystemGroupID();
+            if (fsGroupID == null)
+                throw new IllegalStateException(
+                        "No File System Group ID configured for " + ae.getAETitle());
             InstanceStore store = initInstanceStore(as);
             if (initFileSystem) {
                 store.initFileSystem(fsGroupID);
@@ -120,7 +123,9 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             FileSystem fs = (FileSystem) storage;
             String iuid = rq.getString(Tag.AffectedSOPInstanceUID);
             ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-            File dir = new File(fs.getDirectory(), ae.getReceivingDirectoryPath());
+            String subdir = ae.getReceivingDirectoryPath();
+            File dir = subdir != null ? new File(fs.getDirectory(), subdir)
+                                      : fs.getDirectory();
             dir.mkdirs();
             File file = new File(dir, iuid);
             while (!file.createNewFile())
