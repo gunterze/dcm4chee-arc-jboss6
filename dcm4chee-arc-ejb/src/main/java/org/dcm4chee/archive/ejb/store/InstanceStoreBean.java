@@ -42,11 +42,9 @@ import static org.dcm4chee.archive.ejb.store.RejectionNote.Action.*;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -68,7 +66,6 @@ import org.dcm4che.data.VR;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.soundex.FuzzyStr;
-import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
 import org.dcm4chee.archive.ejb.query.IANQuery;
 import org.dcm4chee.archive.persistence.AttributeFilter;
@@ -81,14 +78,10 @@ import org.dcm4chee.archive.persistence.FileSystemStatus;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.PerformedProcedureStep;
-import org.dcm4chee.archive.persistence.QInstance;
 import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
 import org.dcm4chee.archive.persistence.Series;
 import org.dcm4chee.archive.persistence.Study;
 import org.dcm4chee.archive.persistence.VerifyingObserver;
-import org.hibernate.Session;
-
-import com.mysema.query.jpa.hibernate.HibernateQuery;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -260,27 +253,26 @@ public class InstanceStoreBean implements InstanceStore {
                 storeParam.getAttributeFilter(Entity.Instance),
                 storeParam.getFuzzyStr());
         em.persist(inst);
-        setDirty(series);
+        series.setDirty(true);
         em.flush();
         return inst;
     }
 
     private void initHideConceptNameCodes(StoreParam storeParam) {
-        if (hideConceptNameCodes != null)
+        if (hideConceptNameCodes == null)
             hideConceptNameCodes = CodeFactory.createCodes(em,
                     RejectionNote.selectByAction(storeParam.getRejectionNotes(),
                             RejectionNote.Action.HIDE_REJECTION_NOTE));
     }
 
     private void initHideRejectionCodes(StoreParam storeParam) {
-        if (hideRejectionCodes != null)
+        if (hideRejectionCodes == null)
             hideRejectionCodes = CodeFactory.createCodes(em,
                     RejectionNote.selectByAction(storeParam.getRejectionNotes(),
                             RejectionNote.Action.HIDE_REJECTED_INSTANCES));
     }
 
     private void rejectRefInstances(Attributes data, Code rejectionCode) {
-        ArrayList<Series> dirtySeries = new ArrayList<Series>();
         HashMap<String,String> iuid2cuid = new HashMap<String,String>();
         Sequence refStudySeq = data.getSequence(Tag.CurrentRequestedProcedureEvidenceSequence);
         if (refStudySeq == null)
@@ -319,14 +311,11 @@ public class InstanceStoreBean implements InstanceStore {
                             inst.setRejectionCode(rejectionCode);
                         }
                     }
-                    dirtySeries.add(series);
+                    updateSeries(series);
                 }
                 if (!iuid2cuid.isEmpty())
                     rejectionFailed("Rejection failed: No such referenced SOP Instances");
             }
-        }
-        for (Series series : dirtySeries) {
-            updateSeries(series);
         }
     }
 
@@ -338,7 +327,7 @@ public class InstanceStoreBean implements InstanceStore {
 
     @Override
     public FileSystem selectFileSystem(String groupID) {
-        return em.createNamedQuery(FileSystem.FIND_BY_GROUP_ID_AND_STATUD, FileSystem.class)
+        return em.createNamedQuery(FileSystem.FIND_BY_GROUP_ID_AND_STATUS, FileSystem.class)
                 .setParameter(1, groupID)
                 .setParameter(2, FileSystemStatus.RW)
                 .getSingleResult();
@@ -379,117 +368,6 @@ public class InstanceStoreBean implements InstanceStore {
                     Study.FIND_BY_STUDY_INSTANCE_UID, Study.class)
                  .setParameter(1, studyIUID)
                  .getSingleResult();
-    }
-
-    private void setDirty(Series series) {
-        em.createNamedQuery(Series.SET_DIRTY)
-          .setParameter(1, series)
-          .executeUpdate();
-    }
-
-    private String[] sopClassesOf(Study study) {
-        return em.createNamedQuery(Study.SOP_CLASSES_IN_STUDY, String.class)
-            .setParameter(1, study)
-            .getResultList().toArray(StringUtils.EMPTY_STRING);
-    }
-
-    private String[] modalitiesOf(Study study) {
-        List<String> resultList = em.createNamedQuery(Study.MODALITIES_IN_STUDY, String.class)
-            .setParameter(1, study)
-            .getResultList();
-        resultList.remove(null);
-        return resultList.toArray(StringUtils.EMPTY_STRING);
-    }
-
-    private int countRelatedSeriesOf(Study study) {
-        return em.createNamedQuery(Study.COUNT_RELATED_SERIES, Long.class)
-          .setParameter(1, study)
-          .getSingleResult().intValue();
-    }
-
-    private int countRelatedInstancesOf(Study study) {
-        return em.createNamedQuery(Study.COUNT_RELATED_INSTANCES, Long.class)
-          .setParameter(1, study)
-          .getSingleResult().intValue();
-    }
-
-    private int countRelatedInstancesOf(Series series) {
-        Session session = (Session) em.getDelegate();
-        return (int) new HibernateQuery(session)
-            .from(QInstance.instance)
-            .where(QInstance.instance.series.eq(series),
-                   QInstance.instance.replaced.isFalse(),
-                   QInstance.instance.conceptNameCode.in(hideConceptNameCodes).not(),
-                   QInstance.instance.rejectionCode.in(hideRejectionCodes).not())
-            .count();
-    }
-
-    private Availability availabilityOf(Study study) {
-        return em.createNamedQuery(Study.AVAILABILITY, Availability.class)
-          .setParameter(1, study)
-          .getSingleResult();
-    }
-
-    private Availability availabilityOf(Series series) {
-        return em.createNamedQuery(Series.AVAILABILITY, Availability.class)
-          .setParameter(1, series)
-          .getSingleResult();
-    }
-
-    private String[] retrieveAETsOf(Study study) {
-        return commonAETs(em.createNamedQuery(Study.RETRIEVE_AETS, String.class)
-                .setParameter(1, study)
-                .getResultList());
-    }
-
-    private String[] retrieveAETsOf(Series series) {
-        return commonAETs(em.createNamedQuery(Series.RETRIEVE_AETS, String.class)
-                .setParameter(1, series)
-                .getResultList());
-    }
-
-    private String[] commonAETs(List<String> resultList) {
-        LinkedHashSet<String> set = null;
-        for (String aets : resultList) {
-            if (aets == null)
-                return StringUtils.EMPTY_STRING;
-            List<String> aetList = Arrays.asList(StringUtils.split(aets, '\\'));
-            if (set == null) {
-                set = new LinkedHashSet<String>(aetList);
-            } else {
-                set.retainAll(aetList);
-            }
-            if (set.isEmpty())
-                return StringUtils.EMPTY_STRING;
-        }
-        return set.toArray(StringUtils.EMPTY_STRING);
-    }
-
-    private String externalRetrieveAETOf(Study study) {
-        return commonAET(em.createNamedQuery(Study.EXTERNAL_RETRIEVE_AET, String.class)
-                .setParameter(1, study)
-                .getResultList());
-    }
-
-    private String externalRetrieveAETOf(Series series) {
-        return commonAET(em.createNamedQuery(Series.EXTERNAL_RETRIEVE_AET, String.class)
-                .setParameter(1, series)
-                .getResultList());
-    }
-
-    private String commonAET(List<String> resultList) {
-        String common = null;
-        for (String aet : resultList) {
-            if (aet == null)
-                return null;
-            if (common == null) {
-                common = aet;
-            } else {
-                if (!common.equals(aet));
-                    return null;
-            }
-        }
-        return common;
     }
 
     private List<VerifyingObserver> createVerifyingObservers(Sequence seq, FuzzyStr fuzzyStr) {
@@ -536,7 +414,7 @@ public class InstanceStoreBean implements InstanceStore {
         Series series = cachedSeries;
         AttributeFilter seriesFilter = storeParam.getAttributeFilter(Entity.Series);
         if (series == null || !series.getSeriesInstanceUID().equals(seriesIUID)) {
-            updateCachedSeries();
+            updateSeries(cachedSeries);
             updateRefPPS(
                     data.getNestedDataset(Tag.ReferencedPerformedProcedureStepSequence),
                     storeParam);
@@ -678,7 +556,10 @@ public class InstanceStoreBean implements InstanceStore {
     @Override
     @Remove
     public void close() {
-        updateCachedSeries();
+        if (cachedSeries != null) {
+            em.joinTransaction();
+            updateSeries(cachedSeries);
+        }
         cachedSeries = null;
         prevMpps = null;
         curMpps = null;
@@ -689,30 +570,8 @@ public class InstanceStoreBean implements InstanceStore {
         em = null;
     }
 
-    private void updateCachedSeries() {
-        Series series = cachedSeries;
-        if (series != null)
-            updateSeries(series);
-    }
-
     private void updateSeries(Series series) {
-        em.joinTransaction();
-        series.setNumberOfSeriesRelatedInstances(countRelatedInstancesOf(series));
-        series.setRetrieveAETs(retrieveAETsOf(series));
-        series.setExternalRetrieveAET(externalRetrieveAETOf(series));
-        series.setAvailability(availabilityOf(series));
-        series.setDirty(false);
-
-        Study study = series.getStudy();
-        study.setModalitiesInStudy(modalitiesOf(study));
-        study.setSOPClassesInStudy(sopClassesOf(study));
-        study.setNumberOfStudyRelatedSeries(countRelatedSeriesOf(study));
-        study.setNumberOfStudyRelatedInstances(countRelatedInstancesOf(study));
-        study.setRetrieveAETs(retrieveAETsOf(study));
-        study.setExternalRetrieveAET(externalRetrieveAETOf(study));
-        study.setAvailability(availabilityOf(study));
-
-        em.flush();
+        SeriesUpdate.updateSeries(em, series, hideConceptNameCodes, hideRejectionCodes);
     }
 
     private Study getStudy(Attributes data, Availability availability, StoreParam storeParam) {

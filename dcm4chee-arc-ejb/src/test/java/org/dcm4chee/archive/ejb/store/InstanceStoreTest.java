@@ -101,7 +101,10 @@ public class InstanceStoreTest {
                         PerformedProcedureStepManagerBean.class,
                         PPSWithIAN.class,
                         RemovePatient.class,
+                        RejectionNote.class,
                         RequestFactory.class,
+                        SeriesUpdate.class,
+                        StoreDuplicate.class,
                         StoreParam.class,
                         StoreParamFactory.class)
                 .addAsResource("mpps-create.xml")

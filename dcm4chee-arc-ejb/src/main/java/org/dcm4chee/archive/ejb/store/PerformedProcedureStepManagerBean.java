@@ -63,6 +63,7 @@ import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.PerformedProcedureStep;
 import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
+import org.dcm4chee.archive.persistence.Series;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -129,9 +130,17 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
                         Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);
                 RejectionNote rn = storeParam.getRejectionNote(reasonCode);
                 if (rn != null) {
+                    List<Code> hideConceptNameCodes = CodeFactory.createCodes(em,
+                            RejectionNote.selectByAction(storeParam.getRejectionNotes(),
+                                    RejectionNote.Action.HIDE_REJECTION_NOTE));
+                    List<Code> hideRejectionCodes = CodeFactory.createCodes(em,
+                            RejectionNote.selectByAction(storeParam.getRejectionNotes(),
+                                    RejectionNote.Action.HIDE_REJECTED_INSTANCES));
+                    
                     rejectPerformedSeries(
                             attrs.getSequence(Tag.PerformedSeriesSequence),
-                            CodeFactory.getCode(em, rn));
+                            CodeFactory.getCode(em, rn),
+                            hideConceptNameCodes, hideRejectionCodes);
                     ian = null;
                 }
             }
@@ -140,7 +149,8 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
         return new PPSWithIAN(pps, ian);
     }
 
-    private void rejectPerformedSeries(Sequence perfSeriesSeq, Code rejectionCode) {
+    private void rejectPerformedSeries(Sequence perfSeriesSeq, Code rejectionCode,
+            List<Code> hideConceptNameCodes, List<Code> hideRejectionCodes) {
         HashSet<String> iuids = new HashSet<String>();
         for (Attributes perfSeries : perfSeriesSeq) {
             addRefSOPInstanceUIDs(iuids,
@@ -151,9 +161,15 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
                 em.createNamedQuery(Instance.FIND_BY_SERIES_INSTANCE_UID, Instance.class)
                   .setParameter(1, perfSeries.getString(Tag.SeriesInstanceUID))
                   .getResultList();
+            Series series = null;
             for (Instance inst : insts)
-                if (iuids.contains(inst.getSopInstanceUID()))
+                if (iuids.contains(inst.getSopInstanceUID())) {
                     inst.setRejectionCode(rejectionCode);
+                    series = inst.getSeries();
+                }
+            if (series != null)
+                SeriesUpdate.updateSeries(em, series,
+                        hideConceptNameCodes, hideRejectionCodes);
             iuids.clear();
         }
     }

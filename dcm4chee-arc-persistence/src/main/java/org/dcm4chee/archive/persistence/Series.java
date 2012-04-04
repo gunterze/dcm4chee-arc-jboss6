@@ -101,10 +101,7 @@ import org.dcm4che.util.StringUtils;
     query="SELECT DISTINCT(i.externalRetrieveAET) FROM Instance i WHERE i.series = ?1 AND i.replaced = false"),
 @NamedQuery(
     name="Series.availability",
-    query="SELECT MAX(i.availability) FROM Instance i WHERE i.series = ?1 AND i.replaced = false"),
-@NamedQuery(
-    name="Series.setDirty",
-    query="UPDATE Series s SET dirty = true WHERE s = ?1")
+    query="SELECT MAX(i.availability) FROM Instance i WHERE i.series = ?1 AND i.replaced = false")
 })
 @Entity
 @Table(name = "series")
@@ -118,7 +115,6 @@ public class Series implements Serializable {
     public static final String RETRIEVE_AETS = "Series.retrieveAETs";
     public static final String EXTERNAL_RETRIEVE_AET = "Series.externalRetrieveAET";
     public static final String AVAILABILITY = "Series.availability";
-    public static final String SET_DIRTY = "Series.setDirty";
 
     @Id
     @GeneratedValue

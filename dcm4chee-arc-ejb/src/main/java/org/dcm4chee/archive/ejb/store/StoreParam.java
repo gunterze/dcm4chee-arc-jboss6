@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.ejb.store;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.dcm4che.data.Attributes;
@@ -58,8 +59,8 @@ public class StoreParam {
     private String modifyingSystem;
     private String[] retrieveAETs;
     private String externalRetrieveAET;
-    private List<StoreDuplicate> storeDuplicates;
-    private List<RejectionNote> rejectionNotes;
+    private List<StoreDuplicate> storeDuplicates = Collections.emptyList();
+    private List<RejectionNote> rejectionNotes = Collections.emptyList();
 
     public final boolean isStoreOriginalAttributes() {
         return storeOriginalAttributes;

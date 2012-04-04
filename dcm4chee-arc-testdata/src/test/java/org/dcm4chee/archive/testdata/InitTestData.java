@@ -62,7 +62,10 @@ import org.dcm4chee.archive.ejb.store.PPSWithIAN;
 import org.dcm4chee.archive.ejb.store.PatientFactory;
 import org.dcm4chee.archive.ejb.store.PatientMergedException;
 import org.dcm4chee.archive.ejb.store.PatientMismatchException;
+import org.dcm4chee.archive.ejb.store.RejectionNote;
 import org.dcm4chee.archive.ejb.store.RequestFactory;
+import org.dcm4chee.archive.ejb.store.SeriesUpdate;
+import org.dcm4chee.archive.ejb.store.StoreDuplicate;
 import org.dcm4chee.archive.ejb.store.StoreParam;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
@@ -100,7 +103,10 @@ public class InitTestData {
         PatientMismatchException.class,
         PatientMergedException.class,
         PPSWithIAN.class,
+        RejectionNote.class,
         RequestFactory.class,
+        SeriesUpdate.class,
+        StoreDuplicate.class,
         StoreParam.class,
     };
 

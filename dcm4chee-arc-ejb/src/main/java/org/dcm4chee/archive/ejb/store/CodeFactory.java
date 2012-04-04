@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.ejb.store;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -105,7 +106,7 @@ public abstract class CodeFactory {
 
     public static List<Code> createCodes(EntityManager em, Sequence seq) {
         if (seq == null || seq.isEmpty())
-            return null;
+            return Collections.emptyList();
 
         ArrayList<Code> list = new ArrayList<Code>(seq.size());
         for (Attributes item : seq)
@@ -115,8 +116,8 @@ public abstract class CodeFactory {
     }
 
     public static List<Code> createCodes(EntityManager em, List<RejectionNote> rns) {
-        if (rns.isEmpty())
-            return null;
+        if (rns == null || rns.isEmpty())
+            return Collections.emptyList();
 
         ArrayList<Code> list = new ArrayList<Code>(rns.size());
         for (RejectionNote rn : rns)

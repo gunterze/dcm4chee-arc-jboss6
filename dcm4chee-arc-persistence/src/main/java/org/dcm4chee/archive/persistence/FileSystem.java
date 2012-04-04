@@ -81,7 +81,7 @@ public class FileSystem implements Serializable {
 
     public static final String FIND_BY_GROUP_ID = "FileSystem.findByGroupID";
     public static final String COUNT_WITH_GROUP_ID = "FileSystem.countWithGroupID";
-    public static final String FIND_BY_GROUP_ID_AND_STATUD = "FileSystem.findByGroupIDAndStatus";
+    public static final String FIND_BY_GROUP_ID_AND_STATUS = "FileSystem.findByGroupIDAndStatus";
     public static final String GET_GROUP_IDS = "FileSystem.getGroupIDs";
 
     @Id
