@@ -40,6 +40,9 @@ package org.dcm4chee.archive.net.service;
 
 
 import java.util.EnumSet;
+import java.util.List;
+
+import javax.ejb.EJB;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
@@ -56,7 +59,10 @@ import org.dcm4che.util.AttributesValidator;
 import org.dcm4chee.archive.ejb.query.CompositeQuery;
 import org.dcm4chee.archive.ejb.query.IDWithIssuer;
 import org.dcm4chee.archive.ejb.query.QueryParam;
+import org.dcm4chee.archive.ejb.store.CodeManager;
+import org.dcm4chee.archive.ejb.store.RejectionNote;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
+import org.dcm4chee.archive.net.ArchiveDevice;
 import org.dcm4chee.archive.persistence.Issuer;
 
 /**
@@ -66,6 +72,9 @@ public class CFindSCPImpl extends BasicCFindSCP {
 
     private final String[] qrLevels;
     private final QueryRetrieveLevel rootLevel;
+
+    @EJB
+    private CodeManager codeManager;
 
     public CFindSCPImpl(String sopClass, String... qrLevels) {
         super(sopClass);
@@ -85,7 +94,19 @@ public class CFindSCPImpl extends BasicCFindSCP {
         level.validateQueryKeys(validator, rootLevel, relational);
         IDWithIssuer[] pids = pids(keys);
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-        QueryParam queryParam = ae.getQueryParam(queryOpts, roles());
+        ArchiveDevice dev = ae.getArchiveDevice();
+        List<RejectionNote> rns = ae.getRejectionNotes();
+        QueryParam queryParam = new QueryParam();
+        queryParam.setFuzzyStr(dev.getFuzzyStr());
+        queryParam.setAttributeFilters(dev.getAttributeFilters());
+        queryParam.setCombinedDatetimeMatching(queryOpts.contains(QueryOption.DATETIME));
+        queryParam.setFuzzySemanticMatching(queryOpts.contains(QueryOption.FUZZY));
+        queryParam.setMatchUnknown(ae.isMatchUnknown());
+        queryParam.setRoles(roles());
+        queryParam.setHideConceptNameCodes(codeManager.createCodes(
+                RejectionNote.selectByAction(rns, RejectionNote.Action.HIDE_REJECTION_NOTE)));
+        queryParam.setHideRejectionCodes(codeManager.createCodes(
+                RejectionNote.selectByAction(rns, RejectionNote.Action.HIDE_REJECTED_INSTANCES)));
         try {
             CompositeQuery query = (CompositeQuery) JNDIUtils.lookup(CompositeQuery.JNDI_NAME);
             switch (level) {

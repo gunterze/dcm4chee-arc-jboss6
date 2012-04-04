@@ -76,10 +76,7 @@ import org.dcm4che.util.StringUtils;
     query="SELECT i FROM Instance i WHERE i.sopInstanceUID = ?1 AND i.replaced = false"),
 @NamedQuery(
     name="Instance.findBySeriesInstanceUID",
-    query="SELECT i FROM Instance i WHERE i.series.seriesInstanceUID = ?1 AND i.replaced = false"),
-@NamedQuery(
-    name="Instance.findByStudyAndSeriesInstanceUID",
-    query="SELECT i FROM Instance i WHERE i.series.study.studyInstanceUID = ?1 AND i.series.seriesInstanceUID = ?2 AND i.replaced = false")
+    query="SELECT i FROM Instance i WHERE i.series.seriesInstanceUID = ?1 AND i.replaced = false")
 })
 @Entity
 @Table(name = "instance")
@@ -91,8 +88,6 @@ public class Instance implements Serializable {
             "Instance.findBySOPInstanceUID";
     public static final String FIND_BY_SERIES_INSTANCE_UID =
             "Instance.findBySeriesInstanceUID";
-    public static final String FIND_BY_STUDY_AND_SERIES_INSTANCE_UID =
-            "Instance.findByStudyAndSeriesInstanceUID";
 
     @Id
     @GeneratedValue

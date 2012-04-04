@@ -88,7 +88,7 @@ import org.dcm4che.util.StringUtils;
     query="SELECT COUNT(s) FROM Series s WHERE s.study = ?1"),
 @NamedQuery(
     name="Study.countRelatedInstances",
-    query="SELECT COUNT(i) FROM Instance i WHERE i.series.study = ?1 AND i.replaced = false"),
+    query="SELECT SUM(s.numberOfSeriesRelatedInstances) FROM Series s WHERE s.study = ?1"),
 @NamedQuery(
     name="Study.retrieveAETs",
     query="SELECT DISTINCT(s.retrieveAETs) FROM Series s WHERE s.study = ?1"),

@@ -38,12 +38,11 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.dcm4che.soundex.FuzzyStr;
-import org.dcm4chee.archive.ejb.store.RejectionNote;
 import org.dcm4chee.archive.persistence.AttributeFilter;
+import org.dcm4chee.archive.persistence.Code;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -55,7 +54,8 @@ public class QueryParam {
     private boolean combinedDatetimeMatching;
     private boolean fuzzySemanticMatching;
     private boolean matchUnknown;
-    private List<RejectionNote> rejectionNotes;
+    private List<Code> hideConceptNameCodes;
+    private List<Code> hideRejectionCodes;
     private String[] roles;
 
     public final boolean isCombinedDatetimeMatching() {
@@ -82,22 +82,6 @@ public class QueryParam {
         this.matchUnknown = matchUnknown;
     }
 
-    public final List<RejectionNote> getRejectionNotes() {
-        return rejectionNotes;
-    }
-
-    public final List<RejectionNote> getRejectionNotes(RejectionNote.Action action) {
-        List<RejectionNote> list = new ArrayList<RejectionNote>(rejectionNotes.size());
-        for (RejectionNote rn : rejectionNotes) 
-            if (rn.getActions().contains(action))
-                list.add(rn);
-        return list;
-    }
-
-    public final void setRejectionNotes(List<RejectionNote> rejectionNotes) {
-        this.rejectionNotes = rejectionNotes;
-    }
-
     public final String[] getRoles() {
         return roles != null ? roles.clone() : null;
     }
@@ -120,6 +104,22 @@ public class QueryParam {
 
     public final AttributeFilter[] getAttributeFilters() {
         return attributeFilters;
+    }
+
+    public List<Code> getHideConceptNameCodes() {
+        return hideConceptNameCodes;
+    }
+
+    public void setHideConceptNameCodes(List<Code> hideConceptNameCodes) {
+        this.hideConceptNameCodes = hideConceptNameCodes;
+    }
+
+    public List<Code> getHideRejectionCodes() {
+        return hideRejectionCodes;
+    }
+
+    public void setHideRejectionCodes(List<Code> hideRejectionCodes) {
+        this.hideRejectionCodes = hideRejectionCodes;
     }
 
 }

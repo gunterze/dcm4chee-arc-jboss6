@@ -249,7 +249,7 @@
   </bean>
 
   <!-- Patient Root C-FIND SCP -->
-  <bean name="PatientRootCFindSCP" class="org.dcm4chee.archive.net.service.CFindSCPImpl">
+  <bean name="PatientRootCFindSCP" class="org.dcm4chee.archive.net.service.CFindSCPImpl" access-mode="ALL">
     <constructor>
       <parameter>1.2.840.10008.5.1.4.1.2.1.1</parameter>
       <parameter>
@@ -265,7 +265,7 @@
 
 
   <!-- Study Root C-FIND SCP -->
-  <bean name="StudyRootCFindSCP" class="org.dcm4chee.archive.net.service.CFindSCPImpl">
+  <bean name="StudyRootCFindSCP" class="org.dcm4chee.archive.net.service.CFindSCPImpl" access-mode="ALL">
     <constructor>
       <parameter>1.2.840.10008.5.1.4.1.2.2.1</parameter>
       <parameter>
@@ -279,7 +279,7 @@
   </bean>
 
   <!-- Patient/Study Only C-FIND SCP -->
-  <bean name="PatientStudyOnlyCFindSCP" class="org.dcm4chee.archive.net.service.CFindSCPImpl">
+  <bean name="PatientStudyOnlyCFindSCP" class="org.dcm4chee.archive.net.service.CFindSCPImpl" access-mode="ALL">
     <constructor>
       <parameter>1.2.840.10008.5.1.4.1.2.3.1</parameter>
       <parameter>

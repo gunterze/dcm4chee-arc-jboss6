@@ -81,10 +81,14 @@ import org.dcm4chee.archive.persistence.FileSystemStatus;
 import org.dcm4chee.archive.persistence.Instance;
 import org.dcm4chee.archive.persistence.Patient;
 import org.dcm4chee.archive.persistence.PerformedProcedureStep;
+import org.dcm4chee.archive.persistence.QInstance;
 import org.dcm4chee.archive.persistence.ScheduledProcedureStep;
 import org.dcm4chee.archive.persistence.Series;
 import org.dcm4chee.archive.persistence.Study;
 import org.dcm4chee.archive.persistence.VerifyingObserver;
+import org.hibernate.Session;
+
+import com.mysema.query.jpa.hibernate.HibernateQuery;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -103,6 +107,8 @@ public class InstanceStoreBean implements InstanceStore {
     private PerformedProcedureStep prevMpps;
     private PerformedProcedureStep curMpps;
     private Code curRejectionCode;
+    private List<Code> hideRejectionCodes;
+    private List<Code> hideConceptNameCodes;
 
     @PostConstruct
     public void init() {
@@ -139,7 +145,10 @@ public class InstanceStoreBean implements InstanceStore {
     public boolean addFileRef(String sourceAET, Attributes data, Attributes modified,
             FileRef fileRef, StoreParam storeParam) {
         em.joinTransaction();
+        initHideRejectionCodes(storeParam);
+        initHideConceptNameCodes(storeParam);
         FileSystem fs = fileRef.getFileSystem();
+        Availability availability = fs.getAvailability();
         Instance inst;
         try {
             inst = findInstance(data.getString(Tag.SOPInstanceUID, null));
@@ -162,13 +171,13 @@ public class InstanceStoreBean implements InstanceStore {
                 break;
             case REPLACE:
                 inst.setReplaced(true);
-                inst = newInstance(sourceAET, data, modified, fs.getAvailability(), storeParam);
+                inst = newInstance(sourceAET, data, modified, availability, storeParam);
                 if (rn != null && !rn.getActions().contains(NOT_REJECT_SUBSEQUENT_OCCURRENCE))
                     inst.setRejectionCode(rejectionCode);
                 break;
             }
         } catch (NoResultException e) {
-            inst = newInstance(sourceAET, data, modified, fs.getAvailability(), storeParam);
+            inst = newInstance(sourceAET, data, modified, availability, storeParam);
         }
         fileRef.setInstance(inst);
         em.persist(fileRef);
@@ -220,6 +229,8 @@ public class InstanceStoreBean implements InstanceStore {
     public Instance newInstance(String sourceAET, Attributes data,
             Attributes modified, Availability availability, StoreParam storeParam) {
         em.joinTransaction();
+        initHideRejectionCodes(storeParam);
+        initHideConceptNameCodes(storeParam);
         Attributes conceptNameCode = data.getNestedDataset(Tag.ConceptNameCodeSequence);
         RejectionNote rn = storeParam.getRejectionNote(conceptNameCode);
         if (rn != null)
@@ -254,7 +265,22 @@ public class InstanceStoreBean implements InstanceStore {
         return inst;
     }
 
+    private void initHideConceptNameCodes(StoreParam storeParam) {
+        if (hideConceptNameCodes != null)
+            hideConceptNameCodes = CodeFactory.createCodes(em,
+                    RejectionNote.selectByAction(storeParam.getRejectionNotes(),
+                            RejectionNote.Action.HIDE_REJECTION_NOTE));
+    }
+
+    private void initHideRejectionCodes(StoreParam storeParam) {
+        if (hideRejectionCodes != null)
+            hideRejectionCodes = CodeFactory.createCodes(em,
+                    RejectionNote.selectByAction(storeParam.getRejectionNotes(),
+                            RejectionNote.Action.HIDE_REJECTED_INSTANCES));
+    }
+
     private void rejectRefInstances(Attributes data, Code rejectionCode) {
+        ArrayList<Series> dirtySeries = new ArrayList<Series>();
         HashMap<String,String> iuid2cuid = new HashMap<String,String>();
         Sequence refStudySeq = data.getSequence(Tag.CurrentRequestedProcedureEvidenceSequence);
         if (refStudySeq == null)
@@ -277,21 +303,30 @@ public class InstanceStoreBean implements InstanceStore {
                     iuid2cuid.put(refIUID, refCUID);
                 }
                 List<Instance> insts =
-                    em.createNamedQuery(Instance.FIND_BY_STUDY_AND_SERIES_INSTANCE_UID, Instance.class)
-                      .setParameter(1, studyIUID)
-                      .setParameter(2, seriesIUID)
+                    em.createNamedQuery(Instance.FIND_BY_SERIES_INSTANCE_UID, Instance.class)
+                      .setParameter(1, seriesIUID)
                       .getResultList();
-                for (Instance inst : insts) {
-                    String refCUID = iuid2cuid.remove(inst.getSopInstanceUID());
-                    if (refCUID != null) {
-                        if (!refCUID.equals(inst.getSopClassUID()))
-                            rejectionFailed("Rejection failed: Mismatch of SOP Class UID");
-                        inst.setRejectionCode(rejectionCode);
+                if (!insts.isEmpty()) {
+                    Series series = insts.get(0).getSeries();
+                    Study study = series.getStudy();
+                    if (!studyIUID.equals(study.getStudyInstanceUID()))
+                        rejectionFailed("Rejection failed: Mismatch of Study Instance UID");
+                    for (Instance inst : insts) {
+                        String refCUID = iuid2cuid.remove(inst.getSopInstanceUID());
+                        if (refCUID != null) {
+                            if (!refCUID.equals(inst.getSopClassUID()))
+                                rejectionFailed("Rejection failed: Mismatch of SOP Class UID");
+                            inst.setRejectionCode(rejectionCode);
+                        }
                     }
+                    dirtySeries.add(series);
                 }
                 if (!iuid2cuid.isEmpty())
                     rejectionFailed("Rejection failed: No such referenced SOP Instances");
             }
+        }
+        for (Series series : dirtySeries) {
+            updateSeries(series);
         }
     }
 
@@ -379,9 +414,14 @@ public class InstanceStoreBean implements InstanceStore {
     }
 
     private int countRelatedInstancesOf(Series series) {
-        return em.createNamedQuery(Series.COUNT_RELATED_INSTANCES, Long.class)
-          .setParameter(1, series)
-          .getSingleResult().intValue();
+        Session session = (Session) em.getDelegate();
+        return (int) new HibernateQuery(session)
+            .from(QInstance.instance)
+            .where(QInstance.instance.series.eq(series),
+                   QInstance.instance.replaced.isFalse(),
+                   QInstance.instance.conceptNameCode.in(hideConceptNameCodes).not(),
+                   QInstance.instance.rejectionCode.in(hideRejectionCodes).not())
+            .count();
     }
 
     private Availability availabilityOf(Study study) {
@@ -643,15 +683,19 @@ public class InstanceStoreBean implements InstanceStore {
         prevMpps = null;
         curMpps = null;
         curRejectionCode = null;
+        hideRejectionCodes = null;
+        hideConceptNameCodes = null;
         em.close();
         em = null;
     }
 
     private void updateCachedSeries() {
         Series series = cachedSeries;
-        if (series == null)
-            return;
+        if (series != null)
+            updateSeries(series);
+    }
 
+    private void updateSeries(Series series) {
         em.joinTransaction();
         series.setNumberOfSeriesRelatedInstances(countRelatedInstancesOf(series));
         series.setRetrieveAETs(retrieveAETsOf(series));

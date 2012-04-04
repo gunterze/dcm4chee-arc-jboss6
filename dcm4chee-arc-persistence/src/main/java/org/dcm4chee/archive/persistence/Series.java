@@ -94,9 +94,6 @@ import org.dcm4che.util.StringUtils;
                  "s.study.patient.encodedAttributes " +
           "FROM Series s WHERE s.pk = ?1"),
 @NamedQuery(
-    name="Series.countRelatedInstances",
-    query="SELECT COUNT(i) FROM Instance i WHERE i.series = ?1 AND i.replaced = false"),
-@NamedQuery(
     name="Series.retrieveAETs",
     query="SELECT DISTINCT(i.retrieveAETs) FROM Instance i WHERE i.series = ?1 AND i.replaced = false"),
 @NamedQuery(
@@ -118,7 +115,6 @@ public class Series implements Serializable {
     public static final String FIND_BY_SERIES_INSTANCE_UID = "Series.findBySeriesInstanceUID";
     public static final String ENCODED_ATTRIBUTES = "Series.encodedAttributes";
     public static final String ENCODED_ATTRIBUTES2 = "Series.encodedAttributes2";
-    public static final String COUNT_RELATED_INSTANCES = "Series.countRelatedInstances";
     public static final String RETRIEVE_AETS = "Series.retrieveAETs";
     public static final String EXTERNAL_RETRIEVE_AET = "Series.externalRetrieveAET";
     public static final String AVAILABILITY = "Series.availability";

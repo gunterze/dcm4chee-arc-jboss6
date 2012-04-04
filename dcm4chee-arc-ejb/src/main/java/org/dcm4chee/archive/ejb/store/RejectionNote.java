@@ -38,7 +38,9 @@
 
 package org.dcm4chee.archive.ejb.store;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
@@ -134,5 +136,15 @@ public class RejectionNote {
             return false;
         return true;
     }
+
+    public static List<RejectionNote> selectByAction(List<RejectionNote> rns,
+            Action action) {
+        List<RejectionNote> list = new ArrayList<RejectionNote>(rns.size());
+        for (RejectionNote rn : rns) 
+            if (rn.getActions().contains(action))
+                list.add(rn);
+        return list;
+    }
+
 
 }
