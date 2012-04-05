@@ -3705,17 +3705,19 @@ dcmCodingSchemeDesignator: 99IHEIOCM
 dcmCodeValue: XXXXXX22
 
 dn: dicomAETitle=DCM4CHEE_ADMIN,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dcmSendPendingCGet: TRUE
-dicomAssociationInitiator: TRUE
-dcmSendPendingCMoveInterval: 5000
 dcmMatchUnknown: TRUE
+dicomAssociationInitiator: TRUE
+dicomAssociationAcceptor: TRUE
+dicomAETitle: DCM4CHEE_ADMIN
 objectClass: dicomNetworkAE
 objectClass: dcmNetworkAE
 objectClass: dcmArchiveNetworkAE
-dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
-dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
-dicomAETitle: DCM4CHEE_ADMIN
-dicomAssociationAcceptor: TRUE
+dcmSendPendingCMoveInterval: 5000
+dcmShowEmptyStudy: TRUE
+dcmShowEmptySeries: TRUE
 
 dn: cn=Composite Instance Retrieve Without Bulk Data - GET SCP,dicomAETitle=DCM4CHEE_ADMIN,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dicomSOPClass: 1.2.840.10008.5.1.4.1.2.5.3

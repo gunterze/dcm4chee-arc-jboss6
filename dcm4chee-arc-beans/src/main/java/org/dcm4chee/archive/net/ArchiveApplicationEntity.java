@@ -61,6 +61,7 @@ import org.dcm4chee.archive.ejb.store.StoreParam;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 public class ArchiveApplicationEntity extends ApplicationEntity {
 
@@ -90,6 +91,8 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     private final List<StoreDuplicate> storeDuplicates  = new ArrayList<StoreDuplicate>();
     private final List<RejectionNote> rejectionNotes = new ArrayList<RejectionNote>();
     private final AttributeCoercions attributeCoercions = new AttributeCoercions();
+    private boolean showEmptyStudy;
+    private boolean showEmptySeries;
 
     public ArchiveApplicationEntity(String aeTitle) {
         super(aeTitle);
@@ -326,6 +329,22 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         return rejectionNotes.remove(rn);
     }
 
+    public boolean isShowEmptyStudy() {
+        return showEmptyStudy;
+    }
+
+    public void setShowEmptyStudy(boolean showEmptyStudy) {
+        this.showEmptyStudy = showEmptyStudy;
+    }
+
+    public boolean isShowEmptySeries() {
+        return showEmptySeries;
+    }
+
+    public void setShowEmptySeries(boolean showEmptySeries) {
+        this.showEmptySeries = showEmptySeries;
+    }
+
     public StoreParam getStoreParam() {
         StoreParam storeParam = getArchiveDevice().getStoreParam();
         storeParam.setStoreOriginalAttributes(storeOriginalAttributes);
@@ -354,6 +373,8 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         queryParam.setHideRejectionCodes(codeManager.createCodes(
                 RejectionNote.selectByAction(rns,
                         RejectionNote.Action.HIDE_REJECTED_INSTANCES)));
+        queryParam.setShowEmptySeries(showEmptySeries);
+        queryParam.setShowEmptyStudy(showEmptyStudy);
         return queryParam;
     }
 

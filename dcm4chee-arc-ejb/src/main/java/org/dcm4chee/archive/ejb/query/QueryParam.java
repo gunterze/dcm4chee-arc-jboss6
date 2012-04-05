@@ -46,6 +46,7 @@ import org.dcm4chee.archive.persistence.Code;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 public class QueryParam {
 
@@ -57,6 +58,8 @@ public class QueryParam {
     private List<Code> hideConceptNameCodes;
     private List<Code> hideRejectionCodes;
     private String[] roles;
+    private boolean showEmptyStudy;
+    private boolean showEmptySeries;
 
     public final boolean isCombinedDatetimeMatching() {
         return combinedDatetimeMatching;
@@ -120,6 +123,22 @@ public class QueryParam {
 
     public void setHideRejectionCodes(List<Code> hideRejectionCodes) {
         this.hideRejectionCodes = hideRejectionCodes;
+    }
+
+    public boolean isShowEmptyStudy() {
+        return showEmptyStudy;
+    }
+
+    public void setShowEmptyStudy(boolean showEmptyStudy) {
+        this.showEmptyStudy = showEmptyStudy;
+    }
+
+    public boolean isShowEmptySeries() {
+        return showEmptySeries;
+    }
+
+    public void setShowEmptySeries(boolean showEmptySeries) {
+        this.showEmptySeries = showEmptySeries;
     }
 
 }

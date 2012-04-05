@@ -45,9 +45,9 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.dcm4che.util.StringUtils;
+import org.dcm4chee.archive.ejb.query.Builder;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Code;
-import org.dcm4chee.archive.persistence.QCode;
 import org.dcm4chee.archive.persistence.QInstance;
 import org.dcm4chee.archive.persistence.Series;
 import org.dcm4chee.archive.persistence.Study;
@@ -55,10 +55,10 @@ import org.hibernate.Session;
 
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.hibernate.HibernateQuery;
-import com.mysema.query.types.ExpressionUtils;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 public class SeriesUpdate {
 
@@ -89,18 +89,13 @@ public class SeriesUpdate {
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(QInstance.instance.series.eq(series));
         builder.and(QInstance.instance.replaced.isFalse());
-        andNotIn(builder, QInstance.instance.conceptNameCode, hideConceptNameCodes);
-        andNotIn(builder, QInstance.instance.rejectionCode, hideRejectionCodes);
+        Builder.andNotInCodes(builder, QInstance.instance.conceptNameCode, hideConceptNameCodes);
+        Builder.andNotInCodes(builder, QInstance.instance.rejectionCode, hideRejectionCodes);
         Session session = (Session) em.getDelegate();
         return (int) new HibernateQuery(session)
             .from(QInstance.instance)
             .where(builder)
             .count();
-    }
-
-    private static void andNotIn(BooleanBuilder builder, QCode code, List<Code> codes) {
-        if (codes != null && !codes.isEmpty())
-            builder.and(ExpressionUtils.or(code.isNull(),code.in(codes).not()));
     }
 
     private static String[] retrieveAETsOf(EntityManager em, Series series) {

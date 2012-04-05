@@ -213,6 +213,18 @@ olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.34
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
+olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.35
+  NAME 'dcmShowEmptyStudy'
+  DESC 'Specifies to hide study without series from a query result; disabled if absent'
+  EQUALITY booleanMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 
+  SINGLE-VALUE )
+olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.36
+  NAME 'dcmShowEmptySeries'
+  DESC 'Specifies to hide series without instances from a query result; disabled if absent'
+  EQUALITY booleanMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 
+  SINGLE-VALUE )
 olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.4
   NAME 'dcmArchiveDevice'
   DESC 'DICOM Archive Device related information'
@@ -243,7 +255,9 @@ olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.5
     dcmFwdMppsRetryInterval $
     dcmIanDestination $
     dcmIanMaxRetries $
-    dcmIanRetryInterval ) )
+    dcmIanRetryInterval $
+    dcmShowEmptySeries $
+    dcmShowEmptyStudy ) )
 olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.10
   NAME 'dcmAttributeFilter'
   DESC 'Attributes stored in the database'

@@ -69,6 +69,7 @@ import com.mysema.query.jpa.hibernate.HibernateQuery;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -111,6 +112,10 @@ public class LocateInstancesBean implements LocateInstances {
         builder.and(Builder.uids(QInstance.instance.sopInstanceUID,
                 keys.getStrings(Tag.SOPInstanceUID), false));
         builder.and(QInstance.instance.replaced.isFalse());
+        Builder.andNotInCodes(builder, QInstance.instance.conceptNameCode, 
+                queryParam.getHideConceptNameCodes());
+        Builder.andNotInCodes(builder, QInstance.instance.rejectionCode, 
+                queryParam.getHideRejectionCodes());
         return locate(new HibernateQuery(session)
             .from(QInstance.instance)
             .leftJoin(QInstance.instance.fileRefs, QFileRef.fileRef)

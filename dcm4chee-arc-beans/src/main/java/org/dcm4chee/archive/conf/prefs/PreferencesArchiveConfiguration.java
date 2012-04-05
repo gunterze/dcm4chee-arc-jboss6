@@ -64,6 +64,7 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration {
 
@@ -185,6 +186,8 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         storeNotDef(prefs, "dcmIanMaxRetries", arcAE.getIANMaxRetries(), 0);
         storeNotDef(prefs, "dcmIanRetryInterval", arcAE.getIANRetryInterval(),
                     ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+        storeNotDef(prefs, "dcmShowEmptySeries", arcAE.isShowEmptySeries(), false);
+        storeNotDef(prefs, "dcmShowEmptyStudy", arcAE.isShowEmptyStudy(), false);
     }
 
     @Override
@@ -278,6 +281,8 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         arcae.setIANMaxRetries(prefs.getInt("dcmIanMaxRetries", 0));
         arcae.setIANRetryInterval(prefs.getInt("dcmIanRetryInterval",
                 ArchiveApplicationEntity.DEF_RETRY_INTERVAL));
+        arcae.setShowEmptySeries(prefs.getBoolean("dcmShowEmptySeries", false));
+        arcae.setShowEmptyStudy(prefs.getBoolean("dcmShowEmptyStudy", false));
     }
 
     @Override
@@ -471,6 +476,14 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
                  aa.getIANRetryInterval(),
                  bb.getIANRetryInterval(),
                  ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
+         storeDiff(prefs, "dcmShowEmptySeries",
+                 aa.isShowEmptySeries(),
+                 bb.isShowEmptySeries(),
+                 false);
+         storeDiff(prefs, "dcmShowEmptyStudy",
+                 aa.isShowEmptyStudy(),
+                 bb.isShowEmptyStudy(),
+                 false);
     }
 
     @Override

@@ -72,6 +72,7 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 public class ArchiveConfigurationTestUtils {
 
@@ -729,6 +730,8 @@ public class ArchiveConfigurationTestUtils {
         addTC(ae, null, SCU, UID.ModalityPerformedProcedureStepSOPClass, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCU, UID.InstanceAvailabilityNotificationSOPClass, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCP, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
+        ae.setShowEmptyStudy(false);
+        ae.setShowEmptySeries(false);
         return ae;
     }
 
@@ -750,6 +753,8 @@ public class ArchiveConfigurationTestUtils {
         addTCs(ae, EnumSet.of(QueryOption.RELATIONAL), SCP, RETRIEVE_CUIDS, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCP, UID.CompositeInstanceRetrieveWithoutBulkDataGET, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCP, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
+        ae.setShowEmptyStudy(true);
+        ae.setShowEmptySeries(true);
         return ae;
     }
 

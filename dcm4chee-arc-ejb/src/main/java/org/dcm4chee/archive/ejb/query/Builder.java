@@ -38,6 +38,8 @@
 
 package org.dcm4chee.archive.ejb.query;
 
+import java.util.List;
+
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
@@ -151,6 +153,8 @@ public abstract class Builder {
                 AttributeFilter.selectStringValue(keys, attrFilter.getCustomAttribute3(), "*"),
                 matchUnknown, true));
         builder.and(permission(queryParam.getRoles(), StudyPermissionAction.QUERY));
+        builder.and(queryParam.isShowEmptyStudy()
+                ? null : QStudy.study.numberOfStudyRelatedInstances.ne(0));
     }
 
     static void addSeriesLevelPredicates(BooleanBuilder builder, Attributes keys,
@@ -205,6 +209,8 @@ public abstract class Builder {
         builder.and(wildCard(QSeries.series.seriesCustomAttribute3,
                 AttributeFilter.selectStringValue(keys, attrFilter.getCustomAttribute3(), "*"),
                 matchUnknown, true));
+        builder.and(queryParam.isShowEmptySeries() 
+                ? null : QSeries.series.numberOfSeriesRelatedInstances.ne(0));
     }
 
     static void addInstanceLevelPredicates(BooleanBuilder builder, Attributes keys,
@@ -246,6 +252,8 @@ public abstract class Builder {
                 AttributeFilter.selectStringValue(keys, attrFilter.getCustomAttribute3(), "*"),
                 matchUnknown, true));
         builder.and(QInstance.instance.replaced.isFalse());
+        andNotInCodes(builder, QInstance.instance.conceptNameCode, queryParam.getHideConceptNameCodes());
+        andNotInCodes(builder, QInstance.instance.rejectionCode, queryParam.getHideRejectionCodes());
     }
 
     static Predicate pids(IDWithIssuer[] pids, boolean matchUnknown) {
@@ -383,12 +391,18 @@ public abstract class Builder {
         if (predicate == null)
             return null;
 
-        return matchUnknown(new HibernateSubQuery()
-            .from(QCode.code)
-            .where(codes.contains(QCode.code), predicate)
-            .exists(),
+        return matchUnknown(
+                new HibernateSubQuery()
+                    .from(QCode.code)
+                    .where(codes.contains(QCode.code), predicate)
+                    .exists(),
                 codes,
-               matchUnknown);
+                matchUnknown);
+    }
+
+    public static void andNotInCodes(BooleanBuilder builder, QCode code, List<Code> codes) {
+        if (codes != null && !codes.isEmpty())
+            builder.and(ExpressionUtils.or(code.isNull(), code.notIn(codes)));
     }
 
     static Predicate issuer(QIssuer path, Attributes item, boolean matchUnknown) {
