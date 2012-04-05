@@ -55,6 +55,7 @@ import org.hibernate.Session;
 
 import com.mysema.query.BooleanBuilder;
 import com.mysema.query.jpa.hibernate.HibernateQuery;
+import com.mysema.query.types.ExpressionUtils;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -99,7 +100,7 @@ public class SeriesUpdate {
 
     private static void andNotIn(BooleanBuilder builder, QCode code, List<Code> codes) {
         if (codes != null && !codes.isEmpty())
-            builder.andNot(code.in(codes));
+            builder.and(ExpressionUtils.or(code.isNull(),code.in(codes).not()));
     }
 
     private static String[] retrieveAETsOf(EntityManager em, Series series) {

@@ -85,7 +85,7 @@ import org.dcm4che.util.StringUtils;
     query="SELECT DISTINCT(i.sopClassUID) FROM Instance i WHERE i.series.study = ?1 AND i.replaced = false"),
 @NamedQuery(
     name="Study.countRelatedSeries",
-    query="SELECT COUNT(s) FROM Series s WHERE s.study = ?1"),
+    query="SELECT COUNT(s) FROM Series s WHERE s.study = ?1 AND s.numberOfSeriesRelatedInstances != 0"),
 @NamedQuery(
     name="Study.countRelatedInstances",
     query="SELECT SUM(s.numberOfSeriesRelatedInstances) FROM Series s WHERE s.study = ?1"),
