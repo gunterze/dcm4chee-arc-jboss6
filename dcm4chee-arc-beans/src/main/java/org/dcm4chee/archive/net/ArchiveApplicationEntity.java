@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.net;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import javax.xml.transform.Templates;
@@ -48,9 +49,12 @@ import org.dcm4che.conf.api.AttributeCoercion;
 import org.dcm4che.conf.api.AttributeCoercions;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Dimse;
+import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.TransferCapability.Role;
 import org.dcm4che.util.AttributesFormat;
+import org.dcm4chee.archive.ejb.query.QueryParam;
+import org.dcm4chee.archive.ejb.store.CodeManager;
 import org.dcm4chee.archive.ejb.store.RejectionNote;
 import org.dcm4chee.archive.ejb.store.StoreDuplicate;
 import org.dcm4chee.archive.ejb.store.StoreParam;
@@ -331,6 +335,26 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         storeParam.setStoreDuplicates(storeDuplicates);
         storeParam.setRejectionNotes(rejectionNotes);
         return storeParam;
+    }
+
+    public QueryParam getQueryParam(CodeManager codeManager,
+            EnumSet<QueryOption> queryOpts, String... roles) {
+        QueryParam queryParam = new QueryParam();
+        ArchiveDevice dev = getArchiveDevice();
+        List<RejectionNote> rns = getRejectionNotes();
+        queryParam.setFuzzyStr(dev.getFuzzyStr());
+        queryParam.setAttributeFilters(dev.getAttributeFilters());
+        queryParam.setCombinedDatetimeMatching(queryOpts.contains(QueryOption.DATETIME));
+        queryParam.setFuzzySemanticMatching(queryOpts.contains(QueryOption.FUZZY));
+        queryParam.setMatchUnknown(matchUnknown);
+        queryParam.setRoles(roles);
+        queryParam.setHideConceptNameCodes(codeManager.createCodes(
+                RejectionNote.selectByAction(rns,
+                        RejectionNote.Action.HIDE_REJECTION_NOTE)));
+        queryParam.setHideRejectionCodes(codeManager.createCodes(
+                RejectionNote.selectByAction(rns,
+                        RejectionNote.Action.HIDE_REJECTED_INSTANCES)));
+        return queryParam;
     }
 
 }

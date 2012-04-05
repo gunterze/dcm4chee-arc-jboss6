@@ -38,6 +38,8 @@
 
 package org.dcm4chee.archive.ejb.query;
 
+import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Tag;
 import org.dcm4chee.archive.persistence.Issuer;
 
 /**
@@ -55,7 +57,27 @@ public class IDWithIssuer {
 
     @Override
     public String toString() {
-        // TODO Auto-generated method stub
         return "IDWithIssuer[id=" + id + ", issuer=" + issuer + "]";
+    }
+
+    public static IDWithIssuer pidWithIssuer(Attributes keys) {
+        String id = keys.getString(Tag.PatientID, "*");
+        if (id.equals("*"))
+            return null;
+
+        String entityID = keys.getString(Tag.IssuerOfPatientID, "*");
+        Attributes issuerItem = keys.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence);
+        String entityUID = issuerItem != null
+                ? issuerItem.getString(Tag.UniversalEntityID, "*")
+                : "*";
+        String entityUIDType = issuerItem != null
+                ? issuerItem.getString(Tag.UniversalEntityIDType, "*")
+                : "*";
+        Issuer issuer = entityID.equals("*")
+                     && entityUID.equals("*")
+                     && entityUIDType.equals("*")
+                     ? null
+                     : new Issuer(entityID, entityUID, entityUIDType);
+        return new IDWithIssuer(id, issuer);
     }
 }

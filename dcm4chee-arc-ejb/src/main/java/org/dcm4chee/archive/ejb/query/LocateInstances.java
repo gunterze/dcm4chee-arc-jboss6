@@ -51,6 +51,7 @@ import org.dcm4che.net.service.InstanceLocator;
 @Local
 public interface LocateInstances {
 
-     List<InstanceLocator> find(IDWithIssuer[] pids, Attributes keys);
+     List<InstanceLocator> find(IDWithIssuer[] pids, Attributes keys,
+             QueryParam queryParam);
 
 }

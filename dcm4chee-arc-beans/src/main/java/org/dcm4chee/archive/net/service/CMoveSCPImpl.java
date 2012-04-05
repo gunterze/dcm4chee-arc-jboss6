@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.net.service;
 
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.List;
 
 import javax.ejb.EJB;
@@ -62,7 +63,10 @@ import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4che.util.AttributesValidator;
+import org.dcm4chee.archive.ejb.query.IDWithIssuer;
 import org.dcm4chee.archive.ejb.query.LocateInstances;
+import org.dcm4chee.archive.ejb.query.QueryParam;
+import org.dcm4chee.archive.ejb.store.CodeManager;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 
 /**
@@ -76,6 +80,9 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
 
     @EJB
     private LocateInstances calculateMatches;
+
+    @EJB
+    private CodeManager codeManager;
 
     public CMoveSCPImpl(String[] sopClasses, String... qrLevels) {
         super(sopClasses);
@@ -98,7 +105,11 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(validator, qrLevels);
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        boolean relational = QueryOption.toOptions(extNeg).contains(QueryOption.RELATIONAL);
+        EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
+        boolean relational = queryOpts.contains(QueryOption.RELATIONAL);
+        level.validateRetrieveKeys(validator, rootLevel, relational);
+        ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+        QueryParam queryParam = ae.getQueryParam(codeManager, queryOpts, roles());
         level.validateRetrieveKeys(validator, rootLevel, relational);
         String dest = rq.getString(Tag.MoveDestination);
         final ApplicationEntity destAE;
@@ -110,7 +121,7 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         } catch (ConfigurationException e) {
             throw new DicomServiceException(Status.UnableToProcess, e);
         }
-        List<InstanceLocator> matches = calculateMatches(rq, keys);
+        List<InstanceLocator> matches = calculateMatches(rq, keys, queryParam);
         RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(
                 BasicRetrieveTask.Service.C_MOVE, as, pc, rq, matches, false) {
 
@@ -134,10 +145,18 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
     }
 
 
-    private List<InstanceLocator> calculateMatches(Attributes rq, Attributes keys)
+    private String roles() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    private List<InstanceLocator> calculateMatches(Attributes rq,
+            Attributes keys, QueryParam queryParam)
             throws DicomServiceException {
         try {
-            return calculateMatches.find(CFindSCPImpl.pids(keys), keys);
+            IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys);
+            IDWithIssuer[] pids = pid != null ? new IDWithIssuer[] { pid } : null;
+            return calculateMatches.find(pids, keys, queryParam);
         }  catch (Exception e) {
             throw new DicomServiceException(Status.UnableToCalculateNumberOfMatches, e);
         }

@@ -56,7 +56,6 @@ import org.dcm4chee.archive.ejb.query.IDWithIssuer;
 import org.dcm4chee.archive.ejb.query.ModalityWorklistQuery;
 import org.dcm4chee.archive.ejb.query.QueryParam;
 import org.dcm4chee.archive.net.ArchiveDevice;
-import org.dcm4chee.archive.persistence.Issuer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -72,7 +71,8 @@ public class MWLCFindSCPImpl extends BasicCFindSCP {
             Attributes rq, Attributes keys) throws DicomServiceException {
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        IDWithIssuer[] pids = pids(keys);
+        IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys);
+        IDWithIssuer[] pids = pid != null ? new IDWithIssuer[] { pid } : null;
         ArchiveDevice dev = (ArchiveDevice) as.getApplicationEntity().getDevice(); 
         EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
         QueryParam queryParam = new QueryParam();
@@ -89,24 +89,4 @@ public class MWLCFindSCPImpl extends BasicCFindSCP {
         }
     }
 
-    static IDWithIssuer[] pids(Attributes keys) {
-        String id = keys.getString(Tag.PatientID, "*");
-        if (id.equals("*"))
-            return null;
-
-        String entityID = keys.getString(Tag.IssuerOfPatientID, "*");
-        Attributes issuerItem = keys.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence);
-        String entityUID = issuerItem != null
-                ? issuerItem.getString(Tag.UniversalEntityID, "*")
-                : "*";
-        String entityUIDType = issuerItem != null
-                ? issuerItem.getString(Tag.UniversalEntityIDType, "*")
-                : "*";
-        Issuer issuer = entityID.equals("*")
-                     && entityUID.equals("*")
-                     && entityUIDType.equals("*")
-                     ? null
-                     : new Issuer(entityID, entityUID, entityUIDType);
-        return new IDWithIssuer[] { new IDWithIssuer(id, issuer) };
-    }
 }

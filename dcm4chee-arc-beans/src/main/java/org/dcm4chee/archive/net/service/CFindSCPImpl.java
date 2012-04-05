@@ -40,7 +40,6 @@ package org.dcm4chee.archive.net.service;
 
 
 import java.util.EnumSet;
-import java.util.List;
 
 import javax.ejb.EJB;
 
@@ -60,10 +59,7 @@ import org.dcm4chee.archive.ejb.query.CompositeQuery;
 import org.dcm4chee.archive.ejb.query.IDWithIssuer;
 import org.dcm4chee.archive.ejb.query.QueryParam;
 import org.dcm4chee.archive.ejb.store.CodeManager;
-import org.dcm4chee.archive.ejb.store.RejectionNote;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
-import org.dcm4chee.archive.net.ArchiveDevice;
-import org.dcm4chee.archive.persistence.Issuer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -92,21 +88,10 @@ public class CFindSCPImpl extends BasicCFindSCP {
         EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
         boolean relational = queryOpts.contains(QueryOption.RELATIONAL);
         level.validateQueryKeys(validator, rootLevel, relational);
-        IDWithIssuer[] pids = pids(keys);
+        IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys);
+        IDWithIssuer[] pids = pid != null ? new IDWithIssuer[] { pid } : null;
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-        ArchiveDevice dev = ae.getArchiveDevice();
-        List<RejectionNote> rns = ae.getRejectionNotes();
-        QueryParam queryParam = new QueryParam();
-        queryParam.setFuzzyStr(dev.getFuzzyStr());
-        queryParam.setAttributeFilters(dev.getAttributeFilters());
-        queryParam.setCombinedDatetimeMatching(queryOpts.contains(QueryOption.DATETIME));
-        queryParam.setFuzzySemanticMatching(queryOpts.contains(QueryOption.FUZZY));
-        queryParam.setMatchUnknown(ae.isMatchUnknown());
-        queryParam.setRoles(roles());
-        queryParam.setHideConceptNameCodes(codeManager.createCodes(
-                RejectionNote.selectByAction(rns, RejectionNote.Action.HIDE_REJECTION_NOTE)));
-        queryParam.setHideRejectionCodes(codeManager.createCodes(
-                RejectionNote.selectByAction(rns, RejectionNote.Action.HIDE_REJECTED_INSTANCES)));
+        QueryParam queryParam = ae.getQueryParam(codeManager, queryOpts, roles());
         try {
             CompositeQuery query = (CompositeQuery) JNDIUtils.lookup(CompositeQuery.JNDI_NAME);
             switch (level) {
@@ -127,27 +112,6 @@ public class CFindSCPImpl extends BasicCFindSCP {
         } catch (Exception e) {
             throw new DicomServiceException(Status.UnableToProcess, e);
         }
-    }
-
-    static IDWithIssuer[] pids(Attributes keys) {
-        String id = keys.getString(Tag.PatientID, "*");
-        if (id.equals("*"))
-            return null;
-
-        String entityID = keys.getString(Tag.IssuerOfPatientID, "*");
-        Attributes issuerItem = keys.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence);
-        String entityUID = issuerItem != null
-                ? issuerItem.getString(Tag.UniversalEntityID, "*")
-                : "*";
-        String entityUIDType = issuerItem != null
-                ? issuerItem.getString(Tag.UniversalEntityIDType, "*")
-                : "*";
-        Issuer issuer = entityID.equals("*")
-                     && entityUID.equals("*")
-                     && entityUIDType.equals("*")
-                     ? null
-                     : new Issuer(entityID, entityUID, entityUIDType);
-        return new IDWithIssuer[] { new IDWithIssuer(id, issuer) };
     }
 
     private String[] roles() {

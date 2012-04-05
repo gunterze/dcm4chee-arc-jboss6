@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.net.service;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import javax.ejb.EJB;
@@ -47,6 +48,7 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
+import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCGetSCP;
 import org.dcm4che.net.service.BasicRetrieveTask;
@@ -55,7 +57,10 @@ import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.net.service.QueryRetrieveLevel;
 import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4che.util.AttributesValidator;
+import org.dcm4chee.archive.ejb.query.IDWithIssuer;
 import org.dcm4chee.archive.ejb.query.LocateInstances;
+import org.dcm4chee.archive.ejb.query.QueryParam;
+import org.dcm4chee.archive.ejb.store.CodeManager;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 
 /**
@@ -69,6 +74,9 @@ public class CGetSCPImpl extends BasicCGetSCP {
 
     @EJB
     private LocateInstances calculateMatches;
+
+    @EJB
+    private CodeManager codeManager;
 
     public CGetSCPImpl(String[] sopClasses, String... qrLevels) {
         super(sopClasses);
@@ -90,24 +98,33 @@ public class CGetSCPImpl extends BasicCGetSCP {
         AttributesValidator validator = new AttributesValidator(keys);
         QueryRetrieveLevel level = QueryRetrieveLevel.valueOf(validator, qrLevels);
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
-        boolean relational = rootLevel == QueryRetrieveLevel.IMAGE
-                || QueryOption.toOptions(as.getAAssociateAC().getExtNegotiationFor(cuid))
-                        .contains(QueryOption.RELATIONAL);
+        ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
+        EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
+        boolean relational = queryOpts.contains(QueryOption.RELATIONAL);
         level.validateRetrieveKeys(validator, rootLevel, relational);
-        List<InstanceLocator> matches  = calculateMatches(rq, keys);
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+        QueryParam queryParam = ae.getQueryParam(codeManager, queryOpts, roles());
+        List<InstanceLocator> matches = calculateMatches(rq, keys, queryParam);
         RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(
                 BasicRetrieveTask.Service.C_GET, as, pc, rq, matches, withoutBulkData);
         retrieveTask.setSendPendingRSP(ae.isSendPendingCGet());
         return retrieveTask;
     }
 
-    private List<InstanceLocator> calculateMatches(Attributes rq, Attributes keys)
-            throws DicomServiceException {
+    private List<InstanceLocator> calculateMatches(Attributes rq,
+            Attributes keys, QueryParam queryParam) throws DicomServiceException {
         try {
-            return calculateMatches.find(CFindSCPImpl.pids(keys), keys);
+            IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys);
+            IDWithIssuer[] pids = pid != null ? new IDWithIssuer[] { pid } : null;
+            return calculateMatches.find(pids, keys, queryParam);
         }  catch (Exception e) {
             throw new DicomServiceException(Status.UnableToCalculateNumberOfMatches, e);
         }
     }
+
+    private String roles() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

@@ -100,7 +100,8 @@ public class LocateInstancesBean implements LocateInstances {
     }
 
     @Override
-    public List<InstanceLocator> find(IDWithIssuer[] pids, Attributes keys) {
+    public List<InstanceLocator> find(IDWithIssuer[] pids, Attributes keys,
+            QueryParam queryParam) {
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(Builder.pids(pids, false));
         builder.and(Builder.uids(QStudy.study.studyInstanceUID,
