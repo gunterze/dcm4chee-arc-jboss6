@@ -38,9 +38,13 @@
 
 package org.dcm4chee.archive.ejb.query;
 
+import java.util.List;
+import java.util.Set;
+
 import javax.ejb.Local;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4chee.archive.persistence.Code;
 import org.dcm4chee.archive.persistence.PerformedProcedureStep;
 
 /**
@@ -49,5 +53,6 @@ import org.dcm4chee.archive.persistence.PerformedProcedureStep;
 @Local
 public interface IANQuery {
 
-    Attributes createIANforMPPS(PerformedProcedureStep pps);
+    Attributes createIANforMPPS(PerformedProcedureStep pps,
+            List<Code> hideConceptNameCodes, Set<String> rejectedIUIDs);
 }

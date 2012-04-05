@@ -38,14 +38,19 @@
 
 package org.dcm4chee.archive.ejb.store;
 
-import static org.dcm4chee.archive.ejb.store.RejectionNote.Action.*;
+import static org.dcm4chee.archive.ejb.store.RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE;
+import static org.dcm4chee.archive.ejb.store.RejectionNote.Action.NOT_REJECT_SUBSEQUENT_OCCURRENCE;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -102,6 +107,8 @@ public class InstanceStoreBean implements InstanceStore {
     private Code curRejectionCode;
     private List<Code> hideRejectionCodes;
     private List<Code> hideConceptNameCodes;
+    private HashMap<String,HashSet<String>> rejectedInstances =
+            new HashMap<String,HashSet<String>>();
 
     @PostConstruct
     public void init() {
@@ -112,7 +119,7 @@ public class InstanceStoreBean implements InstanceStore {
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public Attributes createIANforPreviousMPPS() {
         try {
-            return createIANforMPPS(prevMpps);
+            return createIANforMPPS(prevMpps, Collections.<String> emptySet());
         } finally {
             prevMpps = null;
         }
@@ -122,16 +129,17 @@ public class InstanceStoreBean implements InstanceStore {
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public Attributes createIANforCurrentMPPS() {
         try {
-            return createIANforMPPS(curMpps);
+            return createIANforMPPS(curMpps, Collections.<String> emptySet());
         } finally {
             curMpps = null;
         }
     }
 
-    private Attributes createIANforMPPS(PerformedProcedureStep pps) {
+    private Attributes createIANforMPPS(PerformedProcedureStep pps,
+            Set<String> rejectedIUIDs) {
         return (pps == null || pps.isInProgress())
                 ? null
-                : ianQuery.createIANforMPPS(pps);
+                : ianQuery.createIANforMPPS(pps, hideConceptNameCodes, rejectedIUIDs);
     }
 
     @Override
@@ -224,10 +232,12 @@ public class InstanceStoreBean implements InstanceStore {
         em.joinTransaction();
         initHideRejectionCodes(storeParam);
         initHideConceptNameCodes(storeParam);
+        rejectedInstances.clear();
         Attributes conceptNameCode = data.getNestedDataset(Tag.ConceptNameCodeSequence);
         RejectionNote rn = storeParam.getRejectionNote(conceptNameCode);
-        if (rn != null)
-            rejectRefInstances(data, CodeFactory.getCode(em, rn));
+        if (rn != null) {
+            rejectRefInstances(data, rn);
+        }
         Series series = getSeries(sourceAET, data, availability, storeParam);
         coerceSeriesAttributes(series, data, modified);
         if (!modified.isEmpty() && storeParam.isStoreOriginalAttributes()) {
@@ -272,7 +282,10 @@ public class InstanceStoreBean implements InstanceStore {
                             RejectionNote.Action.HIDE_REJECTED_INSTANCES));
     }
 
-    private void rejectRefInstances(Attributes data, Code rejectionCode) {
+    private void rejectRefInstances(Attributes data, RejectionNote rn) {
+        boolean hideRejectedInstances = rn.getActions()
+                .contains(RejectionNote.Action.HIDE_REJECTED_INSTANCES);
+        Code rejectionCcode = CodeFactory.getCode(em, rn);
         HashMap<String,String> iuid2cuid = new HashMap<String,String>();
         Sequence refStudySeq = data.getSequence(Tag.CurrentRequestedProcedureEvidenceSequence);
         if (refStudySeq == null)
@@ -303,12 +316,23 @@ public class InstanceStoreBean implements InstanceStore {
                     Study study = series.getStudy();
                     if (!studyIUID.equals(study.getStudyInstanceUID()))
                         rejectionFailed("Rejection failed: Mismatch of Study Instance UID");
+                    if (hideRejectedInstances
+                            && UID.ModalityPerformedProcedureStepSOPClass
+                                .equals(series.getPerformedProcedureStepClassUID())) {
+                        String mppsiuid = series.getPerformedProcedureStepInstanceUID();
+                        HashSet<String> iuids = rejectedInstances.get(mppsiuid);
+                        if (iuids == null)
+                            rejectedInstances.put(mppsiuid,
+                                    iuids = new HashSet<String>(iuid2cuid.keySet()));
+                        else
+                            iuids.addAll(iuid2cuid.keySet());
+                    }
                     for (Instance inst : insts) {
                         String refCUID = iuid2cuid.remove(inst.getSopInstanceUID());
                         if (refCUID != null) {
                             if (!refCUID.equals(inst.getSopClassUID()))
                                 rejectionFailed("Rejection failed: Mismatch of SOP Class UID");
-                            inst.setRejectionCode(rejectionCode);
+                            inst.setRejectionCode(rejectionCcode);
                         }
                     }
                     updateSeries(series);
@@ -316,6 +340,21 @@ public class InstanceStoreBean implements InstanceStore {
                 if (!iuid2cuid.isEmpty())
                     rejectionFailed("Rejection failed: No such referenced SOP Instances");
             }
+        }
+    }
+
+    @Override
+    public List<Attributes> createIANsforRejectionNote() {
+        try {
+            List<Attributes> ians = new ArrayList<Attributes>(rejectedInstances.size());
+            for (Entry<String, HashSet<String>> entry : rejectedInstances.entrySet()) {
+                Attributes ian = createIANforMPPS(findPPS(entry.getKey()), entry.getValue());
+                if (ian != null)
+                    ians.add(ian);
+            }
+            return ians;
+        } finally {
+            rejectedInstances.clear();
         }
     }
 
@@ -566,6 +605,7 @@ public class InstanceStoreBean implements InstanceStore {
         curRejectionCode = null;
         hideRejectionCodes = null;
         hideConceptNameCodes = null;
+        rejectedInstances.clear();
         em.close();
         em = null;
     }

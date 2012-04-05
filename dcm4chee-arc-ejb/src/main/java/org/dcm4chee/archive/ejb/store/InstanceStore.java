@@ -38,6 +38,8 @@
 
 package org.dcm4chee.archive.ejb.store;
 
+import java.util.Collection;
+
 import javax.ejb.Local;
 
 import org.dcm4che.data.Attributes;
@@ -70,4 +72,5 @@ public interface InstanceStore {
 
     Attributes createIANforCurrentMPPS();
 
+    Collection<Attributes> createIANsforRejectionNote();
 }

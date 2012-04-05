@@ -40,6 +40,7 @@ package org.dcm4chee.archive.ejb.query;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -58,6 +59,7 @@ import org.dcm4che.net.Status;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
 import org.dcm4chee.archive.persistence.Availability;
+import org.dcm4chee.archive.persistence.Code;
 import org.dcm4chee.archive.persistence.PerformedProcedureStep;
 import org.dcm4chee.archive.persistence.QInstance;
 import org.dcm4chee.archive.persistence.QSeries;
@@ -94,7 +96,8 @@ public class IANQueryBean implements IANQuery {
     }
 
     @Override
-    public Attributes createIANforMPPS(PerformedProcedureStep mpps) {
+    public Attributes createIANforMPPS(PerformedProcedureStep mpps,
+            List<Code> hideConceptNameCodes, Set<String> rejectedIUIDs) {
         Sequence perfSeriesSeq = mpps.getAttributes()
                 .getSequence(Tag.PerformedSeriesSequence);
         if (perfSeriesSeq == null)
@@ -132,7 +135,8 @@ public class IANQueryBean implements IANQuery {
                 QInstance.instance.sopInstanceUID,
                 QInstance.instance.retrieveAETs,
                 QInstance.instance.externalRetrieveAET,
-                QInstance.instance.availability);
+                QInstance.instance.availability,
+                QInstance.instance.conceptNameCode.pk);
 
         if (list.isEmpty())
             return null;
@@ -166,19 +170,23 @@ public class IANQueryBean implements IANQuery {
                 continue;
             String seriesIUID = perfSeries.getString(Tag.SeriesInstanceUID);
             Attributes refSeries = new Attributes(3);
-            refSeriesSeq.add(refSeries);
             Sequence refSOPs = refSeries.newSequence(Tag.ReferencedSOPSequence, seriesSize);
             refSeries.setString(Tag.SeriesInstanceUID, VR.UI, seriesIUID);
             if (refImgs != null)
-                remaining -= addAllTo(studyIUID, seriesIUID, refImgs, map, refSOPs);
+                remaining -= addAllTo(studyIUID, seriesIUID, refImgs, map,
+                        refSOPs, rejectedIUIDs, hideConceptNameCodes);
             if (refNonImgs != null)
-                remaining -= addAllTo(studyIUID, seriesIUID, refNonImgs, map, refSOPs);
+                remaining -= addAllTo(studyIUID, seriesIUID, refNonImgs, map,
+                        refSOPs, rejectedIUIDs, hideConceptNameCodes);
+            if (!refSOPs.isEmpty())
+                refSeriesSeq.add(refSeries);
         }
-        return remaining == 0 ? ian : null;
+        return remaining == 0 && !refSeriesSeq.isEmpty() ? ian : null;
     }
 
     private static int addAllTo(String studyIUD, String seriesIUID,
-            Sequence ppsRefs, HashMap<String, Object[]> map, Sequence refSOPs) {
+            Sequence ppsRefs, HashMap<String, Object[]> map, Sequence refSOPs,
+            Set<String> rejected, List<Code> hideConceptNameCodes) {
         int count = 0;
         for (Attributes ppsRef : ppsRefs) {
             Object[] a = map.get(ppsRef.getString(Tag.ReferencedSOPInstanceUID));
@@ -195,11 +203,25 @@ public class IANQueryBean implements IANQuery {
                     throw new DicomServiceRuntimeException(
                             new DicomServiceException(Status.ProcessingFailure,
                                     "Mismatch of SOP Class UID of referenced Instance"));
-                refSOPs.add(refSOP(ppsRef, (String) a[4], (String) a[5], (Availability) a[6]));
+                if (!contains(hideConceptNameCodes, (Long) a[7]))
+                    refSOPs.add(refSOP(ppsRef, (String) a[4], (String) a[5], 
+                            rejected.contains(ppsRef.getString(Tag.ReferencedSOPInstanceUID))
+                                    ? Availability.UNAVAILABLE
+                                    : (Availability) a[6]));
                 count++;
             }
         }
         return count;
+    }
+
+    private static boolean contains(List<Code> hideConceptNameCodes, Long codePk) {
+        if (codePk != null) {
+            long pk = codePk.longValue();
+            for (Code code : hideConceptNameCodes)
+                if (code.getPk() == pk)
+                    return true;
+        }
+        return false;
     }
 
     private static Attributes refSOP(Attributes ppsRef, String retrieveAETs,

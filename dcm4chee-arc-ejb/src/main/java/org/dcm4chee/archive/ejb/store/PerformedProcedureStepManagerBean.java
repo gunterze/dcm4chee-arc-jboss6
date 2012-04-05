@@ -40,6 +40,7 @@ package org.dcm4chee.archive.ejb.store;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -124,15 +125,15 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
                 throw new DicomServiceRuntimeException(
                         new DicomServiceException(Status.MissingAttributeValue)
                         .setAttributeIdentifierList(Tag.PerformedSeriesSequence));
-            ian = ianQuery.createIANforMPPS(pps);
+            List<Code> hideConceptNameCodes = CodeFactory.createCodes(em,
+                    RejectionNote.selectByAction(storeParam.getRejectionNotes(),
+                            RejectionNote.Action.HIDE_REJECTION_NOTE));
+            ian = ianQuery.createIANforMPPS(pps, hideConceptNameCodes, Collections.<String> emptySet());
             if (pps.isDiscontinued()) {
                 Attributes reasonCode = attrs.getNestedDataset(
                         Tag.PerformedProcedureStepDiscontinuationReasonCodeSequence);
                 RejectionNote rn = storeParam.getRejectionNote(reasonCode);
                 if (rn != null) {
-                    List<Code> hideConceptNameCodes = CodeFactory.createCodes(em,
-                            RejectionNote.selectByAction(storeParam.getRejectionNotes(),
-                                    RejectionNote.Action.HIDE_REJECTION_NOTE));
                     List<Code> hideRejectionCodes = CodeFactory.createCodes(em,
                             RejectionNote.selectByAction(storeParam.getRejectionNotes(),
                                     RejectionNote.Action.HIDE_REJECTED_INSTANCES));

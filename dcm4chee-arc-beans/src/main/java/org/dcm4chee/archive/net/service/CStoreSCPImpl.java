@@ -175,8 +175,11 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
                     new FileRef(fs, filePath, pc.getTransferSyntax(), dst.length(),
                             digest(digest)), ae.getStoreParam())) {
                 dst = null;
-                if (ae.hasIANDestinations())
+                if (ae.hasIANDestinations()) {
                     scheduleIAN(ae, store.createIANforPreviousMPPS());
+                    for (Attributes ian : store.createIANsforRejectionNote())
+                        scheduleIAN(ae, ian);
+                }
             }
             if (!modified.isEmpty()) {
                 if (LOG.isInfoEnabled()) {
