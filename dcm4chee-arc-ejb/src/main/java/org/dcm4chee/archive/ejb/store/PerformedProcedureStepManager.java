@@ -41,6 +41,7 @@ package org.dcm4chee.archive.ejb.store;
 import javax.ejb.Local;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.persistence.PerformedProcedureStep;
 
 /**
@@ -50,8 +51,10 @@ import org.dcm4chee.archive.persistence.PerformedProcedureStep;
 public interface PerformedProcedureStepManager {
 
     PerformedProcedureStep createPerformedProcedureStep(
-            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
+            String sopInstanceUID, Attributes attrs, StoreParam storeParam)
+                    throws DicomServiceException;
 
     PPSWithIAN updatePerformedProcedureStep(
-            String sopInstanceUID, Attributes attrs, StoreParam storeParam);
+            String sopInstanceUID, Attributes attrs, StoreParam storeParam)
+                    throws DicomServiceException;
 }

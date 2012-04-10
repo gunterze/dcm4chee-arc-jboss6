@@ -43,6 +43,7 @@ import java.util.Collection;
 import javax.ejb.Local;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.FileRef;
 import org.dcm4chee.archive.persistence.FileSystem;
@@ -57,10 +58,12 @@ public interface InstanceStore {
     public static final String JNDI_NAME = "InstanceStoreBean/local";
 
     Instance newInstance(String sourceAET, Attributes data, Attributes modified,
-            Availability availability, StoreParam storeParam);
+            Availability availability, StoreParam storeParam)
+                    throws DicomServiceException;
 
     boolean addFileRef(String sourceAET, Attributes data, Attributes modified,
-            FileRef fileRef, StoreParam storeParam);
+            FileRef fileRef, StoreParam storeParam)
+                    throws DicomServiceException;
 
     void close();
 
@@ -68,9 +71,10 @@ public interface InstanceStore {
 
     FileSystem selectFileSystem(String groupID);
 
-    Attributes createIANforPreviousMPPS();
+    Attributes createIANforPreviousMPPS() throws DicomServiceException;
 
-    Attributes createIANforCurrentMPPS();
+    Attributes createIANforCurrentMPPS() throws DicomServiceException;
 
-    Collection<Attributes> createIANsforRejectionNote();
+    Collection<Attributes> createIANsforRejectionNote()
+            throws DicomServiceException;
 }

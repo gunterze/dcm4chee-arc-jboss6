@@ -56,7 +56,6 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.BasicMppsSCP;
 import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
 import org.dcm4chee.archive.ejb.query.IANQuery;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Code;
@@ -80,10 +79,12 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
 
     @Override
     public PerformedProcedureStep createPerformedProcedureStep(
-            String sopInstanceUID, Attributes attrs, StoreParam storeParam) {
+            String sopInstanceUID, Attributes attrs, StoreParam storeParam)
+                    throws DicomServiceException {
         try {
-            PerformedProcedureStep pps = find(sopInstanceUID);
-            throw new EntityAlreadyExistsException(pps.toString());
+            find(sopInstanceUID);
+            throw new DicomServiceException(Status.DuplicateSOPinstance)
+                .setUID(Tag.AffectedSOPInstanceUID, sopInstanceUID);
         } catch (NoResultException e) {}
         AttributeFilter filter = storeParam.getAttributeFilter(Entity.PerformedProcedureStep);
         Patient patient = PatientFactory.findUniqueOrCreatePatient(em, attrs, storeParam);
@@ -102,7 +103,7 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
 
     @Override
     public PPSWithIAN updatePerformedProcedureStep(String sopInstanceUID,
-            Attributes modified, StoreParam storeParam) {
+            Attributes modified, StoreParam storeParam) throws DicomServiceException {
         PerformedProcedureStep pps;
         try {
             pps = find(sopInstanceUID);
@@ -110,10 +111,9 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
             throw new EntityNotExistsException(sopInstanceUID);
         }
         if (!pps.isInProgress())
-            throw new DicomServiceRuntimeException(
-                    new DicomServiceException(Status.ProcessingFailure,
+            throw new DicomServiceException(Status.ProcessingFailure,
                             BasicMppsSCP.MAY_NO_LONGER_BE_UPDATED)
-                        .setErrorID(BasicMppsSCP.MAY_NO_LONGER_BE_UPDATED_ERROR_ID));
+                        .setErrorID(BasicMppsSCP.MAY_NO_LONGER_BE_UPDATED_ERROR_ID);
 
         AttributeFilter filter = storeParam.getAttributeFilter(Entity.PerformedProcedureStep);
         Attributes attrs = pps.getAttributes();
@@ -122,9 +122,8 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
         Attributes ian = null;
         if (!pps.isInProgress()) {
             if (!attrs.containsValue(Tag.PerformedSeriesSequence))
-                throw new DicomServiceRuntimeException(
-                        new DicomServiceException(Status.MissingAttributeValue)
-                        .setAttributeIdentifierList(Tag.PerformedSeriesSequence));
+                throw new DicomServiceException(Status.MissingAttributeValue)
+                        .setAttributeIdentifierList(Tag.PerformedSeriesSequence);
             List<Code> hideConceptNameCodes = CodeFactory.createCodes(em,
                     RejectionNote.selectByAction(storeParam.getRejectionNotes(),
                             RejectionNote.Action.HIDE_REJECTION_NOTE));

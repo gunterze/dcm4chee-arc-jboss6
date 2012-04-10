@@ -51,7 +51,6 @@ import javax.ejb.EJB;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.io.SAXReader;
-import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
 import org.dcm4chee.archive.ejb.query.Builder;
 import org.dcm4chee.archive.ejb.query.IANQuery;
 import org.dcm4chee.archive.ejb.query.IANQueryBean;
@@ -84,7 +83,6 @@ public class InstanceStoreTest {
                 .addClasses(
                         Builder.class,
                         CodeFactory.class,
-                        DicomServiceRuntimeException.class,
                         Entity.class,
                         EntityAlreadyExistsException.class,
                         EntityNotExistsException.class,

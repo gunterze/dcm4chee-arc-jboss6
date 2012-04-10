@@ -61,7 +61,6 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.TagUtils;
-import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 import org.dcm4chee.archive.persistence.FileRef;
@@ -196,8 +195,8 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
                 }
             }
             return dst;
-        } catch (DicomServiceRuntimeException e) {
-            throw e.getDicomServiceException();
+        } catch (DicomServiceException e) {
+            throw e;
         } catch (Exception e) {
             throw new DicomServiceException(Status.ProcessingFailure,
                     DicomServiceException.initialCauseOf(e));
@@ -262,7 +261,11 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         if (store != null) {
             ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
             if (ae.hasIANDestinations())
-                scheduleIAN(ae, store.createIANforCurrentMPPS());
+                try {
+                    scheduleIAN(ae, store.createIANforCurrentMPPS());
+                } catch (Exception e) {
+                    LOG.warn(as + ": Failed to create IAN for MPPS:", e);
+                }
             store.close();
         }
     }

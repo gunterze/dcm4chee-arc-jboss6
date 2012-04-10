@@ -57,7 +57,6 @@ import org.dcm4che.data.UID;
 import org.dcm4che.data.VR;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
 import org.dcm4chee.archive.persistence.Availability;
 import org.dcm4chee.archive.persistence.Code;
 import org.dcm4chee.archive.persistence.PerformedProcedureStep;
@@ -97,7 +96,8 @@ public class IANQueryBean implements IANQuery {
 
     @Override
     public Attributes createIANforMPPS(PerformedProcedureStep mpps,
-            List<Code> hideConceptNameCodes, Set<String> rejectedIUIDs) {
+            List<Code> hideConceptNameCodes, Set<String> rejectedIUIDs)
+            throws DicomServiceException {
         Sequence perfSeriesSeq = mpps.getAttributes()
                 .getSequence(Tag.PerformedSeriesSequence);
         if (perfSeriesSeq == null)
@@ -186,23 +186,21 @@ public class IANQueryBean implements IANQuery {
 
     private static int addAllTo(String studyIUD, String seriesIUID,
             Sequence ppsRefs, HashMap<String, Object[]> map, Sequence refSOPs,
-            Set<String> rejected, List<Code> hideConceptNameCodes) {
+            Set<String> rejected, List<Code> hideConceptNameCodes)
+            throws DicomServiceException {
         int count = 0;
         for (Attributes ppsRef : ppsRefs) {
             Object[] a = map.get(ppsRef.getString(Tag.ReferencedSOPInstanceUID));
             if (a != null) {
                 if (!studyIUD.equals(a[0]))
-                    throw new DicomServiceRuntimeException(
-                            new DicomServiceException(Status.ProcessingFailure,
-                                    "Referenced SOP Instances belong to multiple Studies"));
+                    throw new DicomServiceException(Status.ProcessingFailure,
+                                "Referenced SOP Instances belong to multiple Studies");
                 if (!seriesIUID.equals(a[1]))
-                    throw new DicomServiceRuntimeException(
-                            new DicomServiceException(Status.ProcessingFailure,
-                                    "Mismatch of Series Instance UID of referenced Instance"));
+                    throw new DicomServiceException(Status.ProcessingFailure,
+                                "Mismatch of Series Instance UID of referenced Instance");
                 if (!ppsRef.getString(Tag.ReferencedSOPClassUID).equals(a[2]))
-                    throw new DicomServiceRuntimeException(
-                            new DicomServiceException(Status.ProcessingFailure,
-                                    "Mismatch of SOP Class UID of referenced Instance"));
+                    new DicomServiceException(Status.ProcessingFailure,
+                                "Mismatch of SOP Class UID of referenced Instance");
                 if (!contains(hideConceptNameCodes, (Long) a[7]))
                     refSOPs.add(refSOP(ppsRef, (String) a[4], (String) a[5], 
                             rejected.contains(ppsRef.getString(Tag.ReferencedSOPInstanceUID))

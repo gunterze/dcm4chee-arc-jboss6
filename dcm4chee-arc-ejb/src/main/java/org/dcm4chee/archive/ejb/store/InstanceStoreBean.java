@@ -38,8 +38,7 @@
 
 package org.dcm4chee.archive.ejb.store;
 
-import static org.dcm4chee.archive.ejb.store.RejectionNote.Action.NOT_ACCEPT_SUBSEQUENT_OCCURRENCE;
-import static org.dcm4chee.archive.ejb.store.RejectionNote.Action.NOT_REJECT_SUBSEQUENT_OCCURRENCE;
+import static org.dcm4chee.archive.ejb.store.RejectionNote.Action.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -71,7 +70,6 @@ import org.dcm4che.data.VR;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.soundex.FuzzyStr;
-import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
 import org.dcm4chee.archive.ejb.query.IANQuery;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Availability;
@@ -117,7 +115,7 @@ public class InstanceStoreBean implements InstanceStore {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public Attributes createIANforPreviousMPPS() {
+    public Attributes createIANforPreviousMPPS() throws DicomServiceException {
         try {
             return createIANforMPPS(prevMpps, Collections.<String> emptySet());
         } finally {
@@ -127,7 +125,7 @@ public class InstanceStoreBean implements InstanceStore {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public Attributes createIANforCurrentMPPS() {
+    public Attributes createIANforCurrentMPPS() throws DicomServiceException {
         try {
             return createIANforMPPS(curMpps, Collections.<String> emptySet());
         } finally {
@@ -136,7 +134,7 @@ public class InstanceStoreBean implements InstanceStore {
     }
 
     private Attributes createIANforMPPS(PerformedProcedureStep pps,
-            Set<String> rejectedIUIDs) {
+            Set<String> rejectedIUIDs) throws DicomServiceException {
         return (pps == null || pps.isInProgress())
                 ? null
                 : ianQuery.createIANforMPPS(pps, hideConceptNameCodes, rejectedIUIDs);
@@ -144,7 +142,7 @@ public class InstanceStoreBean implements InstanceStore {
 
     @Override
     public boolean addFileRef(String sourceAET, Attributes data, Attributes modified,
-            FileRef fileRef, StoreParam storeParam) {
+            FileRef fileRef, StoreParam storeParam) throws DicomServiceException {
         em.joinTransaction();
         initHideRejectionCodes(storeParam);
         initHideConceptNameCodes(storeParam);
@@ -156,9 +154,8 @@ public class InstanceStoreBean implements InstanceStore {
             Code rejectionCode = inst.getRejectionCode();
             RejectionNote rn = storeParam.getRejectionNote(rejectionCode);
             if (rn != null && rn.getActions().contains(NOT_ACCEPT_SUBSEQUENT_OCCURRENCE))
-                throw new DicomServiceRuntimeException(
-                        new DicomServiceException(Status.CannotUnderstand,
-                                rejectionCode.getCodeMeaning()));
+                    throw new DicomServiceException(Status.CannotUnderstand,
+                            rejectionCode.getCodeMeaning());
             switch (storeDuplicate(inst, fileRef.getDigest(), fs.getGroupID(), storeParam)) {
             case IGNORE:
                 coerceInstanceAttributes(inst, data, modified);
@@ -228,7 +225,8 @@ public class InstanceStoreBean implements InstanceStore {
 
     @Override
     public Instance newInstance(String sourceAET, Attributes data,
-            Attributes modified, Availability availability, StoreParam storeParam) {
+            Attributes modified, Availability availability, StoreParam storeParam)
+                    throws DicomServiceException {
         em.joinTransaction();
         initHideRejectionCodes(storeParam);
         initHideConceptNameCodes(storeParam);
@@ -282,7 +280,8 @@ public class InstanceStoreBean implements InstanceStore {
                             RejectionNote.Action.HIDE_REJECTED_INSTANCES));
     }
 
-    private void rejectRefInstances(Attributes data, RejectionNote rn) {
+    private void rejectRefInstances(Attributes data, RejectionNote rn)
+            throws DicomServiceException {
         boolean hideRejectedInstances = rn.getActions()
                 .contains(RejectionNote.Action.HIDE_REJECTED_INSTANCES);
         Code rejectionCcode = CodeFactory.getCode(em, rn);
@@ -344,7 +343,7 @@ public class InstanceStoreBean implements InstanceStore {
     }
 
     @Override
-    public List<Attributes> createIANsforRejectionNote() {
+    public List<Attributes> createIANsforRejectionNote() throws DicomServiceException {
         try {
             List<Attributes> ians = new ArrayList<Attributes>(rejectedInstances.size());
             for (Entry<String, HashSet<String>> entry : rejectedInstances.entrySet()) {
@@ -358,10 +357,9 @@ public class InstanceStoreBean implements InstanceStore {
         }
     }
 
-    private void rejectionFailed(String message) {
-        throw new DicomServiceRuntimeException(
-                new DicomServiceException(Status.CannotUnderstand, message)
-                .setOffendingElements(Tag.CurrentRequestedProcedureEvidenceSequence));
+    private void rejectionFailed(String message) throws DicomServiceException {
+        throw new DicomServiceException(Status.CannotUnderstand, message)
+                .setOffendingElements(Tag.CurrentRequestedProcedureEvidenceSequence);
     }
 
     @Override
@@ -448,7 +446,7 @@ public class InstanceStoreBean implements InstanceStore {
     }
 
     private Series getSeries(String sourceAET, Attributes data, Availability availability,
-            StoreParam storeParam) {
+            StoreParam storeParam) throws DicomServiceException {
         String seriesIUID = data.getString(Tag.SeriesInstanceUID, null);
         Series series = cachedSeries;
         AttributeFilter seriesFilter = storeParam.getAttributeFilter(Entity.Series);
@@ -508,7 +506,7 @@ public class InstanceStoreBean implements InstanceStore {
         }
     }
 
-    private void checkRefPPS(Attributes data) {
+    private void checkRefPPS(Attributes data) throws DicomServiceException {
         PerformedProcedureStep mpps = curMpps;
         if (mpps == null || mpps.isInProgress())
             return;
@@ -533,25 +531,23 @@ public class InstanceStoreBean implements InstanceStore {
                     perfSeries.getSequence(Tag.ReferencedImageSequence))
              || containsRef(sopCUID, sopIUID,
                     perfSeries.getSequence(Tag.ReferencedNonImageCompositeSOPInstanceSequence)))
-            throw new DicomServiceRuntimeException(
-                    new DicomServiceException(Status.ProcessingFailure,
-                            "Mismatch of Series Instance UID in Referenced PPS"));
+            throw new DicomServiceException(Status.ProcessingFailure,
+                        "Mismatch of Series Instance UID in Referenced PPS");
         }
-        throw new DicomServiceRuntimeException(
-                new DicomServiceException(Status.ProcessingFailure,
-                        "No such Instance in Referenced PPS"));
+        throw new DicomServiceException(Status.ProcessingFailure,
+                    "No such Instance in Referenced PPS");
     }
 
-    private boolean containsRef(String sopCUID, String sopIUID, Sequence refSOPs) {
+    private boolean containsRef(String sopCUID, String sopIUID, Sequence refSOPs)
+            throws DicomServiceException {
         if (refSOPs != null)
             for (Attributes refSOP : refSOPs)
                 if (sopIUID.equals(refSOP.getString(Tag.ReferencedSOPInstanceUID)))
                     if (sopCUID.equals(refSOP.getString(Tag.ReferencedSOPClassUID)))
                         return true;
                     else
-                        throw new DicomServiceRuntimeException(
-                                new DicomServiceException(Status.ProcessingFailure,
-                                        "Mismatch of SOP Class UID in Referenced PPS"));
+                        throw new DicomServiceException(Status.ProcessingFailure,
+                                    "Mismatch of SOP Class UID in Referenced PPS");
         return false;
     }
 

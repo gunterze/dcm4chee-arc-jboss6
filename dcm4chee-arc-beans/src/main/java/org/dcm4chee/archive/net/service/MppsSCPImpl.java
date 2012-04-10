@@ -46,8 +46,6 @@ import org.dcm4che.net.Association;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.BasicMppsSCP;
 import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4chee.archive.ejb.exception.DicomServiceRuntimeException;
-import org.dcm4chee.archive.ejb.store.EntityAlreadyExistsException;
 import org.dcm4chee.archive.ejb.store.EntityNotExistsException;
 import org.dcm4chee.archive.ejb.store.PPSWithIAN;
 import org.dcm4chee.archive.ejb.store.PerformedProcedureStepManager;
@@ -88,11 +86,8 @@ public class MppsSCPImpl extends BasicMppsSCP {
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
         try {
             ppsmgr.createPerformedProcedureStep(iuid , rqAttrs, ae.getStoreParam());
-        } catch (EntityAlreadyExistsException e) {
-            throw new DicomServiceException(Status.DuplicateSOPinstance)
-                .setUID(Tag.AffectedSOPInstanceUID, iuid);
-        } catch (DicomServiceRuntimeException e) {
-            throw e.getDicomServiceException();
+        } catch (DicomServiceException e) {
+            throw e;
         } catch (Exception e) {
             throw new DicomServiceException(Status.ProcessingFailure, e);
         }
@@ -114,8 +109,8 @@ public class MppsSCPImpl extends BasicMppsSCP {
         } catch (EntityNotExistsException e) {
             throw new DicomServiceException(Status.NoSuchObjectInstance)
                 .setUID(Tag.AffectedSOPInstanceUID, iuid);
-        } catch (DicomServiceRuntimeException e) {
-            throw e.getDicomServiceException();
+        } catch (DicomServiceException e) {
+            throw e;
         } catch (Exception e) {
             throw new DicomServiceException(Status.ProcessingFailure, e);
         }
