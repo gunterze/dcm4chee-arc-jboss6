@@ -148,11 +148,11 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
     }
 
     @Override
-    protected File process(Association as, PresentationContext pc, Attributes rq,
-            Attributes rsp, Object storage, File file, MessageDigest digest)
+    protected boolean process(Association as, PresentationContext pc, Attributes rq,
+            Attributes rsp, Object storage, FileHolder fileHolder, MessageDigest digest)
             throws DicomServiceException {
         FileSystem fs = (FileSystem) storage;
-        Attributes ds = readDataset(as, rq, file);
+        Attributes ds = readDataset(as, rq, fileHolder.getFile());
         if (ds.bigEndian())
             ds = new Attributes(ds, false);
         String sourceAET = as.getRemoteAET();
@@ -165,20 +165,19 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             if (tpl != null)
                 ds.update(SAXTransformer.transform(ds, tpl, false, false), modified);
             AttributesFormat filePathFormat = ae.getStorageFilePathFormat();
-            File dst = filePathFormat != null
-                    ? rename(as, rq, fs, file, format(filePathFormat, ds))
-                    : file;
+            if (filePathFormat != null)
+                fileHolder.setFile(rename(as, rq, fs, fileHolder.getFile(),
+                        format(filePathFormat, ds)));
+            File dst = fileHolder.getFile();
             String filePath = dst.toURI().toString().substring(fs.getURI().length());
             InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
-            if (store.addFileRef(sourceAET, ds, modified,
+            boolean add = store.addFileRef(sourceAET, ds, modified,
                     new FileRef(fs, filePath, pc.getTransferSyntax(), dst.length(),
-                            digest(digest)), ae.getStoreParam())) {
-                dst = null;
-                if (ae.hasIANDestinations()) {
-                    scheduleIAN(ae, store.createIANforPreviousMPPS());
-                    for (Attributes ian : store.createIANsforRejectionNote())
-                        scheduleIAN(ae, ian);
-                }
+                            digest(digest)), ae.getStoreParam());
+            if (add && ae.hasIANDestinations()) {
+                scheduleIAN(ae, store.createIANforPreviousMPPS());
+                for (Attributes ian : store.createIANsforRejectionNote())
+                    scheduleIAN(ae, ian);
             }
             if (!modified.isEmpty()) {
                 if (LOG.isInfoEnabled()) {
@@ -194,7 +193,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
                     rsp.setInt(Tag.OffendingElement, VR.AT, modified.tags());
                 }
             }
-            return dst;
+            return add;
         } catch (DicomServiceException e) {
             throw e;
         } catch (Exception e) {
