@@ -145,6 +145,7 @@ public class InitTestData {
         "fuzzy-2.xml",
         "fuzzy-3.xml",
         "fuzzy-4.xml",
+        "fuzzy-5.xml",
         "person-name-1.xml",
    };
 

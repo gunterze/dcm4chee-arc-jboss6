@@ -42,7 +42,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 
 import javax.ejb.EJB;
@@ -130,6 +129,10 @@ public class PatientQueryTest {
     @Test
     public void testByPatientName() throws Exception {
         query.findPatients(null, patientName("大宮^省吾", true), QUERY_PARAM);
+        assertTrue(query.hasMoreMatches());
+        query.nextMatch();
+        assertFalse(query.hasMoreMatches());
+        query.findPatients(pids("FUZZY_NUMERICAL"), patientName("123^456", false), QUERY_PARAM);
         assertTrue(query.hasMoreMatches());
         query.nextMatch();
         assertFalse(query.hasMoreMatches());
@@ -238,7 +241,7 @@ public class PatientQueryTest {
     public void testByPatientNameSoundex5() throws Exception {
         query.findPatients(pids("FUZZY*"), patientName("LU*", false), FUZZY_MATCH_UNKNOWN);
         ArrayList<String> result = patientIDResultList(query);
-        String patIDs[] = { "FUZZY_LUKE", "FUZZY_JOERG", "FUZZY_GEORGE", "FUZZY_NONE"};
+        String patIDs[] = { "FUZZY_LUKE", "FUZZY_JOERG", "FUZZY_GEORGE", "FUZZY_NONE", "FUZZY_NUMERICAL"};
         Collection<String> col = Arrays.asList(patIDs);
         assertTrue(equals(result, col));
         query.close();

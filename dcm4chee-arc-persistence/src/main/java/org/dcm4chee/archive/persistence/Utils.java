@@ -134,6 +134,7 @@ public class Utils {
     }
 
     public static String toFuzzy(FuzzyStr fuzzyStr, String s) {
-        return s != null ? fuzzyStr.toFuzzy(s) : "*";
+        String fuzzy = fuzzyStr.toFuzzy(s);
+        return fuzzy.length() == 0 ? "*" : fuzzy;
     }
 }

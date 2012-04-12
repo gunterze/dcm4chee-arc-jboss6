@@ -69,6 +69,7 @@ public class ClearTestData {
         "FUZZY_JOERG",
         "FUZZY_LUKE",
         "FUZZY_NONE",
+        "FUZZY_NUMERICAL",
         "PERSON_NAME",
         "MWL_TEST",
     };
