@@ -56,6 +56,7 @@ import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Connection;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.Dimse;
+import org.dcm4che.net.Issuer;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.SSLManagerFactory;
 import org.dcm4che.net.TransferCapability;
@@ -531,7 +532,34 @@ public class ArchiveConfigurationTestUtils {
         "STGCMTSCU",
         "STORESCP",
         "MPPSSCP",
-        "IANSCP"
+        "IANSCP",
+        "FINDSCU",
+        "GETSCU"
+    };
+
+    private static final Issuer SITE_A =
+            new Issuer("Site A", "1.2.40.0.13.1.1.999.111.1111", "ISO");
+    private static final Issuer SITE_B =
+            new Issuer("Site B", "1.2.40.0.13.1.1.999.222.2222", "ISO");
+
+    private static final Issuer[] OTHER_ISSUER = {
+        SITE_B, // DCMQRSCP
+        null, // STGCMTSCU
+        SITE_A, // STORESCP
+        null, // MPPSSCP
+        null, // IANSCP
+        SITE_A, // FINDSCU
+        SITE_A, // GETSCU
+    };
+
+    private static final int[] OTHER_PORTS = {
+        11113, 2763, // DCMQRSCP
+        11114, 2765, // STGCMTSCU
+        11115, 2766, // STORESCP
+        11116, 2767, // MPPSSCP
+        11117, 2768, // IANSCP
+        Connection.NOT_LISTENING, Connection.NOT_LISTENING, // FINDSCU
+        Connection.NOT_LISTENING, Connection.NOT_LISTENING, // GETSCU
     };
 
     private static final String[] HL7_MESSAGE_TYPES = {
@@ -573,11 +601,11 @@ public class ArchiveConfigurationTestUtils {
         for (int i = 0; i < OTHER_AES.length; i++) {
             String aet = OTHER_AES[i];
             config.registerAETitle(aet);
-            config.persist(createDevice(config, OTHER_DEVICES[i], aet,
-                    "localhost", 11113 + i, 2763 + i));
+            config.persist(createDevice(config, OTHER_DEVICES[i], OTHER_ISSUER[i],
+                    aet, "localhost", OTHER_PORTS[i<<1], OTHER_PORTS[(i<<1)+1]));
         }
         for (int i = OTHER_AES.length; i < OTHER_DEVICES.length; i++)
-            config.persist(createDevice(config, OTHER_DEVICES[i]));
+            config.persist(createDevice(config, OTHER_DEVICES[i], null));
 
         config.registerAETitle("DCM4CHEE");
         config.registerAETitle("DCM4CHEE_ADMIN");
@@ -585,17 +613,20 @@ public class ArchiveConfigurationTestUtils {
         config.findApplicationEntity("DCM4CHEE");
     }
 
-    private static  Device createDevice(DicomConfiguration config, String name)
-            throws Exception {
+    private static  Device createDevice(DicomConfiguration config, String name,
+            Issuer issuer) throws Exception {
         Device device = new Device(name);
         device.setThisNodeCertificates(config.deviceRef(name),
                 (X509Certificate) KEYSTORE.getCertificate(name));
+        device.setIssuerOfPatientID(issuer);
+        device.setIssuerOfAccessionNumber(issuer);
         return device;
     }
 
     private static Device createDevice(DicomConfiguration config, String name,
-           String aet, String host, int port, int tlsPort) throws Exception {
-        Device device = createDevice(config, name);
+           Issuer issuer, String aet, String host, int port, int tlsPort)
+           throws Exception {
+        Device device = createDevice(config, name, issuer);
         ApplicationEntity ae = new ApplicationEntity(aet);
         ae.setAssociationAcceptor(true);
         device.addApplicationEntity(ae);
