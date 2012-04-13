@@ -53,6 +53,7 @@ import org.dcm4che.conf.api.DicomConfiguration;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
+import org.dcm4che.net.Code;
 import org.dcm4che.net.Connection;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.Dimse;
@@ -519,11 +520,11 @@ public class ArchiveConfigurationTestUtils {
         "storescp",
         "mppsscp",
         "ianscp",
+        "storescu",
+        "mppsscu",
         "findscu",
         "getscu",
         "movescu",
-        "mppsscu",
-        "storescu",
         "hl7snd"
     };
 
@@ -533,6 +534,8 @@ public class ArchiveConfigurationTestUtils {
         "STORESCP",
         "MPPSSCP",
         "IANSCP",
+        "STORESCU",
+        "MPPSSCU",
         "FINDSCU",
         "GETSCU"
     };
@@ -548,8 +551,27 @@ public class ArchiveConfigurationTestUtils {
         SITE_A, // STORESCP
         null, // MPPSSCP
         null, // IANSCP
+        SITE_A, // STORESCU
+        SITE_A, // MPPSSCU
         SITE_A, // FINDSCU
         SITE_A, // GETSCU
+    };
+
+    private static final Code INST_A =
+            new Code("111.1111", "99DCM4CHEE", null, "Site A");
+    private static final Code INST_B =
+            new Code("222.2222", "99DCM4CHEE", null, "Site B");
+
+    private static final Code[] OTHER_INST_CODES = {
+        INST_B, // DCMQRSCP
+        null, // STGCMTSCU
+        null, // STORESCP
+        null, // MPPSSCP
+        null, // IANSCP
+        INST_A, // STORESCU
+        null, // MPPSSCU
+        null, // FINDSCU
+        null, // GETSCU
     };
 
     private static final int[] OTHER_PORTS = {
@@ -558,6 +580,8 @@ public class ArchiveConfigurationTestUtils {
         11115, 2766, // STORESCP
         11116, 2767, // MPPSSCP
         11117, 2768, // IANSCP
+        Connection.NOT_LISTENING, Connection.NOT_LISTENING, // STORESCU
+        Connection.NOT_LISTENING, Connection.NOT_LISTENING, // MPPSSCU
         Connection.NOT_LISTENING, Connection.NOT_LISTENING, // FINDSCU
         Connection.NOT_LISTENING, Connection.NOT_LISTENING, // GETSCU
     };
@@ -601,12 +625,12 @@ public class ArchiveConfigurationTestUtils {
         for (int i = 0; i < OTHER_AES.length; i++) {
             String aet = OTHER_AES[i];
             config.registerAETitle(aet);
-            config.persist(createDevice(config, OTHER_DEVICES[i], OTHER_ISSUER[i],
+            config.persist(createDevice(config,
+                    OTHER_DEVICES[i], OTHER_ISSUER[i], OTHER_INST_CODES[i],
                     aet, "localhost", OTHER_PORTS[i<<1], OTHER_PORTS[(i<<1)+1]));
         }
         for (int i = OTHER_AES.length; i < OTHER_DEVICES.length; i++)
-            config.persist(createDevice(config, OTHER_DEVICES[i], null));
-
+            config.persist(createDevice(config, OTHER_DEVICES[i], null, null));
         config.registerAETitle("DCM4CHEE");
         config.registerAETitle("DCM4CHEE_ADMIN");
         config.persist(createArchiveDevice(config, "dcm4chee-arc"));
@@ -614,19 +638,23 @@ public class ArchiveConfigurationTestUtils {
     }
 
     private static  Device createDevice(DicomConfiguration config, String name,
-            Issuer issuer) throws Exception {
+            Issuer issuer, Code institutionCode) throws Exception {
         Device device = new Device(name);
         device.setThisNodeCertificates(config.deviceRef(name),
                 (X509Certificate) KEYSTORE.getCertificate(name));
         device.setIssuerOfPatientID(issuer);
         device.setIssuerOfAccessionNumber(issuer);
+        if (institutionCode != null) {
+            device.setInstitutionNames(institutionCode.getCodeMeaning());
+            device.setInstitutionCodes(institutionCode);
+        }
         return device;
     }
 
     private static Device createDevice(DicomConfiguration config, String name,
-           Issuer issuer, String aet, String host, int port, int tlsPort)
-           throws Exception {
-        Device device = createDevice(config, name, issuer);
+           Issuer issuer, Code institutionCode, String aet,
+           String host, int port, int tlsPort) throws Exception {
+        Device device = createDevice(config, name, issuer, institutionCode);
         ApplicationEntity ae = new ApplicationEntity(aet);
         ae.setAssociationAcceptor(true);
         device.addApplicationEntity(ae);

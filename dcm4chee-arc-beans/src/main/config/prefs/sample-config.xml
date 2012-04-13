@@ -17,16 +17,16 @@
                 <entry key="dcmFuzzyAlgorithmClass" value="org.dcm4che.soundex.ESoundex"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.#" value="11"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/dcmqrscp"/>
-                <entry key="dicomAuthorizedNodeCertificateReference.10" value="org/dcm4chee/archive/dicomDevicesRoot/storescu"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.10" value="org/dcm4chee/archive/dicomDevicesRoot/movescu"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.11" value="org/dcm4chee/archive/dicomDevicesRoot/hl7snd"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.2" value="org/dcm4chee/archive/dicomDevicesRoot/stgcmtscu"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.3" value="org/dcm4chee/archive/dicomDevicesRoot/storescp"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.4" value="org/dcm4chee/archive/dicomDevicesRoot/mppsscp"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.5" value="org/dcm4chee/archive/dicomDevicesRoot/ianscp"/>
-                <entry key="dicomAuthorizedNodeCertificateReference.6" value="org/dcm4chee/archive/dicomDevicesRoot/findscu"/>
-                <entry key="dicomAuthorizedNodeCertificateReference.7" value="org/dcm4chee/archive/dicomDevicesRoot/getscu"/>
-                <entry key="dicomAuthorizedNodeCertificateReference.8" value="org/dcm4chee/archive/dicomDevicesRoot/movescu"/>
-                <entry key="dicomAuthorizedNodeCertificateReference.9" value="org/dcm4chee/archive/dicomDevicesRoot/mppsscu"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.6" value="org/dcm4chee/archive/dicomDevicesRoot/storescu"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.7" value="org/dcm4chee/archive/dicomDevicesRoot/mppsscu"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.8" value="org/dcm4chee/archive/dicomDevicesRoot/findscu"/>
+                <entry key="dicomAuthorizedNodeCertificateReference.9" value="org/dcm4chee/archive/dicomDevicesRoot/getscu"/>
                 <entry key="dicomInstalled" value="true"/>
                 <entry key="dicomThisNodeCertificateReference.#" value="1"/>
                 <entry key="dicomThisNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/dcm4chee-arc"/>
@@ -5928,6 +5928,10 @@
             <node name="dcmqrscp">
               <map>
                 <entry key="dicomInstalled" value="true"/>
+                <entry key="dicomInstitutionCode.#" value="1"/>
+                <entry key="dicomInstitutionCode.1" value="222.2222^Site B^99DCM4CHEE"/>
+                <entry key="dicomInstitutionName.#" value="1"/>
+                <entry key="dicomInstitutionName.1" value="Site B"/>
                 <entry key="dicomIssuerOfAccessionNumber" value="Site B^1.2.40.0.13.1.1.999.222.2222^ISO"/>
                 <entry key="dicomIssuerOfPatientID" value="Site B^1.2.40.0.13.1.1.999.222.2222^ISO"/>
                 <entry key="dicomThisNodeCertificateReference.#" value="1"/>
@@ -6195,6 +6199,8 @@
             <node name="mppsscu">
               <map>
                 <entry key="dicomInstalled" value="true"/>
+                <entry key="dicomIssuerOfAccessionNumber" value="Site A^1.2.40.0.13.1.1.999.111.1111^ISO"/>
+                <entry key="dicomIssuerOfPatientID" value="Site A^1.2.40.0.13.1.1.999.111.1111^ISO"/>
                 <entry key="dicomThisNodeCertificateReference.#" value="1"/>
                 <entry key="dicomThisNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/mppsscu"/>
                 <entry key="userCertificate.#" value="1"/>
@@ -6202,9 +6208,39 @@
               </map>
               <node name="dcmNetworkAE">
                 <map/>
+                <node name="MPPSSCU">
+                  <map>
+                    <entry key="dicomAssociationAcceptor" value="true"/>
+                    <entry key="dicomAssociationInitiator" value="true"/>
+                    <entry key="dicomNetworkConnectionReference.#" value="2"/>
+                    <entry key="dicomNetworkConnectionReference.1" value="1"/>
+                    <entry key="dicomNetworkConnectionReference.2" value="2"/>
+                  </map>
+                  <node name="dicomTransferCapability">
+                    <map/>
+                  </node>
+                </node>
               </node>
               <node name="dcmNetworkConnection">
                 <map/>
+                <node name="1">
+                  <map>
+                    <entry key="cn" value="dicom"/>
+                    <entry key="dicomHostname" value="localhost"/>
+                  </map>
+                </node>
+                <node name="2">
+                  <map>
+                    <entry key="cn" value="dicom-tls"/>
+                    <entry key="dcmTLSProtocol.#" value="2"/>
+                    <entry key="dcmTLSProtocol.1" value="TLSv1"/>
+                    <entry key="dcmTLSProtocol.2" value="SSLv3"/>
+                    <entry key="dicomHostname" value="localhost"/>
+                    <entry key="dicomTLSCipherSuite.#" value="2"/>
+                    <entry key="dicomTLSCipherSuite.1" value="TLS_RSA_WITH_AES_128_CBC_SHA"/>
+                    <entry key="dicomTLSCipherSuite.2" value="SSL_RSA_WITH_3DES_EDE_CBC_SHA"/>
+                  </map>
+                </node>
               </node>
             </node>
             <node name="stgcmtscu">
@@ -6306,6 +6342,12 @@
             <node name="storescu">
               <map>
                 <entry key="dicomInstalled" value="true"/>
+                <entry key="dicomInstitutionCode.#" value="1"/>
+                <entry key="dicomInstitutionCode.1" value="111.1111^Site A^99DCM4CHEE"/>
+                <entry key="dicomInstitutionName.#" value="1"/>
+                <entry key="dicomInstitutionName.1" value="Site A"/>
+                <entry key="dicomIssuerOfAccessionNumber" value="Site A^1.2.40.0.13.1.1.999.111.1111^ISO"/>
+                <entry key="dicomIssuerOfPatientID" value="Site A^1.2.40.0.13.1.1.999.111.1111^ISO"/>
                 <entry key="dicomThisNodeCertificateReference.#" value="1"/>
                 <entry key="dicomThisNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/storescu"/>
                 <entry key="userCertificate.#" value="1"/>
@@ -6313,9 +6355,39 @@
               </map>
               <node name="dcmNetworkAE">
                 <map/>
+                <node name="STORESCU">
+                  <map>
+                    <entry key="dicomAssociationAcceptor" value="true"/>
+                    <entry key="dicomAssociationInitiator" value="true"/>
+                    <entry key="dicomNetworkConnectionReference.#" value="2"/>
+                    <entry key="dicomNetworkConnectionReference.1" value="1"/>
+                    <entry key="dicomNetworkConnectionReference.2" value="2"/>
+                  </map>
+                  <node name="dicomTransferCapability">
+                    <map/>
+                  </node>
+                </node>
               </node>
               <node name="dcmNetworkConnection">
                 <map/>
+                <node name="1">
+                  <map>
+                    <entry key="cn" value="dicom"/>
+                    <entry key="dicomHostname" value="localhost"/>
+                  </map>
+                </node>
+                <node name="2">
+                  <map>
+                    <entry key="cn" value="dicom-tls"/>
+                    <entry key="dcmTLSProtocol.#" value="2"/>
+                    <entry key="dcmTLSProtocol.1" value="TLSv1"/>
+                    <entry key="dcmTLSProtocol.2" value="SSLv3"/>
+                    <entry key="dicomHostname" value="localhost"/>
+                    <entry key="dicomTLSCipherSuite.#" value="2"/>
+                    <entry key="dicomTLSCipherSuite.1" value="TLS_RSA_WITH_AES_128_CBC_SHA"/>
+                    <entry key="dicomTLSCipherSuite.2" value="SSL_RSA_WITH_3DES_EDE_CBC_SHA"/>
+                  </map>
+                </node>
               </node>
             </node>
           </node>
@@ -6342,10 +6414,16 @@
             <node name="MPPSSCP">
               <map/>
             </node>
+            <node name="MPPSSCU">
+              <map/>
+            </node>
             <node name="STGCMTSCU">
               <map/>
             </node>
             <node name="STORESCP">
+              <map/>
+            </node>
+            <node name="STORESCU">
               <map/>
             </node>
           </node>
