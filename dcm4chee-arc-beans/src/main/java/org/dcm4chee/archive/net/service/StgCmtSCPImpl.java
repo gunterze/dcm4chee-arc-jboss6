@@ -55,6 +55,9 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
+import org.dcm4che.net.AssociationStateException;
+import org.dcm4che.net.Commands;
+import org.dcm4che.net.Dimse;
 import org.dcm4che.net.DimseRSP;
 import org.dcm4che.net.IncompatibleConnectionException;
 import org.dcm4che.net.Status;
@@ -62,7 +65,7 @@ import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.pdu.AAssociateRQ;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.pdu.RoleSelection;
-import org.dcm4che.net.service.BasicNActionSCP;
+import org.dcm4che.net.service.DicomService;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.ejb.query.StgCmtQuery;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
@@ -72,7 +75,7 @@ import org.dcm4chee.archive.net.service.JMSService.MessageCreator;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class StgCmtSCPImpl extends BasicNActionSCP implements MessageListener {
+public class StgCmtSCPImpl extends DicomService implements MessageListener {
 
     @EJB
     private StgCmtQuery stgCmtQuery;
@@ -84,7 +87,6 @@ public class StgCmtSCPImpl extends BasicNActionSCP implements MessageListener {
 
     public StgCmtSCPImpl() {
         super(UID.StorageCommitmentPushModelSOPClass);
-        setActionTypeIDs(1);
     }
 
     public final ArchiveDevice getDevice() {
@@ -128,9 +130,17 @@ public class StgCmtSCPImpl extends BasicNActionSCP implements MessageListener {
     }
 
     @Override
-    protected Attributes action(Association as, int actionTypeID,
-            Attributes actionInfo, Attributes rsp, Object[] handback)
-            throws DicomServiceException {
+    public void onDimseRQ(Association as, PresentationContext pc, Dimse dimse,
+            Attributes rq, Attributes actionInfo) throws IOException {
+        if (dimse != Dimse.N_ACTION_RQ)
+            throw new DicomServiceException(Status.UnrecognizedOperation);
+
+        int actionTypeID = rq.getInt(Tag.ActionTypeID, 0);
+        if (actionTypeID != 1)
+            throw new DicomServiceException(Status.NoSuchActionType)
+                        .setActionTypeID(actionTypeID);
+
+        Attributes rsp = Commands.mkNActionRSP(rq, Status.Success);
         String localAET = as.getLocalAET();
         String remoteAET = as.getRemoteAET();
         try {
@@ -150,7 +160,11 @@ public class StgCmtSCPImpl extends BasicNActionSCP implements MessageListener {
         } catch (Exception e) {
             throw new DicomServiceException(Status.ProcessingFailure, e);
         }
-        return null;
+        try {
+            as.writeDimseRSP(pc, rsp, null);
+        } catch (AssociationStateException e) {
+            LOG.warn("{} << N-ACTION-RSP failed: {}", as, e.getMessage());
+        }
     }
 
     @Override
