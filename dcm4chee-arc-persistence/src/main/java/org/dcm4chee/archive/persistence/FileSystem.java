@@ -66,9 +66,6 @@ import javax.persistence.Table;
     name = "FileSystem.findByGroupID",
     query = "SELECT fs FROM FileSystem fs WHERE fs.groupID = ?1"),
 @NamedQuery(
-    name = "FileSystem.countWithGroupID",
-    query = "SELECT COUNT(fs) FROM FileSystem fs WHERE fs.groupID = ?1"),
-@NamedQuery(
     name = "FileSystem.findByGroupIDAndStatus",
     query = "SELECT fs FROM FileSystem fs WHERE fs.groupID = ?1 AND fs.status = ?2"),
 @NamedQuery(
@@ -80,7 +77,6 @@ public class FileSystem implements Serializable {
     private static final long serialVersionUID = -5237294062957988389L;
 
     public static final String FIND_BY_GROUP_ID = "FileSystem.findByGroupID";
-    public static final String COUNT_WITH_GROUP_ID = "FileSystem.countWithGroupID";
     public static final String FIND_BY_GROUP_ID_AND_STATUS = "FileSystem.findByGroupIDAndStatus";
     public static final String GET_GROUP_IDS = "FileSystem.getGroupIDs";
 

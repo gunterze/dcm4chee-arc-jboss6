@@ -39,7 +39,6 @@
 package org.dcm4chee.archive.net.service;
 
 import java.io.File;
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -49,17 +48,14 @@ import javax.xml.transform.Templates;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
-import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.io.SAXTransformer;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Dimse;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.TransferCapability;
-import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCStoreSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.AttributesFormat;
-import org.dcm4che.util.SafeClose;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
@@ -71,7 +67,6 @@ import org.dcm4chee.archive.persistence.FileSystem;
  */
 public class CStoreSCPImpl extends BasicCStoreSCP {
 
-    private boolean initFileSystem = true;
     private IanSCU ianSCU;
 
     public CStoreSCPImpl(String... sopClasses) {
@@ -86,26 +81,6 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         this.ianSCU = ianSCU;
     }
 
-    @Override
-    protected Object selectStorage(Association as, Attributes rq) throws DicomServiceException {
-        try {
-            ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-            String fsGroupID = ae.getFileSystemGroupID();
-            if (fsGroupID == null)
-                throw new IllegalStateException(
-                        "No File System Group ID configured for " + ae.getAETitle());
-            InstanceStore store = initInstanceStore(as);
-            if (initFileSystem) {
-                store.initFileSystem(fsGroupID);
-                initFileSystem = false;
-            }
-            return store.selectFileSystem(fsGroupID);
-        } catch (Exception e) {
-            LOG.warn(as + ": Failed to select filesystem:", e);
-            throw new DicomServiceException(Status.OutOfResources, e);
-        }
-    }
-
     private static class LazyInitialization {
         static final SecureRandom random = new SecureRandom();
 
@@ -116,10 +91,11 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
     }
 
     @Override
-    protected File createFile(Association as, Attributes rq, Object storage)
+    protected File createFile(Association as, Attributes rq)
             throws DicomServiceException {
+        InstanceStore store = initInstanceStore(as);
         try {
-            FileSystem fs = (FileSystem) storage;
+            FileSystem fs = store.getCurrentFileSystem();
             String iuid = rq.getString(Tag.AffectedSOPInstanceUID);
             ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
             String subdir = ae.getReceivingDirectoryPath();
@@ -148,11 +124,37 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
     }
 
     @Override
-    protected boolean process(Association as, PresentationContext pc, Attributes rq,
-            Attributes rsp, Object storage, FileHolder fileHolder, MessageDigest digest)
+    protected File rename(Association as, File file, Attributes ds)
             throws DicomServiceException {
-        FileSystem fs = (FileSystem) storage;
-        Attributes ds = readDataset(as, rq, fileHolder.getFile());
+        ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+        AttributesFormat filePathFormat = ae.getStorageFilePathFormat();
+        if (filePathFormat == null)
+            return file;
+
+        InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
+        File storeDir = store.getCurrentFileSystem().getDirectory();
+        File dst;
+        synchronized (filePathFormat) {
+            dst = new File(storeDir, filePathFormat.format(ds));
+        }
+        File dir = dst.getParentFile();
+        dir.mkdirs();
+        while (dst.exists()) {
+            dst = new File(dir, TagUtils.toHexString(LazyInitialization.nextInt()));
+        }
+        if (file.renameTo(dst))
+            LOG.info(as + ": M-RENAME " + file + " to " + dst);
+        else {
+            LOG.warn(as + ": Failed to M-RENAME " + file + " to " + dst);
+            throw new DicomServiceException(Status.OutOfResources, "Failed to rename file");
+        }
+        return dst;
+    }
+
+    @Override
+    protected boolean process(Association as, Attributes rq,  Attributes rsp,
+            File dst, MessageDigest digest, Attributes fmi, Attributes ds)
+            throws DicomServiceException {
         if (ds.bigEndian())
             ds = new Attributes(ds, false);
         String sourceAET = as.getRemoteAET();
@@ -164,15 +166,11 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
                     TransferCapability.Role.SCP, sourceAET);
             if (tpl != null)
                 ds.update(SAXTransformer.transform(ds, tpl, false, false), modified);
-            AttributesFormat filePathFormat = ae.getStorageFilePathFormat();
-            if (filePathFormat != null)
-                fileHolder.setFile(rename(as, rq, fs, fileHolder.getFile(),
-                        format(filePathFormat, ds)));
-            File dst = fileHolder.getFile();
-            String filePath = dst.toURI().toString().substring(fs.getURI().length());
             InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
+            FileSystem fs = store.getCurrentFileSystem();
+            String filePath = dst.toURI().toString().substring(fs.getURI().length());
             boolean add = store.addFileRef(sourceAET, ds, modified,
-                    new FileRef(fs, filePath, pc.getTransferSyntax(), dst.length(),
+                    new FileRef(fs, filePath, fmi.getString(Tag.TransferSyntaxUID), dst.length(),
                             digest(digest)), ae.getStoreParam());
             if (add && ae.hasIANDestinations()) {
                 scheduleIAN(ae, store.createIANforPreviousMPPS());
@@ -202,53 +200,22 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         }
     }
 
-    private String format(AttributesFormat format, Attributes ds) {
-        synchronized (format) {
-            return format.format(ds);
-        }
-    }
-
-    private static File rename(Association as, Attributes rq, FileSystem fs, File file,
-            String fpath) throws DicomServiceException {
-        File dst = new File(fs.getDirectory(), fpath);
-        File dir = dst.getParentFile();
-        dir.mkdirs();
-        while (dst.exists()) {
-            dst = new File(dir, TagUtils.toHexString(LazyInitialization.nextInt()));
-        }
-        if (file.renameTo(dst))
-            LOG.info(as + ": M-RENAME " + file + " to " + dst);
-        else {
-            LOG.warn(as + ": Failed to M-RENAME " + file + " to " + dst);
-            throw new DicomServiceException(Status.OutOfResources, "Failed to rename file");
-        }
-        return dst;
-    }
-
     private String digest(MessageDigest digest) {
         return digest != null ? TagUtils.toHexString(digest.digest()) : null;
     }
 
-    private Attributes readDataset(Association as, Attributes rq, File file)
+    private InstanceStore initInstanceStore(Association as)
             throws DicomServiceException {
-        DicomInputStream in = null;
-        try {
-            in = new DicomInputStream(file);
-            in.setIncludeBulkData(false);
-            return in.readDataset(-1, Tag.PixelData);
-        } catch (IOException e) {
-            LOG.warn(as + ": Failed to decode dataset:", e);
-            throw new DicomServiceException(Status.CannotUnderstand);
-        } finally {
-            SafeClose.close(in);
-        }
-    }
-
-    private InstanceStore initInstanceStore(Association as) {
         InstanceStore store =
                     (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
         if (store == null) {
+            ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+            String fsGroupID = ae.getFileSystemGroupID();
+            if (fsGroupID == null)
+                throw new IllegalStateException(
+                        "No File System Group ID configured for " + ae.getAETitle());
             store = (InstanceStore) JNDIUtils.lookup(InstanceStore.JNDI_NAME);
+            store.selectFileSystem(fsGroupID);
             as.setProperty(InstanceStore.JNDI_NAME, store);
         }
         return store;

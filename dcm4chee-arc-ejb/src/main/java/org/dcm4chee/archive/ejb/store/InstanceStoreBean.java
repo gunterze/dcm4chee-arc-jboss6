@@ -99,6 +99,7 @@ public class InstanceStoreBean implements InstanceStore {
     @EJB
     private IANQuery ianQuery;
 
+    private FileSystem curFileSystem;
     private Series cachedSeries;
     private PerformedProcedureStep prevMpps;
     private PerformedProcedureStep curMpps;
@@ -111,6 +112,12 @@ public class InstanceStoreBean implements InstanceStore {
     @PostConstruct
     public void init() {
         em = emf.createEntityManager();
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+    public FileSystem getCurrentFileSystem() {
+        return curFileSystem;
     }
 
     @Override
@@ -363,28 +370,39 @@ public class InstanceStoreBean implements InstanceStore {
     }
 
     @Override
-    public FileSystem selectFileSystem(String groupID) {
-        return em.createNamedQuery(FileSystem.FIND_BY_GROUP_ID_AND_STATUS, FileSystem.class)
-                .setParameter(1, groupID)
-                .setParameter(2, FileSystemStatus.RW)
-                .getSingleResult();
-    }
-
-    @Override
-    public boolean initFileSystem(String groupID) {
-        if (em.createNamedQuery(FileSystem.COUNT_WITH_GROUP_ID, Long.class)
-                .setParameter(1, groupID)
-                .getSingleResult() > 0)
-            return false;
-
+    public FileSystem selectFileSystem(String groupID)
+            throws DicomServiceException {
         em.joinTransaction();
-        FileSystem fs = new FileSystem();
-        fs.setGroupID(groupID);
-        fs.setURI(new File(System.getProperty("jboss.server.data.dir")).toURI().toString());
-        fs.setAvailability(Availability.ONLINE);
-        fs.setStatus(FileSystemStatus.RW);
-        em.persist(fs);
-        return true;
+        try {
+            return curFileSystem =
+                    em.createNamedQuery(FileSystem.FIND_BY_GROUP_ID_AND_STATUS, FileSystem.class)
+                        .setParameter(1, groupID)
+                        .setParameter(2, FileSystemStatus.RW)
+                        .getSingleResult();
+        } catch (NoResultException e) {
+            List<FileSystem> resultList = 
+                    em.createNamedQuery(FileSystem.FIND_BY_GROUP_ID, FileSystem.class)
+                        .setParameter(1, groupID)
+                        .getResultList();
+            if (resultList.isEmpty()) {
+                FileSystem fs = new FileSystem();
+                fs.setGroupID(groupID);
+                fs.setURI(new File(System.getProperty("jboss.server.data.dir")).toURI().toString());
+                fs.setAvailability(Availability.ONLINE);
+                fs.setStatus(FileSystemStatus.RW);
+                em.persist(fs);
+                return curFileSystem = fs;
+            }
+            for (FileSystem fs : resultList) {
+                if (fs.getStatus() == FileSystemStatus.Rw) {
+                    fs.setStatus(FileSystemStatus.RW);
+                    em.flush();
+                    return curFileSystem;
+                }
+            }
+            throw new DicomServiceException(Status.OutOfResources,
+                    "No writeable File System in File System Group " + groupID);
+        }
     }
 
     private Instance findInstance(String sopIUID) {
@@ -595,6 +613,7 @@ public class InstanceStoreBean implements InstanceStore {
             em.joinTransaction();
             updateSeries(cachedSeries);
         }
+        curFileSystem = null;
         cachedSeries = null;
         prevMpps = null;
         curMpps = null;

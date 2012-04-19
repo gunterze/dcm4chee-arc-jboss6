@@ -67,9 +67,9 @@ public interface InstanceStore {
 
     void close();
 
-    boolean initFileSystem(String groupID);
+    FileSystem selectFileSystem(String groupID) throws DicomServiceException;
 
-    FileSystem selectFileSystem(String groupID);
+    FileSystem getCurrentFileSystem();
 
     Attributes createIANforPreviousMPPS() throws DicomServiceException;
 
