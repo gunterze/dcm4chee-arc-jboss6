@@ -44,9 +44,9 @@ import java.util.List;
 
 import javax.ejb.EJB;
 
+import org.dcm4che.conf.api.ApplicationEntityCache;
 import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.conf.api.ConfigurationNotFoundException;
-import org.dcm4che.conf.api.DicomConfiguration;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.net.ApplicationEntity;
@@ -76,7 +76,7 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
 
     private final String[] qrLevels;
     private final QueryRetrieveLevel rootLevel;
-    private DicomConfiguration dicomConfiguration;
+    private ApplicationEntityCache aeCache;
 
     @EJB
     private LocateInstances calculateMatches;
@@ -90,12 +90,12 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
     }
 
-    public final DicomConfiguration getDicomConfiguration() {
-        return dicomConfiguration;
+    public final ApplicationEntityCache getApplicationEntityCache() {
+        return aeCache;
     }
 
-    public final void setDicomConfiguration(DicomConfiguration dicomConfiguration) {
-        this.dicomConfiguration = dicomConfiguration;
+    public final void setApplicationEntityCache(ApplicationEntityCache aeCache) {
+        this.aeCache = aeCache;
     }
 
     @Override
@@ -114,10 +114,9 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         String dest = rq.getString(Tag.MoveDestination);
         final ApplicationEntity destAE;
         try {
-            destAE = dicomConfiguration.findApplicationEntity(dest);
+            destAE = aeCache.findApplicationEntity(dest);
         } catch (ConfigurationNotFoundException e) {
-            throw new DicomServiceException(Status.MoveDestinationUnknown,
-                    "Unknown Move Destination: " + dest);
+            throw new DicomServiceException(Status.MoveDestinationUnknown, e);
         } catch (ConfigurationException e) {
             throw new DicomServiceException(Status.UnableToProcess, e);
         }

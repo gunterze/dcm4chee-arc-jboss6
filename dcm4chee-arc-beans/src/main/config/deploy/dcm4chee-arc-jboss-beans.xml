@@ -316,8 +316,8 @@
         </array>
       </parameter>
     </constructor>
-    <property name="dicomConfiguration">
-        <inject bean="ArchiveConfiguration" />
+    <property name="applicationEntityCache">
+      <inject bean="ApplicationEntityCache" />
     </property>
   </bean>
 
@@ -333,8 +333,8 @@
         </array>
       </parameter>
     </constructor>
-    <property name="dicomConfiguration">
-        <inject bean="ArchiveConfiguration" />
+    <property name="applicationEntityCache">
+      <inject bean="ApplicationEntityCache" />
     </property>
   </bean>
 
@@ -349,8 +349,8 @@
         </array>
       </parameter>
     </constructor>
-    <property name="dicomConfiguration">
-        <inject bean="ArchiveConfiguration" />
+    <property name="applicationEntityCache">
+      <inject bean="ApplicationEntityCache" />
     </property>
   </bean>
 
