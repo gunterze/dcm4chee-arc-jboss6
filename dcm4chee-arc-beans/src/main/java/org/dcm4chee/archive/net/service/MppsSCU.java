@@ -47,7 +47,7 @@ import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.Session;
 
-import org.dcm4che.conf.api.DicomConfiguration;
+import org.dcm4che.conf.api.ApplicationEntityCache;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
@@ -73,7 +73,7 @@ public class MppsSCU implements MessageListener {
     public static final Logger LOG = LoggerFactory.getLogger(MppsSCU.class);
 
     private ArchiveDevice device;
-    private DicomConfiguration dicomConfiguration;
+    private ApplicationEntityCache aeCache;
     private JMSService jmsService;
     private Queue queue;
 
@@ -85,12 +85,12 @@ public class MppsSCU implements MessageListener {
         this.device = device;
     }
 
-    public final DicomConfiguration getDicomConfiguration() {
-        return dicomConfiguration;
+    public final ApplicationEntityCache getApplicationEntityCache() {
+        return aeCache;
     }
 
-    public final void setDicomConfiguration(DicomConfiguration dicomConfiguration) {
-        this.dicomConfiguration = dicomConfiguration;
+    public final void setApplicationEntityCache(ApplicationEntityCache aeCache) {
+        this.aeCache = aeCache;
     }
 
     public final JMSService getJmsService() {
@@ -176,7 +176,7 @@ public class MppsSCU implements MessageListener {
                                 UID.ModalityPerformedProcedureStepSOPClass,
                                 tc.getTransferSyntaxes()));
         try {
-            ApplicationEntity remoteAE = dicomConfiguration.findApplicationEntity(remoteAET);
+            ApplicationEntity remoteAE = aeCache.findApplicationEntity(remoteAET);
             Association as = localAE.connect(remoteAE, aarq);
             DimseRSP rsp = ncreate 
                     ? as.ncreate(UID.ModalityPerformedProcedureStepSOPClass, iuid, rqAttrs, null)

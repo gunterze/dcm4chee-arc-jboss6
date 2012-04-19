@@ -14,6 +14,7 @@
             <node name="dcm4chee-arc">
               <map>
                 <entry key="dcmArchiveDevice" value="true"/>
+                <entry key="dcmConfigurationStaleTimeout" value="60"/>
                 <entry key="dcmFuzzyAlgorithmClass" value="org.dcm4che.soundex.ESoundex"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.#" value="11"/>
                 <entry key="dicomAuthorizedNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/dcmqrscp"/>

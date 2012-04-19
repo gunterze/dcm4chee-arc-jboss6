@@ -132,7 +132,7 @@
   </bean>
 
   <!-- The DICOM Device -->
-  <bean name="Device" class="org.dcm4che.net.hl7.HL7Device">
+  <bean name="Device" class="org.dcm4chee.archive.net.ArchiveDevice">
     <constructor factoryMethod="findDevice">
       <factory bean="ArchiveConfiguration"/>
       <parameter>dcm4chee-arc</parameter>
@@ -163,6 +163,18 @@
     <demand>Class:org.dcm4chee.archive.ejb.query.StgCmtQuery</demand>
   </bean>
 
+  <!-- Application Entity Cache -->
+  <bean name="ApplicationEntityCache" class="org.dcm4che.conf.api.ApplicationEntityCache">
+    <constructor>
+      <parameter>
+        <inject bean="ArchiveConfiguration"/>
+      </parameter>
+    </constructor>
+    <property name="staleTimeout">
+      <inject bean="Device" property="configurationStaleTimeout"/>
+    </property>
+  </bean>
+
   <!-- DICOM Service Registry -->
   <bean name="DicomServiceRegistry" class="org.dcm4che.net.service.DicomServiceRegistry">
     <incallback method="addDicomService" />
@@ -181,8 +193,8 @@
     <property name="device">
       <inject bean="Device" />
     </property>
-    <property name="dicomConfiguration">
-      <inject bean="ArchiveConfiguration" />
+    <property name="applicationEntityCache">
+      <inject bean="ApplicationEntityCache" />
     </property>
     <property name="jmsService">
       <inject bean="JMSService" />
@@ -211,8 +223,8 @@
     <property name="device">
       <inject bean="Device" />
     </property>
-    <property name="dicomConfiguration">
-      <inject bean="ArchiveConfiguration" />
+    <property name="applicationEntityCache">
+      <inject bean="ApplicationEntityCache" />
     </property>
     <property name="jmsService">
       <inject bean="JMSService" />
@@ -227,8 +239,8 @@
     <property name="device">
       <inject bean="Device" />
     </property>
-    <property name="dicomConfiguration">
-      <inject bean="ArchiveConfiguration" />
+    <property name="applicationEntityCache">
+      <inject bean="ApplicationEntityCache" />
     </property>
     <property name="jmsService">
       <inject bean="JMSService" />

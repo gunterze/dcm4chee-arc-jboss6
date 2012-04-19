@@ -78,6 +78,7 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
  */
 public class ArchiveConfigurationTestUtils {
 
+    private static final int CONFIGURATION_STALE_TIMEOUT = 60;
     private static final int[] PATIENT_ATTRS = {
         Tag.SpecificCharacterSet,
         Tag.PatientName,
@@ -679,6 +680,7 @@ public class ArchiveConfigurationTestUtils {
             device.setAuthorizedNodeCertificates(config.deviceRef(other),
                     (X509Certificate) KEYSTORE.getCertificate(other));
         device.setFuzzyStr(new ESoundex());
+        device.setConfigurationStaleTimeout(CONFIGURATION_STALE_TIMEOUT);
         device.setAttributeFilter(Entity.Patient, new AttributeFilter(PATIENT_ATTRS));
         device.setAttributeFilter(Entity.Study, new AttributeFilter(STUDY_ATTRS));
         device.setAttributeFilter(Entity.Series, new AttributeFilter(SERIES_ATTRS));

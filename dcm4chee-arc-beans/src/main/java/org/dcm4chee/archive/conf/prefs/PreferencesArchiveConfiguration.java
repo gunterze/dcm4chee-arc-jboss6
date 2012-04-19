@@ -83,6 +83,8 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         prefs.putBoolean("dcmArchiveDevice", true);
         storeNotNull(prefs, "dcmFuzzyAlgorithmClass",
                 arcDev.getFuzzyStr().getClass().getName());
+        storeNotDef(prefs, "dcmConfigurationStaleTimeout",
+                arcDev.getConfigurationStaleTimeout(), 0);
     }
 
     @Override
@@ -236,6 +238,8 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
 
         ArchiveDevice arcdev = (ArchiveDevice) device;
         arcdev.setFuzzyStr(fuzzyStr(prefs.get("dcmFuzzyAlgorithmClass", null)));
+        arcdev.setConfigurationStaleTimeout(
+                prefs.getInt("dcmConfigurationStaleTimeout", 0));
     }
 
     @Override
@@ -389,6 +393,10 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         storeDiff(prefs, "dcmFuzzyAlgorithmClass",
                 aa.getFuzzyAlgorithmClass(),
                 bb.getFuzzyAlgorithmClass());
+        storeDiff(prefs, "dcmConfigurationStaleTimeout",
+                aa.getConfigurationStaleTimeout(),
+                bb.getConfigurationStaleTimeout(),
+                0);
     }
 
     @Override

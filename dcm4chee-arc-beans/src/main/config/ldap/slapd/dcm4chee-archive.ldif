@@ -225,11 +225,18 @@ olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.36
   EQUALITY booleanMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 
   SINGLE-VALUE )
+olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.37
+  NAME 'dcmConfigurationStaleTimeout'
+  DESC 'Stale timeout of cached configuration in s. 0 (=never invalidate cached configuration) if absent'
+  EQUALITY integerMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+  SINGLE-VALUE )
 olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.4
   NAME 'dcmArchiveDevice'
   DESC 'DICOM Archive Device related information'
   SUP top AUXILIARY
-  MUST dcmFuzzyAlgorithmClass )
+  MUST dcmFuzzyAlgorithmClass
+  MAY dcmConfigurationStaleTimeout )
 olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.5
   NAME 'dcmArchiveNetworkAE'
   DESC 'DICOM Archive Network AE related information'

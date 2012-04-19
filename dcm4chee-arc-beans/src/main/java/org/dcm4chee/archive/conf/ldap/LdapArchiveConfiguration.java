@@ -134,6 +134,8 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         ArchiveDevice arcDev = (ArchiveDevice) device;
         storeNotNull(attrs, "dcmFuzzyAlgorithmClass",
                 arcDev.getFuzzyAlgorithmClass());
+        storeNotDef(attrs, "dcmConfigurationStaleTimeout",
+                arcDev.getConfigurationStaleTimeout(), 0);
         return attrs;
     }
 
@@ -269,6 +271,8 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
             return;
         ArchiveDevice arcdev = (ArchiveDevice) device;
         arcdev.setFuzzyStr(fuzzyStr(attrs.get("dcmFuzzyAlgorithmClass")));
+        arcdev.setConfigurationStaleTimeout(
+                intValue(attrs.get("dcmConfigurationStaleTimeout"), 0));
     }
 
     @Override
@@ -445,6 +449,10 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         storeDiff(mods, "dcmFuzzyAlgorithmClass",
                 aa.getFuzzyAlgorithmClass(),
                 bb.getFuzzyAlgorithmClass());
+        storeDiff(mods, "dcmConfigurationStaleTimeout",
+                aa.getConfigurationStaleTimeout(),
+                bb.getConfigurationStaleTimeout(),
+                0);
         return mods;
     }
 

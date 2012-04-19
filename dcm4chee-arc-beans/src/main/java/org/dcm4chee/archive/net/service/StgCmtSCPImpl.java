@@ -48,8 +48,8 @@ import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.Session;
 
+import org.dcm4che.conf.api.ApplicationEntityCache;
 import org.dcm4che.conf.api.ConfigurationNotFoundException;
-import org.dcm4che.conf.api.DicomConfiguration;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.UID;
@@ -81,7 +81,7 @@ public class StgCmtSCPImpl extends DicomService implements MessageListener {
     private StgCmtQuery stgCmtQuery;
 
     private ArchiveDevice device;
-    private DicomConfiguration dicomConfiguration;
+    private ApplicationEntityCache aeCache;
     private JMSService jmsService;
     private Queue queue;
 
@@ -97,12 +97,12 @@ public class StgCmtSCPImpl extends DicomService implements MessageListener {
         this.device = device;
     }
 
-    public final DicomConfiguration getDicomConfiguration() {
-        return dicomConfiguration;
+    public final ApplicationEntityCache getApplicationEntityCache() {
+        return aeCache;
     }
 
-    public final void setDicomConfiguration(DicomConfiguration dicomConfiguration) {
-        this.dicomConfiguration = dicomConfiguration;
+    public final void setApplicationEntityCache(ApplicationEntityCache aeCache) {
+        this.aeCache = aeCache;
     }
 
     public final JMSService getJmsService() {
@@ -146,8 +146,8 @@ public class StgCmtSCPImpl extends DicomService implements MessageListener {
         try {
             ArchiveApplicationEntity ae =
                     (ArchiveApplicationEntity) as.getApplicationEntity();
-            ae.findCompatibelConnection(
-                    dicomConfiguration.findApplicationEntity(remoteAET));
+            ApplicationEntity remoteAE = aeCache.findApplicationEntity(remoteAET);
+            ae.findCompatibelConnection(remoteAE);
             Attributes eventInfo = stgCmtQuery.calculateResult(actionInfo);
             scheduleNEventReport(localAET, remoteAET, eventInfo, 0,
                     ae.getStorageCommitmentDelay());
@@ -205,7 +205,7 @@ public class StgCmtSCPImpl extends DicomService implements MessageListener {
         aarq.addRoleSelection(
                 new RoleSelection(UID.StorageCommitmentPushModelSOPClass, false, true));
         try {
-            ApplicationEntity remoteAE = dicomConfiguration.findApplicationEntity(remoteAET);
+            ApplicationEntity remoteAE = aeCache.findApplicationEntity(remoteAET);
             Association as = localAE.connect(remoteAE, aarq);
             DimseRSP neventReport = as.neventReport(
                     UID.StorageCommitmentPushModelSOPClass,

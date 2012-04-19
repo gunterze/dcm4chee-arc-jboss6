@@ -55,11 +55,21 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
 public class ArchiveDevice extends HL7Device {
 
     private FuzzyStr fuzzyStr;
-    private final AttributeFilter[] attributeFilters = new AttributeFilter[Entity.values().length];
+    private final AttributeFilter[] attributeFilters =
+            new AttributeFilter[Entity.values().length];
     private TemplatesCache templatesCache;
+    private int configurationStaleTimeout;
 
     public ArchiveDevice(String name) {
         super(name);
+    }
+
+    public int getConfigurationStaleTimeout() {
+        return configurationStaleTimeout;
+    }
+
+    public void setConfigurationStaleTimeout(int configurationStaleTimeout) {
+        this.configurationStaleTimeout = configurationStaleTimeout;
     }
 
     public void clearTemplatesCache() {
