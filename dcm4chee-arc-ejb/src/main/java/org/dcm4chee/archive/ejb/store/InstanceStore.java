@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.ejb.store;
 
+import java.io.File;
 import java.util.Collection;
 
 import javax.ejb.Local;
@@ -45,7 +46,6 @@ import javax.ejb.Local;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.persistence.Availability;
-import org.dcm4chee.archive.persistence.FileRef;
 import org.dcm4chee.archive.persistence.FileSystem;
 import org.dcm4chee.archive.persistence.Instance;
 
@@ -62,7 +62,7 @@ public interface InstanceStore {
                     throws DicomServiceException;
 
     boolean addFileRef(String sourceAET, Attributes data, Attributes modified,
-            FileRef fileRef, StoreParam storeParam)
+            File file, String digest, String tsuid, StoreParam storeParam)
                     throws DicomServiceException;
 
     void close();

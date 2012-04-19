@@ -59,7 +59,6 @@ import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
-import org.dcm4chee.archive.persistence.FileRef;
 import org.dcm4chee.archive.persistence.FileSystem;
 
 /**
@@ -167,11 +166,8 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
             if (tpl != null)
                 ds.update(SAXTransformer.transform(ds, tpl, false, false), modified);
             InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
-            FileSystem fs = store.getCurrentFileSystem();
-            String filePath = dst.toURI().toString().substring(fs.getURI().length());
-            boolean add = store.addFileRef(sourceAET, ds, modified,
-                    new FileRef(fs, filePath, fmi.getString(Tag.TransferSyntaxUID), dst.length(),
-                            digest(digest)), ae.getStoreParam());
+            boolean add = store.addFileRef(sourceAET, ds, modified, dst, digest(digest),
+                    fmi.getString(Tag.TransferSyntaxUID), ae.getStoreParam());
             if (add && ae.hasIANDestinations()) {
                 scheduleIAN(ae, store.createIANforPreviousMPPS());
                 for (Attributes ian : store.createIANsforRejectionNote())

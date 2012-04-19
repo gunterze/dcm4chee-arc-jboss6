@@ -149,12 +149,12 @@ public class InstanceStoreBean implements InstanceStore {
 
     @Override
     public boolean addFileRef(String sourceAET, Attributes data, Attributes modified,
-            FileRef fileRef, StoreParam storeParam) throws DicomServiceException {
+            File file, String digest, String tsuid, StoreParam storeParam)
+                    throws DicomServiceException {
         em.joinTransaction();
         initHideRejectionCodes(storeParam);
         initHideConceptNameCodes(storeParam);
-        FileSystem fs = fileRef.getFileSystem();
-        Availability availability = fs.getAvailability();
+        FileSystem fs = curFileSystem;
         Instance inst;
         try {
             inst = findInstance(data.getString(Tag.SOPInstanceUID, null));
@@ -163,7 +163,7 @@ public class InstanceStoreBean implements InstanceStore {
             if (rn != null && rn.getActions().contains(NOT_ACCEPT_SUBSEQUENT_OCCURRENCE))
                     throw new DicomServiceException(Status.CannotUnderstand,
                             rejectionCode.getCodeMeaning());
-            switch (storeDuplicate(inst, fileRef.getDigest(), fs.getGroupID(), storeParam)) {
+            switch (storeDuplicate(inst, digest, fs.getGroupID(), storeParam)) {
             case IGNORE:
                 coerceInstanceAttributes(inst, data, modified);
                 if (rn != null && rn.getActions().contains(NOT_REJECT_SUBSEQUENT_OCCURRENCE))
@@ -176,14 +176,16 @@ public class InstanceStoreBean implements InstanceStore {
                 break;
             case REPLACE:
                 inst.setReplaced(true);
-                inst = newInstance(sourceAET, data, modified, availability, storeParam);
+                inst = newInstance(sourceAET, data, modified, fs.getAvailability(), storeParam);
                 if (rn != null && !rn.getActions().contains(NOT_REJECT_SUBSEQUENT_OCCURRENCE))
                     inst.setRejectionCode(rejectionCode);
                 break;
             }
         } catch (NoResultException e) {
-            inst = newInstance(sourceAET, data, modified, availability, storeParam);
+            inst = newInstance(sourceAET, data, modified, fs.getAvailability(), storeParam);
         }
+        String filePath = file.toURI().toString().substring(fs.getURI().length());
+        FileRef fileRef = new FileRef(fs, filePath, tsuid, file.length(), digest);
         fileRef.setInstance(inst);
         em.persist(fileRef);
         return true;
