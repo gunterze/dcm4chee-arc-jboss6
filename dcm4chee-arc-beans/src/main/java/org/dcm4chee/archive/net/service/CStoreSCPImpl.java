@@ -45,13 +45,16 @@ import java.security.SecureRandom;
 
 import javax.xml.transform.Templates;
 
+import org.dcm4che.conf.api.ApplicationEntityCache;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.io.SAXTransformer;
+import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Dimse;
 import org.dcm4che.net.Status;
+import org.dcm4che.net.Supplements;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.service.BasicCStoreSCP;
 import org.dcm4che.net.service.DicomServiceException;
@@ -67,6 +70,7 @@ import org.dcm4chee.archive.persistence.FileSystem;
 public class CStoreSCPImpl extends BasicCStoreSCP {
 
     private IanSCU ianSCU;
+    private ApplicationEntityCache aeCache;
 
     public CStoreSCPImpl(String... sopClasses) {
         super(sopClasses);
@@ -78,6 +82,14 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
 
     public final void setIanSCU(IanSCU ianSCU) {
         this.ianSCU = ianSCU;
+    }
+
+    public final ApplicationEntityCache getApplicationEntityCache() {
+        return aeCache;
+    }
+
+    public final void setApplicationEntityCache(ApplicationEntityCache aeCache) {
+        this.aeCache = aeCache;
     }
 
     private static class LazyInitialization {
@@ -165,6 +177,9 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
                     TransferCapability.Role.SCP, sourceAET);
             if (tpl != null)
                 ds.update(SAXTransformer.transform(ds, tpl, false, false), modified);
+            ApplicationEntity sourceAE = aeCache.get(sourceAET);
+            if (sourceAE != null)
+                Supplements.supplementComposite(ds, sourceAE.getDevice());
             InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
             boolean add = store.addFileRef(sourceAET, ds, modified, dst, digest(digest),
                     fmi.getString(Tag.TransferSyntaxUID), ae.getStoreParam());
