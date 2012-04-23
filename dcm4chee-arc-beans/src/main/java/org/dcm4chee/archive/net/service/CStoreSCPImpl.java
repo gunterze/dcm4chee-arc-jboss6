@@ -54,8 +54,8 @@ import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.Dimse;
 import org.dcm4che.net.Status;
-import org.dcm4che.net.Supplements;
 import org.dcm4che.net.TransferCapability;
+import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCStoreSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.AttributesFormat;
@@ -163,9 +163,9 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
     }
 
     @Override
-    protected boolean process(Association as, Attributes rq,  Attributes rsp,
-            File dst, MessageDigest digest, Attributes fmi, Attributes ds)
-            throws DicomServiceException {
+    protected boolean process(Association as, PresentationContext pc, 
+            Attributes rq,  Attributes rsp, File dst, MessageDigest digest,
+            Attributes fmi, Attributes ds) throws DicomServiceException {
         if (ds.bigEndian())
             ds = new Attributes(ds, false);
         String sourceAET = as.getRemoteAET();
@@ -182,7 +182,7 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
                 Supplements.supplementComposite(ds, sourceAE.getDevice());
             InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
             boolean add = store.addFileRef(sourceAET, ds, modified, dst, digest(digest),
-                    fmi.getString(Tag.TransferSyntaxUID), ae.getStoreParam());
+                    pc.getTransferSyntax(), ae.getStoreParam());
             if (add && ae.hasIANDestinations()) {
                 scheduleIAN(ae, store.createIANforPreviousMPPS());
                 for (Attributes ian : store.createIANsforRejectionNote())
