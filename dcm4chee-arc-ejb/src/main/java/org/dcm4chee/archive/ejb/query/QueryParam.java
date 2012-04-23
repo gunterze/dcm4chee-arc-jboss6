@@ -43,6 +43,7 @@ import java.util.List;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4chee.archive.persistence.AttributeFilter;
 import org.dcm4chee.archive.persistence.Code;
+import org.dcm4chee.archive.persistence.Issuer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -60,6 +61,8 @@ public class QueryParam {
     private String[] roles;
     private boolean showEmptyStudy;
     private boolean showEmptySeries;
+    private Issuer defaultIssuerOfPatientID;
+    private Issuer defaultIssuerOfAccessionNumber;
 
     public final boolean isCombinedDatetimeMatching() {
         return combinedDatetimeMatching;
@@ -139,6 +142,30 @@ public class QueryParam {
 
     public void setShowEmptySeries(boolean showEmptySeries) {
         this.showEmptySeries = showEmptySeries;
+    }
+
+    public Issuer getDefaultIssuerOfPatientID() {
+        return defaultIssuerOfPatientID;
+    }
+
+    public void setDefaultIssuerOfPatientID(org.dcm4che.net.Issuer issuer) {
+        this.defaultIssuerOfPatientID = issuer != null
+                ? new Issuer(issuer.getLocalNamespaceEntityID(),
+                        issuer.getUniversalEntityID(),
+                        issuer.getUniversalEntityIDType())
+                : null;
+    }
+
+    public Issuer getDefaultIssuerOfAccessionNumber() {
+        return defaultIssuerOfAccessionNumber;
+    }
+
+    public void setDefaultIssuerOfAccessionNumber(org.dcm4che.net.Issuer issuer) {
+        this.defaultIssuerOfAccessionNumber = issuer != null
+                ? new Issuer(issuer.getLocalNamespaceEntityID(),
+                        issuer.getUniversalEntityID(),
+                        issuer.getUniversalEntityIDType())
+                : null;
     }
 
 }

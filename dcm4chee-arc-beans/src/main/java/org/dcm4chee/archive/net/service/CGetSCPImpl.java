@@ -114,7 +114,8 @@ public class CGetSCPImpl extends BasicCGetSCP {
     private List<InstanceLocator> calculateMatches(Attributes rq,
             Attributes keys, QueryParam queryParam) throws DicomServiceException {
         try {
-            IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys);
+            IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
+                    queryParam.getDefaultIssuerOfPatientID());
             IDWithIssuer[] pids = pid != null ? new IDWithIssuer[] { pid } : null;
             return calculateMatches.find(pids, keys, queryParam);
         }  catch (Exception e) {

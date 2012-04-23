@@ -43,9 +43,12 @@ import java.util.EnumSet;
 
 import javax.ejb.EJB;
 
+import org.dcm4che.conf.api.ApplicationEntityCache;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
+import org.dcm4che.net.Device;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.ExtendedNegotiation;
@@ -68,6 +71,7 @@ public class CFindSCPImpl extends BasicCFindSCP {
 
     private final String[] qrLevels;
     private final QueryRetrieveLevel rootLevel;
+    private ApplicationEntityCache aeCache;
 
     @EJB
     private CodeManager codeManager;
@@ -76,6 +80,14 @@ public class CFindSCPImpl extends BasicCFindSCP {
         super(sopClass);
         this.qrLevels = qrLevels;
         this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
+    }
+
+    public final ApplicationEntityCache getApplicationEntityCache() {
+        return aeCache;
+    }
+
+    public final void setApplicationEntityCache(ApplicationEntityCache aeCache) {
+        this.aeCache = aeCache;
     }
 
     @Override
@@ -88,11 +100,20 @@ public class CFindSCPImpl extends BasicCFindSCP {
         EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);
         boolean relational = queryOpts.contains(QueryOption.RELATIONAL);
         level.validateQueryKeys(validator, rootLevel, relational);
-        IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys);
-        IDWithIssuer[] pids = pid != null ? new IDWithIssuer[] { pid } : null;
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
         QueryParam queryParam = ae.getQueryParam(codeManager, queryOpts, roles());
         try {
+            ApplicationEntity sourceAE = aeCache.findApplicationEntity(as.getRemoteAET());
+            if (sourceAE != null) {
+                Device sourcDevice = sourceAE.getDevice();
+                queryParam.setDefaultIssuerOfPatientID(
+                        sourcDevice.getIssuerOfPatientID());
+                queryParam.setDefaultIssuerOfAccessionNumber(
+                        sourcDevice.getIssuerOfAccessionNumber());
+            }
+            IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
+                    queryParam.getDefaultIssuerOfPatientID());
+            IDWithIssuer[] pids = pid != null ? new IDWithIssuer[] { pid } : null;
             CompositeQuery query = (CompositeQuery) JNDIUtils.lookup(CompositeQuery.JNDI_NAME);
             switch (level) {
             case PATIENT:

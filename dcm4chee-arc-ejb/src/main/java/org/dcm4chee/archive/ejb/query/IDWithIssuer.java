@@ -60,7 +60,8 @@ public class IDWithIssuer {
         return "IDWithIssuer[id=" + id + ", issuer=" + issuer + "]";
     }
 
-    public static IDWithIssuer pidWithIssuer(Attributes keys) {
+    public static IDWithIssuer pidWithIssuer(Attributes keys,
+            Issuer defaultIssuerWithPatientID) {
         String id = keys.getString(Tag.PatientID, "*");
         if (id.equals("*"))
             return null;
@@ -76,7 +77,7 @@ public class IDWithIssuer {
         Issuer issuer = entityID.equals("*")
                      && entityUID.equals("*")
                      && entityUIDType.equals("*")
-                     ? null
+                     ? defaultIssuerWithPatientID
                      : new Issuer(entityID, entityUID, entityUIDType);
         return new IDWithIssuer(id, issuer);
     }

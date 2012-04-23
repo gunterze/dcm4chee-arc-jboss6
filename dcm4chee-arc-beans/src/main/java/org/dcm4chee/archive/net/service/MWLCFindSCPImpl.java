@@ -71,7 +71,8 @@ public class MWLCFindSCPImpl extends BasicCFindSCP {
             Attributes rq, Attributes keys) throws DicomServiceException {
         String cuid = rq.getString(Tag.AffectedSOPClassUID);
         ExtendedNegotiation extNeg = as.getAAssociateAC().getExtNegotiationFor(cuid);
-        IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys);
+        //TODO consider default Issuer Of Patient ID of Source AE
+        IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys, null);
         IDWithIssuer[] pids = pid != null ? new IDWithIssuer[] { pid } : null;
         ArchiveDevice dev = (ArchiveDevice) as.getApplicationEntity().getDevice(); 
         EnumSet<QueryOption> queryOpts = QueryOption.toOptions(extNeg);

@@ -276,6 +276,9 @@
         </array>
       </parameter>
     </constructor>
+    <property name="applicationEntityCache">
+      <inject bean="ApplicationEntityCache" />
+    </property>
   </bean>
 
 
@@ -291,6 +294,9 @@
         </array>
       </parameter>
     </constructor>
+    <property name="applicationEntityCache">
+      <inject bean="ApplicationEntityCache" />
+    </property>
   </bean>
 
   <!-- Patient/Study Only C-FIND SCP -->
@@ -304,6 +310,9 @@
         </array>
       </parameter>
     </constructor>
+    <property name="applicationEntityCache">
+      <inject bean="ApplicationEntityCache" />
+    </property>
   </bean>
 
   <!-- Patient Root C-MOVE SCP -->

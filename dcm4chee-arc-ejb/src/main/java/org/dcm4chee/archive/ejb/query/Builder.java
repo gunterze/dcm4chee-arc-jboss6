@@ -137,6 +137,7 @@ public abstract class Builder {
         if(!accNo.equals("*"))
             builder.and(issuer(QStudy.study.issuerOfAccessionNumber,
                     keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence),
+                    queryParam.getDefaultIssuerOfAccessionNumber(),
                     matchUnknown));
         builder.and(modalitiesInStudy(
                 keys.getString(Tag.ModalitiesInStudy, "*").toUpperCase(), matchUnknown));
@@ -405,6 +406,14 @@ public abstract class Builder {
             builder.and(ExpressionUtils.or(code.isNull(), code.notIn(codes)));
     }
 
+    static Predicate issuer(QIssuer path, Attributes item, Issuer defaultIssuer,
+            boolean matchUnknown) {
+        Predicate issuer = issuer(path, item, matchUnknown);
+        return issuer != null 
+                ? issuer
+                : issuer(path, defaultIssuer, matchUnknown);
+    }
+
     static Predicate issuer(QIssuer path, Attributes item, boolean matchUnknown) {
         if (item == null || item.isEmpty())
             return null;
@@ -559,7 +568,7 @@ public abstract class Builder {
             builder.and(
                     issuer(QServiceRequest.serviceRequest.issuerOfAccessionNumber,
                         item.getNestedDataset(Tag.IssuerOfAccessionNumberSequence),
-                        matchUnknown));
+                        queryParam.getDefaultIssuerOfAccessionNumber(), matchUnknown));
 
     }
 
