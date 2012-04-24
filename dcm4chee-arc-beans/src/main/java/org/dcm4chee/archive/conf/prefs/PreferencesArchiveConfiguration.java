@@ -190,6 +190,8 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
                     ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
         storeNotDef(prefs, "dcmShowEmptySeries", arcAE.isShowEmptySeries(), false);
         storeNotDef(prefs, "dcmShowEmptyStudy", arcAE.isShowEmptyStudy(), false);
+        storeNotNull(prefs, "hl7PIXConsumerApplication", arcAE.getLocalPIXConsumerApplication());
+        storeNotNull(prefs, "hl7PIXManagerApplication", arcAE.getRemotePIXManagerApplication());
     }
 
     @Override
@@ -287,6 +289,8 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
                 ArchiveApplicationEntity.DEF_RETRY_INTERVAL));
         arcae.setShowEmptySeries(prefs.getBoolean("dcmShowEmptySeries", false));
         arcae.setShowEmptyStudy(prefs.getBoolean("dcmShowEmptyStudy", false));
+        arcae.setLocalPIXConsumerApplication(prefs.get("hl7PIXConsumerApplication", null));
+        arcae.setRemotePIXManagerApplication(prefs.get("hl7PIXManagerApplication", null));
     }
 
     @Override
@@ -492,6 +496,12 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
                  aa.isShowEmptyStudy(),
                  bb.isShowEmptyStudy(),
                  false);
+         storeDiff(prefs, "hl7PIXConsumerApplication",
+                 aa.getLocalPIXConsumerApplication(),
+                 bb.getLocalPIXConsumerApplication());
+         storeDiff(prefs, "hl7PIXManagerApplication",
+                 aa.getRemotePIXManagerApplication(),
+                 bb.getRemotePIXManagerApplication());
     }
 
     @Override

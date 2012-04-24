@@ -93,6 +93,8 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     private final AttributeCoercions attributeCoercions = new AttributeCoercions();
     private boolean showEmptyStudy;
     private boolean showEmptySeries;
+    private String pixManagerApplication;
+    private String pixConsumerApplication;
 
     public ArchiveApplicationEntity(String aeTitle) {
         super(aeTitle);
@@ -343,6 +345,22 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
 
     public void setShowEmptySeries(boolean showEmptySeries) {
         this.showEmptySeries = showEmptySeries;
+    }
+
+    public String getRemotePIXManagerApplication() {
+        return pixManagerApplication;
+    }
+
+    public void setRemotePIXManagerApplication(String appName) {
+        this.pixManagerApplication = appName;
+    }
+
+    public String getLocalPIXConsumerApplication() {
+        return pixConsumerApplication;
+    }
+
+    public void setLocalPIXConsumerApplication(String appName) {
+        this.pixConsumerApplication = appName;
     }
 
     public StoreParam getStoreParam() {
