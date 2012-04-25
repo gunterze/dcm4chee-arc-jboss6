@@ -52,7 +52,6 @@ import org.dcm4chee.archive.ejb.store.StoreParam;
  */
 public class ArchiveHL7Application extends HL7Application {
 
-    private String hl7DefaultCharacterSet;
     private final LinkedHashMap<String, String> templatesURIs =
             new LinkedHashMap<String, String>();
 
@@ -62,14 +61,6 @@ public class ArchiveHL7Application extends HL7Application {
 
     public final ArchiveDevice getArchiveDevice() {
         return ((ArchiveDevice) getDevice());
-    }
-
-    public final String getHL7DefaultCharacterSet() {
-        return hl7DefaultCharacterSet;
-    }
-
-    public final void setHL7DefaultCharacterSet(String hl7DefaultCharacterSet) {
-        this.hl7DefaultCharacterSet = hl7DefaultCharacterSet;
     }
 
     public void addTemplatesURI(String key, String uri) {

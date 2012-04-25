@@ -83,14 +83,6 @@ public class Issuer implements Serializable {
     public static final String FIND_BY_ENTITY_ID_OR_UID =
         "Issuer.findByEntityIDorUID";
 
-    public Issuer() {}
-
-    public Issuer(String entityID, String entityUID, String entityUIDType) {
-        this.entityID = entityID;
-        this.entityUID = entityUID;
-        this.entityUIDType = entityUIDType;
-    }
-
     @Id
     @GeneratedValue
     @Column(name = "pk")
@@ -104,6 +96,14 @@ public class Issuer implements Serializable {
 
     @Column(name = "entity_uid_type")
     private String entityUIDType;
+
+    public Issuer() {}
+
+    public Issuer(String entityID, String entityUID, String entityUIDType) {
+        this.entityID = entityID;
+        this.entityUID = entityUID;
+        this.entityUIDType = entityUIDType;
+    }
 
     public long getPk() {
         return pk;
@@ -174,5 +174,16 @@ public class Issuer implements Serializable {
         issuer.entityUID = item.getString(Tag.UniversalEntityID, null);
         issuer.entityUIDType = item.getString(Tag.UniversalEntityIDType, null);
         return issuer;
+    }
+
+    public String toHL7HD(char delim) {
+        return entityUID == null ? maskNull(entityID, "")
+                : (maskNull(entityID, "")
+                        + delim + maskNull(entityUID, "")
+                        + delim + maskNull(entityUIDType, ""));
+    }
+ 
+    private String maskNull(String s, String mask) {
+        return s == null ? mask : s;
     }
 }

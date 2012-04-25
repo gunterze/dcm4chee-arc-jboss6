@@ -39,18 +39,29 @@
 package org.dcm4chee.archive.net.service;
 
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.EnumSet;
 
 import javax.ejb.EJB;
+import javax.naming.ConfigurationException;
 
 import org.dcm4che.conf.api.ApplicationEntityCache;
+import org.dcm4che.conf.api.hl7.HL7ApplicationCache;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.hl7.HL7Message;
+import org.dcm4che.hl7.HL7Segment;
+import org.dcm4che.hl7.MLLPConnection;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
+import org.dcm4che.net.CompatibleConnection;
+import org.dcm4che.net.Connection;
 import org.dcm4che.net.Device;
+import org.dcm4che.net.IncompatibleConnectionException;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.Status;
+import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.net.pdu.ExtendedNegotiation;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCFindSCP;
@@ -63,6 +74,7 @@ import org.dcm4chee.archive.ejb.query.IDWithIssuer;
 import org.dcm4chee.archive.ejb.query.QueryParam;
 import org.dcm4chee.archive.ejb.store.CodeManager;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
+import org.dcm4chee.archive.net.ArchiveDevice;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -72,6 +84,7 @@ public class CFindSCPImpl extends BasicCFindSCP {
     private final String[] qrLevels;
     private final QueryRetrieveLevel rootLevel;
     private ApplicationEntityCache aeCache;
+    private HL7ApplicationCache hl7AppCache;
 
     @EJB
     private CodeManager codeManager;
@@ -88,6 +101,14 @@ public class CFindSCPImpl extends BasicCFindSCP {
 
     public final void setApplicationEntityCache(ApplicationEntityCache aeCache) {
         this.aeCache = aeCache;
+    }
+
+    public final HL7ApplicationCache getHL7ApplicationCache() {
+        return hl7AppCache;
+    }
+
+    public final void setHL7ApplicationCache(HL7ApplicationCache hl7AppCache) {
+        this.hl7AppCache = hl7AppCache;
     }
 
     @Override
@@ -113,7 +134,7 @@ public class CFindSCPImpl extends BasicCFindSCP {
             }
             IDWithIssuer pid = IDWithIssuer.pidWithIssuer(keys,
                     queryParam.getDefaultIssuerOfPatientID());
-            IDWithIssuer[] pids = pid != null ? new IDWithIssuer[] { pid } : null;
+            IDWithIssuer[] pids = pixQuery(ae, pid);
             CompositeQuery query = (CompositeQuery) JNDIUtils.lookup(CompositeQuery.JNDI_NAME);
             switch (level) {
             case PATIENT:
@@ -133,6 +154,65 @@ public class CFindSCPImpl extends BasicCFindSCP {
         } catch (Exception e) {
             throw new DicomServiceException(Status.UnableToProcess, e);
         }
+    }
+
+    private IDWithIssuer[] pixQuery(ArchiveApplicationEntity ae, IDWithIssuer pid) {
+        if (pid == null)
+            return null;
+        
+        String pixConsumer = ae.getLocalPIXConsumerApplication();
+        String pixManager = ae.getRemotePIXManagerApplication();
+        if (containsWildcard(pid.id) || pid.issuer == null
+                || pixConsumer == null || pixManager == null)
+            return new IDWithIssuer[] { pid };
+        
+        ArrayList<IDWithIssuer> pids = new ArrayList<IDWithIssuer>();
+        pids.add(pid);
+        try {
+            ArchiveDevice dev = ae.getArchiveDevice();
+            HL7Application pixConsumerApp = dev.getHL7Application(pixConsumer);
+            if (pixConsumerApp == null)
+                throw new ConfigurationException(
+                        "Unknown HL7 Application: " + pixConsumer);
+            HL7Application pixManagerApp = 
+                    hl7AppCache.findHL7Application(pixManager);
+            HL7Message qbp = HL7Message.makePixQuery(pid.toHL7CX());
+            HL7Segment msh = qbp.get(0);
+            msh.setSendingApplicationWithFacility(pixConsumer);
+            msh.setReceivingApplicationWithFacility(pixManagerApp.getApplicationName());
+            msh.setField(17, pixConsumerApp.getHL7DefaultCharacterSet());
+            HL7Message rsp = pixQuery(pixConsumerApp, pixManagerApp, qbp);
+            HL7Segment pidSeg = rsp.getSegment("PID");
+            if (pidSeg != null) {
+                String[] pidCXs = HL7Segment.split(pidSeg.getField(3, ""),
+                        pidSeg.getRepetitionSeparator());
+                for (String pidCX : pidCXs)
+                    pids.add(IDWithIssuer.fromHL7CX(pidCX));
+            }
+        } catch (Exception e) {
+            LOG.info("PIX Query failed: ", e);
+        }
+        return pids.toArray(new IDWithIssuer[pids.size()]);
+    }
+
+    private HL7Message pixQuery(HL7Application pixConsumerApp,
+            HL7Application pixManagerApp, HL7Message qbp)
+            throws IncompatibleConnectionException, IOException {
+        CompatibleConnection cc = pixConsumerApp.findCompatibelConnection(pixManagerApp);
+        Connection conn = cc.getLocalConnection();
+        MLLPConnection mllpConn = pixConsumerApp.connect(conn, cc.getRemoteConnection());
+        try {
+            String charset = pixConsumerApp.getHL7DefaultCharacterSet();
+            mllpConn.writeMessage(qbp.getBytes(charset));
+            HL7Message rsp = HL7Message.parse(mllpConn.readMessage(), charset);
+            return rsp;
+        } finally {
+            conn.close(mllpConn.getSocket());
+        }
+    }
+
+    private boolean containsWildcard(String s) {
+        return s.indexOf('*') >= 0 || s.indexOf('?') >= 0;
     }
 
     private String[] roles() {

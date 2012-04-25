@@ -61,6 +61,8 @@ import org.dcm4che.net.Issuer;
 import org.dcm4che.net.QueryOption;
 import org.dcm4che.net.SSLManagerFactory;
 import org.dcm4che.net.TransferCapability;
+import org.dcm4che.net.hl7.HL7Application;
+import org.dcm4che.net.hl7.HL7Device;
 import org.dcm4che.soundex.ESoundex;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4chee.archive.ejb.store.Entity;
@@ -78,6 +80,7 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
  */
 public class ArchiveConfigurationTestUtils {
 
+    private static final String PIX_MANAGER = "HL7RCV^DCM4CHEE";
     private static final int CONFIGURATION_STALE_TIMEOUT = 60;
     private static final int[] PATIENT_ATTRS = {
         Tag.SpecificCharacterSet,
@@ -616,6 +619,9 @@ public class ArchiveConfigurationTestUtils {
         try {
             config.removeDevice("dcm4chee-arc");
         }  catch (ConfigurationNotFoundException e) {}
+        try {
+            config.removeDevice("hl7rcv");
+        }  catch (ConfigurationNotFoundException e) {}
         for (String name : OTHER_DEVICES)
             try {
                 config.removeDevice(name);
@@ -631,16 +637,18 @@ public class ArchiveConfigurationTestUtils {
                     aet, "localhost", OTHER_PORTS[i<<1], OTHER_PORTS[(i<<1)+1]));
         }
         for (int i = OTHER_AES.length; i < OTHER_DEVICES.length; i++)
-            config.persist(createDevice(config, OTHER_DEVICES[i], null, null));
+            config.persist(init(new Device(OTHER_DEVICES[i]), config, null, null));
+        config.persist(createHL7Device(config, "hl7rcv", SITE_A, INST_A, PIX_MANAGER,
+                "localhost", 2576, 12576));
         config.registerAETitle("DCM4CHEE");
         config.registerAETitle("DCM4CHEE_ADMIN");
         config.persist(createArchiveDevice(config, "dcm4chee-arc"));
         config.findApplicationEntity("DCM4CHEE");
     }
 
-    private static  Device createDevice(DicomConfiguration config, String name,
+    private static Device init(Device device, DicomConfiguration config,
             Issuer issuer, Code institutionCode) throws Exception {
-        Device device = new Device(name);
+        String name = device.getDeviceName();
         device.setThisNodeCertificates(config.deviceRef(name),
                 (X509Certificate) KEYSTORE.getCertificate(name));
         device.setIssuerOfPatientID(issuer);
@@ -655,7 +663,7 @@ public class ArchiveConfigurationTestUtils {
     private static Device createDevice(DicomConfiguration config, String name,
            Issuer issuer, Code institutionCode, String aet,
            String host, int port, int tlsPort) throws Exception {
-        Device device = createDevice(config, name, issuer, institutionCode);
+        Device device = init(new Device(name), config, issuer, institutionCode);
         ApplicationEntity ae = new ApplicationEntity(aet);
         ae.setAssociationAcceptor(true);
         device.addApplicationEntity(ae);
@@ -671,7 +679,26 @@ public class ArchiveConfigurationTestUtils {
         return device;
     }
 
-    private static ArchiveDevice createArchiveDevice(DicomConfiguration config, String name)
+    private static HL7Device createHL7Device(DicomConfiguration config, String name,
+            Issuer issuer, Code institutionCode, String appName,
+            String host, int port, int tlsPort) throws Exception {
+         HL7Device device = new HL7Device(name);
+         init(device, config, issuer, institutionCode);
+         HL7Application hl7app = new HL7Application(appName);
+         device.addHL7Application(hl7app);
+         Connection dicom = new Connection("hl7", host, port);
+         device.addConnection(dicom);
+         hl7app.addConnection(dicom);
+         Connection dicomTLS = new Connection("hl7-tls", host, tlsPort);
+         dicomTLS.setTlsCipherSuites(
+                 Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
+                 Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
+         device.addConnection(dicomTLS);
+         hl7app.addConnection(dicomTLS);
+         return device;
+     }
+
+   private static ArchiveDevice createArchiveDevice(DicomConfiguration config, String name)
             throws Exception {
         ArchiveDevice device = new ArchiveDevice(name);
         device.setThisNodeCertificates(config.deviceRef(name),
@@ -793,6 +820,7 @@ public class ArchiveConfigurationTestUtils {
         addTC(ae, null, SCP, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
         ae.setShowEmptyStudy(false);
         ae.setShowEmptySeries(false);
+        ae.setRemotePIXManagerApplication(PIX_MANAGER);
         return ae;
     }
 
@@ -816,6 +844,7 @@ public class ArchiveConfigurationTestUtils {
         addTC(ae, null, SCP, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
         ae.setShowEmptyStudy(true);
         ae.setShowEmptySeries(true);
+        ae.setRemotePIXManagerApplication(PIX_MANAGER);
         return ae;
     }
 

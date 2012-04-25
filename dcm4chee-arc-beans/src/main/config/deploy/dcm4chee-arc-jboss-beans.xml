@@ -175,6 +175,18 @@
     </property>
   </bean>
 
+  <!-- HL7 Application Cache -->
+  <bean name="HL7ApplicationCache" class="org.dcm4che.conf.api.hl7.HL7ApplicationCache">
+    <constructor>
+      <parameter>
+        <inject bean="ArchiveConfiguration"/>
+      </parameter>
+    </constructor>
+    <property name="staleTimeout">
+      <inject bean="Device" property="configurationStaleTimeout"/>
+    </property>
+  </bean>
+
   <!-- DICOM Service Registry -->
   <bean name="DicomServiceRegistry" class="org.dcm4che.net.service.DicomServiceRegistry">
     <incallback method="addDicomService" />
@@ -279,6 +291,9 @@
     <property name="applicationEntityCache">
       <inject bean="ApplicationEntityCache" />
     </property>
+    <property name="HL7ApplicationCache">
+      <inject bean="HL7ApplicationCache" />
+    </property>
   </bean>
 
 
@@ -297,6 +312,9 @@
     <property name="applicationEntityCache">
       <inject bean="ApplicationEntityCache" />
     </property>
+    <property name="HL7ApplicationCache">
+      <inject bean="HL7ApplicationCache" />
+    </property>
   </bean>
 
   <!-- Patient/Study Only C-FIND SCP -->
@@ -312,6 +330,9 @@
     </constructor>
     <property name="applicationEntityCache">
       <inject bean="ApplicationEntityCache" />
+    </property>
+    <property name="HL7ApplicationCache">
+      <inject bean="HL7ApplicationCache" />
     </property>
   </bean>
 

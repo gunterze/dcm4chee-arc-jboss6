@@ -340,6 +340,7 @@
                     <entry key="dicomNetworkConnectionReference.#" value="2"/>
                     <entry key="dicomNetworkConnectionReference.1" value="1"/>
                     <entry key="dicomNetworkConnectionReference.2" value="2"/>
+                    <entry key="hl7PIXManagerApplication" value="HL7RCV^DCM4CHEE"/>
                   </map>
                   <node name="dcmAttributeCoercion">
                     <map/>
@@ -3985,6 +3986,7 @@
                     <entry key="dicomNetworkConnectionReference.#" value="2"/>
                     <entry key="dicomNetworkConnectionReference.1" value="1"/>
                     <entry key="dicomNetworkConnectionReference.2" value="2"/>
+                    <entry key="hl7PIXManagerApplication" value="HL7RCV^DCM4CHEE"/>
                   </map>
                   <node name="dcmAttributeCoercion">
                     <map/>
@@ -6069,6 +6071,57 @@
                     <entry key="dicomTLSCipherSuite.#" value="2"/>
                     <entry key="dicomTLSCipherSuite.1" value="TLS_RSA_WITH_AES_128_CBC_SHA"/>
                     <entry key="dicomTLSCipherSuite.2" value="SSL_RSA_WITH_3DES_EDE_CBC_SHA"/>
+                  </map>
+                </node>
+              </node>
+            </node>
+            <node name="hl7rcv">
+              <map>
+                <entry key="dicomInstalled" value="true"/>
+                <entry key="dicomInstitutionCode.#" value="1"/>
+                <entry key="dicomInstitutionCode.1" value="111.1111^Site A^99DCM4CHEE"/>
+                <entry key="dicomInstitutionName.#" value="1"/>
+                <entry key="dicomInstitutionName.1" value="Site A"/>
+                <entry key="dicomIssuerOfAccessionNumber" value="Site A^1.2.40.0.13.1.1.999.111.1111^ISO"/>
+                <entry key="dicomIssuerOfPatientID" value="Site A^1.2.40.0.13.1.1.999.111.1111^ISO"/>
+                <entry key="dicomThisNodeCertificateReference.#" value="1"/>
+                <entry key="dicomThisNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/hl7rcv"/>
+                <entry key="userCertificate.#" value="1"/>
+                <entry key="userCertificate.1" value="MIICSTCCAbKgAwIBAgIETztwuDANBgkqhkiG9w0BAQUFADBpMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxFTATBgNVBAsTDGRjbTRjaGUtdG9vbDEPMA0GA1UEAxMGaGw3cmN2MB4XDTEyMDIxNTA4NDU0NFoXDTEzMDIxNDA4NDU0NFowaTELMAkGA1UEBhMCQVQxDzANBgNVBAgTBlZpZW5uYTEPMA0GA1UEBxMGVmllbm5hMRAwDgYDVQQKEwdkY200Y2hlMRUwEwYDVQQLEwxkY200Y2hlLXRvb2wxDzANBgNVBAMTBmhsN3JjdjCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAx6iU5U2RcbjJaP3eCpNyPY6PHB8NOXYCrd/NjMAMhD9rI+Xvbsg0xYeD/WmXpL5bRil6mpBYjaFt8Uj/D7hOGN+xPbx0b4HtMEdk12MYgy0WXZIBErD32jNO0/ryG6aUUP8G9N93g0oivtlfp/xEo1mZaULkEvDBXUWM85Kaj1UCAwEAATANBgkqhkiG9w0BAQUFAAOBgQBGDJXG8pbySRvrYq8wnFsDO2VOl+mDv1cwrCmtGJnYICtE4QptKLDNo3jKdVWofWLmgo7WX6arUV1mLYYpi5gQexytUSqwRGRUph7brUnKoeCJN0FStfv4kg3qnhAKmvp/Pj5zgPRJhPS0w1b45T2ZndOrHD9SFTA6famKPw7Wow=="/>
+              </map>
+              <node name="dcmNetworkAE">
+                <map/>
+              </node>
+              <node name="dcmNetworkConnection">
+                <map/>
+                <node name="1">
+                  <map>
+                    <entry key="cn" value="hl7"/>
+                    <entry key="dicomHostname" value="localhost"/>
+                    <entry key="dicomPort" value="2576"/>
+                  </map>
+                </node>
+                <node name="2">
+                  <map>
+                    <entry key="cn" value="hl7-tls"/>
+                    <entry key="dcmTLSProtocol.#" value="2"/>
+                    <entry key="dcmTLSProtocol.1" value="TLSv1"/>
+                    <entry key="dcmTLSProtocol.2" value="SSLv3"/>
+                    <entry key="dicomHostname" value="localhost"/>
+                    <entry key="dicomPort" value="12576"/>
+                    <entry key="dicomTLSCipherSuite.#" value="2"/>
+                    <entry key="dicomTLSCipherSuite.1" value="TLS_RSA_WITH_AES_128_CBC_SHA"/>
+                    <entry key="dicomTLSCipherSuite.2" value="SSL_RSA_WITH_3DES_EDE_CBC_SHA"/>
+                  </map>
+                </node>
+              </node>
+              <node name="hl7Application">
+                <map/>
+                <node name="HL7RCV^DCM4CHEE">
+                  <map>
+                    <entry key="dicomNetworkConnectionReference.#" value="2"/>
+                    <entry key="dicomNetworkConnectionReference.1" value="1"/>
+                    <entry key="dicomNetworkConnectionReference.2" value="2"/>
                   </map>
                 </node>
               </node>

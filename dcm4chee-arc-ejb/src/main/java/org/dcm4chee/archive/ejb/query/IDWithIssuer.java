@@ -40,6 +40,7 @@ package org.dcm4chee.archive.ejb.query;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.persistence.Issuer;
 
 /**
@@ -58,6 +59,25 @@ public class IDWithIssuer {
     @Override
     public String toString() {
         return "IDWithIssuer[id=" + id + ", issuer=" + issuer + "]";
+    }
+
+    public String toHL7CX() {
+        return id + "^^^" + issuer.toHL7HD('&');
+    }
+
+    public static IDWithIssuer fromHL7CX(String cx) {
+        String[] ss = StringUtils.split(cx, '^');
+        Issuer issuer = null;
+        if (ss.length > 3) {
+            String[] ss3 = StringUtils.split(ss[3], '&');
+            issuer = new Issuer();
+            issuer.setLocalNamespaceEntityID(ss3[0]);
+            if (ss3.length > 2) {
+                issuer.setUniversalEntityID(ss3[1]);
+                issuer.setUniversalEntityIDType(ss3[12]);
+            }
+        }
+        return new IDWithIssuer(ss[0], issuer);
     }
 
     public static IDWithIssuer pidWithIssuer(Attributes keys,

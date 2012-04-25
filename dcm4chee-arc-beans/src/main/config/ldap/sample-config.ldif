@@ -375,6 +375,42 @@ objectClass: pkiUser
 dicomThisNodeCertificateReference: dicomDeviceName=hl7snd,cn=Devices,cn=DICOM Configuration,dc=nodomain
 userCertificate;binary:: MIICSTCCAbKgAwIBAgIETztwfzANBgkqhkiG9w0BAQUFADBpMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxFTATBgNVBAsTDGRjbTRjaGUtdG9vbDEPMA0GA1UEAxMGaGw3c25kMB4XDTEyMDIxNTA4NDQ0N1oXDTEzMDIxNDA4NDQ0N1owaTELMAkGA1UEBhMCQVQxDzANBgNVBAgTBlZpZW5uYTEPMA0GA1UEBxMGVmllbm5hMRAwDgYDVQQKEwdkY200Y2hlMRUwEwYDVQQLEwxkY200Y2hlLXRvb2wxDzANBgNVBAMTBmhsN3NuZDCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEA3b74xNeEJudoc6BADEpmfXo9/KQpAhjv/eCo9nBJQ0bEugfQBz6xPW1nuWk4EisgyESc/v79jJ0lq5GUNKZTjL3VjL27vwh/aPifVwCeOb1zgKqIG0A3O3WsvE7xMtBOxf9aYkh2JEY+aBx6RvTpBnYEE97/NWgg29RwPC/VGIECAwEAATANBgkqhkiG9w0BAQUFAAOBgQBZHm35m+hDbM8A/K6GTP0cbc2fo4sPM9dMGGHX9uNXItORInzJXKOS3WQutI035r2EAhsTCYLMDwuzlVlQi2uKmmM6R7hSlWtRQXMPRE9ilp8foY2sPWXa6i46rgFv0xmY6Mt7wCoHJgDqXtvMuARHndADwMvQWbU7p3Xee9K4TA==
 
+dn: dicomDeviceName=hl7rcv,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomInstalled: TRUE
+dicomInstitutionCode: 111.1111^Site A^99DCM4CHEE
+dicomIssuerOfPatientID: Site A^1.2.40.0.13.1.1.999.111.1111^ISO
+dicomDeviceName: hl7rcv
+objectClass: dicomDevice
+objectClass: pkiUser
+dicomIssuerOfAccessionNumber: Site A^1.2.40.0.13.1.1.999.111.1111^ISO
+dicomThisNodeCertificateReference: dicomDeviceName=hl7rcv,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomInstitutionName: Site A
+userCertificate;binary:: MIICSTCCAbKgAwIBAgIETztwuDANBgkqhkiG9w0BAQUFADBpMQswCQYDVQQGEwJBVDEPMA0GA1UECBMGVmllbm5hMQ8wDQYDVQQHEwZWaWVubmExEDAOBgNVBAoTB2RjbTRjaGUxFTATBgNVBAsTDGRjbTRjaGUtdG9vbDEPMA0GA1UEAxMGaGw3cmN2MB4XDTEyMDIxNTA4NDU0NFoXDTEzMDIxNDA4NDU0NFowaTELMAkGA1UEBhMCQVQxDzANBgNVBAgTBlZpZW5uYTEPMA0GA1UEBxMGVmllbm5hMRAwDgYDVQQKEwdkY200Y2hlMRUwEwYDVQQLEwxkY200Y2hlLXRvb2wxDzANBgNVBAMTBmhsN3JjdjCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAx6iU5U2RcbjJaP3eCpNyPY6PHB8NOXYCrd/NjMAMhD9rI+Xvbsg0xYeD/WmXpL5bRil6mpBYjaFt8Uj/D7hOGN+xPbx0b4HtMEdk12MYgy0WXZIBErD32jNO0/ryG6aUUP8G9N93g0oivtlfp/xEo1mZaULkEvDBXUWM85Kaj1UCAwEAATANBgkqhkiG9w0BAQUFAAOBgQBGDJXG8pbySRvrYq8wnFsDO2VOl+mDv1cwrCmtGJnYICtE4QptKLDNo3jKdVWofWLmgo7WX6arUV1mLYYpi5gQexytUSqwRGRUph7brUnKoeCJN0FStfv4kg3qnhAKmvp/Pj5zgPRJhPS0w1b45T2ZndOrHD9SFTA6famKPw7Wow==
+
+dn: cn=hl7,dicomDeviceName=hl7rcv,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomHostname: localhost
+dicomPort: 2576
+objectClass: dicomNetworkConnection
+objectClass: dcmNetworkConnection
+cn: hl7
+
+dn: cn=hl7-tls,dicomDeviceName=hl7rcv,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomHostname: localhost
+dicomPort: 12576
+objectClass: dicomNetworkConnection
+objectClass: dcmNetworkConnection
+dicomTLSCipherSuite: TLS_RSA_WITH_AES_128_CBC_SHA
+dicomTLSCipherSuite: SSL_RSA_WITH_3DES_EDE_CBC_SHA
+dcmTLSProtocol: TLSv1
+dcmTLSProtocol: SSLv3
+cn: hl7-tls
+
+dn: hl7ApplicationName=HL7RCV^DCM4CHEE,dicomDeviceName=hl7rcv,cn=Devices,cn=DICOM Configuration,dc=nodomain
+objectClass: hl7Application
+dicomNetworkConnectionReference: cn=hl7,dicomDeviceName=hl7rcv,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomNetworkConnectionReference: cn=hl7-tls,dicomDeviceName=hl7rcv,cn=Devices,cn=DICOM Configuration,dc=nodomain
+hl7ApplicationName: HL7RCV^DCM4CHEE
+
 dn: dicomAETitle=DCM4CHEE,cn=Unique AE Titles Registry,cn=DICOM Configuration,dc=nodomain
 objectClass: dicomUniqueAETitle
 dicomAETitle: DCM4CHEE
@@ -462,6 +498,7 @@ objectClass: dcmArchiveNetworkAE
 dcmSendPendingCMoveInterval: 5000
 dcmDigestAlgorithm: MD5
 dcmStorageFilePathFormat: archive/{now,date,yyyy/MM/dd}/{0020000D,hash}/{0020000E,hash}/{00080018,hash}
+hl7PIXManagerApplication: HL7RCV^DCM4CHEE
 dcmFileSystemGroupID: DEFAULT
 
 dn: cn=Composite Instance Retrieve Without Bulk Data - GET SCP,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
@@ -3850,6 +3887,7 @@ objectClass: dcmNetworkAE
 objectClass: dcmArchiveNetworkAE
 dcmSendPendingCMoveInterval: 5000
 dcmShowEmptyStudy: TRUE
+hl7PIXManagerApplication: HL7RCV^DCM4CHEE
 dcmShowEmptySeries: TRUE
 
 dn: cn=Composite Instance Retrieve Without Bulk Data - GET SCP,dicomAETitle=DCM4CHEE_ADMIN,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain

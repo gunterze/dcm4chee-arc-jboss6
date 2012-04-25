@@ -145,12 +145,6 @@ olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.23
   EQUALITY caseExactIA5Match
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
   SINGLE-VALUE )
-olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.24
-  NAME 'hl7DefaultCharacterSet'
-  DESC 'Character Set used to decode received messages if not specified by MSH-18, ASCII if absent'
-  EQUALITY caseExactIA5Match
-  SYNTAX 1.3.6.1.4.1.1466.115.121.1.26
-  SINGLE-VALUE )
 olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.25
   NAME 'dcmIanDestination'
   DESC 'Destination to send IAN N-CREATE RQ'
@@ -297,8 +291,7 @@ olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.11
   DESC 'DICOM Archive HL7 Application related information'
   SUP top AUXILIARY
   MAY (
-     labeledURI $
-     hl7DefaultCharacterSet ) )
+     labeledURI ) )
 olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.12
   NAME 'dcmRejectionNote'
   DESC 'Key Object Selection Document Title of Rejection Note with associated Actions'

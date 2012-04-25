@@ -260,7 +260,6 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
             return attrs;
 
         ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
-        storeNotNull(attrs, "hl7DefaultCharacterSet", arcHL7App.getHL7DefaultCharacterSet());
         storeNotEmpty(attrs, "labeledURI", arcHL7App.getTemplatesURIs());
         return attrs;
     }
@@ -436,8 +435,6 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
        if (!(hl7App instanceof ArchiveHL7Application))
            return;
        ArchiveHL7Application arcHL7App = (ArchiveHL7Application) hl7App;
-       arcHL7App.setHL7DefaultCharacterSet(
-               stringValue(attrs.get("hl7DefaultCharacterSet")));
        arcHL7App.setTemplatesURIs(stringArray(attrs.get("labeledURI")));
     }
 
@@ -572,9 +569,6 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         
         ArchiveHL7Application aa = (ArchiveHL7Application) a;
         ArchiveHL7Application bb = (ArchiveHL7Application) b;
-        storeDiff(mods, "hl7DefaultCharacterSet",
-                aa.getHL7DefaultCharacterSet(),
-                bb.getHL7DefaultCharacterSet());
         storeDiff(mods, "labeledURI",
                 aa.getTemplatesURIs(),
                 bb.getTemplatesURIs());
