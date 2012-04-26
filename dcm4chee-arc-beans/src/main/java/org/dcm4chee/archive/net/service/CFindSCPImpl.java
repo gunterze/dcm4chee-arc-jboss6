@@ -150,7 +150,7 @@ public class CFindSCPImpl extends BasicCFindSCP {
                 query.findInstances(pids, keys, queryParam);
                 break;
             }
-            return new QueryTaskImpl(as, pc, rq, keys, query);
+            return new QueryTaskImpl(as, pc, rq, keys, query, queryParam, pids);
         } catch (Exception e) {
             throw new DicomServiceException(Status.UnableToProcess, e);
         }
@@ -158,7 +158,7 @@ public class CFindSCPImpl extends BasicCFindSCP {
 
     private IDWithIssuer[] pixQuery(ArchiveApplicationEntity ae, IDWithIssuer pid) {
         if (pid == null)
-            return null;
+            return IDWithIssuer.EMPTY;
         
         String pixConsumer = ae.getLocalPIXConsumerApplication();
         String pixManager = ae.getRemotePIXManagerApplication();

@@ -40,6 +40,7 @@ package org.dcm4chee.archive.ejb.query;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.data.VR;
 import org.dcm4che.util.StringUtils;
 import org.dcm4chee.archive.persistence.Issuer;
 
@@ -47,6 +48,8 @@ import org.dcm4chee.archive.persistence.Issuer;
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 public class IDWithIssuer {
+
+    public static final IDWithIssuer[] EMPTY = {};
 
     public final String id;
     public final Issuer issuer;
@@ -65,6 +68,14 @@ public class IDWithIssuer {
         return id + "^^^" + issuer.toHL7HD('&');
     }
 
+    public Attributes toPIDWithIssuer(Attributes attrs) {
+        if (attrs == null)
+            attrs = new Attributes(3);
+
+        attrs.setString(Tag.PatientID, VR.LO, id);
+        return issuer.toIssuerOfPatientID(attrs);
+    }
+
     public static IDWithIssuer fromHL7CX(String cx) {
         String[] ss = StringUtils.split(cx, '^');
         Issuer issuer = null;
@@ -74,7 +85,7 @@ public class IDWithIssuer {
             issuer.setLocalNamespaceEntityID(ss3[0]);
             if (ss3.length > 2) {
                 issuer.setUniversalEntityID(ss3[1]);
-                issuer.setUniversalEntityIDType(ss3[12]);
+                issuer.setUniversalEntityIDType(ss3[2]);
             }
         }
         return new IDWithIssuer(ss[0], issuer);
@@ -82,8 +93,8 @@ public class IDWithIssuer {
 
     public static IDWithIssuer pidWithIssuer(Attributes keys,
             Issuer defaultIssuerWithPatientID) {
-        String id = keys.getString(Tag.PatientID, "*");
-        if (id.equals("*"))
+        String id = keys.getString(Tag.PatientID);
+        if (id == null)
             return null;
 
         String entityID = keys.getString(Tag.IssuerOfPatientID, "*");

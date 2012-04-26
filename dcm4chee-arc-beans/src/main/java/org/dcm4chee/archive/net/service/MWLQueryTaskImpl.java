@@ -83,7 +83,7 @@ class MWLQueryTaskImpl extends BasicQueryTask {
     }
 
     @Override
-    protected boolean optionalKeyNotSupported(Attributes match, Attributes keys) {
+    protected boolean optionalKeyNotSupported(Attributes match) {
         return query.optionalKeyNotSupported();
     }
 }

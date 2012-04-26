@@ -82,7 +82,7 @@ public abstract class Builder {
             Attributes keys, QueryParam queryParam) {
 
         boolean matchUnknown = queryParam.isMatchUnknown();
- 
+
         builder.and(pids(pids, matchUnknown));
 
         if (keys == null)
