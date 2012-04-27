@@ -57,9 +57,11 @@ import javax.persistence.Transient;
 
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.hibernate.annotations.Index;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 @NamedQueries({
     @NamedQuery(
@@ -68,6 +70,9 @@ import org.dcm4che.data.Tag;
 })
 @Entity
 @Table(name = "pps")
+@org.hibernate.annotations.Table(appliesTo = "pps", 
+indexes = { @Index(name = "pps_idx", 
+    columnNames = { "sop_iuid", "pps_status" } ) } )
 public class PerformedProcedureStep implements Serializable {
 
     private static final long serialVersionUID = 4127487385799077653L;

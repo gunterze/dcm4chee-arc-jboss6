@@ -50,8 +50,11 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Index;
+
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 @Entity
 @Table(name = "content_item")
@@ -82,9 +85,11 @@ public class ContentItem implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "rel_type")
+    @Index(name = "rel_type_idx")
     private String relationshipType;
     
     @Column(name = "text_value")
+    @Index(name = "text_value_idx")
     private String textValue;
     
     @ManyToOne(fetch = FetchType.LAZY)

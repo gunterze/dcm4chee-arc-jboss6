@@ -66,12 +66,14 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.DateUtils;
 import org.dcm4che.util.StringUtils;
+import org.hibernate.annotations.Index;
 
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
  * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 @NamedQueries({
 @NamedQuery(
@@ -129,22 +131,27 @@ public class Study implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "study_iuid", updatable = false)
+    @Index(name="study_iuid_idx")
     private String studyInstanceUID;
 
     @Basic(optional = false)
     @Column(name = "study_id")
+    @Index(name="study_id_idx")
     private String studyID;
 
     @Basic(optional = false)
     @Column(name = "study_date")
+    @Index(name="study_date_idx")
     private String studyDate;
 
     @Basic(optional = false)
     @Column(name = "study_time")
+    @Index(name="study_time_idx")
     private String studyTime;
 
     @Basic(optional = false)
     @Column(name = "accession_no")
+    @Index(name="accession_no_idx")
     private String accessionNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -153,38 +160,47 @@ public class Study implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "ref_physician")
+    @Index(name="ref_physician_idx")
     private String referringPhysicianName;
     
     @Basic(optional = false)
     @Column(name = "ref_phys_fn_sx")
+    @Index(name="ref_phys_fn_sx_idx")
     private String referringPhysicianFamilyNameSoundex;
     
     @Basic(optional = false)
     @Column(name = "ref_phys_gn_sx")
+    @Index(name="ref_phys_gn_sx_idx")
     private String referringPhysicianGivenNameSoundex;
 
     @Basic(optional = false)
     @Column(name = "ref_phys_i_name")
+    @Index(name="ref_phys_i_name_idx")
     private String referringPhysicianIdeographicName;
 
     @Basic(optional = false)
     @Column(name = "ref_phys_p_name")
+    @Index(name="ref_phys_p_name_idx")
     private String referringPhysicianPhoneticName;
 
     @Basic(optional = false)
     @Column(name = "study_desc")
+    @Index(name="study_desc_idx")
     private String studyDescription;
 
     @Basic(optional = false)
     @Column(name = "study_custom1")
+    @Index(name="study_custom1_idx")
     private String studyCustomAttribute1;
 
     @Basic(optional = false)
     @Column(name = "study_custom2")
+    @Index(name="study_custom2_idx")
     private String studyCustomAttribute2;
 
     @Basic(optional = false)
     @Column(name = "study_custom3")
+    @Index(name="study_custom3_idx")
     private String studyCustomAttribute3;
 
     @Basic(optional = false)
@@ -193,9 +209,11 @@ public class Study implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "num_instances")
+    @Index(name="num_instances_idx")
     private int numberOfStudyRelatedInstances;
 
     @Column(name = "mods_in_study")
+    @Index(name="mods_in_study_idx")
     private String modalitiesInStudy;
 
     @Column(name = "cuids_in_study")

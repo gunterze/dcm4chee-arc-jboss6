@@ -66,11 +66,13 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.DateUtils;
 import org.dcm4che.util.StringUtils;
+import org.hibernate.annotations.Index;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
  * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 @NamedQueries({
 @NamedQuery(
@@ -131,66 +133,82 @@ public class Series implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "series_iuid", updatable = false)
+    @Index(name="series_iuid_idx")
     private String seriesInstanceUID;
 
     @Basic(optional = false)
     @Column(name = "series_no")
+    @Index(name="series_no_idx")
     private String seriesNumber;
 
     @Basic(optional = false)
     @Column(name = "series_desc")
+    @Index(name="series_desc_idx")
     private String seriesDescription;
 
     @Basic(optional = false)
     @Column(name = "modality")
+    @Index(name="modality_idx")
     private String modality;
 
     @Basic(optional = false)
     @Column(name = "department")
+    @Index(name="department_idx")
     private String institutionalDepartmentName;
 
     @Basic(optional = false)
     @Column(name = "institution")
+    @Index(name="institution_idx")
     private String institutionName;
 
     @Basic(optional = false)
     @Column(name = "station_name")
+    @Index(name="station_name_idx")
     private String stationName;
 
     @Basic(optional = false)
     @Column(name = "body_part")
+    @Index(name="body_part_idx")
     private String bodyPartExamined;
 
     @Basic(optional = false)
     @Column(name = "laterality")
+    @Index(name="laterality_idx")
     private String laterality;
 
     @Basic(optional = false)
     @Column(name = "perf_phys_name")
+    @Index(name="perf_phys_name_idx")
     private String performingPhysicianName;
     
     @Basic(optional = false)
     @Column(name = "perf_phys_fn_sx")
+    @Index(name="perf_phys_fn_sx_idx")
     private String performingPhysicianFamilyNameSoundex;
     
     @Basic(optional = false)
     @Column(name = "perf_phys_gn_sx")
+    @Index(name="perf_phys_gn_sx_idx")
     private String performingPhysicianGivenNameSoundex;
 
     @Basic(optional = false)
     @Column(name = "perf_phys_i_name")
+    @Index(name="perf_phys_i_name_idx")
     private String performingPhysicianIdeographicName;
 
     @Basic(optional = false)
     @Column(name = "perf_phys_p_name")
+    @Index(name="perf_phys_p_name_idx")
     private String performingPhysicianPhoneticName;
 
     @Basic(optional = false)
     @Column(name = "pps_start_date")
+    @Index(name="pps_start_date_idx")
     private String performedProcedureStepStartDate;
 
     @Basic(optional = false)
     @Column(name = "pps_start_time")
+    @Index(name="pps_start_time_idx")
     private String performedProcedureStepStartTime;
 
     @Basic(optional = false)
@@ -203,18 +221,22 @@ public class Series implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "series_custom1")
+    @Index(name="series_custom1_idx")
     private String seriesCustomAttribute1;
 
     @Basic(optional = false)
     @Column(name = "series_custom2")
+    @Index(name="series_custom2_idx")
     private String seriesCustomAttribute2;
 
     @Basic(optional = false)
     @Column(name = "series_custom3")
+    @Index(name="series_custom3_idx")
     private String seriesCustomAttribute3;
 
     @Basic(optional = false)
     @Column(name = "num_instances")
+    @Index(name="num_instances_idx")
     private int numberOfSeriesRelatedInstances;
 
     @Column(name = "src_aet")

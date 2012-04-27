@@ -51,11 +51,13 @@ import javax.persistence.Table;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.hibernate.annotations.Index;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
  * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 @NamedQueries({
 @NamedQuery(
@@ -89,12 +91,15 @@ public class Issuer implements Serializable {
     private long pk;
 
     @Column(name = "entity_id")
+    @Index(name="entity_id_idx")
     private String entityID;
 
     @Column(name = "entity_uid")
+    @Index(name="entity_uid_idx")
     private String entityUID;
 
     @Column(name = "entity_uid_type")
+    @Index(name="entity_uid_type_idx")
     private String entityUIDType;
 
     public Issuer() {}

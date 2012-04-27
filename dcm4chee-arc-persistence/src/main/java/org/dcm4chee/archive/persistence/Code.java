@@ -52,11 +52,13 @@ import javax.persistence.Table;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.hibernate.annotations.Index;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
  * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 @NamedQueries({
 @NamedQuery(
@@ -74,6 +76,9 @@ import org.dcm4che.data.VR;
 })
 @Entity
 @Table(name = "code")
+@org.hibernate.annotations.Table(appliesTo = "code", 
+    indexes = { @Index(name = "code_idx", 
+        columnNames = { "code_value", "code_designator", "code_version" } ) } )
 public class Code implements Serializable {
 
     private static final long serialVersionUID = -130090842318534124L;

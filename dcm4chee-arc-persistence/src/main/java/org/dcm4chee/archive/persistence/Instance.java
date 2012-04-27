@@ -64,11 +64,13 @@ import org.dcm4che.data.Tag;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.DateUtils;
 import org.dcm4che.util.StringUtils;
+import org.hibernate.annotations.Index;
 
 /**
  * @author Damien Evans <damien.daddy@gmail.com>
  * @author Justin Falk <jfalkmu@gmail.com>
  * @author Gunter Zeilinger <gunterze@gmail.com>
+ * @author Michael Backhaus <michael.backhaus@agfa.com>
  */
 @NamedQueries({
 @NamedQuery(
@@ -104,42 +106,52 @@ public class Instance implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "sop_iuid", updatable = false)
+    @Index(name="sop_iuid_idx")
     private String sopInstanceUID;
 
     @Basic(optional = false)
     @Column(name = "sop_cuid", updatable = false)
+    @Index(name="sop_cuid_idx")
     private String sopClassUID;
 
     @Basic(optional = false)
     @Column(name = "inst_no")
+    @Index(name="inst_no_idx")
     private String instanceNumber;
 
     @Basic(optional = false)
     @Column(name = "content_date")
+    @Index(name="content_date_idx")
     private String contentDate;
 
     @Basic(optional = false)
     @Column(name = "content_time")
+    @Index(name="content_time_idx")
     private String contentTime;
 
     @Basic(optional = false)
     @Column(name = "sr_complete")
+    @Index(name="sr_complete_idx")
     private String completionFlag;
 
     @Basic(optional = false)
     @Column(name = "sr_verified")
+    @Index(name="sr_verified_idx")
     private String verificationFlag;
 
     @Basic(optional = false)
     @Column(name = "inst_custom1")
+    @Index(name="inst_custom1_idx")
     private String instanceCustomAttribute1;
 
     @Basic(optional = false)
     @Column(name = "inst_custom2")
+    @Index(name="inst_custom2_idx")
     private String instanceCustomAttribute2;
 
     @Basic(optional = false)
     @Column(name = "inst_custom3")
+    @Index(name="inst_custom3_idx")
     private String instanceCustomAttribute3;
 
     @Column(name = "retrieve_aets")
@@ -154,6 +166,7 @@ public class Instance implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "replaced")
+    @Index(name="replaced_idx")
     private boolean replaced;
 
     @Basic(optional = false)
