@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.net.service;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.net.Association;
@@ -47,6 +48,9 @@ import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicQueryTask;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.ejb.query.CompositeQuery;
+import org.dcm4chee.archive.ejb.query.IDWithIssuer;
+import org.dcm4chee.archive.ejb.query.QueryParam;
+import org.dcm4chee.archive.persistence.Issuer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -54,15 +58,22 @@ import org.dcm4chee.archive.ejb.query.CompositeQuery;
 class QueryTaskImpl extends BasicQueryTask {
 
     private final CompositeQuery query;
+    private final QueryParam queryParam;
+    private final IDWithIssuer[] pids;
 
     public QueryTaskImpl(Association as, PresentationContext pc, Attributes rq,
-            Attributes keys, CompositeQuery query) throws DicomServiceException {
+            Attributes keys, CompositeQuery query, QueryParam queryParam,
+            IDWithIssuer[] pids) throws DicomServiceException {
         super(as, pc, rq, keys);
         this.query = query;
+        this.queryParam = queryParam;
+        this.pids = pids;
     }
 
     @Override
-    protected Attributes adjust(Attributes match, Attributes keys, Association as) {
+    protected Attributes adjust(Attributes match) {
+        adjustPatientID(match);
+        adjustAccessionNumber(match);
         Attributes filtered = new Attributes(match.size());
         filtered.setString(Tag.QueryRetrieveLevel, VR.CS,
                 keys.getString(Tag.QueryRetrieveLevel, null));
@@ -71,6 +82,65 @@ class QueryTaskImpl extends BasicQueryTask {
         filtered.addSelected(match, keys);
         return filtered;
      }
+
+    private void adjustPatientID(Attributes match) {
+        if (!keys.contains(Tag.PatientID))
+            return;
+        
+        if (pids.length > 1) {
+            pids[0].toPIDWithIssuer(match);
+            if (keys.contains(Tag.OtherPatientIDsSequence)) {
+                Sequence seq = match.newSequence(Tag.OtherPatientIDsSequence, pids.length-1);
+                for (int i = 1; i < pids.length; i++)
+                    seq.add(pids[i].toPIDWithIssuer(null));
+            }
+        } else {
+            Issuer keyIssuer = Issuer.issuerOfPatientIDOf(keys);
+            if (keyIssuer == null)
+                keyIssuer = queryParam.getDefaultIssuerOfPatientID();
+
+            if (keyIssuer != null) {
+                Issuer matchIssuer = Issuer.issuerOfPatientIDOf(match);
+                if (matchIssuer != null && !matchIssuer.matches(keyIssuer)) {
+                    match.setNull(Tag.PatientID, VR.LO);
+                    keyIssuer.toIssuerOfPatientID(match);
+                }
+            }
+        }
+    }
+
+    private void adjustAccessionNumber(Attributes match) {
+        adjustAccessionNumber(match, keys);
+        Sequence rqAttrsSeq = match.getSequence(Tag.RequestAttributesSequence);
+        if (rqAttrsSeq != null) {
+            Attributes rqAttrsKeys = keys.getNestedDataset(Tag.RequestAttributesSequence);
+            if (rqAttrsKeys != null && rqAttrsKeys.isEmpty())
+                rqAttrsKeys = null;
+            for (Attributes rqAttrs : rqAttrsSeq)
+                adjustAccessionNumber(rqAttrs, rqAttrsKeys);
+        }
+    }
+
+    private void adjustAccessionNumber(Attributes match, Attributes keys) {
+        if (keys != null && !keys.contains(Tag.AccessionNumber)
+                || !match.containsValue(Tag.AccessionNumber))
+            return;
+
+        Issuer matchIssuer = Issuer.valueOf(
+                match.getNestedDataset(Tag.IssuerOfAccessionNumberSequence));
+        if (matchIssuer == null)
+            return;
+
+        Issuer keyIssuer = Issuer.valueOf(
+                keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence));
+        if (keyIssuer == null)
+            keyIssuer = queryParam.getDefaultIssuerOfAccessionNumber();
+        if (keyIssuer == null)
+            return;
+
+        if (!matchIssuer.matches(keyIssuer))
+            match.setNull(Tag.AccessionNumber, VR.SH);
+    }
 
     @Override
     protected void close() {
@@ -96,7 +166,7 @@ class QueryTaskImpl extends BasicQueryTask {
     }
 
     @Override
-    protected boolean optionalKeyNotSupported(Attributes match, Attributes keys) {
+    protected boolean optionalKeyNotSupported(Attributes match) {
         return query.optionalKeyNotSupported();
     }
 }

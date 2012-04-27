@@ -82,7 +82,7 @@ public abstract class Builder {
             Attributes keys, QueryParam queryParam) {
 
         boolean matchUnknown = queryParam.isMatchUnknown();
- 
+
         builder.and(pids(pids, matchUnknown));
 
         if (keys == null)
@@ -275,7 +275,7 @@ public abstract class Builder {
     }
 
     static Predicate wildCard(StringPath path, String value, boolean matchUnknown, boolean ignoreCase) {
-        if (value.equals("*"))
+        if (value == null || value.equals("*"))
             return null;
 
         Predicate predicate;
@@ -438,10 +438,12 @@ public abstract class Builder {
 
     private static Predicate issuer(QIssuer path, String entityID,
             String entityUID, String entityUIDType, boolean matchUnknown) {
-        Predicate predicate = ExpressionUtils.allOf(
-               wildCard(QIssuer.issuer.entityID, entityID, false, false),
-               wildCard(QIssuer.issuer.entityUID, entityUID, false, false),
-               wildCard(QIssuer.issuer.entityUIDType, entityUIDType, false, false));
+        Predicate predicate = ExpressionUtils.anyOf(
+                wildCard(QIssuer.issuer.entityID, entityID, false, false),
+                ExpressionUtils.allOf(
+                        wildCard(QIssuer.issuer.entityUID, entityUID, false, false),
+                        wildCard(QIssuer.issuer.entityUIDType, entityUIDType, false, false))
+                );
 
         if (predicate == null)
             return null;

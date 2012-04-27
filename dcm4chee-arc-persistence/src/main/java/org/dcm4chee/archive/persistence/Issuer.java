@@ -169,15 +169,47 @@ public class Issuer implements Serializable {
         if (entityUID != null)
             item.setString(Tag.UniversalEntityID, VR.UT, entityUID);
         if (entityUIDType != null)
-            item.setString(Tag.UniversalEntityIDType, VR.UT, entityUID);
+            item.setString(Tag.UniversalEntityIDType, VR.UT, entityUIDType);
         return item ;
     }
 
+    public Attributes toIssuerOfPatientID(Attributes attrs) {
+        if (attrs == null)
+            attrs = new Attributes(2);
+        if (entityID != null)
+            attrs.setString(Tag.IssuerOfPatientID, VR.LO, entityID);
+        if (entityUID != null) {
+            Attributes item = new Attributes(2);
+            item.setString(Tag.UniversalEntityID, VR.UT, entityUID);
+            item.setString(Tag.UniversalEntityIDType, VR.UT, entityUIDType);
+            attrs.newSequence(Tag.IssuerOfPatientIDQualifiersSequence, 1).add(item);
+        }
+        return attrs;
+    }
+
     public static Issuer valueOf(Attributes item) {
+        if (item == null || item.isEmpty())
+            return null;
+
         Issuer issuer = new Issuer();
         issuer.entityID = item.getString(Tag.LocalNamespaceEntityID, null);
         issuer.entityUID = item.getString(Tag.UniversalEntityID, null);
         issuer.entityUIDType = item.getString(Tag.UniversalEntityIDType, null);
+        return issuer;
+    }
+
+    public static Issuer issuerOfPatientIDOf(Attributes attrs) {
+        String entityID = attrs.getString(Tag.IssuerOfPatientID);
+        Attributes item = attrs.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence);
+        if (entityID == null && item == null)
+            return null;
+
+        Issuer issuer = new Issuer();
+        issuer.entityID = entityID;
+        if (item != null) {
+            issuer.entityUID = item.getString(Tag.UniversalEntityID, null);
+            issuer.entityUIDType = item.getString(Tag.UniversalEntityIDType, null);
+        }
         return issuer;
     }
 
@@ -190,5 +222,21 @@ public class Issuer implements Serializable {
  
     private String maskNull(String s, String mask) {
         return s == null ? mask : s;
+    }
+
+    public boolean matches(Issuer other) {
+        if (this == other)
+            return true;
+
+        int equalsID, equalsUID, equalsUIDType;
+        if ((equalsID = equals(entityID, other.entityID)) < 0
+                || (equalsUID = equals(entityUID, other.entityUID)) < 0
+                || (equalsUIDType = equals(entityUIDType, other.entityUIDType)) < 0)
+            return false;
+        return equalsID > 0 || equalsUID > 0 && equalsUIDType > 0;
+    }
+
+    private int equals(String s1, String s2) {
+        return s1 == null || s2 == null ? 0 : s1.equals(s2) ? 1 : -1;
     }
 }
