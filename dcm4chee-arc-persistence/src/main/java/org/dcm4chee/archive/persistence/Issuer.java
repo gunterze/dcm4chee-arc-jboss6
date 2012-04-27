@@ -74,6 +74,9 @@ import org.hibernate.annotations.Index;
 })
 @Entity
 @Table(name = "issuer")
+@org.hibernate.annotations.Table(appliesTo = "issuer", 
+indexes = { @Index(name = "issuer_uidt_idx", 
+    columnNames = { "entity_uid", "entity_uid_type" } ) } )
 public class Issuer implements Serializable {
 
     private static final long serialVersionUID = -5050458184841995777L;
@@ -95,11 +98,9 @@ public class Issuer implements Serializable {
     private String entityID;
 
     @Column(name = "entity_uid")
-    @Index(name="entity_uid_idx")
     private String entityUID;
 
     @Column(name = "entity_uid_type")
-    @Index(name="entity_uid_type_idx")
     private String entityUIDType;
 
     public Issuer() {}
