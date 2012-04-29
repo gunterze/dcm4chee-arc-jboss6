@@ -188,6 +188,7 @@ public class InstanceStoreBean implements InstanceStore {
         FileRef fileRef = new FileRef(fs, filePath, tsuid, file.length(), digest);
         fileRef.setInstance(inst);
         em.persist(fileRef);
+        em.flush();
         em.detach(fileRef);
         return true;
     }
@@ -271,9 +272,9 @@ public class InstanceStoreBean implements InstanceStore {
                 storeParam.getAttributeFilter(Entity.Instance),
                 storeParam.getFuzzyStr());
         em.persist(inst);
+        em.flush();
         em.detach(inst);
         series.setDirty(true);
-        em.flush();
         return inst;
     }
 
