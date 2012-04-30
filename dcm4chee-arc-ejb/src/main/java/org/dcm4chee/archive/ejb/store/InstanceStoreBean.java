@@ -271,10 +271,10 @@ public class InstanceStoreBean implements InstanceStore {
         inst.setAttributes(data, 
                 storeParam.getAttributeFilter(Entity.Instance),
                 storeParam.getFuzzyStr());
+        series.setDirty(true);
         em.persist(inst);
         em.flush();
         em.detach(inst);
-        series.setDirty(true);
         return inst;
     }
 
