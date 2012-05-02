@@ -97,6 +97,10 @@
               <groupId>ws-commons</groupId>
               <artifactId>policy</artifactId>
             </exclusion>
+            <exclusion>
+              <groupId>com.sun.istack</groupId>
+              <artifactId>istack-commons-runtime</artifactId>
+            </exclusion>
           </exclusions>
         </dependency>
       </dependencies>
@@ -221,4 +225,37 @@
       </testResource>
     </testResources>
   </build>
+  <repositories>
+    <repository>
+      <id>public</id>
+      <url>http://maven.nuxeo.org/nexus/content/groups/public</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>public-snapshot</id>
+      <url>http://maven.nuxeo.org/nexus/content/groups/public-snapshot</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <updatePolicy>always</updatePolicy>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>anteline-public-jboss-mirror</id>
+      <url>http://maven.antelink.com/content/groups/public-jboss</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
 </project>
