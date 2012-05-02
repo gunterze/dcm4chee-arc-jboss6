@@ -43,6 +43,7 @@ import java.util.List;
 
 import javax.ejb.EJB;
 
+import org.dcm4che.conf.api.ApplicationEntityCache;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.net.Association;
@@ -71,6 +72,8 @@ public class CGetSCPImpl extends BasicCGetSCP {
     private final String[] qrLevels;
     private final QueryRetrieveLevel rootLevel;
     private boolean withoutBulkData;
+    private ApplicationEntityCache aeCache;
+    private PIXConsumer pixConsumer;
 
     @EJB
     private LocateInstances calculateMatches;
@@ -82,6 +85,22 @@ public class CGetSCPImpl extends BasicCGetSCP {
         super(sopClasses);
         this.qrLevels = qrLevels;
         this.rootLevel = QueryRetrieveLevel.valueOf(qrLevels[0]);
+    }
+
+    public final ApplicationEntityCache getApplicationEntityCache() {
+        return aeCache;
+    }
+
+    public final void setApplicationEntityCache(ApplicationEntityCache aeCache) {
+        this.aeCache = aeCache;
+    }
+
+    public final PIXConsumer getPIXConsumer() {
+        return pixConsumer;
+    }
+
+    public final void setPIXConsumer(PIXConsumer pixConsumer) {
+        this.pixConsumer = pixConsumer;
     }
 
     public final boolean isWithoutBulkData() {

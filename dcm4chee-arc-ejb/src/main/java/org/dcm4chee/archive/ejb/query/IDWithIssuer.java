@@ -41,8 +41,8 @@ package org.dcm4chee.archive.ejb.query;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.dcm4che.net.Issuer;
 import org.dcm4che.util.StringUtils;
-import org.dcm4chee.archive.persistence.Issuer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -59,13 +59,15 @@ public class IDWithIssuer {
         this.issuer = issuer;
     }
 
-    @Override
-    public String toString() {
-        return "IDWithIssuer[id=" + id + ", issuer=" + issuer + "]";
+    public IDWithIssuer(String cx) {
+        String[] ss = StringUtils.split(cx, '^');
+        this.id = ss[0];
+        this.issuer = ss.length > 3 ? new Issuer(ss[3], '&') : null;
     }
 
-    public String toHL7CX() {
-        return id + "^^^" + issuer.toHL7HD('&');
+    @Override
+    public String toString() {
+        return issuer == null ? id : id + "^^^" + issuer.toString('&');
     }
 
     public Attributes toPIDWithIssuer(Attributes attrs) {
@@ -73,22 +75,20 @@ public class IDWithIssuer {
             attrs = new Attributes(3);
 
         attrs.setString(Tag.PatientID, VR.LO, id);
-        return issuer.toIssuerOfPatientID(attrs);
-    }
-
-    public static IDWithIssuer fromHL7CX(String cx) {
-        String[] ss = StringUtils.split(cx, '^');
-        Issuer issuer = null;
-        if (ss.length > 3) {
-            String[] ss3 = StringUtils.split(ss[3], '&');
-            issuer = new Issuer();
-            issuer.setLocalNamespaceEntityID(ss3[0]);
-            if (ss3.length > 2) {
-                issuer.setUniversalEntityID(ss3[1]);
-                issuer.setUniversalEntityIDType(ss3[2]);
-            }
+        if (issuer == null)
+            return attrs;
+        String issuerOfPatientID = issuer.getLocalNamespaceEntityID();
+        if (issuerOfPatientID != null)
+            attrs.setString(Tag.IssuerOfPatientID, VR.LO, issuerOfPatientID);
+        String universalEntityID = issuer.getUniversalEntityID();
+        if (universalEntityID != null) {
+            Attributes item = new Attributes(2);
+            item.setString(Tag.UniversalEntityID, VR.UT, universalEntityID);
+            item.setString(Tag.UniversalEntityIDType, VR.UT,
+                    issuer.getUniversalEntityIDType());
+            attrs.newSequence(Tag.IssuerOfPatientIDQualifiersSequence, 1).add(item);
         }
-        return new IDWithIssuer(ss[0], issuer);
+        return attrs;
     }
 
     public static IDWithIssuer pidWithIssuer(Attributes keys,
@@ -98,18 +98,15 @@ public class IDWithIssuer {
             return null;
 
         String entityID = keys.getString(Tag.IssuerOfPatientID);
-        String entityUID = null;
-        String entityUIDType = null;
-        Attributes issuerItem = keys.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence);
-        if (issuerItem != null) {
-            entityUID = issuerItem.getString(Tag.UniversalEntityID);
-            entityUIDType = issuerItem.getString(Tag.UniversalEntityIDType);
-        }
-        Issuer issuer = entityID == null
-                     && entityUID == null
-                     && entityUIDType == null
-                     ? defaultIssuerWithPatientID
-                     : new Issuer(entityID, entityUID, entityUIDType);
-        return new IDWithIssuer(id, issuer);
+        Attributes issuerItem =
+                keys.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence);
+        return new IDWithIssuer(id,
+                issuerItem != null
+                    ? new Issuer(entityID,
+                            issuerItem.getString(Tag.UniversalEntityID),
+                            issuerItem.getString(Tag.UniversalEntityIDType))
+                    : entityID != null
+                            ? new Issuer(entityID, null, null)
+                            : defaultIssuerWithPatientID);
     }
 }

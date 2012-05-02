@@ -77,6 +77,7 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
     private final String[] qrLevels;
     private final QueryRetrieveLevel rootLevel;
     private ApplicationEntityCache aeCache;
+    private PIXConsumer pixConsumer;
 
     @EJB
     private LocateInstances calculateMatches;
@@ -96,6 +97,14 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
 
     public final void setApplicationEntityCache(ApplicationEntityCache aeCache) {
         this.aeCache = aeCache;
+    }
+
+    public final PIXConsumer getPIXConsumer() {
+        return pixConsumer;
+    }
+
+    public final void setPIXConsumer(PIXConsumer pixConsumer) {
+        this.pixConsumer = pixConsumer;
     }
 
     @Override

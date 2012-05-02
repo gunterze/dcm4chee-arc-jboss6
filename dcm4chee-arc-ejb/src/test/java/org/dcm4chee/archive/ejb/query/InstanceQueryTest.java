@@ -38,7 +38,7 @@
 
 package org.dcm4chee.archive.ejb.query;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,10 +50,10 @@ import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
+import org.dcm4che.net.Issuer;
 import org.dcm4che.soundex.ESoundex;
 import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.persistence.AttributeFilter;
-import org.dcm4chee.archive.persistence.Issuer;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -68,7 +68,7 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class InstanceQueryTest {
 
-    private static final Issuer ISSUER = new Issuer("DCM4CHEE_TESTDATA", "*", "*");
+    private static final Issuer ISSUER = new Issuer("DCM4CHEE_TESTDATA");
     private static final AttributeFilter[] ATTR_FILTERS = {
         new AttributeFilter(),
         new AttributeFilter(),

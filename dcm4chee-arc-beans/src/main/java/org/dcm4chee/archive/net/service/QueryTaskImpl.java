@@ -43,6 +43,7 @@ import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.net.Association;
+import org.dcm4che.net.Issuer;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicQueryTask;
@@ -50,7 +51,6 @@ import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4chee.archive.ejb.query.CompositeQuery;
 import org.dcm4chee.archive.ejb.query.IDWithIssuer;
 import org.dcm4chee.archive.ejb.query.QueryParam;
-import org.dcm4chee.archive.persistence.Issuer;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
