@@ -236,7 +236,7 @@ public class Series implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "num_instances")
-    @Index(name="num_instances_idx")
+    @Index(name="series_num_instances_idx")
     private int numberOfSeriesRelatedInstances;
 
     @Column(name = "src_aet")

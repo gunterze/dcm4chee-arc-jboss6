@@ -209,7 +209,7 @@ public class Study implements Serializable {
 
     @Basic(optional = false)
     @Column(name = "num_instances")
-    @Index(name="num_instances_idx")
+    @Index(name="study_num_instances_idx")
     private int numberOfStudyRelatedInstances;
 
     @Column(name = "mods_in_study")
