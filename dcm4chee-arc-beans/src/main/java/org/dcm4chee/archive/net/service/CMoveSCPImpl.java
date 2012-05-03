@@ -131,6 +131,7 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         }
         List<InstanceLocator> matches = calculateMatches(rq, keys, queryParam);
         RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(
+                destAE.getDevice(), pixConsumer,
                 BasicRetrieveTask.Service.C_MOVE, as, pc, rq, matches, false) {
 
             @Override

@@ -44,18 +44,23 @@ import java.util.List;
 import javax.xml.transform.Templates;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
+import org.dcm4che.data.VR;
 import org.dcm4che.io.DicomInputStream;
 import org.dcm4che.io.SAXTransformer;
 import org.dcm4che.net.Association;
 import org.dcm4che.net.DataWriter;
 import org.dcm4che.net.DataWriterAdapter;
+import org.dcm4che.net.Device;
 import org.dcm4che.net.Dimse;
+import org.dcm4che.net.Issuer;
 import org.dcm4che.net.TransferCapability.Role;
 import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicRetrieveTask;
 import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.util.SafeClose;
+import org.dcm4chee.archive.ejb.query.IDWithIssuer;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 
 /**
@@ -63,12 +68,28 @@ import org.dcm4chee.archive.net.ArchiveApplicationEntity;
  */
 class RetrieveTaskImpl extends BasicRetrieveTask {
 
+    private final ArchiveApplicationEntity ae;
+    private final Issuer issuerOfPatientID;
+    private final Issuer issuerOfAccessionNumber;
+    private final PIXConsumer pixConsumer;
     private final boolean withoutBulkData;
+    private IDWithIssuer[] pids;
+    private IDWithIssuer pidWithMatchingIssuer;
 
-    public RetrieveTaskImpl(BasicRetrieveTask.Service service, Association as,
+    public RetrieveTaskImpl(Device destDevice, PIXConsumer pixConsumer,
+            BasicRetrieveTask.Service service, Association as,
             PresentationContext pc, Attributes rq, List<InstanceLocator> matches,
             boolean withoutBulkData) {
         super(service, as, pc, rq, matches);
+        this.ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+        if (destDevice == null) {
+            this.issuerOfPatientID = null;
+            this.issuerOfAccessionNumber = null;
+        } else {
+            this.issuerOfPatientID = destDevice.getIssuerOfPatientID();
+            this.issuerOfAccessionNumber = destDevice.getIssuerOfAccessionNumber();
+        }
+        this.pixConsumer = pixConsumer;
         this.withoutBulkData = withoutBulkData;
     }
 
@@ -89,6 +110,8 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
             SafeClose.close(in);
         }
         attrs.addAll((Attributes) inst.getObject());
+        adjustPatientID(attrs);
+        adjustAccessionNumber(attrs);
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
         try {
             Templates tpl = ae.getAttributeCoercionTemplates(
@@ -99,6 +122,70 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
             throw new IOException(e);
         }
         return new DataWriterAdapter(attrs);
+    }
+
+    private void adjustPatientID(Attributes attrs) {
+        IDWithIssuer pid0 = IDWithIssuer.pidWithIssuer(attrs, null);
+        if (pid0 == null)
+            return;
+
+        if (pids == null) {
+            pids = pixConsumer == null 
+                    ? new IDWithIssuer[] { pid0 }
+                    : pixConsumer.pixQuery(ae, pid0);
+            pidWithMatchingIssuer = pidWithMatchingIssuer(pids, issuerOfPatientID);
+        }
+
+        Sequence otherpids;
+        if (pidWithMatchingIssuer != null) {
+            pidWithMatchingIssuer.toPIDWithIssuer(attrs);
+            if (pids.length == 1)
+                return;
+
+            otherpids = attrs.newSequence(Tag.OtherPatientIDsSequence, pids.length - 1);
+        } else {
+            attrs.setNull(Tag.PatientID, VR.LO);
+            issuerOfPatientID.toIssuerOfPatientID(attrs);
+            otherpids = attrs.newSequence(Tag.OtherPatientIDsSequence, pids.length);
+        }
+        for (IDWithIssuer pid : pids)
+            if (pid != pidWithMatchingIssuer)
+                otherpids.add(pid.toPIDWithIssuer(null));
+    }
+
+    private IDWithIssuer pidWithMatchingIssuer(IDWithIssuer[] pids, Issuer issuer) {
+        if (issuer == null)
+            return pids[0];
+
+        for (IDWithIssuer pid : pids)
+            if (issuer.matches(pid.issuer))
+                return pid;
+
+        return null;
+    }
+
+    private void adjustAccessionNumber(Attributes attrs) {
+        if (issuerOfAccessionNumber == null)
+            return;
+
+        adjustAccessionNumber(attrs, issuerOfAccessionNumber);
+        Sequence rqAttrsSeq = attrs.getSequence(Tag.RequestAttributesSequence);
+        if (rqAttrsSeq != null)
+            for (Attributes rqAttrs : rqAttrsSeq)
+                adjustAccessionNumber(rqAttrs, issuerOfAccessionNumber);
+    }
+
+    private void adjustAccessionNumber(Attributes attrs, Issuer destIssuer) {
+        if (!attrs.containsValue(Tag.AccessionNumber))
+            return;
+
+        Issuer issuer = Issuer.valueOf(
+                attrs.getNestedDataset(Tag.IssuerOfAccessionNumberSequence));
+        if (issuer == null)
+            return;
+
+        if (!issuer.matches(destIssuer))
+            attrs.setNull(Tag.AccessionNumber, VR.SH);
     }
 
  }
