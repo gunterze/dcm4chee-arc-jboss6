@@ -52,6 +52,8 @@ import org.dcm4chee.archive.ejb.store.StoreParam;
  */
 public class ArchiveHL7Application extends HL7Application {
 
+    private static final long serialVersionUID = -8258532093950989486L;
+
     private final LinkedHashMap<String, String> templatesURIs =
             new LinkedHashMap<String, String>();
 

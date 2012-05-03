@@ -65,6 +65,8 @@ import org.dcm4chee.archive.ejb.store.StoreParam;
  */
 public class ArchiveApplicationEntity extends ApplicationEntity {
 
+    private static final long serialVersionUID = -2390448404282661045L;
+
     public static final int DEF_RETRY_INTERVAL = 60;
 
     private String modifyingSystem;

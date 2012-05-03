@@ -51,7 +51,6 @@ import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Connection;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.hl7.HL7Application;
-import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.ejb.store.Entity;
@@ -82,7 +81,7 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         ArchiveDevice arcDev = (ArchiveDevice) device;
         prefs.putBoolean("dcmArchiveDevice", true);
         storeNotNull(prefs, "dcmFuzzyAlgorithmClass",
-                arcDev.getFuzzyStr().getClass().getName());
+                arcDev.getFuzzyAlgorithmClass());
         storeNotDef(prefs, "dcmConfigurationStaleTimeout",
                 arcDev.getConfigurationStaleTimeout(), 0);
     }
@@ -238,7 +237,7 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
             return;
 
         ArchiveDevice arcdev = (ArchiveDevice) device;
-        arcdev.setFuzzyStr(fuzzyStr(prefs.get("dcmFuzzyAlgorithmClass", null)));
+        arcdev.setFuzzyAlgorithmClass(prefs.get("dcmFuzzyAlgorithmClass", null));
         arcdev.setConfigurationStaleTimeout(
                 prefs.getInt("dcmConfigurationStaleTimeout", 0));
     }
@@ -374,14 +373,6 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         for (int i = 0; i < n; i++)
             is[i] = Integer.parseInt(prefs.get(key + '.' + (i+1), null), 16);
         return is;
-    }
-
-    private static FuzzyStr fuzzyStr(String s) {
-        try {
-            return (FuzzyStr) Class.forName(s).newInstance();
-         } catch (Exception e) {
-            return null;
-        }
     }
 
     @Override

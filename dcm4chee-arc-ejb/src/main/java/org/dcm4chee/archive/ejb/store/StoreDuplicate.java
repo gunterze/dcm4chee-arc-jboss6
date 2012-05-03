@@ -38,11 +38,15 @@
 
 package org.dcm4chee.archive.ejb.store;
 
+import java.io.Serializable;
+
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class StoreDuplicate {
+public class StoreDuplicate implements Serializable {
+
+    private static final long serialVersionUID = 3499899064498849214L;
 
     public enum Action {
         IGNORE,

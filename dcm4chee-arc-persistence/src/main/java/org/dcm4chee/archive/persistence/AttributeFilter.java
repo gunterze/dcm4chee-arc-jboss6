@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.persistence;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import org.dcm4che.data.Attributes;
@@ -46,7 +47,9 @@ import org.dcm4che.data.ValueSelector;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class AttributeFilter {
+public class AttributeFilter implements Serializable {
+
+    private static final long serialVersionUID = -2417549681350544302L;
 
     private final int[] selection;
     private ValueSelector customAttribute1;

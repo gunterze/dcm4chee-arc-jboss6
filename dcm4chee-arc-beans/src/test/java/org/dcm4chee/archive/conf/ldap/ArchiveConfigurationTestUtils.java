@@ -63,7 +63,6 @@ import org.dcm4che.net.SSLManagerFactory;
 import org.dcm4che.net.TransferCapability;
 import org.dcm4che.net.hl7.HL7Application;
 import org.dcm4che.net.hl7.HL7Device;
-import org.dcm4che.soundex.ESoundex;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.ejb.store.RejectionNote;
@@ -706,7 +705,7 @@ public class ArchiveConfigurationTestUtils {
         for (String other : OTHER_DEVICES)
             device.setAuthorizedNodeCertificates(config.deviceRef(other),
                     (X509Certificate) KEYSTORE.getCertificate(other));
-        device.setFuzzyStr(new ESoundex());
+        device.setFuzzyAlgorithmClass("org.dcm4che.soundex.ESoundex");
         device.setConfigurationStaleTimeout(CONFIGURATION_STALE_TIMEOUT);
         device.setAttributeFilter(Entity.Patient, new AttributeFilter(PATIENT_ATTRS));
         device.setAttributeFilter(Entity.Study, new AttributeFilter(STUDY_ATTRS));

@@ -38,6 +38,7 @@
 
 package org.dcm4chee.archive.ejb.store;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -49,7 +50,9 @@ import org.dcm4chee.archive.persistence.Code;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class RejectionNote {
+public class RejectionNote implements Serializable {
+
+    private static final long serialVersionUID = -1299501804796953248L;
 
     public enum Action {
         HIDE_REJECTED_INSTANCES,

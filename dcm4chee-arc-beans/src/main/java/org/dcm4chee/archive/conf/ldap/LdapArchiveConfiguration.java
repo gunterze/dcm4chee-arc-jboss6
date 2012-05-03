@@ -59,7 +59,6 @@ import org.dcm4che.data.ValueSelector;
 import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Device;
 import org.dcm4che.net.hl7.HL7Application;
-import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4che.util.AttributesFormat;
 import org.dcm4che.util.TagUtils;
 import org.dcm4chee.archive.ejb.store.Entity;
@@ -271,7 +270,7 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         if (!(device instanceof ArchiveDevice))
             return;
         ArchiveDevice arcdev = (ArchiveDevice) device;
-        arcdev.setFuzzyStr(fuzzyStr(attrs.get("dcmFuzzyAlgorithmClass")));
+        arcdev.setFuzzyAlgorithmClass(stringValue(attrs.get("dcmFuzzyAlgorithmClass")));
         arcdev.setConfigurationStaleTimeout(
                 intValue(attrs.get("dcmConfigurationStaleTimeout"), 0));
     }
@@ -309,16 +308,6 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
     private static ValueSelector valueSelector(Attribute attr) throws NamingException {
         return attr != null ? ValueSelector.valueOf((String) attr.get()) : null;
    }
-
-    private static FuzzyStr fuzzyStr(Attribute attr) throws NamingException {
-        try {
-            return (FuzzyStr) Class.forName((String) attr.get()).newInstance();
-        } catch (NamingException ne) {
-            throw ne;
-        } catch (Exception e) {
-            return null;
-        }
-    }
 
     private  static AttributesFormat attributesFormat(Attribute attr) throws NamingException {
         return attr != null ? new AttributesFormat((String) attr.get()) : null;

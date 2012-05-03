@@ -54,16 +54,47 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
  */
 public class ArchiveDevice extends HL7Device {
 
-    private FuzzyStr fuzzyStr;
+    private static final long serialVersionUID = 2933279846751009427L;
+
+    private String fuzzyAlgorithmClass;
     private final AttributeFilter[] attributeFilters =
             new AttributeFilter[Entity.values().length];
-    private TemplatesCache templatesCache;
     private int configurationStaleTimeout;
+
+    private transient FuzzyStr fuzzyStr;
+    private transient TemplatesCache templatesCache;
 
     public ArchiveDevice(String name) {
         super(name);
     }
 
+    public String getFuzzyAlgorithmClass() {
+        return fuzzyAlgorithmClass;
+    }
+
+    public void setFuzzyAlgorithmClass(String fuzzyAlgorithmClass) {
+        this.fuzzyStr = fuzzyStr(fuzzyAlgorithmClass);
+        this.fuzzyAlgorithmClass = fuzzyAlgorithmClass;
+    }
+
+    public FuzzyStr getFuzzyStr() {
+        if (fuzzyStr == null)
+            if (fuzzyAlgorithmClass == null)
+                throw new IllegalStateException("No Fuzzy Algorithm Class configured");
+            else
+                fuzzyStr = fuzzyStr(fuzzyAlgorithmClass);
+        return fuzzyStr;
+    }
+
+    private static FuzzyStr fuzzyStr(String s) {
+        try {
+            return (FuzzyStr) Class.forName(s).newInstance();
+         } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalArgumentException(s);
+        }
+    }
     public int getConfigurationStaleTimeout() {
         return configurationStaleTimeout;
     }
@@ -83,18 +114,6 @@ public class ArchiveDevice extends HL7Device {
         if (tmp == null)
             templatesCache = tmp = new TemplatesCache();
         return tmp.get(uri);
-    }
-
-    public void setFuzzyStr(FuzzyStr fuzzyStr) {
-        this.fuzzyStr = fuzzyStr;
-    }
-
-    public FuzzyStr getFuzzyStr() {
-        return fuzzyStr;
-    }
-
-    public String getFuzzyAlgorithmClass() {
-        return fuzzyStr.getClass().getName();
     }
 
     public void setAttributeFilter(Entity entity, AttributeFilter filter) {
