@@ -138,8 +138,10 @@ class QueryTaskImpl extends BasicQueryTask {
         if (keyIssuer == null)
             return;
 
-        if (!matchIssuer.matches(keyIssuer))
+        if (!matchIssuer.matches(keyIssuer)) {
             match.setNull(Tag.AccessionNumber, VR.SH);
+            match.remove(Tag.IssuerOfAccessionNumberSequence);
+        }
     }
 
     @Override

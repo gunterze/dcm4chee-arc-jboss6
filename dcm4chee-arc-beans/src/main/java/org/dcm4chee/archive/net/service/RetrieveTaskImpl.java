@@ -184,8 +184,10 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
         if (issuer == null)
             return;
 
-        if (!issuer.matches(destIssuer))
+        if (!issuer.matches(destIssuer)) {
             attrs.setNull(Tag.AccessionNumber, VR.SH);
+            attrs.remove(Tag.IssuerOfAccessionNumberSequence);
+        }
     }
 
  }
