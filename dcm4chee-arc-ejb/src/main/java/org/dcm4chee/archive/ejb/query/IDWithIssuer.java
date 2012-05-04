@@ -97,16 +97,10 @@ public class IDWithIssuer {
         if (id == null)
             return null;
 
-        String entityID = keys.getString(Tag.IssuerOfPatientID);
-        Attributes issuerItem =
-                keys.getNestedDataset(Tag.IssuerOfPatientIDQualifiersSequence);
+        Issuer issuerOfPatientID = Issuer.issuerOfPatientIDOf(keys);
         return new IDWithIssuer(id,
-                issuerItem != null
-                    ? new Issuer(entityID,
-                            issuerItem.getString(Tag.UniversalEntityID),
-                            issuerItem.getString(Tag.UniversalEntityIDType))
-                    : entityID != null
-                            ? new Issuer(entityID, null, null)
-                            : defaultIssuerWithPatientID);
+                issuerOfPatientID != null
+                    ? issuerOfPatientID
+                    : defaultIssuerWithPatientID);
     }
 }

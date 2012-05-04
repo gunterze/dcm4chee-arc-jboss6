@@ -58,16 +58,25 @@ import org.dcm4chee.archive.ejb.query.QueryParam;
 class QueryTaskImpl extends BasicQueryTask {
 
     private final CompositeQuery query;
-    private final QueryParam queryParam;
     private final IDWithIssuer[] pids;
+    private final Issuer issuerOfPatientID;
+    private final Issuer issuerOfAccessionNumber;
 
     public QueryTaskImpl(Association as, PresentationContext pc, Attributes rq,
             Attributes keys, CompositeQuery query, QueryParam queryParam,
             IDWithIssuer[] pids) throws DicomServiceException {
         super(as, pc, rq, keys);
         this.query = query;
-        this.queryParam = queryParam;
         this.pids = pids;
+        this.issuerOfPatientID =
+                keys.contains(Tag.IssuerOfPatientID)
+             || keys.contains(Tag.IssuerOfPatientIDQualifiersSequence)
+                ? Issuer.issuerOfPatientIDOf(keys)
+                : queryParam.getDefaultIssuerOfPatientID();
+        this.issuerOfAccessionNumber =
+                keys.contains(Tag.IssuerOfAccessionNumberSequence)
+                ? Issuer.valueOf(keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence))
+                : queryParam.getDefaultIssuerOfAccessionNumber();
     }
 
     @Override
@@ -94,18 +103,10 @@ class QueryTaskImpl extends BasicQueryTask {
                 for (int i = 1; i < pids.length; i++)
                     seq.add(pids[i].toPIDWithIssuer(null));
             }
-        } else {
-            Issuer keyIssuer = Issuer.issuerOfPatientIDOf(keys);
-            if (keyIssuer == null)
-                keyIssuer = queryParam.getDefaultIssuerOfPatientID();
-
-            if (keyIssuer != null) {
-                Issuer matchIssuer = Issuer.issuerOfPatientIDOf(match);
-                if (matchIssuer != null && !matchIssuer.matches(keyIssuer)) {
-                    match.setNull(Tag.PatientID, VR.LO);
-                    keyIssuer.toIssuerOfPatientID(match);
-                }
-            }
+        } else if (issuerOfPatientID != null
+                && !issuerOfPatientID.matches(Issuer.issuerOfPatientIDOf(match))) {
+            match.setNull(Tag.PatientID, VR.LO);
+            issuerOfPatientID.toIssuerOfPatientID(match);
         }
     }
 
@@ -126,19 +127,9 @@ class QueryTaskImpl extends BasicQueryTask {
                 || !match.containsValue(Tag.AccessionNumber))
             return;
 
-        Issuer matchIssuer = Issuer.valueOf(
-                match.getNestedDataset(Tag.IssuerOfAccessionNumberSequence));
-        if (matchIssuer == null)
-            return;
-
-        Issuer keyIssuer = Issuer.valueOf(
-                keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence));
-        if (keyIssuer == null)
-            keyIssuer = queryParam.getDefaultIssuerOfAccessionNumber();
-        if (keyIssuer == null)
-            return;
-
-        if (!matchIssuer.matches(keyIssuer)) {
+        if (issuerOfAccessionNumber != null
+                && !issuerOfAccessionNumber.matches(Issuer.valueOf(
+                        match.getNestedDataset(Tag.IssuerOfAccessionNumberSequence)))) {
             match.setNull(Tag.AccessionNumber, VR.SH);
             match.remove(Tag.IssuerOfAccessionNumberSequence);
         }
