@@ -552,7 +552,7 @@ public class ArchiveConfigurationTestUtils {
         SITE_B, // DCMQRSCP
         null, // STGCMTSCU
         SITE_A, // STORESCP
-        null, // MPPSSCP
+        SITE_A, // MPPSSCP
         null, // IANSCP
         SITE_A, // STORESCU
         SITE_A, // MPPSSCU

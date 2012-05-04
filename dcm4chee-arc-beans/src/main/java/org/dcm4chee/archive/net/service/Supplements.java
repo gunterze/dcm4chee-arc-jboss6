@@ -56,17 +56,20 @@ class Supplements {
         supplementValue(ds, Tag.ManufacturerModelName, VR.LO, device.getManufacturerModelName());
         supplementValue(ds, Tag.StationName, VR.SH, device.getStationName());
         supplementValue(ds, Tag.DeviceSerialNumber, VR.LO, device.getDeviceSerialNumber());
+        supplementValues(ds, Tag.SoftwareVersions, VR.LO, device.getSoftwareVersions());
+        supplementValue(ds, Tag.InstitutionName, VR.LO, device.getInstitutionNames());
+        supplementCode(ds, Tag.InstitutionCodeSequence, device.getInstitutionCodes());
+        supplementValue(ds, Tag.InstitutionalDepartmentName, VR.LO,
+        device.getInstitutionalDepartmentNames());
+        supplementIssuers(ds, device);
+        supplementRequestIssuers(ds, device);
+        supplementRequestIssuers(ds.getSequence(Tag.RequestAttributesSequence),
+                device);
+    }
+
+    private static void supplementIssuers(Attributes ds, Device device) {
         if (ds.containsValue(Tag.PatientID))
             supplementIssuerOfPatientID(ds, device.getIssuerOfPatientID());
-        if (ds.containsValue(Tag.AccessionNumber))
-            supplementIssuer(ds, Tag.IssuerOfAccessionNumberSequence,
-                    device.getIssuerOfAccessionNumber());
-        if (ds.containsValue(Tag.PlacerOrderNumberImagingServiceRequest))
-            supplementIssuer(ds, Tag.OrderPlacerIdentifierSequence,
-                    device.getOrderPlacerIdentifier());
-        if (ds.containsValue(Tag.FillerOrderNumberImagingServiceRequest))
-            supplementIssuer(ds, Tag.OrderFillerIdentifierSequence,
-                    device.getOrderFillerIdentifier());
         if (ds.containsValue(Tag.AdmissionID))
             supplementIssuer(ds, Tag.IssuerOfAdmissionIDSequence,
                     device.getIssuerOfAdmissionID());
@@ -79,24 +82,31 @@ class Supplements {
         if (ds.containsValue(Tag.SpecimenIdentifier))
             supplementIssuer(ds, Tag.IssuerOfTheSpecimenIdentifierSequence,
                     device.getIssuerOfSpecimenIdentifier());
-        supplementValues(ds, Tag.SoftwareVersions, VR.LO, device.getSoftwareVersions());
-        supplementValue(ds, Tag.InstitutionName, VR.LO, device.getInstitutionNames());
-        supplementCode(ds, Tag.InstitutionCodeSequence, device.getInstitutionCodes());
-        supplementValue(ds, Tag.InstitutionalDepartmentName, VR.LO,
-        device.getInstitutionalDepartmentNames());
-        Sequence rqSeq = ds.getSequence(Tag.RequestAttributesSequence);
+    }
+
+    private static void supplementRequestIssuers(Sequence rqSeq, Device device) {
         if (rqSeq != null)
-            for (Attributes rq : rqSeq) {
-                if (ds.containsValue(Tag.AccessionNumber))
-                supplementIssuer(rq, Tag.IssuerOfAccessionNumberSequence,
-                        device.getIssuerOfAccessionNumber());
-                if (ds.containsValue(Tag.PlacerOrderNumberImagingServiceRequest))
-                    supplementIssuer(rq, Tag.OrderPlacerIdentifierSequence,
-                            device.getOrderPlacerIdentifier());
-                if (ds.containsValue(Tag.FillerOrderNumberImagingServiceRequest))
-                    supplementIssuer(rq, Tag.OrderFillerIdentifierSequence,
-                            device.getOrderFillerIdentifier());
-            }
+            for (Attributes rq : rqSeq)
+                supplementRequestIssuers(rq, device);
+    }
+
+    private static void supplementRequestIssuers(Attributes rq, Device device) {
+        if (rq.containsValue(Tag.AccessionNumber))
+            supplementIssuer(rq, Tag.IssuerOfAccessionNumberSequence,
+                    device.getIssuerOfAccessionNumber());
+        if (rq.containsValue(Tag.PlacerOrderNumberImagingServiceRequest))
+            supplementIssuer(rq, Tag.OrderPlacerIdentifierSequence,
+                    device.getOrderPlacerIdentifier());
+        if (rq.containsValue(Tag.FillerOrderNumberImagingServiceRequest))
+            supplementIssuer(rq, Tag.OrderFillerIdentifierSequence,
+                    device.getOrderFillerIdentifier());
+    }
+
+    public static void supplementMPPS(Attributes mpps, Device device) {
+        supplementIssuers(mpps, device);
+        supplementRequestIssuers(
+                mpps.getSequence(Tag.ScheduledStepAttributesSequence),
+                device);
     }
 
     public static boolean supplementIssuerOfPatientID(Attributes ds, Issuer issuer) {

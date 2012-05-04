@@ -40,13 +40,16 @@ package org.dcm4chee.archive.net.service;
 
 import javax.ejb.EJB;
 
+import org.dcm4che.conf.api.ApplicationEntityCache;
+import org.dcm4che.conf.api.ConfigurationException;
 import org.dcm4che.data.Attributes;
 import org.dcm4che.data.Tag;
+import org.dcm4che.net.ApplicationEntity;
 import org.dcm4che.net.Association;
+import org.dcm4che.net.Issuer;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.service.BasicMppsSCP;
 import org.dcm4che.net.service.DicomServiceException;
-import org.dcm4chee.archive.ejb.store.EntityNotExistsException;
 import org.dcm4chee.archive.ejb.store.PPSWithIAN;
 import org.dcm4chee.archive.ejb.store.PerformedProcedureStepManager;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
@@ -59,6 +62,7 @@ public class MppsSCPImpl extends BasicMppsSCP {
     @EJB
     private PerformedProcedureStepManager ppsmgr;
     
+    private ApplicationEntityCache aeCache;
     private MppsSCU mppsSCU;
     private IanSCU ianSCU;
 
@@ -78,13 +82,25 @@ public class MppsSCPImpl extends BasicMppsSCP {
         this.ianSCU = ianSCU;
     }
 
+    public final ApplicationEntityCache getApplicationEntityCache() {
+        return aeCache;
+    }
+
+    public final void setApplicationEntityCache(ApplicationEntityCache aeCache) {
+        this.aeCache = aeCache;
+    }
+
     @Override
     protected Attributes create(Association as, Attributes rq,
             Attributes rqAttrs, Attributes rsp) throws DicomServiceException {
         String localAET = as.getLocalAET();
+        String sourceAET = as.getRemoteAET();
         String iuid = rq.getString(Tag.AffectedSOPInstanceUID);
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
         try {
+            ApplicationEntity sourceAE = aeCache.get(sourceAET);
+            if (sourceAE != null)
+                Supplements.supplementMPPS(rqAttrs, sourceAE.getDevice());
             ppsmgr.createPerformedProcedureStep(iuid , rqAttrs, ae.getStoreParam());
         } catch (DicomServiceException e) {
             throw e;
@@ -92,8 +108,21 @@ public class MppsSCPImpl extends BasicMppsSCP {
             throw new DicomServiceException(Status.ProcessingFailure, e);
         }
         for (String remoteAET : ae.getForwardMPPSDestinations())
-            mppsSCU.scheduleForwardMPPS(localAET, remoteAET, iuid, rqAttrs, true, 0, 0);
+            if (matchIssuerOfPatientID(remoteAET, Issuer.issuerOfPatientIDOf(rqAttrs)))
+                mppsSCU.scheduleForwardMPPS(localAET, remoteAET, iuid, rqAttrs, true, 0, 0);
         return null;
+    }
+
+    private boolean matchIssuerOfPatientID(String remoteAET, Issuer issuer) {
+        if (issuer == null)
+            return true;
+        ApplicationEntity remoteAE = null;
+        try {
+            remoteAE = aeCache.get(remoteAET);
+        } catch (ConfigurationException e) {
+        }
+        return remoteAE == null
+                || issuer.matches(remoteAE.getDevice().getIssuerOfPatientID());
     }
 
     @Override
@@ -106,16 +135,15 @@ public class MppsSCPImpl extends BasicMppsSCP {
         try {
             ppsWithIAN = ppsmgr.updatePerformedProcedureStep(iuid, rqAttrs,
                     ae.getStoreParam());
-        } catch (EntityNotExistsException e) {
-            throw new DicomServiceException(Status.NoSuchObjectInstance)
-                .setUID(Tag.AffectedSOPInstanceUID, iuid);
         } catch (DicomServiceException e) {
             throw e;
         } catch (Exception e) {
             throw new DicomServiceException(Status.ProcessingFailure, e);
         }
         for (String remoteAET : ae.getForwardMPPSDestinations())
-            mppsSCU.scheduleForwardMPPS(localAET, remoteAET, iuid, rqAttrs, false, 0, 0);
+            if (matchIssuerOfPatientID(remoteAET,
+                    Issuer.issuerOfPatientIDOf(ppsWithIAN.pps.getPatient().getAttributes())))
+                mppsSCU.scheduleForwardMPPS(localAET, remoteAET, iuid, rqAttrs, false, 0, 0);
         if (ppsWithIAN.ian != null)
             for (String remoteAET : ae.getIANDestinations())
                 ianSCU.scheduleIAN(localAET, remoteAET, ppsWithIAN.ian, 0, 0);

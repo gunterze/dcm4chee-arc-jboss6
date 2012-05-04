@@ -108,7 +108,8 @@ public class PerformedProcedureStepManagerBean implements PerformedProcedureStep
         try {
             pps = find(sopInstanceUID);
         } catch (NoResultException e) {
-            throw new EntityNotExistsException(sopInstanceUID);
+            throw new DicomServiceException(Status.NoSuchObjectInstance)
+                .setUID(Tag.AffectedSOPInstanceUID, sopInstanceUID);
         }
         if (!pps.isInProgress())
             throw new DicomServiceException(Status.ProcessingFailure,

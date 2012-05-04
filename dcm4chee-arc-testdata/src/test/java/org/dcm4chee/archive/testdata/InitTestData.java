@@ -50,7 +50,6 @@ import org.dcm4chee.archive.ejb.query.IANQueryBean;
 import org.dcm4chee.archive.ejb.store.CodeFactory;
 import org.dcm4chee.archive.ejb.store.Entity;
 import org.dcm4chee.archive.ejb.store.EntityAlreadyExistsException;
-import org.dcm4chee.archive.ejb.store.EntityNotExistsException;
 import org.dcm4chee.archive.ejb.store.InstanceStore;
 import org.dcm4chee.archive.ejb.store.InstanceStoreBean;
 import org.dcm4chee.archive.ejb.store.IssuerFactory;
@@ -88,7 +87,6 @@ public class InitTestData {
         CodeFactory.class,
         Entity.class,
         EntityAlreadyExistsException.class,
-        EntityNotExistsException.class,
         IANQuery.class,
         IANQueryBean.class,
         InstanceStore.class,

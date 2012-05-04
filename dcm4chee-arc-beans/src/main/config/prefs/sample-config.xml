@@ -6206,6 +6206,8 @@
             <node name="mppsscp">
               <map>
                 <entry key="dicomInstalled" value="true"/>
+                <entry key="dicomIssuerOfAccessionNumber" value="Site A^1.2.40.0.13.1.1.999.111.1111^ISO"/>
+                <entry key="dicomIssuerOfPatientID" value="Site A^1.2.40.0.13.1.1.999.111.1111^ISO"/>
                 <entry key="dicomThisNodeCertificateReference.#" value="1"/>
                 <entry key="dicomThisNodeCertificateReference.1" value="org/dcm4chee/archive/dicomDevicesRoot/mppsscp"/>
                 <entry key="userCertificate.#" value="1"/>

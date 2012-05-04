@@ -282,6 +282,9 @@
     <property name="ianSCU">
       <inject bean="IanSCU" />
     </property>
+    <property name="applicationEntityCache">
+      <inject bean="ApplicationEntityCache" />
+    </property>
   </bean>
 
   <!-- Patient Root C-FIND SCP -->

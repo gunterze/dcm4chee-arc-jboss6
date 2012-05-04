@@ -85,7 +85,6 @@ public class InstanceStoreTest {
                         CodeFactory.class,
                         Entity.class,
                         EntityAlreadyExistsException.class,
-                        EntityNotExistsException.class,
                         IANQuery.class,
                         IANQueryBean.class,
                         InstanceStore.class,
