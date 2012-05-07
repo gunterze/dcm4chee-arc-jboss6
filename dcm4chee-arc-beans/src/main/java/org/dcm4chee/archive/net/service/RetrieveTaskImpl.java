@@ -68,6 +68,7 @@ import org.dcm4chee.archive.net.ArchiveApplicationEntity;
  */
 class RetrieveTaskImpl extends BasicRetrieveTask {
 
+    private final PIXConsumer pixConsumer;
     private final ArchiveApplicationEntity ae;
     private final boolean withoutBulkData;
     private IDWithIssuer[] pids;
@@ -76,7 +77,6 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
     private boolean returnOtherPatientNames;
     private Issuer issuerOfPatientID;
     private Issuer issuerOfAccessionNumber;
-    private PIXConsumer pixConsumer;
 
     public RetrieveTaskImpl(PIXConsumer pixConsumer,
             BasicRetrieveTask.Service service, Association as,
