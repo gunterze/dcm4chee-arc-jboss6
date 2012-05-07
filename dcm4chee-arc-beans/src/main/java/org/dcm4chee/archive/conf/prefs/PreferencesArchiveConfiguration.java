@@ -189,6 +189,8 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
                     ArchiveApplicationEntity.DEF_RETRY_INTERVAL);
         storeNotDef(prefs, "dcmShowEmptySeries", arcAE.isShowEmptySeries(), false);
         storeNotDef(prefs, "dcmShowEmptyStudy", arcAE.isShowEmptyStudy(), false);
+        storeNotDef(prefs, "dcmReturnOtherPatientIDs", arcAE.isReturnOtherPatientIDs(), false);
+        storeNotDef(prefs, "dcmReturnOtherPatientNames", arcAE.isReturnOtherPatientNames(), false);
         storeNotNull(prefs, "hl7PIXConsumerApplication", arcAE.getLocalPIXConsumerApplication());
         storeNotNull(prefs, "hl7PIXManagerApplication", arcAE.getRemotePIXManagerApplication());
     }
@@ -287,6 +289,10 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
                 ArchiveApplicationEntity.DEF_RETRY_INTERVAL));
         arcae.setShowEmptySeries(prefs.getBoolean("dcmShowEmptySeries", false));
         arcae.setShowEmptyStudy(prefs.getBoolean("dcmShowEmptyStudy", false));
+        arcae.setReturnOtherPatientIDs(
+                prefs.getBoolean("dcmReturnOtherPatientIDs", false));
+        arcae.setReturnOtherPatientNames(
+                prefs.getBoolean("dcmReturnOtherPatientNames", false));
         arcae.setLocalPIXConsumerApplication(prefs.get("hl7PIXConsumerApplication", null));
         arcae.setRemotePIXManagerApplication(prefs.get("hl7PIXManagerApplication", null));
     }
@@ -484,6 +490,14 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
          storeDiff(prefs, "dcmShowEmptyStudy",
                  aa.isShowEmptyStudy(),
                  bb.isShowEmptyStudy(),
+                 false);
+         storeDiff(prefs, "dcmReturnOtherPatientIDs",
+                 aa.isReturnOtherPatientIDs(),
+                 bb.isReturnOtherPatientIDs(),
+                 false);
+         storeDiff(prefs, "dcmReturnOtherPatientNames",
+                 aa.isReturnOtherPatientNames(),
+                 bb.isReturnOtherPatientNames(),
                  false);
          storeDiff(prefs, "hl7PIXConsumerApplication",
                  aa.getLocalPIXConsumerApplication(),

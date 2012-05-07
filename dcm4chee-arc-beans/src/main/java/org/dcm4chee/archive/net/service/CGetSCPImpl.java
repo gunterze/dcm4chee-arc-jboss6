@@ -135,6 +135,8 @@ public class CGetSCPImpl extends BasicCGetSCP {
                 destDevice, pixConsumer,
                 BasicRetrieveTask.Service.C_GET, as, pc, rq, matches, withoutBulkData);
         retrieveTask.setSendPendingRSP(ae.isSendPendingCGet());
+        retrieveTask.setReturnOtherPatientIDs(ae.isReturnOtherPatientIDs());
+        retrieveTask.setReturnOtherPatientNames(ae.isReturnOtherPatientNames());
         return retrieveTask;
     }
 

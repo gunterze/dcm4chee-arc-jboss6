@@ -61,6 +61,7 @@ public class QueryParam {
     private String[] roles;
     private boolean showEmptyStudy;
     private boolean showEmptySeries;
+    private boolean returnOtherPatientIDs;
     private Issuer defaultIssuerOfPatientID;
     private Issuer defaultIssuerOfAccessionNumber;
 
@@ -142,6 +143,14 @@ public class QueryParam {
 
     public void setShowEmptySeries(boolean showEmptySeries) {
         this.showEmptySeries = showEmptySeries;
+    }
+
+    public boolean isReturnOtherPatientIDs() {
+        return returnOtherPatientIDs;
+    }
+
+    public void setReturnOtherPatientIDs(boolean returnOtherPatientIDs) {
+        this.returnOtherPatientIDs = returnOtherPatientIDs;
     }
 
     public Issuer getDefaultIssuerOfPatientID() {

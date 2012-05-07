@@ -819,6 +819,8 @@ public class ArchiveConfigurationTestUtils {
         addTC(ae, null, SCP, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
         ae.setShowEmptyStudy(false);
         ae.setShowEmptySeries(false);
+        ae.setReturnOtherPatientIDs(true);
+        ae.setReturnOtherPatientNames(true);
         ae.setRemotePIXManagerApplication(PIX_MANAGER);
         return ae;
     }
@@ -843,6 +845,8 @@ public class ArchiveConfigurationTestUtils {
         addTC(ae, null, SCP, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
         ae.setShowEmptyStudy(true);
         ae.setShowEmptySeries(true);
+        ae.setReturnOtherPatientIDs(true);
+        ae.setReturnOtherPatientNames(true);
         ae.setRemotePIXManagerApplication(PIX_MANAGER);
         return ae;
     }

@@ -239,6 +239,18 @@ olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.39
   SUBSTR caseExactSubstringsMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 
   SINGLE-VALUE )
+olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.40
+  NAME 'dcmReturnOtherPatientIDs'
+  DESC 'Specifies to return all known Patient IDs in the Other Patient IDs Sequence; disable if absent'
+  EQUALITY booleanMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 
+  SINGLE-VALUE )
+olcAttributeTypes: ( 1.2.40.0.13.1.1.15.0.3.41
+  NAME 'dcmReturnOtherPatientNames'
+  DESC 'Specifies to return all known patient names known in Other Patient Names; disable if absent'
+  EQUALITY booleanMatch
+  SYNTAX 1.3.6.1.4.1.1466.115.121.1.7 
+  SINGLE-VALUE )
 olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.4
   NAME 'dcmArchiveDevice'
   DESC 'DICOM Archive Device related information'
@@ -271,8 +283,10 @@ olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.5
     dcmIanDestination $
     dcmIanMaxRetries $
     dcmIanRetryInterval $
-    dcmShowEmptySeries $
     dcmShowEmptyStudy $
+    dcmShowEmptySeries $
+    dcmReturnOtherPatientIDs $
+    dcmReturnOtherPatientNames $
     hl7PIXManagerApplication $
     hl7PIXConsumerApplication ) )
 olcObjectClasses: ( 1.2.40.0.13.1.1.15.0.4.10

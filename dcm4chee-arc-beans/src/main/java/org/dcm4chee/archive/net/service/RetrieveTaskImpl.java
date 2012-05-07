@@ -75,6 +75,8 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
     private final boolean withoutBulkData;
     private IDWithIssuer[] pids;
     private IDWithIssuer pidWithMatchingIssuer;
+    private boolean returnOtherPatientIDs;
+    private boolean returnOtherPatientNames;
 
     public RetrieveTaskImpl(Device destDevice, PIXConsumer pixConsumer,
             BasicRetrieveTask.Service service, Association as,
@@ -91,6 +93,15 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
         }
         this.pixConsumer = pixConsumer;
         this.withoutBulkData = withoutBulkData;
+    }
+
+
+    public void setReturnOtherPatientIDs(boolean returnOtherPatientIDs) {
+        this.returnOtherPatientIDs = returnOtherPatientIDs;
+    }
+
+    public void setReturnOtherPatientNames(boolean returnOtherPatientNames) {
+        this.returnOtherPatientNames = returnOtherPatientNames;
     }
 
     @Override
@@ -136,21 +147,14 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
             pidWithMatchingIssuer = pidWithMatchingIssuer(pids, issuerOfPatientID);
         }
 
-        Sequence otherpids;
         if (pidWithMatchingIssuer != null) {
             pidWithMatchingIssuer.toPIDWithIssuer(attrs);
-            if (pids.length == 1)
-                return;
-
-            otherpids = attrs.newSequence(Tag.OtherPatientIDsSequence, pids.length - 1);
         } else {
             attrs.setNull(Tag.PatientID, VR.LO);
             issuerOfPatientID.toIssuerOfPatientID(attrs);
-            otherpids = attrs.newSequence(Tag.OtherPatientIDsSequence, pids.length);
         }
-        for (IDWithIssuer pid : pids)
-            if (pid != pidWithMatchingIssuer)
-                otherpids.add(pid.toPIDWithIssuer(null));
+        if (returnOtherPatientIDs)
+            IDWithIssuer.addOtherPatientIDs(attrs, pids);
     }
 
     private IDWithIssuer pidWithMatchingIssuer(IDWithIssuer[] pids, Issuer issuer) {

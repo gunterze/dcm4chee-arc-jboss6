@@ -61,6 +61,7 @@ class QueryTaskImpl extends BasicQueryTask {
     private final IDWithIssuer[] pids;
     private final Issuer issuerOfPatientID;
     private final Issuer issuerOfAccessionNumber;
+    private final boolean returnOtherPatientIDs;
 
     public QueryTaskImpl(Association as, PresentationContext pc, Attributes rq,
             Attributes keys, CompositeQuery query, QueryParam queryParam,
@@ -77,6 +78,7 @@ class QueryTaskImpl extends BasicQueryTask {
                 keys.contains(Tag.IssuerOfAccessionNumberSequence)
                 ? Issuer.valueOf(keys.getNestedDataset(Tag.IssuerOfAccessionNumberSequence))
                 : queryParam.getDefaultIssuerOfAccessionNumber();
+        this.returnOtherPatientIDs = queryParam.isReturnOtherPatientIDs();
     }
 
     @Override
@@ -95,19 +97,16 @@ class QueryTaskImpl extends BasicQueryTask {
     private void adjustPatientID(Attributes match) {
         if (!keys.contains(Tag.PatientID))
             return;
-        
+
         if (pids.length > 1) {
             pids[0].toPIDWithIssuer(match);
-            if (keys.contains(Tag.OtherPatientIDsSequence)) {
-                Sequence seq = match.newSequence(Tag.OtherPatientIDsSequence, pids.length-1);
-                for (int i = 1; i < pids.length; i++)
-                    seq.add(pids[i].toPIDWithIssuer(null));
-            }
         } else if (issuerOfPatientID != null
                 && !issuerOfPatientID.matches(Issuer.issuerOfPatientIDOf(match))) {
             match.setNull(Tag.PatientID, VR.LO);
             issuerOfPatientID.toIssuerOfPatientID(match);
         }
+        if (returnOtherPatientIDs && keys.contains(Tag.OtherPatientIDsSequence))
+            IDWithIssuer.addOtherPatientIDs(match, pids);
     }
 
     private void adjustAccessionNumber(Attributes match) {

@@ -488,6 +488,8 @@ dcmRetrieveAET: DCM4CHEE
 dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dcmStoreOriginalAttributes: TRUE
+dcmReturnOtherPatientNames: TRUE
+dcmReturnOtherPatientIDs: TRUE
 dcmSendPendingCGet: TRUE
 dcmMatchUnknown: TRUE
 dicomAssociationInitiator: TRUE
@@ -3879,6 +3881,8 @@ dcmCodeValue: XXXXXX22
 dn: dicomAETitle=DCM4CHEE_ADMIN,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dcmReturnOtherPatientNames: TRUE
+dcmReturnOtherPatientIDs: TRUE
 dcmSendPendingCGet: TRUE
 dcmMatchUnknown: TRUE
 dicomAssociationInitiator: TRUE

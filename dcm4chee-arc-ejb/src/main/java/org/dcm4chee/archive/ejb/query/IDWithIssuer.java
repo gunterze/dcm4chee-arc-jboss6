@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.ejb.query;
 
 import org.dcm4che.data.Attributes;
+import org.dcm4che.data.Sequence;
 import org.dcm4che.data.Tag;
 import org.dcm4che.data.VR;
 import org.dcm4che.net.Issuer;
@@ -102,5 +103,14 @@ public class IDWithIssuer {
                 issuerOfPatientID != null
                     ? issuerOfPatientID
                     : defaultIssuerWithPatientID);
+    }
+
+    public static void addOtherPatientIDs(Attributes attrs, IDWithIssuer... pids) {
+        Sequence seq = attrs.newSequence(Tag.OtherPatientIDsSequence, pids.length);
+        for (IDWithIssuer pid : pids)
+            if (pid.issuer != null)
+                seq.add(pid.toPIDWithIssuer(null));
+        if (seq.isEmpty())
+            attrs.remove(Tag.OtherPatientIDsSequence);
     }
 }

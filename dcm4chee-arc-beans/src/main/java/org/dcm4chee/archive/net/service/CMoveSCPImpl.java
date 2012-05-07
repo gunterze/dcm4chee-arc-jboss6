@@ -150,6 +150,8 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
         };
         ArchiveApplicationEntity localAE = (ArchiveApplicationEntity) as.getApplicationEntity();
         retrieveTask.setSendPendingRSPInterval(localAE.getSendPendingCMoveInterval());
+        retrieveTask.setReturnOtherPatientIDs(ae.isReturnOtherPatientIDs());
+        retrieveTask.setReturnOtherPatientNames(ae.isReturnOtherPatientNames());
         return retrieveTask;
     }
 

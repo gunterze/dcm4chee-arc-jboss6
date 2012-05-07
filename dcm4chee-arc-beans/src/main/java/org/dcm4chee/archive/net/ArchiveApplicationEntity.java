@@ -95,6 +95,8 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     private final AttributeCoercions attributeCoercions = new AttributeCoercions();
     private boolean showEmptyStudy;
     private boolean showEmptySeries;
+    private boolean returnOtherPatientIDs;
+    private boolean returnOtherPatientNames;
     private String pixManagerApplication;
     private String pixConsumerApplication;
 
@@ -349,6 +351,22 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         this.showEmptySeries = showEmptySeries;
     }
 
+    public boolean isReturnOtherPatientIDs() {
+        return returnOtherPatientIDs;
+    }
+
+    public void setReturnOtherPatientIDs(boolean returnOtherPatientIDs) {
+        this.returnOtherPatientIDs = returnOtherPatientIDs;
+    }
+
+    public boolean isReturnOtherPatientNames() {
+        return returnOtherPatientNames;
+    }
+
+    public void setReturnOtherPatientNames(boolean returnOtherPatientNames) {
+        this.returnOtherPatientNames = returnOtherPatientNames;
+    }
+
     public String getRemotePIXManagerApplication() {
         return pixManagerApplication;
     }
@@ -395,6 +413,7 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
                         RejectionNote.Action.HIDE_REJECTED_INSTANCES)));
         queryParam.setShowEmptySeries(showEmptySeries);
         queryParam.setShowEmptyStudy(showEmptyStudy);
+        queryParam.setReturnOtherPatientIDs(returnOtherPatientIDs);
         return queryParam;
     }
 
