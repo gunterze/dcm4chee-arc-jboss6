@@ -130,8 +130,7 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
             throw new DicomServiceException(Status.UnableToProcess, e);
         }
         List<InstanceLocator> matches = calculateMatches(rq, keys, queryParam);
-        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(
-                destAE.getDevice(), pixConsumer,
+        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(pixConsumer,
                 BasicRetrieveTask.Service.C_MOVE, as, pc, rq, matches, false) {
 
             @Override
@@ -149,6 +148,7 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
 
         };
         ArchiveApplicationEntity localAE = (ArchiveApplicationEntity) as.getApplicationEntity();
+        retrieveTask.setDestinationDevice(destAE.getDevice());
         retrieveTask.setSendPendingRSPInterval(localAE.getSendPendingCMoveInterval());
         retrieveTask.setReturnOtherPatientIDs(ae.isReturnOtherPatientIDs());
         retrieveTask.setReturnOtherPatientNames(ae.isReturnOtherPatientNames());

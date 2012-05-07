@@ -69,32 +69,29 @@ import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 class RetrieveTaskImpl extends BasicRetrieveTask {
 
     private final ArchiveApplicationEntity ae;
-    private final Issuer issuerOfPatientID;
-    private final Issuer issuerOfAccessionNumber;
-    private final PIXConsumer pixConsumer;
     private final boolean withoutBulkData;
     private IDWithIssuer[] pids;
     private IDWithIssuer pidWithMatchingIssuer;
     private boolean returnOtherPatientIDs;
     private boolean returnOtherPatientNames;
+    private Issuer issuerOfPatientID;
+    private Issuer issuerOfAccessionNumber;
+    private PIXConsumer pixConsumer;
 
-    public RetrieveTaskImpl(Device destDevice, PIXConsumer pixConsumer,
+    public RetrieveTaskImpl(PIXConsumer pixConsumer,
             BasicRetrieveTask.Service service, Association as,
             PresentationContext pc, Attributes rq, List<InstanceLocator> matches,
             boolean withoutBulkData) {
         super(service, as, pc, rq, matches);
         this.ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-        if (destDevice == null) {
-            this.issuerOfPatientID = null;
-            this.issuerOfAccessionNumber = null;
-        } else {
-            this.issuerOfPatientID = destDevice.getIssuerOfPatientID();
-            this.issuerOfAccessionNumber = destDevice.getIssuerOfAccessionNumber();
-        }
         this.pixConsumer = pixConsumer;
         this.withoutBulkData = withoutBulkData;
     }
 
+    public void setDestinationDevice(Device destDevice) {
+        this.issuerOfPatientID = destDevice.getIssuerOfPatientID();
+        this.issuerOfAccessionNumber = destDevice.getIssuerOfAccessionNumber();
+    }
 
     public void setReturnOtherPatientIDs(boolean returnOtherPatientIDs) {
         this.returnOtherPatientIDs = returnOtherPatientIDs;

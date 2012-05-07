@@ -125,15 +125,14 @@ public class CGetSCPImpl extends BasicCGetSCP {
         level.validateRetrieveKeys(validator, rootLevel, relational);
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
         QueryParam queryParam = ae.getQueryParam(codeManager, queryOpts, roles());
-        Device destDevice = null;
+        List<InstanceLocator> matches = calculateMatches(rq, keys, queryParam);
+        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(pixConsumer,
+                BasicRetrieveTask.Service.C_GET, as, pc, rq, matches, withoutBulkData);
         try {
-            destDevice = aeCache.findApplicationEntity(as.getRemoteAET()).getDevice();
+            Device destDevice = aeCache.findApplicationEntity(as.getRemoteAET()).getDevice();
+            retrieveTask.setDestinationDevice(destDevice);
         } catch (ConfigurationException e) {
         }
-        List<InstanceLocator> matches = calculateMatches(rq, keys, queryParam);
-        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(
-                destDevice, pixConsumer,
-                BasicRetrieveTask.Service.C_GET, as, pc, rq, matches, withoutBulkData);
         retrieveTask.setSendPendingRSP(ae.isSendPendingCGet());
         retrieveTask.setReturnOtherPatientIDs(ae.isReturnOtherPatientIDs());
         retrieveTask.setReturnOtherPatientNames(ae.isReturnOtherPatientNames());
