@@ -65,6 +65,7 @@ import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4che.util.AttributesValidator;
 import org.dcm4chee.archive.ejb.query.IDWithIssuer;
 import org.dcm4chee.archive.ejb.query.LocateInstances;
+import org.dcm4chee.archive.ejb.query.PatientNameQuery;
 import org.dcm4chee.archive.ejb.query.QueryParam;
 import org.dcm4chee.archive.ejb.store.CodeManager;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
@@ -81,6 +82,9 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
 
     @EJB
     private LocateInstances calculateMatches;
+
+    @EJB
+    private PatientNameQuery patientNameQuery;
 
     @EJB
     private CodeManager codeManager;
@@ -130,7 +134,8 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
             throw new DicomServiceException(Status.UnableToProcess, e);
         }
         List<InstanceLocator> matches = calculateMatches(rq, keys, queryParam);
-        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(pixConsumer,
+        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(
+                pixConsumer, patientNameQuery,
                 BasicRetrieveTask.Service.C_MOVE, as, pc, rq, matches, false) {
 
             @Override

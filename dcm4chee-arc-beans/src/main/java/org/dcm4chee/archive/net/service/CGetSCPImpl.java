@@ -62,6 +62,7 @@ import org.dcm4che.net.service.RetrieveTask;
 import org.dcm4che.util.AttributesValidator;
 import org.dcm4chee.archive.ejb.query.IDWithIssuer;
 import org.dcm4chee.archive.ejb.query.LocateInstances;
+import org.dcm4chee.archive.ejb.query.PatientNameQuery;
 import org.dcm4chee.archive.ejb.query.QueryParam;
 import org.dcm4chee.archive.ejb.store.CodeManager;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
@@ -79,6 +80,9 @@ public class CGetSCPImpl extends BasicCGetSCP {
 
     @EJB
     private LocateInstances calculateMatches;
+
+    @EJB
+    private PatientNameQuery patientNameQuery;
 
     @EJB
     private CodeManager codeManager;
@@ -126,8 +130,10 @@ public class CGetSCPImpl extends BasicCGetSCP {
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
         QueryParam queryParam = ae.getQueryParam(codeManager, queryOpts, roles());
         List<InstanceLocator> matches = calculateMatches(rq, keys, queryParam);
-        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(pixConsumer,
-                BasicRetrieveTask.Service.C_GET, as, pc, rq, matches, withoutBulkData);
+        RetrieveTaskImpl retrieveTask = new RetrieveTaskImpl(
+                pixConsumer, patientNameQuery,
+                BasicRetrieveTask.Service.C_GET, as, pc, rq, matches,
+                withoutBulkData);
         try {
             Device destDevice = aeCache.findApplicationEntity(as.getRemoteAET()).getDevice();
             retrieveTask.setDestinationDevice(destDevice);

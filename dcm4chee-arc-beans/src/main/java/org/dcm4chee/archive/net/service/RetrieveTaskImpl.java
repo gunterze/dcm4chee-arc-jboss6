@@ -61,6 +61,7 @@ import org.dcm4che.net.service.BasicRetrieveTask;
 import org.dcm4che.net.service.InstanceLocator;
 import org.dcm4che.util.SafeClose;
 import org.dcm4chee.archive.ejb.query.IDWithIssuer;
+import org.dcm4chee.archive.ejb.query.PatientNameQuery;
 import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 
 /**
@@ -69,22 +70,25 @@ import org.dcm4chee.archive.net.ArchiveApplicationEntity;
 class RetrieveTaskImpl extends BasicRetrieveTask {
 
     private final PIXConsumer pixConsumer;
+    private final PatientNameQuery patientNameQuery;
     private final ArchiveApplicationEntity ae;
     private final boolean withoutBulkData;
     private IDWithIssuer[] pids;
     private IDWithIssuer pidWithMatchingIssuer;
+    private String[] patientNames;
     private boolean returnOtherPatientIDs;
     private boolean returnOtherPatientNames;
     private Issuer issuerOfPatientID;
     private Issuer issuerOfAccessionNumber;
 
-    public RetrieveTaskImpl(PIXConsumer pixConsumer,
+    public RetrieveTaskImpl(PIXConsumer pixConsumer, PatientNameQuery patientNameQuery,
             BasicRetrieveTask.Service service, Association as,
             PresentationContext pc, Attributes rq, List<InstanceLocator> matches,
             boolean withoutBulkData) {
         super(service, as, pc, rq, matches);
         this.ae = (ArchiveApplicationEntity) as.getApplicationEntity();
         this.pixConsumer = pixConsumer;
+        this.patientNameQuery = patientNameQuery;
         this.withoutBulkData = withoutBulkData;
     }
 
@@ -142,6 +146,15 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
                     ? new IDWithIssuer[] { pid0 }
                     : pixConsumer.pixQuery(ae, pid0);
             pidWithMatchingIssuer = pidWithMatchingIssuer(pids, issuerOfPatientID);
+            if (returnOtherPatientNames) {
+                if (pids.length > 0)
+                    patientNames = patientNameQuery.query(pids);
+                else {
+                    String patientName = attrs.getString(Tag.PatientName);
+                    if (patientName != null)
+                        patientNames = new String[] { patientName };
+                }
+            }
         }
 
         if (pidWithMatchingIssuer != null) {
@@ -152,6 +165,8 @@ class RetrieveTaskImpl extends BasicRetrieveTask {
         }
         if (returnOtherPatientIDs)
             IDWithIssuer.addOtherPatientIDs(attrs, pids);
+        if (patientNames != null)
+            attrs.setString(Tag.OtherPatientNames, VR.PN, patientNames);
     }
 
     private IDWithIssuer pidWithMatchingIssuer(IDWithIssuer[] pids, Issuer issuer) {
