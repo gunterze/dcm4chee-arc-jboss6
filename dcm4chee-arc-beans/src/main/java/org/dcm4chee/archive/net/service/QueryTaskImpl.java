@@ -95,18 +95,19 @@ class QueryTaskImpl extends BasicQueryTask {
      }
 
     private void adjustPatientID(Attributes match) {
-        if (!keys.contains(Tag.PatientID))
-            return;
-
+        IDWithIssuer pid = IDWithIssuer.pidWithIssuer(match, null);
         if (pids.length > 1) {
             pids[0].toPIDWithIssuer(match);
         } else if (issuerOfPatientID != null
-                && !issuerOfPatientID.matches(Issuer.issuerOfPatientIDOf(match))) {
+                && !issuerOfPatientID.matches(pid.issuer)) {
             match.setNull(Tag.PatientID, VR.LO);
             issuerOfPatientID.toIssuerOfPatientID(match);
         }
         if (returnOtherPatientIDs && keys.contains(Tag.OtherPatientIDsSequence))
-            IDWithIssuer.addOtherPatientIDs(match, pids);
+            if (pids.length > 0)
+                IDWithIssuer.addOtherPatientIDs(match, pids);
+            else
+                IDWithIssuer.addOtherPatientIDs(match, pid);
     }
 
     private void adjustAccessionNumber(Attributes match) {
