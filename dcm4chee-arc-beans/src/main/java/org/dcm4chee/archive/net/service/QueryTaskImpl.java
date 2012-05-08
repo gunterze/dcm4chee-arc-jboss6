@@ -96,6 +96,9 @@ class QueryTaskImpl extends BasicQueryTask {
 
     private void adjustPatientID(Attributes match) {
         IDWithIssuer pid = IDWithIssuer.pidWithIssuer(match, null);
+        if (pid == null)
+            return;
+
         if (pids.length > 1) {
             pids[0].toPIDWithIssuer(match);
         } else if (issuerOfPatientID != null
