@@ -250,6 +250,10 @@ public class ScheduledProcedureStep implements Serializable {
         return series;
     }
 
+    public byte[] getEncodedAttributes() {
+        return encodedAttributes;
+    }
+
     public Attributes getAttributes() throws BlobCorruptedException {
         if (cachedAttributes == null)
             cachedAttributes = Utils.decodeAttributes(encodedAttributes);

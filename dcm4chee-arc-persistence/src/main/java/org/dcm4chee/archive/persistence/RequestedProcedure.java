@@ -154,6 +154,10 @@ public class RequestedProcedure implements Serializable {
         return scheduledProcedureSteps;
     }
 
+    public byte[] getEncodedAttributes() {
+        return encodedAttributes;
+    }
+
     public Attributes getAttributes() throws BlobCorruptedException {
         if (cachedAttributes == null)
             cachedAttributes = Utils.decodeAttributes(encodedAttributes);

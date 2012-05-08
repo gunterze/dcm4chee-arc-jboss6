@@ -206,6 +206,10 @@ public class ServiceRequest implements Serializable {
         return requestedProcedures;
     }
 
+    public byte[] getEncodedAttributes() {
+        return encodedAttributes;
+    }
+
     public Attributes getAttributes() throws BlobCorruptedException {
         if (cachedAttributes == null)
             cachedAttributes = Utils.decodeAttributes(encodedAttributes);

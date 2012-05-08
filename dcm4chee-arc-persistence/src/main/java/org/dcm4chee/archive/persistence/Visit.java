@@ -149,6 +149,10 @@ public class Visit implements Serializable {
         return serviceRequests;
     }
 
+    public byte[] getEncodedAttributes() {
+        return encodedAttributes;
+    }
+
     public Attributes getAttributes() throws BlobCorruptedException {
         if (cachedAttributes == null)
             cachedAttributes = Utils.decodeAttributes(encodedAttributes);
