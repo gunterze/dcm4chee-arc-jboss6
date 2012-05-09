@@ -75,6 +75,16 @@
         <updatePolicy>never</updatePolicy>
       </snapshots>
     </repository>
+    <repository>
+      <id>mysema-public-repository</id>
+      <name>MySema Public Maven Repository</name>
+      <url>http://source.mysema.com/maven2/releases/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
@@ -92,6 +102,9 @@
       </snapshots>
     </pluginRepository>
   </pluginRepositories>
+  <properties>
+    <querydsl.version>2.3.3</querydsl.version>
+  </properties>
   <build>
     <plugins>
       <plugin>
