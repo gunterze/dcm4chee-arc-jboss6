@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.net.service;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 
 import org.dcm4che.conf.api.ConfigurationException;
@@ -111,7 +112,7 @@ public class PIXConsumer {
 
     private HL7Message pixQuery(HL7Application pixConsumerApp,
             HL7Application pixManagerApp, HL7Message qbp)
-            throws IncompatibleConnectionException, IOException {
+            throws IncompatibleConnectionException, IOException, GeneralSecurityException {
         CompatibleConnection cc = pixConsumerApp.findCompatibelConnection(pixManagerApp);
         Connection conn = cc.getLocalConnection();
         MLLPConnection mllpConn = pixConsumerApp.connect(conn, cc.getRemoteConnection());

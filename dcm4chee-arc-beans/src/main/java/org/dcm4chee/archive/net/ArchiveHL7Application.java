@@ -109,4 +109,10 @@ public class ArchiveHL7Application extends HL7Application {
         return getArchiveDevice().getStoreParam();
     }
 
+    @Override
+    protected void setHL7ApplicationAttributes(HL7Application src) {
+        // TODO Auto-generated method stub
+        super.setHL7ApplicationAttributes(src);
+    }
+
 }

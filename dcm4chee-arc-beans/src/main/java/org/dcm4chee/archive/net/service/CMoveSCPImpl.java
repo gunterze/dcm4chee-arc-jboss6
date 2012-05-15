@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.net.service;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -147,6 +148,8 @@ public class CMoveSCPImpl extends BasicCMoveSCP {
                 } catch (InterruptedException e) {
                     throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
                 } catch (IncompatibleConnectionException e) {
+                    throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
+                } catch (GeneralSecurityException e) {
                     throw new DicomServiceException(Status.UnableToPerformSubOperations, e);
                 }
             }

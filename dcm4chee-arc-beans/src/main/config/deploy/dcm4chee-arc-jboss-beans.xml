@@ -137,6 +137,10 @@
       <factory bean="ArchiveConfiguration"/>
       <parameter>dcm4chee-arc</parameter>
     </constructor>
+    <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="dcm4chee.archive:service=Device", exposedInterface=org.dcm4chee.archive.net.ArchiveDeviceMBean.class)</annotation>
+    <property name="configuration">
+      <inject bean="ArchiveConfiguration" />
+    </property>
     <property name="executor">
       <inject bean="Executer" />
     </property>
@@ -152,9 +156,8 @@
     <property name="keyManager">
       <inject bean="KeyManager" />
     </property>
-    <create method="initTrustManager" />
-    <start method="activate" />
-    <stop method="deactivate" />
+    <start method="bindConnections" />
+    <stop method="unbindConnections" />
     <demand>Class:org.dcm4chee.archive.ejb.store.InstanceStore</demand>
     <demand>Class:org.dcm4chee.archive.ejb.store.PerformedProcedureStepManager</demand>
     <demand>Class:org.dcm4chee.archive.ejb.query.CompositeQuery</demand>

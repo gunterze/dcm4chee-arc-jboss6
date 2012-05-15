@@ -39,6 +39,7 @@
 package org.dcm4chee.archive.net;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -121,6 +122,11 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         attributeCoercions.add(ac);
     }
 
+    public void setAttributeCoercions(AttributeCoercions acs) {
+        attributeCoercions.clear();
+        attributeCoercions.add(acs);
+    }
+
     public boolean removeAttributeCoercion(AttributeCoercion ac) {
         return attributeCoercions.remove(ac);
     }
@@ -131,6 +137,11 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
 
     public void addStoreDuplicate(StoreDuplicate storeDuplicate) {
         storeDuplicates.add(storeDuplicate);
+    }
+
+    public void setStoreDuplicates(Collection<StoreDuplicate> storeDuplicates) {
+        storeDuplicates.clear();
+        storeDuplicates.addAll(storeDuplicates);
     }
 
     public boolean removeStoreDuplicate(StoreDuplicate storeDuplicate) {
@@ -331,6 +342,17 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         rejectionNotes.add(rn);
     }
 
+    public void setRejectionNotes(Collection<RejectionNote> rns) {
+        for (RejectionNote rn : rns)
+            for (RejectionNote other : rejectionNotes)
+                if (rn.matches(other)) {
+                    rn.setCode(other.getCode());
+                    break;
+                }
+        rejectionNotes.clear();
+        rejectionNotes.addAll(rns);
+    }
+
     public boolean removeRejectionNote(RejectionNote rn) {
         return rejectionNotes.remove(rn);
     }
@@ -415,6 +437,43 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         queryParam.setShowEmptyStudy(showEmptyStudy);
         queryParam.setReturnOtherPatientIDs(returnOtherPatientIDs);
         return queryParam;
+    }
+
+    @Override
+    protected void setApplicationEntityAttributes(ApplicationEntity from) {
+        super.setApplicationEntityAttributes(from);
+
+        ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) from;
+        setModifyingSystem(arcae.modifyingSystem);
+        setRetrieveAETs(arcae.retrieveAETs);
+        setExternalRetrieveAET(arcae.externalRetrieveAET);
+        setFileSystemGroupID(arcae.fileSystemGroupID);
+        setDigestAlgorithm(arcae.digestAlgorithm);
+        setReceivingDirectoryPath(arcae.receivingDirectoryPath);
+        setStorageFilePathFormat(arcae.storageFilePathFormat);
+        setStoreOriginalAttributes(arcae.storeOriginalAttributes);
+        setSuppressWarningCoercionOfDataElements(arcae.suppressWarningCoercionOfDataElements);
+        setMatchUnknown(arcae.matchUnknown);
+        setSendPendingCGet(arcae.sendPendingCGet);
+        setSendPendingCMoveInterval(arcae.sendPendingCMoveInterval);
+        setStorageCommitmentDelay(arcae.storageCommitmentDelay);
+        setStorageCommitmentMaxRetries(arcae.storageCommitmentMaxRetries);
+        setStorageCommitmentRetryInterval(arcae.storageCommitmentRetryInterval);
+        setForwardMPPSDestinations(arcae.forwardMPPSDestinations);
+        setForwardMPPSMaxRetries(arcae.forwardMPPSMaxRetries);
+        setForwardMPPSRetryInterval(arcae.forwardMPPSRetryInterval);
+        setIANDestinations(arcae.ianDestinations);
+        setIANMaxRetries(arcae.ianMaxRetries);
+        setIANRetryInterval(arcae.ianRetryInterval);
+        setShowEmptyStudy(arcae.showEmptyStudy);
+        setShowEmptySeries(arcae.showEmptySeries);
+        setReturnOtherPatientIDs(arcae.returnOtherPatientIDs);
+        setReturnOtherPatientNames(arcae.returnOtherPatientNames);
+        setRemotePIXManagerApplication(arcae.pixManagerApplication);
+        setLocalPIXConsumerApplication(arcae.pixConsumerApplication);
+        setStoreDuplicates(arcae.getStoreDuplicates());
+        setRejectionNotes(arcae.getRejectionNotes());
+        setAttributeCoercions(arcae.getAttributeCoercions());
     }
 
 }

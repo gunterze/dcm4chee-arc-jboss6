@@ -38,10 +38,16 @@
 
 package org.dcm4chee.archive.net;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+
 import javax.xml.transform.Templates;
 import javax.xml.transform.TransformerConfigurationException;
 
+import org.dcm4che.conf.api.ConfigurationException;
+import org.dcm4che.conf.api.DicomConfiguration;
 import org.dcm4che.io.TemplatesCache;
+import org.dcm4che.net.Device;
 import org.dcm4che.net.hl7.HL7Device;
 import org.dcm4che.soundex.FuzzyStr;
 import org.dcm4chee.archive.ejb.store.Entity;
@@ -52,7 +58,7 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class ArchiveDevice extends HL7Device {
+public class ArchiveDevice extends HL7Device implements ArchiveDeviceMBean {
 
     private static final long serialVersionUID = 2933279846751009427L;
 
@@ -63,9 +69,27 @@ public class ArchiveDevice extends HL7Device {
 
     private transient FuzzyStr fuzzyStr;
     private transient TemplatesCache templatesCache;
+    private transient DicomConfiguration configuration;
 
     public ArchiveDevice(String name) {
         super(name);
+    }
+
+    public DicomConfiguration getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(DicomConfiguration configuration) {
+        this.configuration = configuration;
+    }
+
+    @Override
+    public void reloadConfiguration() throws ConfigurationException, IOException, GeneralSecurityException {
+        DicomConfiguration tmp = configuration;
+        if (tmp == null)
+            throw new IllegalStateException("configuration not initalized");
+        reconfigure(tmp.findDevice(getDeviceName()));
+        rebindConnections();
     }
 
     public String getFuzzyAlgorithmClass() {
@@ -133,5 +157,15 @@ public class ArchiveDevice extends HL7Device {
         storeParam.setFuzzyStr(fuzzyStr);
         storeParam.setAttributeFilters(attributeFilters);
         return storeParam;
+    }
+
+    @Override
+    protected void setDeviceAttributes(Device from) {
+        super.setDeviceAttributes(from);
+        ArchiveDevice arcdev = (ArchiveDevice) from;
+        setFuzzyAlgorithmClass(arcdev.fuzzyAlgorithmClass);
+        setConfigurationStaleTimeout(arcdev.configurationStaleTimeout);
+        System.arraycopy(arcdev.attributeFilters, 0,
+                attributeFilters, 0, attributeFilters.length);
     }
 }
