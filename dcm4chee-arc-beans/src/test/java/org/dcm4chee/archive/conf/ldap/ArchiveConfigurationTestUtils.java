@@ -80,6 +80,7 @@ import org.dcm4chee.archive.persistence.AttributeFilter;
 public class ArchiveConfigurationTestUtils {
 
     private static final String PIX_MANAGER = "HL7RCV^DCM4CHEE";
+    private static int PENDING_CMOVE_INTERVAL = 5000;
     private static final int CONFIGURATION_STALE_TIMEOUT = 60;
     private static final int[] PATIENT_ATTRS = {
         Tag.SpecificCharacterSet,
@@ -697,25 +698,22 @@ public class ArchiveConfigurationTestUtils {
          return device;
      }
 
-   private static ArchiveDevice createArchiveDevice(DicomConfiguration config, String name)
-            throws Exception {
+    static ArchiveDevice createArchiveDevice(String name) {
         ArchiveDevice device = new ArchiveDevice(name);
+        device.setFuzzyAlgorithmClass("org.dcm4che.soundex.ESoundex");
+        device.setConfigurationStaleTimeout(CONFIGURATION_STALE_TIMEOUT);
+        setAttributeFilters(device);
+        return device ;
+    }
+
+    private static ArchiveDevice createArchiveDevice(DicomConfiguration config, String name)
+            throws Exception {
+        ArchiveDevice device = createArchiveDevice(name);
         device.setThisNodeCertificates(config.deviceRef(name),
                 (X509Certificate) KEYSTORE.getCertificate(name));
         for (String other : OTHER_DEVICES)
             device.setAuthorizedNodeCertificates(config.deviceRef(other),
                     (X509Certificate) KEYSTORE.getCertificate(other));
-        device.setFuzzyAlgorithmClass("org.dcm4che.soundex.ESoundex");
-        device.setConfigurationStaleTimeout(CONFIGURATION_STALE_TIMEOUT);
-        device.setAttributeFilter(Entity.Patient, new AttributeFilter(PATIENT_ATTRS));
-        device.setAttributeFilter(Entity.Study, new AttributeFilter(STUDY_ATTRS));
-        device.setAttributeFilter(Entity.Series, new AttributeFilter(SERIES_ATTRS));
-        device.setAttributeFilter(Entity.Instance, new AttributeFilter(INSTANCE_ATTRS));
-        device.setAttributeFilter(Entity.Visit, new AttributeFilter(VISIT_ATTRS));
-        device.setAttributeFilter(Entity.ServiceRequest, new AttributeFilter(SERVICE_REQUEST_ATTRS));
-        device.setAttributeFilter(Entity.RequestedProcedure, new AttributeFilter(REQUESTED_PROCEDURE_ATTRS));
-        device.setAttributeFilter(Entity.ScheduledProcedureStep, new AttributeFilter(SPS_ATTRS));
-        device.setAttributeFilter(Entity.PerformedProcedureStep, new AttributeFilter(PPS_ATTRS));
         Connection dicom = createConnection("dicom", "localhost", 11112);
         dicom.setMaxOpsInvoked(0);
         dicom.setMaxOpsPerformed(0);
@@ -727,11 +725,13 @@ public class ArchiveConfigurationTestUtils {
                 Connection.TLS_RSA_WITH_AES_128_CBC_SHA, 
                 Connection.TLS_RSA_WITH_3DES_EDE_CBC_SHA);
         device.addConnection(dicomTLS);
-        ArchiveApplicationEntity ae = createAE("DCM4CHEE");
+        ArchiveApplicationEntity ae = createAE("DCM4CHEE",
+                IMAGE_TSUIDS, VIDEO_TSUIDS, OTHER_TSUIDS, null, PIX_MANAGER);
         device.addApplicationEntity(ae);
         ae.addConnection(dicom);
         ae.addConnection(dicomTLS);
-        ArchiveApplicationEntity adminAE = createAdminAE("DCM4CHEE_ADMIN");
+        ArchiveApplicationEntity adminAE = createAdminAE("DCM4CHEE_ADMIN",
+                IMAGE_TSUIDS, VIDEO_TSUIDS, OTHER_TSUIDS, null, PIX_MANAGER);
         device.addApplicationEntity(adminAE);
         adminAE.addConnection(dicom);
         adminAE.addConnection(dicomTLS);
@@ -753,6 +753,27 @@ public class ArchiveConfigurationTestUtils {
     }
 
 
+    private static void setAttributeFilters(ArchiveDevice device) {
+        device.setAttributeFilter(Entity.Patient,
+                new AttributeFilter(PATIENT_ATTRS));
+        device.setAttributeFilter(Entity.Study,
+                new AttributeFilter(STUDY_ATTRS));
+        device.setAttributeFilter(Entity.Series,
+                new AttributeFilter(SERIES_ATTRS));
+        device.setAttributeFilter(Entity.Instance,
+                new AttributeFilter(INSTANCE_ATTRS));
+        device.setAttributeFilter(Entity.Visit,
+                new AttributeFilter(VISIT_ATTRS));
+        device.setAttributeFilter(Entity.ServiceRequest,
+                new AttributeFilter(SERVICE_REQUEST_ATTRS));
+        device.setAttributeFilter(Entity.RequestedProcedure,
+                new AttributeFilter(REQUESTED_PROCEDURE_ATTRS));
+        device.setAttributeFilter(Entity.ScheduledProcedureStep,
+                new AttributeFilter(SPS_ATTRS));
+        device.setAttributeFilter(Entity.PerformedProcedureStep,
+                new AttributeFilter(PPS_ATTRS));
+    }
+
     private static Connection createConnection(String commonName,
             String hostname, int port, String... tlsCipherSuites) {
         Connection conn = new Connection(commonName, hostname, port);
@@ -761,7 +782,9 @@ public class ArchiveConfigurationTestUtils {
     }
 
 
-    private static ArchiveApplicationEntity createAE(String aet) {
+    static ArchiveApplicationEntity createAE(String aet,
+            String[] image_tsuids, String[] video_tsuids, String[] other_tsuids,
+            String pixConsumer, String pixManager) {
         ArchiveApplicationEntity ae = new ArchiveApplicationEntity(aet);
         ae .setAssociationAcceptor(true);
         ae.setAssociationInitiator(true);
@@ -770,7 +793,7 @@ public class ArchiveConfigurationTestUtils {
         ae.setStorageFilePathFormat(new AttributesFormat(
                 "archive/{now,date,yyyy/MM/dd}/{0020000D,hash}/{0020000E,hash}/{00080018,hash}") );
         ae.setDigestAlgorithm("MD5");
-        ae.setRetrieveAETs("DCM4CHEE");
+        ae.setRetrieveAETs(aet);
         ae.setStoreOriginalAttributes(true);
         ae.setSuppressWarningCoercionOfDataElements(false);
         ae.setMatchUnknown(true);
@@ -803,12 +826,12 @@ public class ArchiveConfigurationTestUtils {
                 SCU,
                 "WITHOUT_PN",
                 "resource:dcm4chee-arc-nullify-pn.xsl"));
-        addTCs(ae, null, SCP, IMAGE_CUIDS, IMAGE_TSUIDS);
-        addTCs(ae, null, SCP, VIDEO_CUIDS, VIDEO_TSUIDS);
-        addTCs(ae, null, SCP, OTHER_CUIDS, OTHER_TSUIDS);
-        addTCs(ae, null, SCU, IMAGE_CUIDS, IMAGE_TSUIDS);
-        addTCs(ae, null, SCU, VIDEO_CUIDS, VIDEO_TSUIDS);
-        addTCs(ae, null, SCU, OTHER_CUIDS, OTHER_TSUIDS);
+        addTCs(ae, null, SCP, IMAGE_CUIDS, image_tsuids);
+        addTCs(ae, null, SCP, VIDEO_CUIDS, video_tsuids);
+        addTCs(ae, null, SCP, OTHER_CUIDS, other_tsuids);
+        addTCs(ae, null, SCU, IMAGE_CUIDS, image_tsuids);
+        addTCs(ae, null, SCU, VIDEO_CUIDS, video_tsuids);
+        addTCs(ae, null, SCU, OTHER_CUIDS, other_tsuids);
         addTCs(ae, EnumSet.allOf(QueryOption.class), SCP, QUERY_CUIDS, UID.ImplicitVRLittleEndian);
         addTCs(ae, EnumSet.of(QueryOption.RELATIONAL), SCP, RETRIEVE_CUIDS, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCP, UID.CompositeInstanceRetrieveWithoutBulkDataGET, UID.ImplicitVRLittleEndian);
@@ -821,24 +844,27 @@ public class ArchiveConfigurationTestUtils {
         ae.setShowEmptySeries(false);
         ae.setReturnOtherPatientIDs(true);
         ae.setReturnOtherPatientNames(true);
-        ae.setRemotePIXManagerApplication(PIX_MANAGER);
+        ae.setLocalPIXConsumerApplication(pixConsumer);
+        ae.setRemotePIXManagerApplication(pixManager);
         return ae;
     }
 
-    private static ArchiveApplicationEntity createAdminAE(String aet) {
+    static ArchiveApplicationEntity createAdminAE(String aet,
+            String[] image_tsuids, String[] video_tsuids, String[] other_tsuids,
+            String pixConsumer, String pixManager) {
         ArchiveApplicationEntity ae = new ArchiveApplicationEntity(aet);
         ae .setAssociationAcceptor(true);
         ae.setAssociationInitiator(true);
         ae.setMatchUnknown(true);
         ae.setSendPendingCGet(true);
-        ae.setSendPendingCMoveInterval(5000);
+        ae.setSendPendingCMoveInterval(PENDING_CMOVE_INTERVAL);
         ae.addRejectionNote(INCORRECT_WORKLIST_ENTRY_SELECTED);
         ae.addRejectionNote(REJECT_FOR_PATIENT_SAFETY_REASONS);
         ae.addRejectionNote(INCORRECT_MODALITY_WORKLIST_ENTRY);
         ae.addRejectionNote(DATA_RETENTION_PERIOD_EXPIRED);
-        addTCs(ae, null, SCU, IMAGE_CUIDS, IMAGE_TSUIDS);
-        addTCs(ae, null, SCU, VIDEO_CUIDS, VIDEO_TSUIDS);
-        addTCs(ae, null, SCU, OTHER_CUIDS, OTHER_TSUIDS);
+        addTCs(ae, null, SCU, IMAGE_CUIDS, image_tsuids);
+        addTCs(ae, null, SCU, VIDEO_CUIDS, video_tsuids);
+        addTCs(ae, null, SCU, OTHER_CUIDS, other_tsuids);
         addTCs(ae, EnumSet.allOf(QueryOption.class), SCP, QUERY_CUIDS, UID.ImplicitVRLittleEndian);
         addTCs(ae, EnumSet.of(QueryOption.RELATIONAL), SCP, RETRIEVE_CUIDS, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCP, UID.CompositeInstanceRetrieveWithoutBulkDataGET, UID.ImplicitVRLittleEndian);
@@ -847,9 +873,19 @@ public class ArchiveConfigurationTestUtils {
         ae.setShowEmptySeries(true);
         ae.setReturnOtherPatientIDs(true);
         ae.setReturnOtherPatientNames(true);
-        ae.setRemotePIXManagerApplication(PIX_MANAGER);
+        ae.setLocalPIXConsumerApplication(pixConsumer);
+        ae.setRemotePIXManagerApplication(pixManager);
         return ae;
     }
+
+    static ArchiveHL7Application createHL7Application(String name) {
+        ArchiveHL7Application hl7App = new ArchiveHL7Application(name);
+        hl7App.setAcceptedMessageTypes(HL7_MESSAGE_TYPES);
+        hl7App.setHL7DefaultCharacterSet("8859/1");
+        hl7App.addTemplatesURI("adt2dcm", "resource:dcm4chee-arc-hl7-adt2dcm.xsl");
+        return hl7App ;
+    }
+
 
     private static void addTCs(ArchiveApplicationEntity ae, EnumSet<QueryOption> queryOpts,
             TransferCapability.Role role, String[] cuids, String... tss) {
