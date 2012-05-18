@@ -1,0 +1,23 @@
+version: 1
+
+dn: dicomDeviceName=XDSb_REP_Marabu,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomDeviceName: XDSb_REP_Marabu
+dicomInstalled: TRUE
+objectClass: dicomDevice
+
+dn: cn=hl7,dicomDeviceName=XDSb_REP_Marabu,cn=Devices,cn=DICOM Configuration,dc=nodomain
+cn: dicom
+dicomHostname: marabu1
+dicomPort: 5511
+objectClass: dicomNetworkConnection
+
+dn: cn=proxy,dicomDeviceName=XDSb_REP_Marabu,cn=Devices,cn=DICOM Configuration,dc=nodomain
+cn: proxy
+dicomHostname: proxy
+dicomPort: 26750
+objectClass: dicomNetworkConnection
+
+dn: hl7ApplicationName=PEGASOS^MARABU,dicomDeviceName=XDSb_REP_Marabu,cn=Devices,cn=DICOM Configuration,dc=nodomain
+hl7ApplicationName: PEGASOS^MARABU
+dicomNetworkConnectionReference: cn=hl7,dicomDeviceName=XDSb_REP_Marabu,cn=Devices,cn=DICOM Configuration,dc=nodomain
+objectClass: hl7Application

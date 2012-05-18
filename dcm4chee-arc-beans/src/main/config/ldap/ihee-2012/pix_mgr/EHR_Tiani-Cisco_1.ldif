@@ -1,0 +1,23 @@
+version: 1
+
+dn: dicomDeviceName=EHR_Tiani-Cisco_1,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomDeviceName: EHR_Tiani-Cisco_1
+dicomInstalled: TRUE
+objectClass: dicomDevice
+
+dn: cn=hl7,dicomDeviceName=EHR_Tiani-Cisco_1,cn=Devices,cn=DICOM Configuration,dc=nodomain
+cn: dicom
+dicomHostname: tiani---cisco49
+dicomPort: 2900
+objectClass: dicomNetworkConnection
+
+dn: cn=proxy,dicomDeviceName=EHR_Tiani-Cisco_1,cn=Devices,cn=DICOM Configuration,dc=nodomain
+cn: proxy
+dicomHostname: proxy
+dicomPort: 26742
+objectClass: dicomNetworkConnection
+
+dn: hl7ApplicationName=EHR_TIANI-SPIRIT^TIANI-SPIRIT,dicomDeviceName=EHR_Tiani-Cisco_1,cn=Devices,cn=DICOM Configuration,dc=nodomain
+hl7ApplicationName: EHR_TIANI-SPIRIT^TIANI-SPIRIT
+dicomNetworkConnectionReference: cn=hl7,dicomDeviceName=EHR_Tiani-Cisco_1,cn=Devices,cn=DICOM Configuration,dc=nodomain
+objectClass: hl7Application

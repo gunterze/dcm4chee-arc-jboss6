@@ -1,0 +1,23 @@
+version: 1
+
+dn: dicomDeviceName=MSG_ROUTER_Parsek_HSB,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomDeviceName: MSG_ROUTER_Parsek_HSB
+dicomInstalled: TRUE
+objectClass: dicomDevice
+
+dn: cn=hl7,dicomDeviceName=MSG_ROUTER_Parsek_HSB,cn=Devices,cn=DICOM Configuration,dc=nodomain
+cn: dicom
+dicomHostname: parsek0
+dicomPort: 4067
+objectClass: dicomNetworkConnection
+
+dn: cn=proxy,dicomDeviceName=MSG_ROUTER_Parsek_HSB,cn=Devices,cn=DICOM Configuration,dc=nodomain
+cn: proxy
+dicomHostname: proxy
+dicomPort: 26731
+objectClass: dicomNetworkConnection
+
+dn: hl7ApplicationName=MSG_ROUTER_Parsek_HSB^Parsek,dicomDeviceName=MSG_ROUTER_Parsek_HSB,cn=Devices,cn=DICOM Configuration,dc=nodomain
+hl7ApplicationName: MSG_ROUTER_Parsek_HSB^Parsek
+dicomNetworkConnectionReference: cn=hl7,dicomDeviceName=MSG_ROUTER_Parsek_HSB,cn=Devices,cn=DICOM Configuration,dc=nodomain
+objectClass: hl7Application

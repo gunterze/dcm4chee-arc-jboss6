@@ -1,0 +1,23 @@
+version: 1
+
+dn: dicomDeviceName=ADT_Avintis_MPI,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomDeviceName: ADT_Avintis_MPI
+dicomInstalled: TRUE
+objectClass: dicomDevice
+
+dn: cn=hl7,dicomDeviceName=ADT_Avintis_MPI,cn=Devices,cn=DICOM Configuration,dc=nodomain
+cn: dicom
+dicomHostname: avintis-mpi0
+dicomPort: 3600
+objectClass: dicomNetworkConnection
+
+dn: cn=proxy,dicomDeviceName=ADT_Avintis_MPI,cn=Devices,cn=DICOM Configuration,dc=nodomain
+cn: proxy
+dicomHostname: proxy
+dicomPort: 26674
+objectClass: dicomNetworkConnection
+
+dn: hl7ApplicationName=MPI^MPI,dicomDeviceName=ADT_Avintis_MPI,cn=Devices,cn=DICOM Configuration,dc=nodomain
+hl7ApplicationName: MPI^MPI
+dicomNetworkConnectionReference: cn=hl7,dicomDeviceName=ADT_Avintis_MPI,cn=Devices,cn=DICOM Configuration,dc=nodomain
+objectClass: hl7Application

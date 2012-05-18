@@ -1,0 +1,23 @@
+version: 1
+
+dn: dicomDeviceName=EHR_Rogan_0,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomDeviceName: EHR_Rogan_0
+dicomInstalled: TRUE
+objectClass: dicomDevice
+
+dn: cn=hl7,dicomDeviceName=EHR_Rogan_0,cn=Devices,cn=DICOM Configuration,dc=nodomain
+cn: dicom
+dicomHostname: EHR_Rogan_0
+dicomPort: 1600
+objectClass: dicomNetworkConnection
+
+dn: cn=proxy,dicomDeviceName=EHR_Rogan_0,cn=Devices,cn=DICOM Configuration,dc=nodomain
+cn: proxy
+dicomHostname: proxy
+dicomPort: 26143
+objectClass: dicomNetworkConnection
+
+dn: hl7ApplicationName=EHR_Rogan_0^Rogan,dicomDeviceName=EHR_Rogan_0,cn=Devices,cn=DICOM Configuration,dc=nodomain
+hl7ApplicationName: EHR_Rogan_0^Rogan
+dicomNetworkConnectionReference: cn=hl7,dicomDeviceName=EHR_Rogan_0,cn=Devices,cn=DICOM Configuration,dc=nodomain
+objectClass: hl7Application

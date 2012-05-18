@@ -1,0 +1,23 @@
+version: 1
+
+dn: dicomDeviceName=PIX_X_REF_MGR_Vision,cn=Devices,cn=DICOM Configuration,dc=nodomain
+dicomDeviceName: PIX_X_REF_MGR_Vision
+dicomInstalled: TRUE
+objectClass: dicomDevice
+
+dn: cn=hl7,dicomDeviceName=PIX_X_REF_MGR_Vision,cn=Devices,cn=DICOM Configuration,dc=nodomain
+cn: dicom
+dicomHostname: visionware1
+dicomPort: 4067
+objectClass: dicomNetworkConnection
+
+dn: cn=proxy,dicomDeviceName=PIX_X_REF_MGR_Vision,cn=Devices,cn=DICOM Configuration,dc=nodomain
+cn: proxy
+dicomHostname: proxy
+dicomPort: 26664
+objectClass: dicomNetworkConnection
+
+dn: hl7ApplicationName=PIX_X_REF_MGR_Vision^VisionWare,dicomDeviceName=PIX_X_REF_MGR_Vision,cn=Devices,cn=DICOM Configuration,dc=nodomain
+hl7ApplicationName: PIX_X_REF_MGR_Vision^VisionWare
+dicomNetworkConnectionReference: cn=hl7,dicomDeviceName=PIX_X_REF_MGR_Vision,cn=Devices,cn=DICOM Configuration,dc=nodomain
+objectClass: hl7Application
