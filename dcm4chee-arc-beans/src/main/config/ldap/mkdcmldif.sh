@@ -24,7 +24,8 @@ objectClass: dicomNetworkConnection
 cn: proxy
 
 dn: dicomAETitle=$2,dicomDeviceName=$1,cn=Devices,cn=DICOM Configuration,dc=nodomain
-dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=$1,cn=Devices,cn=DICOM Configuration,dc=nodomain
-dicomAssociationAcceptor: TRUE
 dicomAETitle: $2
+dicomAssociationInitiator: TRUE
+dicomAssociationAcceptor: TRUE
+dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=$1,cn=Devices,cn=DICOM Configuration,dc=nodomain
 objectClass: dicomNetworkAE"
