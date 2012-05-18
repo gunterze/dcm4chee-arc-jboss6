@@ -212,6 +212,17 @@
   <!-- CEchoSCP -->
   <bean name="CEchoSCP" class="org.dcm4che.net.service.BasicCEchoSCP"/>
 
+  <!-- CEchoSCU -->
+  <bean name="CEchoSCU" class="org.dcm4chee.archive.net.service.CEchoSCU">
+    <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="dcm4chee.archive:service=CEchoSCU", exposedInterface=org.dcm4chee.archive.net.service.CEchoSCUMBean.class)</annotation>
+    <property name="device">
+      <inject bean="Device" />
+    </property>
+    <property name="applicationEntityCache">
+      <inject bean="ApplicationEntityCache" />
+    </property>
+  </bean>
+
   <!-- Instance Available Notification SCU -->
   <bean name="IanSCU" class="org.dcm4chee.archive.net.service.IanSCU">
     <property name="device">

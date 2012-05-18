@@ -840,6 +840,7 @@ public class ArchiveConfigurationTestUtils {
         addTC(ae, null, SCU, UID.ModalityPerformedProcedureStepSOPClass, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCU, UID.InstanceAvailabilityNotificationSOPClass, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCP, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
+        addTC(ae, null, SCU, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
         ae.setShowEmptyStudy(false);
         ae.setShowEmptySeries(false);
         ae.setReturnOtherPatientIDs(true);
@@ -869,6 +870,7 @@ public class ArchiveConfigurationTestUtils {
         addTCs(ae, EnumSet.of(QueryOption.RELATIONAL), SCP, RETRIEVE_CUIDS, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCP, UID.CompositeInstanceRetrieveWithoutBulkDataGET, UID.ImplicitVRLittleEndian);
         addTC(ae, null, SCP, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
+        addTC(ae, null, SCU, UID.VerificationSOPClass, UID.ImplicitVRLittleEndian);
         ae.setShowEmptyStudy(true);
         ae.setShowEmptySeries(true);
         ae.setReturnOtherPatientIDs(true);
