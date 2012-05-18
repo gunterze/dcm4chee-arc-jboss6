@@ -101,7 +101,7 @@ public class CEchoSCU implements CEchoSCUMBean {
                 as.release();
             }
         } catch (Exception e) {
-            return e.getMessage();
+            return e.toString();
         }
     }
 
