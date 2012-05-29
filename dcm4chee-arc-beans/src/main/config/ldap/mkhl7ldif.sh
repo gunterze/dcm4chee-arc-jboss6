@@ -12,7 +12,7 @@ dicomInstalled: TRUE
 objectClass: dicomDevice
 
 dn: cn=hl7,dicomDeviceName=$1,cn=Devices,cn=DICOM Configuration,dc=nodomain
-cn: dicom
+cn: hl7
 dicomHostname: $3
 dicomPort: $4
 objectClass: dicomNetworkConnection
