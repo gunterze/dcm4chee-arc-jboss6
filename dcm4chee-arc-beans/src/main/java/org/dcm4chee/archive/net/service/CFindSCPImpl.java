@@ -112,7 +112,7 @@ public class CFindSCPImpl extends BasicCFindSCP {
         ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
         QueryParam queryParam = ae.getQueryParam(codeManager, queryOpts, roles());
         try {
-            ApplicationEntity sourceAE = aeCache.findApplicationEntity(as.getRemoteAET());
+            ApplicationEntity sourceAE = aeCache.get(as.getRemoteAET());
             if (sourceAE != null) {
                 Device sourcDevice = sourceAE.getDevice();
                 queryParam.setDefaultIssuerOfPatientID(
