@@ -6,7 +6,7 @@ dicomInstalled: TRUE
 objectClass: dicomDevice
 
 dn: cn=hl7,dicomDeviceName=XDSb_REP_Marabu,cn=Devices,cn=DICOM Configuration,dc=nodomain
-cn: dicom
+cn: hl7
 dicomHostname: marabu1
 dicomPort: 5511
 objectClass: dicomNetworkConnection

@@ -6,7 +6,7 @@ dicomInstalled: TRUE
 objectClass: dicomDevice
 
 dn: cn=hl7,dicomDeviceName=MSG_ROUTER_Parsek_HSB,cn=Devices,cn=DICOM Configuration,dc=nodomain
-cn: dicom
+cn: hl7
 dicomHostname: parsek0
 dicomPort: 4067
 objectClass: dicomNetworkConnection

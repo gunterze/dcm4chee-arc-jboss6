@@ -6,7 +6,7 @@ dicomInstalled: TRUE
 objectClass: dicomDevice
 
 dn: cn=hl7,dicomDeviceName=EHR_Rogan_0,cn=Devices,cn=DICOM Configuration,dc=nodomain
-cn: dicom
+cn: hl7
 dicomHostname: EHR_Rogan_0
 dicomPort: 1600
 objectClass: dicomNetworkConnection
