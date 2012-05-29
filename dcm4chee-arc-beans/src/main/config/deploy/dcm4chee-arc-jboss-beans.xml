@@ -520,4 +520,16 @@
     </constructor>
   </bean>
 
+
+  <!-- ProcedureUpdateService -->
+  <bean name="ProcedureUpdateService" class="org.dcm4chee.archive.net.service.ProcedureUpdateService" access-mode="ALL">
+    <constructor>
+      <parameter>
+        <array>
+          <value>ORM^O01</value>
+        </array>
+      </parameter>
+    </constructor>
+  </bean>
+
 </deployment>
