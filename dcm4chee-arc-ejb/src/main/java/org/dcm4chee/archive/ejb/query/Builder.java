@@ -328,7 +328,7 @@ public abstract class Builder {
                 break;
             case '_':
             case '%':
-                like.append('\\');
+                like.append('!');
                 // fall through
             default:
                 like.append(c);
