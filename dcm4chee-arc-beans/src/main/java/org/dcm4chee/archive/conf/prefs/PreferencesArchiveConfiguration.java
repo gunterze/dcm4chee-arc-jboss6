@@ -162,7 +162,7 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         ArchiveApplicationEntity arcAE = (ArchiveApplicationEntity) ae;
         prefs.putBoolean("dcmArchiveNetworkAE", true);
         storeNotNull(prefs, "dcmFileSystemGroupID", arcAE.getFileSystemGroupID());
-        storeNotNull(prefs, "dcmReceivingDirectoryPath", arcAE.getReceivingDirectoryPath());
+        storeNotNull(prefs, "dcmSpoolFilePathFormat", arcAE.getSpoolFilePathFormat());
         storeNotNull(prefs, "dcmStorageFilePathFormat", arcAE.getStorageFilePathFormat());
         storeNotNull(prefs, "dcmDigestAlgorithm", arcAE.getDigestAlgorithm());
         storeNotNull(prefs, "dcmExternalRetrieveAET", arcAE.getExternalRetrieveAET());
@@ -174,6 +174,8 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
                 arcAE.isSuppressWarningCoercionOfDataElements(), false);
         storeNotDef(prefs, "dcmStoreOriginalAttributes",
                 arcAE.isStoreOriginalAttributes(), false);
+        storeNotDef(prefs, "dcmPreserveSpoolFileOnFailure",
+                arcAE.isPreserveSpoolFileOnFailure(), false);
         storeNotNull(prefs, "dcmModifyingSystem", arcAE.getModifyingSystem());
         storeNotDef(prefs, "dcmStgCmtDelay", arcAE.getStorageCommitmentDelay(), 0);
         storeNotDef(prefs, "dcmStgCmtMaxRetries", arcAE.getStorageCommitmentMaxRetries(), 0);
@@ -261,9 +263,12 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
             return;
         ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
         arcae.setFileSystemGroupID(prefs.get("dcmFileSystemGroupID", null));
-        arcae.setReceivingDirectoryPath(prefs.get("dcmReceivingDirectoryPath", null));
+        arcae.setSpoolFilePathFormat(
+                AttributesFormat.valueOf(
+                        prefs.get("dcmSpoolFilePathFormat", null)));
         arcae.setStorageFilePathFormat(
-                AttributesFormat.valueOf(prefs.get("dcmStorageFilePathFormat", null)));
+                AttributesFormat.valueOf(
+                        prefs.get("dcmStorageFilePathFormat", null)));
         arcae.setDigestAlgorithm(prefs.get("dcmDigestAlgorithm", null));
         arcae.setExternalRetrieveAET(prefs.get("dcmExternalRetrieveAET", null));
         arcae.setRetrieveAETs(stringArray(prefs, "dcmRetrieveAET"));
@@ -272,6 +277,8 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
         arcae.setSendPendingCMoveInterval(prefs.getInt("dcmSendPendingCMoveInterval", 0));
         arcae.setSuppressWarningCoercionOfDataElements(
                 prefs.getBoolean("dcmSuppressWarningCoercionOfDataElements", false));
+        arcae.setPreserveSpoolFileOnFailure(
+                prefs.getBoolean("dcmPreserveSpoolFileOnFailure", false));
         arcae.setStoreOriginalAttributes(
                 prefs.getBoolean("dcmStoreOriginalAttributes", false));
         arcae.setModifyingSystem(prefs.get("dcmModifyingSystem", null));
@@ -411,9 +418,9 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
          storeDiff(prefs, "dcmFileSystemGroupID",
                  aa.getFileSystemGroupID(),
                  bb.getFileSystemGroupID());
-         storeDiff(prefs, "dcmReceivingDirectoryPath",
-                 aa.getReceivingDirectoryPath(),
-                 bb.getReceivingDirectoryPath());
+         storeDiff(prefs, "dcmSpoolFilePathFormat",
+                 aa.getSpoolFilePathFormat(),
+                 bb.getSpoolFilePathFormat());
          storeDiff(prefs, "dcmStorageFilePathFormat",
                  aa.getStorageFilePathFormat(),
                  bb.getStorageFilePathFormat());
@@ -445,6 +452,10 @@ public class PreferencesArchiveConfiguration extends PreferencesHL7Configuration
          storeDiff(prefs, "dcmStoreOriginalAttributes",
                  aa.isStoreOriginalAttributes(),
                  bb.isStoreOriginalAttributes(),
+                 false);
+         storeDiff(prefs, "dcmPreserveSpoolFileOnFailure",
+                 aa.isPreserveSpoolFileOnFailure(),
+                 bb.isPreserveSpoolFileOnFailure(),
                  false);
          storeDiff(prefs, "dcmModifyingSystem",
                  aa.getModifyingSystem(),

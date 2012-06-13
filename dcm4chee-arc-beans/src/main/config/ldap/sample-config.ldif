@@ -484,26 +484,27 @@ dcmTLSProtocol: SSLv3
 cn: hl7-tls
 
 dn: dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
-dcmRetrieveAET: DCM4CHEE
+dcmDigestAlgorithm: MD5
+dcmFileSystemGroupID: DEFAULT
 dicomNetworkConnectionReference: cn=dicom,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dicomNetworkConnectionReference: cn=dicom-tls,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
-dcmStoreOriginalAttributes: TRUE
-dcmReturnOtherPatientNames: TRUE
-dcmReturnOtherPatientIDs: TRUE
-dcmSendPendingCGet: TRUE
-dcmMatchUnknown: TRUE
-dicomAssociationInitiator: TRUE
 dicomAssociationAcceptor: TRUE
-dicomAETitle: DCM4CHEE
-dcmReceivingDirectoryPath: incoming
 objectClass: dicomNetworkAE
 objectClass: dcmNetworkAE
 objectClass: dcmArchiveNetworkAE
-dcmSendPendingCMoveInterval: 5000
-dcmDigestAlgorithm: MD5
 dcmStorageFilePathFormat: archive/{now,date,yyyy/MM/dd}/{0020000D,hash}/{0020000E,hash}/{00080018,hash}
+dcmRetrieveAET: DCM4CHEE
+dcmSendPendingCMoveInterval: 5000
 hl7PIXManagerApplication: HL7RCV^DCM4CHEE
-dcmFileSystemGroupID: DEFAULT
+dcmReturnOtherPatientNames: TRUE
+dcmSpoolFilePathFormat: archive/spool/{00020016,urlencoded}/{00020002}/{00020003}
+dcmStoreOriginalAttributes: TRUE
+dcmMatchUnknown: TRUE
+dcmSendPendingCGet: TRUE
+dicomAETitle: DCM4CHEE
+dcmReturnOtherPatientIDs: TRUE
+dcmPreserveSpoolFileOnFailure: TRUE
+dicomAssociationInitiator: TRUE
 
 dn: cn=Composite Instance Retrieve Without Bulk Data - GET SCP,dicomAETitle=DCM4CHEE,dicomDeviceName=dcm4chee-arc,cn=Devices,cn=DICOM Configuration,dc=nodomain
 dicomSOPClass: 1.2.840.10008.5.1.4.1.2.5.3

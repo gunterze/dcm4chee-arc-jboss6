@@ -55,7 +55,6 @@ import org.dcm4che.net.Association;
 import org.dcm4che.net.Dimse;
 import org.dcm4che.net.Status;
 import org.dcm4che.net.TransferCapability;
-import org.dcm4che.net.pdu.PresentationContext;
 import org.dcm4che.net.service.BasicCStoreSCP;
 import org.dcm4che.net.service.DicomServiceException;
 import org.dcm4che.util.AttributesFormat;
@@ -102,20 +101,22 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
     }
 
     @Override
-    protected File createFile(Association as, Attributes rq)
+    protected File getSpoolFile(Association as, Attributes fmi)
             throws DicomServiceException {
         InstanceStore store = initInstanceStore(as);
         try {
             FileSystem fs = store.getCurrentFileSystem();
-            String iuid = rq.getString(Tag.AffectedSOPInstanceUID);
-            ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
-            String subdir = ae.getReceivingDirectoryPath();
-            File dir = subdir != null ? new File(fs.getDirectory(), subdir)
-                                      : fs.getDirectory();
-            dir.mkdirs();
-            File file = new File(dir, iuid);
-            while (!file.createNewFile())
-                file = new File(dir, Integer.toString(LazyInitialization.nextInt()));
+            ArchiveApplicationEntity ae =
+                    (ArchiveApplicationEntity) as.getApplicationEntity();
+            AttributesFormat filePathFormat = ae.getSpoolFilePathFormat();
+            File file;
+            synchronized (filePathFormat) {
+                file = new File(fs.getDirectory(), filePathFormat.format(fmi));
+            }
+            while (file.exists()) {
+                file = new File(file.getParentFile(),
+                        Integer.toString(LazyInitialization.nextInt()));
+            }
             return file;
         } catch (Exception e) {
             LOG.warn(as + ": Failed to create file:", e);
@@ -125,65 +126,68 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
 
     @Override
     protected MessageDigest getMessageDigest(Association as) {
-        ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+        ArchiveApplicationEntity ae =
+                (ArchiveApplicationEntity) as.getApplicationEntity();
         String algorithm = ae.getDigestAlgorithm();
         try {
-            return algorithm != null ? MessageDigest.getInstance(algorithm) : null;
+            return algorithm != null 
+                    ? MessageDigest.getInstance(algorithm)
+                    : null;
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    protected File rename(Association as, File file, Attributes ds)
-            throws DicomServiceException {
-        ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+    protected File getFinalFile(Association as, Attributes fmi, Attributes ds,
+            File spoolFile) {
+        ArchiveApplicationEntity ae =
+                (ArchiveApplicationEntity) as.getApplicationEntity();
         AttributesFormat filePathFormat = ae.getStorageFilePathFormat();
         if (filePathFormat == null)
-            return file;
+            return spoolFile;
 
-        InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
+        InstanceStore store =
+                (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
         File storeDir = store.getCurrentFileSystem().getDirectory();
         File dst;
         synchronized (filePathFormat) {
             dst = new File(storeDir, filePathFormat.format(ds));
         }
-        File dir = dst.getParentFile();
-        dir.mkdirs();
         while (dst.exists()) {
-            dst = new File(dir, TagUtils.toHexString(LazyInitialization.nextInt()));
-        }
-        if (file.renameTo(dst))
-            LOG.info(as + ": M-RENAME " + file + " to " + dst);
-        else {
-            LOG.warn(as + ": Failed to M-RENAME " + file + " to " + dst);
-            throw new DicomServiceException(Status.OutOfResources, "Failed to rename file");
+            dst = new File(dst.getParentFile(),
+                    TagUtils.toHexString(LazyInitialization.nextInt()));
         }
         return dst;
     }
 
     @Override
-    protected boolean process(Association as, PresentationContext pc, 
-            Attributes rq,  Attributes rsp, File dst, MessageDigest digest,
-            Attributes fmi, Attributes ds) throws DicomServiceException {
+     protected void process(Association as, Attributes fmi, Attributes ds,
+            File file, MessageDigest digest, Attributes rsp)
+            throws DicomServiceException {
         if (ds.bigEndian())
             ds = new Attributes(ds, false);
         String sourceAET = as.getRemoteAET();
-        String cuid = rq.getString(Tag.AffectedSOPClassUID);
-        ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+        String cuid = fmi.getString(Tag.MediaStorageSOPClassUID);
+        ArchiveApplicationEntity ae =
+                (ArchiveApplicationEntity) as.getApplicationEntity();
         try {
             Attributes modified = new Attributes();
-            Templates tpl = ae.getAttributeCoercionTemplates(cuid, Dimse.C_STORE_RQ,
-                    TransferCapability.Role.SCP, sourceAET);
+            Templates tpl = ae.getAttributeCoercionTemplates(cuid,
+                    Dimse.C_STORE_RQ, TransferCapability.Role.SCP, sourceAET);
             if (tpl != null)
-                ds.update(SAXTransformer.transform(ds, tpl, false, false), modified);
+                ds.update(SAXTransformer.transform(ds, tpl, false, false),
+                        modified);
             ApplicationEntity sourceAE = aeCache.get(sourceAET);
             if (sourceAE != null)
                 Supplements.supplementComposite(ds, sourceAE.getDevice());
-            InstanceStore store = (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
-            boolean add = store.addFileRef(sourceAET, ds, modified, dst, digest(digest),
-                    pc.getTransferSyntax(), ae.getStoreParam());
-            if (add && ae.hasIANDestinations()) {
+            InstanceStore store = 
+                    (InstanceStore) as.getProperty(InstanceStore.JNDI_NAME);
+            if (!store.addFileRef(sourceAET, ds, modified, file, 
+                    digest(digest), fmi.getString(Tag.TransferSyntaxUID),
+                    ae.getStoreParam())) {
+                delete(as, file);
+            } else if (ae.hasIANDestinations()) {
                 scheduleIAN(ae, store.createIANforPreviousMPPS());
                 for (Attributes ian : store.createIANsforRejectionNote())
                     scheduleIAN(ae, ian);
@@ -202,7 +206,6 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
                     rsp.setInt(Tag.OffendingElement, VR.AT, modified.tags());
                 }
             }
-            return add;
         } catch (DicomServiceException e) {
             throw e;
         } catch (Exception e) {
@@ -236,7 +239,8 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
         InstanceStore store =
                 (InstanceStore) as.clearProperty(InstanceStore.JNDI_NAME);
         if (store != null) {
-            ArchiveApplicationEntity ae = (ArchiveApplicationEntity) as.getApplicationEntity();
+            ArchiveApplicationEntity ae =
+                    (ArchiveApplicationEntity) as.getApplicationEntity();
             if (ae.hasIANDestinations())
                 try {
                     scheduleIAN(ae, store.createIANforCurrentMPPS());
@@ -257,4 +261,16 @@ public class CStoreSCPImpl extends BasicCStoreSCP {
     public void onClose(Association as) {
         closeInstanceStore(as);
     }
+
+    @Override
+    protected void cleanup(Association as, File spoolFile, File finalFile) {
+        ArchiveApplicationEntity ae =
+                (ArchiveApplicationEntity) as.getApplicationEntity();
+        if (!ae.isPreserveSpoolFileOnFailure())
+            super.cleanup(as, spoolFile, finalFile);
+        else
+            if (finalFile != null && finalFile.exists())
+                rename(as, finalFile, spoolFile);
+    }
+
 }

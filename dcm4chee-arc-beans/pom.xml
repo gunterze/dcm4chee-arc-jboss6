@@ -52,6 +52,12 @@
   <dependencies>
     <dependency>
       <groupId>org.dcm4che.dcm4chee-arc</groupId>
+      <artifactId>dcm4chee-arc-persistence</artifactId>
+      <classifier>${db}</classifier>
+      <version>${project.parent.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.dcm4che.dcm4chee-arc</groupId>
       <artifactId>dcm4chee-arc-ejb</artifactId>
       <version>${project.parent.version}</version>
     </dependency>

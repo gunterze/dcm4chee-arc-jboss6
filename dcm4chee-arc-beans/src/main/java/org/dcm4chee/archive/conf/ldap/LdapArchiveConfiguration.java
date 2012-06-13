@@ -220,7 +220,7 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
             return attrs;
         ArchiveApplicationEntity arcAE = (ArchiveApplicationEntity) ae;
         storeNotNull(attrs, "dcmFileSystemGroupID", arcAE.getFileSystemGroupID());
-        storeNotNull(attrs, "dcmReceivingDirectoryPath", arcAE.getReceivingDirectoryPath());
+        storeNotNull(attrs, "dcmSpoolFilePathFormat", arcAE.getSpoolFilePathFormat());
         storeNotNull(attrs, "dcmStorageFilePathFormat", arcAE.getStorageFilePathFormat());
         storeNotNull(attrs, "dcmDigestAlgorithm", arcAE.getDigestAlgorithm());
         storeNotNull(attrs, "dcmExternalRetrieveAET", arcAE.getExternalRetrieveAET());
@@ -232,6 +232,8 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                 arcAE.isSuppressWarningCoercionOfDataElements(), false);
         storeNotDef(attrs, "dcmStoreOriginalAttributes",
                 arcAE.isStoreOriginalAttributes(), false);
+        storeNotDef(attrs, "dcmPreserveSpoolFileOnFailure",
+                arcAE.isPreserveSpoolFileOnFailure(), false);
         storeNotNull(attrs, "dcmModifyingSystem", arcAE.getModifyingSystem());
         storeNotDef(attrs, "dcmStgCmtDelay", arcAE.getStorageCommitmentDelay(), 0);
         storeNotDef(attrs, "dcmStgCmtMaxRetries", arcAE.getStorageCommitmentMaxRetries(), 0);
@@ -331,7 +333,7 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
            return;
        ArchiveApplicationEntity arcae = (ArchiveApplicationEntity) ae;
        arcae.setFileSystemGroupID(stringValue(attrs.get("dcmFileSystemGroupID")));
-       arcae.setReceivingDirectoryPath(stringValue(attrs.get("dcmReceivingDirectoryPath")));
+       arcae.setSpoolFilePathFormat(attributesFormat(attrs.get("dcmSpoolFilePathFormat")));
        arcae.setStorageFilePathFormat(attributesFormat(attrs.get("dcmStorageFilePathFormat")));
        arcae.setDigestAlgorithm(stringValue(attrs.get("dcmDigestAlgorithm")));
        arcae.setExternalRetrieveAET(stringValue(attrs.get("dcmExternalRetrieveAET")));
@@ -343,6 +345,8 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
                booleanValue(attrs.get("dcmSuppressWarningCoercionOfDataElements"), false));
        arcae.setStoreOriginalAttributes(
                booleanValue(attrs.get("dcmStoreOriginalAttributes"), false));
+       arcae.setPreserveSpoolFileOnFailure(
+               booleanValue(attrs.get("dcmPreserveSpoolFileOnFailure"), false));
        arcae.setModifyingSystem(stringValue(attrs.get("dcmModifyingSystem")));
        arcae.setStorageCommitmentDelay(intValue(attrs.get("dcmStgCmtDelay"), 0));
        arcae.setStorageCommitmentMaxRetries(intValue(attrs.get("dcmStgCmtMaxRetries"), 0));
@@ -465,9 +469,9 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         storeDiff(mods, "dcmFileSystemGroupID",
                 aa.getFileSystemGroupID(),
                 bb.getFileSystemGroupID());
-        storeDiff(mods, "dcmReceivingDirectoryPath",
-                aa.getReceivingDirectoryPath(),
-                bb.getReceivingDirectoryPath());
+        storeDiff(mods, "dcmSpoolFilePathFormat",
+                aa.getSpoolFilePathFormat(),
+                bb.getSpoolFilePathFormat());
         storeDiff(mods, "dcmStorageFilePathFormat",
                 aa.getStorageFilePathFormat(),
                 bb.getStorageFilePathFormat());
@@ -499,6 +503,10 @@ public class LdapArchiveConfiguration extends LdapHL7Configuration {
         storeDiff(mods, "dcmStoreOriginalAttributes",
                 aa.isStoreOriginalAttributes(),
                 bb.isStoreOriginalAttributes(),
+                false);
+        storeDiff(mods, "dcmPreserveSpoolFileOnFailure",
+                aa.isPreserveSpoolFileOnFailure(),
+                bb.isPreserveSpoolFileOnFailure(),
                 false);
         storeDiff(mods, "dcmModifyingSystem",
                 aa.getModifyingSystem(),

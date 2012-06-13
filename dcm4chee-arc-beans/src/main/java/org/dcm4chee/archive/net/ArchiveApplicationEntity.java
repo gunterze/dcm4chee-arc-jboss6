@@ -75,10 +75,11 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     private String externalRetrieveAET;
     private String fileSystemGroupID;
     private String digestAlgorithm;
-    private String receivingDirectoryPath;
+    private AttributesFormat spoolFilePathFormat;
     private AttributesFormat storageFilePathFormat;
     private boolean storeOriginalAttributes;
     private boolean suppressWarningCoercionOfDataElements;
+    private boolean preserveSpoolFileOnFailure;
     private boolean matchUnknown;
     private boolean sendPendingCGet;
     private int sendPendingCMoveInterval;
@@ -194,12 +195,12 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         this.digestAlgorithm = digestAlgorithm;
     }
 
-    public String getReceivingDirectoryPath() {
-        return receivingDirectoryPath;
+    public AttributesFormat getSpoolFilePathFormat() {
+        return spoolFilePathFormat;
     }
 
-    public void setReceivingDirectoryPath(String receivingDirectoryPath) {
-        this.receivingDirectoryPath = receivingDirectoryPath;
+    public void setSpoolFilePathFormat(AttributesFormat spoolFilePathFormat) {
+        this.spoolFilePathFormat = spoolFilePathFormat;
     }
 
     public AttributesFormat getStorageFilePathFormat() {
@@ -231,6 +232,14 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
     public void setSuppressWarningCoercionOfDataElements(
             boolean suppressWarningCoercionOfDataElements) {
         this.suppressWarningCoercionOfDataElements = suppressWarningCoercionOfDataElements;
+    }
+
+    public boolean isPreserveSpoolFileOnFailure() {
+        return preserveSpoolFileOnFailure;
+    }
+
+    public void setPreserveSpoolFileOnFailure(boolean preserveSpoolFileOnFailure) {
+        this.preserveSpoolFileOnFailure = preserveSpoolFileOnFailure;
     }
 
     public boolean isMatchUnknown() {
@@ -449,9 +458,10 @@ public class ArchiveApplicationEntity extends ApplicationEntity {
         setExternalRetrieveAET(arcae.externalRetrieveAET);
         setFileSystemGroupID(arcae.fileSystemGroupID);
         setDigestAlgorithm(arcae.digestAlgorithm);
-        setReceivingDirectoryPath(arcae.receivingDirectoryPath);
+        setSpoolFilePathFormat(arcae.spoolFilePathFormat);
         setStorageFilePathFormat(arcae.storageFilePathFormat);
         setStoreOriginalAttributes(arcae.storeOriginalAttributes);
+        setPreserveSpoolFileOnFailure(arcae.preserveSpoolFileOnFailure);
         setSuppressWarningCoercionOfDataElements(arcae.suppressWarningCoercionOfDataElements);
         setMatchUnknown(arcae.matchUnknown);
         setSendPendingCGet(arcae.sendPendingCGet);

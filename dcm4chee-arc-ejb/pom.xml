@@ -52,8 +52,6 @@
   <name>dcm4chee-arc-ejb</name>
   <description>Session Beans for DICOM Archive J2EE application</description>
   <properties>
-    <db>hsql</db>
-    <ds>java:/pacsDS</ds>
     <arquillian.version>1.0.0.CR1</arquillian.version>
     <shrinkwrap.version>1.0.0-alpha-12</shrinkwrap.version>
     <jboss.version>6.0.0.Final</jboss.version>

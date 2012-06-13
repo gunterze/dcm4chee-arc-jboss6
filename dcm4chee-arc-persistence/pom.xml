@@ -51,8 +51,6 @@
   <name>dcm4chee-arc-persistence</name>
   <description>Entity Beans for DICOM archive</description>
   <properties>
-    <db>hsql</db>
-    <ds>java:/pacsDS</ds>
     <show_sql>false</show_sql>
     <hbm2ddl.auto>validate</hbm2ddl.auto>
   </properties>

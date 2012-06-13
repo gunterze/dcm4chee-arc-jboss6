@@ -328,13 +328,14 @@
                     <entry key="dcmDigestAlgorithm" value="MD5"/>
                     <entry key="dcmFileSystemGroupID" value="DEFAULT"/>
                     <entry key="dcmMatchUnknown" value="true"/>
-                    <entry key="dcmReceivingDirectoryPath" value="incoming"/>
+                    <entry key="dcmPreserveSpoolFileOnFailure" value="true"/>
                     <entry key="dcmRetrieveAET.#" value="1"/>
                     <entry key="dcmRetrieveAET.1" value="DCM4CHEE"/>
                     <entry key="dcmReturnOtherPatientIDs" value="true"/>
                     <entry key="dcmReturnOtherPatientNames" value="true"/>
                     <entry key="dcmSendPendingCGet" value="true"/>
                     <entry key="dcmSendPendingCMoveInterval" value="5000"/>
+                    <entry key="dcmSpoolFilePathFormat" value="archive/spool/{00020016,urlencoded}/{00020002}/{00020003}"/>
                     <entry key="dcmStorageFilePathFormat" value="archive/{now,date,yyyy/MM/dd}/{0020000D,hash}/{0020000E,hash}/{00080018,hash}"/>
                     <entry key="dcmStoreOriginalAttributes" value="true"/>
                     <entry key="dicomAssociationAcceptor" value="true"/>

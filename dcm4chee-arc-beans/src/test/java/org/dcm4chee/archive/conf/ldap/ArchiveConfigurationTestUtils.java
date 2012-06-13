@@ -786,15 +786,17 @@ public class ArchiveConfigurationTestUtils {
             String[] image_tsuids, String[] video_tsuids, String[] other_tsuids,
             String pixConsumer, String pixManager) {
         ArchiveApplicationEntity ae = new ArchiveApplicationEntity(aet);
-        ae .setAssociationAcceptor(true);
+        ae.setAssociationAcceptor(true);
         ae.setAssociationInitiator(true);
         ae.setFileSystemGroupID("DEFAULT");
-        ae.setReceivingDirectoryPath("incoming");
+        ae.setSpoolFilePathFormat(new AttributesFormat(
+                "archive/spool/{00020016,urlencoded}/{00020002}/{00020003}") );
         ae.setStorageFilePathFormat(new AttributesFormat(
                 "archive/{now,date,yyyy/MM/dd}/{0020000D,hash}/{0020000E,hash}/{00080018,hash}") );
         ae.setDigestAlgorithm("MD5");
         ae.setRetrieveAETs(aet);
         ae.setStoreOriginalAttributes(true);
+        ae.setPreserveSpoolFileOnFailure(true);
         ae.setSuppressWarningCoercionOfDataElements(false);
         ae.setMatchUnknown(true);
         ae.setSendPendingCGet(true);

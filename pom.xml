@@ -103,6 +103,8 @@
     </pluginRepository>
   </pluginRepositories>
   <properties>
+    <db>hsql</db>
+    <ds>java:/pacsDS</ds>
     <querydsl.version>2.3.3</querydsl.version>
   </properties>
   <build>
